@@ -1,0 +1,72 @@
+super + Escape
+	pkill -USR1 -x sxhkd; \
+	notify-send "sxhkd restarted"
+
+super + y
+	scrot
+
+super + s
+	slock
+
+#XF86MonBrightness{Down,Up}
+#	brightnessctl s 5%{-,+}
+
+super + d  
+	dmenu_run
+
+super + Return
+	st
+
+# dwm
+super + {e,n}
+	dwmc focusstack {-,+}1
+
+#super + shift + {k,j}
+#	dwmc movestack {-,+}1
+
+super + {h,l}
+	dwmc setmfact {-,+}0.05
+
+super + b
+	dwmc togglebar
+
+super + space
+	dwmc togglefloating
+
+super + shift + q
+	dwinkill
+
+super + shift + e
+	dwmc quit 
+
+super + Tab
+	dwmc view
+
+super + {t,f,m,c}
+	dwmc setlayoutex {0,1,2,3}
+	wmp 975 500
+
+super + {_,ctrl +} {1-9}
+	dwmc {_,toggle}viewex {0-8}; \
+	wmp 975 500
+
+super + shift + {_,ctrl +} {1-9}
+	dwmc {_,toggle}tagex {0-8}
+
+super + 0
+	dwmc viewall
+
+super + shift + 0
+	dwmc tag .ui = ~0
+
+super + z 
+	dwmc zoom
+
+super + {comma,period}
+	dwmc focusmon {-,+}1
+
+super + shift + {comma,period}
+	dwmc tagmon {-,+}1
+
+super + {i,p}
+	dwmc incnmaster {+,-}1

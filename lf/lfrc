@@ -1,0 +1,11 @@
+set shell dash
+map <c-s> set hidden!
+map <enter> shell
+
+cmd image $sxiv $f
+#Restore vim bindings
+map n down
+map e up
+map k search-next
+map E $$EDITOR "$f"
+map j image

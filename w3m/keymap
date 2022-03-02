@@ -1,0 +1,8 @@
+keymap M-h HISTORY
+keymap M-k COOKIE
+keymap n MOVE_DOWN
+keymap e MOVE_UP
+keymap N UP
+keymap E DOWN
+keymap k SEARCH_NEXT
+keymap K SEARCH_PREV

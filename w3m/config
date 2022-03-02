@@ -1,0 +1,6 @@
+user_agent Mozilla/5.0 (Windows NT 6.1; rv:45.0) Gecko/20100101 Firefox/45.0
+accept_language en-US,en;q=0.5
+accept_encoding gzip, deflate
+accept_media text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+extbrowser /opt/tor-browser_en-US/Browser/start-tor-browser
+http_proxy=http://127.0.0.1:8118

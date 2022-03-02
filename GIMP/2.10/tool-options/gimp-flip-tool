@@ -1,0 +1,6 @@
+# GIMP gimp-flip-tool options
+
+(background (color-rgb 0.74575854438160816 1 0.7142857142857143))
+(flip-type vertical)
+
+# end of gimp-flip-tool options
