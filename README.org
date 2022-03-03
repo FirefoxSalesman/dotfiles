@@ -1,6 +1,6 @@
 dotfiles
 
-*Holscher's High-Quality Dotfiles
+* Holscher's High-Quality Dotfiles
 Just kidding. They suck.
 
 * Contents
