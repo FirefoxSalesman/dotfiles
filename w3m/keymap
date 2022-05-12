@@ -4,5 +4,9 @@ keymap n MOVE_DOWN
 keymap e MOVE_UP
 keymap N UP
 keymap E DOWN
+keymap i MOVE_RIGHT
 keymap k SEARCH_NEXT
 keymap K SEARCH_PREV
+keymap l PEEK_IMG
+keymap yx EXTERN_LINK '(echo %s | xsel -b)'
+keymap xw EXTERN 'tor-browser'

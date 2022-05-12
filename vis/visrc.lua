@@ -2,7 +2,6 @@
 require('vis')
 
 require('plugins/vis-sneak')
-require('plugins/vis-title')
 require('plugins/vis-surround')
 
 --set keys & theme

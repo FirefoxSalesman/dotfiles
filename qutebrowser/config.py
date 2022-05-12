@@ -10,6 +10,9 @@
 #   qute://help/configuring.html
 #   qute://help/settings.html
 
+# Show Changelog
+config.set('changelog_after_upgrade' , 'never')
+
 #Restore vim bindings
 config.bind('e', 'scroll-page 0 -0.25')
 config.bind('n', 'scroll-page 0 0.25')
@@ -18,6 +21,10 @@ config.bind('n', 'fake-key <Down>')
 config.bind('e', 'fake-key <Up>')
 config.bind('E', 'tab-next')
 config.bind('N', 'tab-prev')
+config.bind('l', 'mode-enter insert')
+config.bind('I', 'forward')
+config.bind('i', 'scroll-page .25 0')
+config.bind('i', 'fake-key <Right>')
 
 # Uncomment this to still load settings configured via autoconfig.yml
 # config.load_autoconfig()
@@ -243,8 +250,8 @@ c.tabs.show = 'multiple'
 
 # Setting default page for when opening new tabs or new windows with
 # commands like :open -t and :open -w .
-c.url.default_page = 'https://duckduckgo.com/'
-c.url.start_pages = 'https://duckduckgo.com/'
+c.url.default_page = 'https://searx.rasp.fr/'
+c.url.start_pages = 'https://searx.rasp.fr/'
 
 # Search engines which can be used via the address bar.  Maps a search
 # engine name (such as `DEFAULT`, or `ddg`) to a URL with a `{}`
@@ -264,7 +271,7 @@ c.url.start_pages = 'https://duckduckgo.com/'
 # the search engine name to the search term, e.g. `:open google
 # qutebrowser`.
 # Type: Dict
-c.url.searchengines = {'DEFAULT': 'https://duckduckgo.com/?q={}', 'aw': 'https://wiki.archlinux.org/?search={}'}
+c.url.searchengines = {'DEFAULT': 'https://searx.rasp.fr/search?q={}', 'aw': 'https://wiki.archlinux.org/?search={}'}
 
 # Default font families to use. Whenever "default_family" is used in a
 # font setting, it's replaced with the fonts listed here. If set to an

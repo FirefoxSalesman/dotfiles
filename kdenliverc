@@ -1,15 +1,15 @@
 [KFileDialog Settings]
-Recent Files[$e]=Cartoon Tire Screech Sound Effect (download)-_eiC1lxdbaY.m4a,file:$HOME/mus/Sounds/Snare Wave.wav,file:$HOME/vid/luke/Rouxls Kaard Boss Fight - Deltarune Chapter 2-2WBba2G7CHw.mp4,file:$HOME/vid/luke/FLEX  TAPE® Commercial-0xzN6FM5x_E.mp4,file:$HOME/vid/luke/flex-tape.jpg,file:$HOME/vid/luke/crypto.mp4,file:$HOME/vid/luke/susie/hows-that-sound.wav,file:$HOME/vid/luke/jokes-on-you.jpg,file:$HOME/vid/luke/susie/whatever.wav,file:$HOME/vid/luke,file:$HOME/pic/miserable.png,file:$HOME/pic/2022-01-31-183811_1920x1080_scrot.png,file:$HOME/mus/eleventh-hour.wav,file:$HOME/mus/phosphor-core.wav,file:$HOME/pic/phosphor-core.png,file:$HOME/pic/agent-goodnam.jpg
-Recent URLs[$e]=file:$HOME/vid/,file:$HOME/pic/,file:$HOME/vid/youtube/,remote:/,file:$HOME/dwn/,baloosearch:/audio/,file:$HOME/mus/Sounds/,file:$HOME/vid/luke/,file:$HOME/vid/luke/susie/,file:$HOME/,file:$HOME/mus/
+Recent Files[$e]=Cartoon Tire Screech Sound Effect (download)-_eiC1lxdbaY.m4a,file:$HOME/pic/noelle/frost9.png,file:$HOME/pic/noelle/frost8.png,file:$HOME/pic/noelle/frost7.png,file:$HOME/pic/noelle,file:$HOME/mus/light.wav,file:$HOME/pic/llamas2.png,file:$HOME/vid/Peter Parker 'I'm Back! My Back!'' (Scene) - Spider-Man 2 (2004) Movie CLIP HD-FIU-blBfMa0.mkv,file:$HOME/pic/llamas1.png,file:$HOME/pic/sanity.jpg,file:$HOME/vid/Llamas.mkv,file:$HOME/vid/carl.mp4,file:$HOME/pic/solstice.jpg,file:$HOME/mus/solstice.wav,file:$HOME/pic/presentation,file:$HOME/vid/luke/output1.mkv
+Recent URLs[$e]=file:$HOME/vid/luke/susie/,file:$HOME/,file:$HOME/mus/,file:$HOME/vid/,file:///,file:///opt/tor-browser_en-US/Browser/,file:///opt/tor-browser_en-US/Browser/Downloads/,file:$HOME/pic/,file:$HOME/vid/youtube/,file:$HOME/pic/noelle/
 detailViewIconSize=16
 
 [MainWindow]
-DisplayPort-0 Height 1920x1080=1047
-DisplayPort-0 Width 1920x1080=1910
-DisplayPort-0 XPosition 1920x1080=5
-DisplayPort-0 YPosition 1920x1080=5
+DisplayPort-0 Height 1920x1080=1029
+DisplayPort-0 Width 1920x1080=1896
+DisplayPort-0 XPosition 1920x1080=12
+DisplayPort-0 YPosition 1920x1080=12
 RestorePositionForNextInstance=false
-State=AAAA/wAAAAD9AAAAAgAAAAEAAAFyAAAB+vwCAAAAAfwAAAH9AAAB+gAAAc0BAAAd+gAAAAECAAAABPsAAAAKAG0AaQB4AGUAcgAAAAHwAAACCwAAAIEBAAAD+wAAABgAZQBmAGYAZQBjAHQAXwBzAHQAYQBjAGsBAAAAAP////8AAAB+AQAAAvsAAAASAHQAaQBtAGUAcgBlAG0AYQBwAQAAAAD/////AAABrwEAAAL7AAAAEgBTAHUAYgB0AGkAdABsAGUAcwAAAAAA/////wAAARkBAAADAAAAAgAAB3YAAAHX/AEAAAAL+wAAABQAcwBjAHIAZQBlAG4AZwByAGEAYgAAAAAA/////wAAAGABAAAD+wAAABoAYQB1AGQAaQBvAHMAcABlAGMAdAByAHUAbQAAAAAA/////wAAAGgBAAAD/AAAAAAAAAGFAAAAiwD////6AAAAAAEAAAAF+wAAABYAcAByAG8AagBlAGMAdABfAGIAaQBuAQAAAAD/////AAAAXAEAAAP7AAAAHgB0AHIAYQBuAHMAaQB0AGkAbwBuAF8AbABpAHMAdAEAAAAA/////wAAAAQBAAAD+wAAABYAZQBmAGYAZQBjAHQAXwBsAGkAcwB0AQAAAAD/////AAAABAEAAAP7AAAAHgBjAGwAaQBwAF8AcAByAG8AcABlAHIAdABpAGUAcwEAAAAA/////wAAAFcBAAAD+wAAABgAdQBuAGQAbwBfAGgAaQBzAHQAbwByAHkBAAAAAP////8AAABbAQAAA/wAAAF1AAADDgAAAAAA////+v////8CAAAAAvsAAAAYAGMAbABpAHAAXwBtAG8AbgBpAHQAbwByAAAAAEQAAAHNAAAA6gEAAAP7AAAADgBsAGkAYgByAGEAcgB5AAAAAAD/////AAAAswEAAAP8AAABhgAABfAAAAJnAP////oAAAAAAgAAAAP7AAAAHgBwAHIAbwBqAGUAYwB0AF8AbQBvAG4AaQB0AG8AcgEAAAC/AAABLAAAAMsBAAAC+wAAABAAdABlAHgAdABlAGQAaQB0AQAAAAD/////AAABaQEAAAL7AAAAGABuAG8AdABlAHMAXwB3AGkAZABnAGUAdAEAAAAA/////wAAAI4BAAAC+wAAABYAdgBlAGMAdABvAHIAcwBjAG8AcABlAAAAAAD/////AAABSgEAAAP7AAAAEAB3AGEAdgBlAGYAbwByAG0AAAAAAP////8AAAC0AQAAA/sAAAAUAHIAZwBiAF8AcABhAHIAYQBkAGUAAAAAAP////8AAACtAQAAA/sAAAASAGgAaQBzAHQAbwBnAHIAYQBtAAAAAAD/////AAABUQEAAAP7AAAAEABiAGkAbgBfAGMAbABpAHAAAAAE/wAAAoEAAAI2AQAAA/sAAAAeAG8AbgBsAGkAbgBlAHIAZQBzAG8AdQByAGMAZQBzAAAAAAD/////AAABQQEAAAMAAAYDAAAB+gAAAAQAAAAEAAAACAAAAAj8AAAAAQAAAAIAAAACAAAAFgBtAGEAaQBuAFQAbwBvAGwAQgBhAHIAAAAAAP////8AAAAAAAAAAAAAABgAZQB4AHQAcgBhAFQAbwBvAGwAQgBhAHIAAAAAAP////8AAAAAAAAAAA==
+State=AAAA/wAAAAD9AAAAAgAAAAEAAAGhAAAB+PwCAAAAAfwAAAHtAAAB+AAAARgBAAAd+gAAAAECAAAABPsAAAAKAG0AaQB4AGUAcgAAAAHwAAACCwAAAIEBAAAD+wAAABgAZQBmAGYAZQBjAHQAXwBzAHQAYQBjAGsBAAAAAP////8AAAB+AQAAAvsAAAASAHQAaQBtAGUAcgBlAG0AYQBwAQAAAAD/////AAAAWgEAAAL7AAAAEgBTAHUAYgB0AGkAdABsAGUAcwEAAAAA/////wAAAPoBAAACAAAAAgAAB2gAAAHH/AEAAAAL+wAAABQAcwBjAHIAZQBlAG4AZwByAGEAYgAAAAAA/////wAAAGABAAAD+wAAABoAYQB1AGQAaQBvAHMAcABlAGMAdAByAHUAbQAAAAAA/////wAAAGgBAAAD/AAAAAAAAAGCAAAAiwD////6AAAAAAEAAAAF+wAAABYAcAByAG8AagBlAGMAdABfAGIAaQBuAQAAAAD/////AAAAXAEAAAP7AAAAHgB0AHIAYQBuAHMAaQB0AGkAbwBuAF8AbABpAHMAdAEAAAAA/////wAAAAQBAAAD+wAAABYAZQBmAGYAZQBjAHQAXwBsAGkAcwB0AQAAAAD/////AAAABAEAAAP7AAAAHgBjAGwAaQBwAF8AcAByAG8AcABlAHIAdABpAGUAcwEAAAAA/////wAAAFcBAAAD+wAAABgAdQBuAGQAbwBfAGgAaQBzAHQAbwByAHkBAAAAAP////8AAABbAQAAA/wAAAF1AAADDgAAAAAA////+v////8CAAAAAvsAAAAYAGMAbABpAHAAXwBtAG8AbgBpAHQAbwByAAAAAEQAAAHNAAAA6gEAAAP7AAAADgBsAGkAYgByAGEAcgB5AAAAAAD/////AAAAswEAAAP8AAABgwAABeUAAAHkAP////oAAAAAAgAAAAP7AAAAHgBwAHIAbwBqAGUAYwB0AF8AbQBvAG4AaQB0AG8AcgEAAAC/AAABLAAAAMsBAAAC+wAAABAAdABlAHgAdABlAGQAaQB0AQAAAAD/////AAABcwEAAAL7AAAAGABuAG8AdABlAHMAXwB3AGkAZABnAGUAdAEAAAAA/////wAAAI4BAAAC+wAAABYAdgBlAGMAdABvAHIAcwBjAG8AcABlAAAAAAD/////AAABTgEAAAP7AAAAEAB3AGEAdgBlAGYAbwByAG0AAAAAAP////8AAAC4AQAAA/sAAAAUAHIAZwBiAF8AcABhAHIAYQBkAGUAAAAAAP////8AAACxAQAAA/sAAAASAGgAaQBzAHQAbwBnAHIAYQBtAAAAAAD/////AAABVQEAAAP7AAAAEABiAGkAbgBfAGMAbABpAHAAAAAE/wAAAoEAAAI2AQAAA/sAAAAeAG8AbgBsAGkAbgBlAHIAZQBzAG8AdQByAGMAZQBzAAAAAAD/////AAABSQEAAAMAAAXGAAAB+AAAAAQAAAAEAAAACAAAAAj8AAAAAQAAAAIAAAACAAAAFgBtAGEAaQBuAFQAbwBvAGwAQgBhAHIAAAAAAP////8AAAAAAAAAAAAAABgAZQB4AHQAcgBhAFQAbwBvAGwAQgBhAHIAAAAAAP////8AAAAAAAAAAA==
 ToolBarsMovable=Disabled
 
 [OnlineResources]
@@ -17,12 +17,16 @@ provider=Freesound
 zoom=7
 
 [Recent Dirs]
-KdenliveClipFolder[$e]=$HOME/mus/Sounds/,$HOME/vid/luke/,$HOME/vid/luke/susie/
-KdenliveProjectsFolder[$e]=$HOME/vid/luke,$HOME/vid/luke/,$HOME/vid
+KdenliveClipFolder[$e]=$HOME/pic/noelle/,$HOME/pic/,$HOME/mus/
+KdenliveProjectsFolder[$e]=$HOME/vid,$HOME/vid/,$HOME/vid/luke/
 
 [Recent Files]
 File1[$e]=$HOME/vid/luke/luke-smith-plays-elpadune.kdenlive
+File2[$e]=$HOME/vid/final.kdenlive
+File3[$e]=$HOME/vid/frost.kdenlive
 Name1[$e]=luke-smith-plays-elpadune.kdenlive
+Name2[$e]=final.kdenlive
+Name3[$e]=frost.kdenlive
 
 [RenderWidget]
 showoptions=false
@@ -66,7 +70,7 @@ rec601=false
 background_alpha=0
 background_color=0,0,0
 dialog_geometry=AdnQywADAAAAAAGXAAAArAAABegAAAOLAAABnAAAALEAAAXjAAADhgAAAAAAAAAAB4AAAAGcAAAAsQAABeMAAAOG
-font_color=255,255,255
+font_color=0,132,231
 font_family=Roboto,-1,54,5,50,0,0,0,0,0
 font_italic=false
 font_outline=0
@@ -118,4 +122,4 @@ use_dark_breeze=true
 widgetstyle=Default
 
 [version]
-version=21.12.2
+version=22.04.0

@@ -1,30 +1,47 @@
+#reload sxhkd
 super + Escape
-	pkill -USR1 -x sxhkd; \
-	notify-send "sxhkd restarted"
+	reload
 
+#screenshot
 super + y
 	scrot
 
+#lock screen
 super + s
 	slock
 
-#XF86MonBrightness{Down,Up}
-#	brightnessctl s 5%{-,+}
+#close a window
+super + shift + q
+	dwinkill
 
+#play music
+super + m
+	musicmenu
+
+#mount all usb drives
+super + u
+	udiskie
+
+#program launcher
 super + d  
-	dmenu_run
+	dmenu_run -c -g 3 -l 5
 
+#run terminal
 super + Return
-	st
+	st -e
+#file manager
+super + f
+	st -e lf
 
-# dwm
+#email client
+super + w
+	st -e mutt
+
+#dwm commands
 super + {e,n}
 	dwmc focusstack {-,+}1
 
-#super + shift + {k,j}
-#	dwmc movestack {-,+}1
-
-super + {h,l}
+super + {h,i}
 	dwmc setmfact {-,+}0.05
 
 super + b
@@ -33,17 +50,14 @@ super + b
 super + space
 	dwmc togglefloating
 
-super + shift + q
-	dwinkill
-
 super + shift + e
 	dwmc quit 
 
 super + Tab
 	dwmc view
 
-super + {t,f,m,c}
-	dwmc setlayoutex {0,1,2,3}
+super + shift + {t,f,m,d}
+	dwmc setlayoutex {0,1,2,3}; \
 	wmp 975 500
 
 super + {_,ctrl +} {1-9}
@@ -67,6 +81,7 @@ super + {comma,period}
 
 super + shift + {comma,period}
 	dwmc tagmon {-,+}1
-
-super + {i,p}
+super + shift + p
+	passmenu -c -l 6 -g 3
+super + {l,p}
 	dwmc incnmaster {+,-}1
