@@ -1,0 +1,6 @@
+# Search engine alias
+lb: file:/cgi-bin/search_engines.cgi?%s
+rd: file:/cgi-bin/search_engines.cgi?%s
+sx: file:/cgi-bin/search_engines.cgi?%s
+wi: file:/cgi-bin/search_engines.cgi?%s
+yt: file:/cgi-bin/search_engines.cgi?%s

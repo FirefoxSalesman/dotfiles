@@ -10,3 +10,7 @@ keymap K SEARCH_PREV
 keymap l PEEK_IMG
 keymap yx EXTERN_LINK '(echo %s | xsel -b)'
 keymap xw EXTERN 'tor-browser'
+
+
+#search with surfraw (no clipboard required)
+keymap xs COMMAND "READ_SHELL ~/.config/w3m/cgi-bin/fzf_surfraw.cgi ; BACK ; GOTO file:/cgi-bin/goto_w3m_clipboard.cgi"

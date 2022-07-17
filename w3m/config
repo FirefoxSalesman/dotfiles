@@ -3,3 +3,11 @@ accept_language en-US,en;q=0.5
 accept_encoding gzip, deflate
 accept_media text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
 extbrowser tor-browser
+active_style 1
+active_color cyan
+visited_anchor 1
+visited_color magenta
+use_history 1
+history 25
+use_mouse 0
+cgi_bin /usr/lib/w3m/cgi-bin:/home/holscherhead/.config/w3m/cgi-bin

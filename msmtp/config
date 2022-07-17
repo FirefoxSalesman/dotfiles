@@ -1,0 +1,23 @@
+account mlghollyleaf@gmail.com
+host smtp.gmail.com
+port 587
+from mlghollyleaf@gmail.com
+user mlghollyleaf@gmail.com
+passwordeval "pass mlghollyleaf@gmail.com"
+auth on
+tls on
+tls_trust_file	/etc/ssl/certs/ca-certificates.crt
+logfile /home/holscherhead/.config/msmtp/msmtp.log
+# tls_starttls
+account HOLSCHCC@rose-hulman.edu
+host smtp.office365.com
+port 465
+from HOLSCHCC@rose-hulman.edu
+user HOLSCHCC@rose-hulman.edu
+passwordeval "pass HOLSCHCC@rose-hulman.edu"
+auth on
+tls on
+tls_trust_file	/etc/ssl/certs/ca-certificates.crt
+logfile /home/holscherhead/.config/msmtp/msmtp.log
+tls_starttls off
+

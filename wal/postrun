@@ -1,0 +1,6 @@
+#!/bin/sh
+oomox-cli ~/.cache/wal/colors-oomox -o pywal &
+sed -i 's/(/{/g' ~/.cache/wal/vis
+sed -i 's/)/}/g' ~/.cache/wal/vis
+sed -i 's/(/{/g' ~/.cache/wal/qutebrowser.css
+sed -i 's/)/}/g' ~/.cache/wal/qutebrowser.css

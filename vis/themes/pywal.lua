@@ -1,0 +1,1 @@
+/home/holscherhead/.cache/wal/vis
