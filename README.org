@@ -9,7 +9,7 @@ Just kidding. They suck.
 - My browser history?
 - Shell config for mksh
 - Pywal everything
-- Nearly everything use colemak
+- Nearly everything uses colemak
 - An lf config that I stole from Luke Smith
 
 * Credits
