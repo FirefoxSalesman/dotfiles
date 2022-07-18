@@ -2,6 +2,10 @@
 super + Escape
 	reload
 
+#kill dwm
+super + shift + e
+	pkill dwm
+
 #screenshot
 super + y
 	scrot
@@ -18,17 +22,14 @@ super + shift + q
 super + m
 	musicmenu
 
-#mount all usb drives
-super + u
-	udiskie
-
 #program launcher
 super + d  
 	dmenu_run -c -g 3 -l 5
 
-#run terminal
+#run teriminal
 super + Return
-	st -e
+	st
+
 #file manager
 super + f
 	st -e lf
@@ -36,6 +37,18 @@ super + f
 #email client
 super + w
 	st -e mutt
+
+#copy text to clipboard
+super + c
+	copy
+
+#change wallpaper
+super + t
+	paper
+
+#manage usb drives
+super + u
+	udisksmenu
 
 #dwm commands
 super + {e,n}
@@ -49,9 +62,6 @@ super + b
 
 super + space
 	dwmc togglefloating
-
-super + shift + e
-	dwmc quit 
 
 super + Tab
 	dwmc view

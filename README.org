@@ -8,4 +8,10 @@ Just kidding. They suck.
 - Sxhkd file to control all window management functions for dwm
 - My browser history?
 - Shell config for mksh
+- Pywal everything
+- Nearly everything use colemak
 - An lf config that I stole from Luke Smith
+
+* Credits
+- Luke Smith's dotfiles were the source for my lf & wal configs
+- My w3m config is a patchwork of settings found in the Qubes OS documentation & Gotbletu's dotfiles & shownotes.

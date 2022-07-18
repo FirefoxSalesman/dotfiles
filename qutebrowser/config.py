@@ -40,10 +40,6 @@ c.content.autoplay = False
 # Type: Dict
 c.aliases = {'q': 'quit', 'w': 'session-save', 'wq': 'quit --save'}
 
-# Setting dark mode
-#config.set("colors.webpage.darkmode.enabled", True)
-
-
 # Which cookies to accept. With QtWebEngine, this setting also controls
 # other features with tracking capabilities similar to those of cookies;
 # including IndexedDB, DOM storage, filesystem API, service workers, and
@@ -310,8 +306,20 @@ c.fonts.statusbar = '8pt "Source Code Pro"'
 config.bind('M', 'hint links spawn mpv {hint-url}')
 config.bind('Z', 'hint links spawn st -e youtube-dl {hint-url}')
 
-# Nord theme
-config.source('nord-qutebrowser.py')
-
 config.set('colors.webpage.darkmode.enabled', True)
 config.set('colors.webpage.darkmode.algorithm', 'brightness-rgb')
+
+#pywal
+import pywalQute.draw
+
+pywalQute.draw.color(c, {
+	'spacing': {
+		'vertical': 1,
+		'horizontal': 2
+	}
+})
+
+# Setting dark mode
+config.set("colors.webpage.darkmode.enabled", True)
+
+c.content.user_stylesheets = ['~/.cache/wal/qutebrowser.css']

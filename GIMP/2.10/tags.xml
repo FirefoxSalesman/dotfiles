@@ -1195,7 +1195,7 @@
   <resource identifier="${gimp_data_dir}/patterns/Wood/wood1.pat" checksum="0c055f250ddbccc1b32d05f8c0ad7012">
   </resource>
 
-  <resource identifier="gimp-gradient-custom" checksum="aae359f9c3bae36cd27eac3a47c7f564">
+  <resource identifier="gimp-gradient-custom" checksum="4a878c6cfae0b0e03c0834723daadf92">
   </resource>
 
   <resource identifier="gimp-gradient-fg-bg-rgb-hardedge" checksum="f3a21fae99695a8feac84cee0ddd716a">
@@ -1423,7 +1423,7 @@
   <resource identifier="${gimp_data_dir}/gradients/Yellow_Orange.ggr" checksum="428584726006e23e260baa2a7d79f295">
   </resource>
 
-  <resource identifier="gimp-palette-color-history" checksum="5e4b93e69cdc2c93db35a7f6eab16edf">
+  <resource identifier="gimp-palette-color-history" checksum="deb8ca3a901dc6755f27ed83f98683e7">
   </resource>
 
   <resource identifier="${gimp_data_dir}/palettes/Bears.gpl" checksum="e82e818c20ac12bdd21049924ea2d1e7">
@@ -1795,6 +1795,9 @@
   <resource identifier="Allencon Demo" checksum="(null)">
   </resource>
 
+  <resource identifier="all-the-icons" checksum="(null)">
+  </resource>
+
   <resource identifier="Almagro Thin" checksum="(null)">
   </resource>
 
@@ -1904,6 +1907,9 @@
   </resource>
 
   <resource identifier="An Creon" checksum="(null)">
+  </resource>
+
+  <resource identifier="Andale Mono" checksum="(null)">
   </resource>
 
   <resource identifier="Anderson Family" checksum="(null)">
@@ -2036,6 +2042,21 @@
   </resource>
 
   <resource identifier="Argosy" checksum="(null)">
+  </resource>
+
+  <resource identifier="Arial" checksum="(null)">
+  </resource>
+
+  <resource identifier="Arial Black," checksum="(null)">
+  </resource>
+
+  <resource identifier="Arial Bold" checksum="(null)">
+  </resource>
+
+  <resource identifier="Arial Bold Italic" checksum="(null)">
+  </resource>
+
+  <resource identifier="Arial Italic" checksum="(null)">
   </resource>
 
   <resource identifier="ArizonaAirwaysNF" checksum="(null)">
@@ -3091,6 +3112,12 @@
   <resource identifier="Comic Book Commando Expanded, Expanded" checksum="(null)">
   </resource>
 
+  <resource identifier="Comic Sans MS" checksum="(null)">
+  </resource>
+
+  <resource identifier="Comic Sans MS Bold" checksum="(null)">
+  </resource>
+
   <resource identifier="Compliant Confuse 1o BRK" checksum="(null)">
   </resource>
 
@@ -3158,6 +3185,18 @@
   </resource>
 
   <resource identifier="Cosmojunk" checksum="(null)">
+  </resource>
+
+  <resource identifier="Courier New" checksum="(null)">
+  </resource>
+
+  <resource identifier="Courier New Bold" checksum="(null)">
+  </resource>
+
+  <resource identifier="Courier New Bold Italic" checksum="(null)">
+  </resource>
+
+  <resource identifier="Courier New Italic" checksum="(null)">
   </resource>
 
   <resource identifier="CoventryGarden" checksum="(null)">
@@ -3790,6 +3829,9 @@
   <resource identifier="FightThis" checksum="(null)">
   </resource>
 
+  <resource identifier="file-icons" checksum="(null)">
+  </resource>
+
   <resource identifier="Filthy Habits" checksum="(null)">
   </resource>
 
@@ -3890,6 +3932,9 @@
   </resource>
 
   <resource identifier="Font" checksum="(null)">
+  </resource>
+
+  <resource identifier="FontAwesome" checksum="(null)">
   </resource>
 
   <resource identifier="Fontcop II" checksum="(null)">
@@ -4066,6 +4111,18 @@
   <resource identifier="Generation Nth Bold" checksum="(null)">
   </resource>
 
+  <resource identifier="Georgia" checksum="(null)">
+  </resource>
+
+  <resource identifier="Georgia Bold" checksum="(null)">
+  </resource>
+
+  <resource identifier="Georgia Bold Italic" checksum="(null)">
+  </resource>
+
+  <resource identifier="Georgia Italic" checksum="(null)">
+  </resource>
+
   <resource identifier="Gessele Thin" checksum="(null)">
   </resource>
 
@@ -4094,6 +4151,9 @@
   </resource>
 
   <resource identifier="GingerPeachy" checksum="(null)">
+  </resource>
+
+  <resource identifier="github-octicons" checksum="(null)">
   </resource>
 
   <resource identifier="GlazKrak Ultra-Heavy" checksum="(null)">
@@ -4369,6 +4429,9 @@
   <resource identifier="IcicleCountry" checksum="(null)">
   </resource>
 
+  <resource identifier="icomoon" checksum="(null)">
+  </resource>
+
   <resource identifier="Iconified" checksum="(null)">
   </resource>
 
@@ -4385,6 +4448,9 @@
   </resource>
 
   <resource identifier="Illumination" checksum="(null)">
+  </resource>
+
+  <resource identifier="Impact Condensed" checksum="(null)">
   </resource>
 
   <resource identifier="Imperfect font" checksum="(null)">
@@ -5212,6 +5278,9 @@
   <resource identifier="Materhorn" checksum="(null)">
   </resource>
 
+  <resource identifier="Material Icons" checksum="(null)">
+  </resource>
+
   <resource identifier="Maximum Security" checksum="(null)">
   </resource>
 
@@ -5563,6 +5632,9 @@
   <resource identifier="Obloquy Solid (BRK)" checksum="(null)">
   </resource>
 
+  <resource identifier="octicons Medium" checksum="(null)">
+  </resource>
+
   <resource identifier="Odalisque" checksum="(null)">
   </resource>
 
@@ -5771,6 +5843,9 @@
   </resource>
 
   <resource identifier="Pointedly Mad" checksum="(null)">
+  </resource>
+
+  <resource identifier="Pomodoro" checksum="(null)">
   </resource>
 
   <resource identifier="Ponderosa" checksum="(null)">
@@ -7465,6 +7540,18 @@
   <resource identifier="TiltAWhirl" checksum="(null)">
   </resource>
 
+  <resource identifier="Times New Roman," checksum="(null)">
+  </resource>
+
+  <resource identifier="Times New Roman, Bold" checksum="(null)">
+  </resource>
+
+  <resource identifier="Times New Roman, Bold Italic" checksum="(null)">
+  </resource>
+
+  <resource identifier="Times New Roman, Italic" checksum="(null)">
+  </resource>
+
   <resource identifier="Tinsnips" checksum="(null)">
   </resource>
 
@@ -7505,6 +7592,18 @@
   </resource>
 
   <resource identifier="Treasure Map Deadhand" checksum="(null)">
+  </resource>
+
+  <resource identifier="Trebuchet MS" checksum="(null)">
+  </resource>
+
+  <resource identifier="Trebuchet MS Bold" checksum="(null)">
+  </resource>
+
+  <resource identifier="Trebuchet MS Bold Italic" checksum="(null)">
+  </resource>
+
+  <resource identifier="Trebuchet MS Italic" checksum="(null)">
   </resource>
 
   <resource identifier="Tribal" checksum="(null)">
@@ -7678,6 +7777,18 @@
   <resource identifier="Vector" checksum="(null)">
   </resource>
 
+  <resource identifier="Verdana" checksum="(null)">
+  </resource>
+
+  <resource identifier="Verdana Bold" checksum="(null)">
+  </resource>
+
+  <resource identifier="Verdana Bold Italic" checksum="(null)">
+  </resource>
+
+  <resource identifier="Verdana Italic" checksum="(null)">
+  </resource>
+
   <resource identifier="Viper Squadron Solid Italic" checksum="(null)">
   </resource>
 
@@ -7712,6 +7823,12 @@
   </resource>
 
   <resource identifier="Weathered (BRK)" checksum="(null)">
+  </resource>
+
+  <resource identifier="Weather Icons" checksum="(null)">
+  </resource>
+
+  <resource identifier="Webdings" checksum="(null)">
   </resource>
 
   <resource identifier="Wellbutrin Medium" checksum="(null)">
