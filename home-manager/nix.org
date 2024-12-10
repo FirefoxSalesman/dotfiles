@@ -1,6 +1,7 @@
 #+title: Holscher's Home Manager Config
 #+startup: overview
 #+auto_tangle: t
+#+options: \n:t
 
 * Notes to my future self
 + To get eduroam working, you need ppp & pptclient
@@ -527,8 +528,8 @@ Dev templates: https://github.com/the-nix-way/dev-templates
 :PROPERTIES:
 :header-args:nix: :tangle scripts/wiki.nix
 :END:
-
 Requires arch-wiki-docs to be installed
+Stole it from Derek Taylor
 #+begin_src nix
   { pkgs }:
 
@@ -737,7 +738,7 @@ This shell is mostly around for eshell to get completions from, but it can be us
 #+end_src
 
 *** bash
-I don't know why I'd ever use this, but it's here, anyways
+It's mostly here for eshell to get completions from, but it's a usable shell
 #+NAME: Bash Shell
 #+begin_src nix
   bash = {
