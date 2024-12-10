@@ -1,7 +1,6 @@
 #+title: Holscher's Home Manager Config
 #+startup: overview
 #+auto_tangle: t
-#+options: \n:t
 
 * Notes to my future self
 + To get eduroam working, you need ppp & pptclient
@@ -462,8 +461,8 @@ I stole this from this git repo https://github.com/sylsau/ffmpeg-bulk
 :PROPERTIES:
 :header-args:nix: :tangle scripts/pkg.nix
 :END:
-
 A package manager manager
+
 Dev templates: https://github.com/the-nix-way/dev-templates
 #+begin_src nix
   { pkgs }:
@@ -529,6 +528,7 @@ Dev templates: https://github.com/the-nix-way/dev-templates
 :header-args:nix: :tangle scripts/wiki.nix
 :END:
 Requires arch-wiki-docs to be installed
+
 Stole it from Derek Taylor
 #+begin_src nix
   { pkgs }:
@@ -799,7 +799,6 @@ a prompt for bash & fish
 
 *** Eshell
 Eshell is a command shell written in elisp, & duplicates many of the GNU coreutils in elisp. It can also call aliases & elisp functions.
-According to David Wilson, it has many limitations, but they can be overcome with a bit of programming.
 
 =Key Bindings=
 + =[[= / =]]= Go backwards & forwards in the buffer's prompts.
@@ -961,6 +960,7 @@ Probably won't use this one interactively much, but it's my login shell, & my /b
 
 **** Configuration template
 This one borrows heavily from the bash module
+
 Special note: The profile settings here take precedence over bash's, because I'm too dumb to make them coexist
 
 ***** Premble
@@ -1157,6 +1157,7 @@ For making emacs transparent
 
 *** Stylix
 Stylix does a bad job of theming emacs, so we use pywal instead
+
 Pywal integration: https://github.com/danth/stylix/issues/99
 #+NAME: Stylix Config
 #+begin_src nix
@@ -1208,7 +1209,8 @@ Pywal integration: https://github.com/danth/stylix/issues/99
 
 *** Icons
 Installs all the icon fonts for dired.
-Use M-x all-the-icons-install-fonts
+
+Use =M-x all-the-icons-install-fonts=
 #+NAME: Emacs Ricing Icons
 #+begin_src nix
   nerd-icons = {
@@ -1267,6 +1269,7 @@ Use M-x all-the-icons-install-fonts
 
 *** Nano
 Using nano modeline to cut down clutter
+
 The powerline separators were borrowed from punchline, because I think they look cool
 #+NAME: Emacs Ricing Nano
 #+begin_src nix :noweb yes
@@ -1656,6 +1659,7 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
 ** Emacs
 *** Template
 This came from Robert Helgeson's nur expressions. I've tweaked it a little to add a few more options for things like general & removed the ability to natively compile init.el, because it was breaking stuff
+
 https://gitlab.com/rycee/nur-expressions
 
 **** Setup
@@ -2322,11 +2326,8 @@ https://gitlab.com/rycee/nur-expressions
 #+end_src
 
 *** Main
-:PROPERTIES:
-:header-args:nix: :tangle emacs.nix
-:END:
 **** Inputs & Imports
-#+begin_src nix
+#+begin_src nix :tangle emacs.nix :noweb yes
   { pkgs, inputs, ... }:
 
   {
@@ -2342,9 +2343,15 @@ https://gitlab.com/rycee/nur-expressions
       ./emacs/writing.nix
       ./emacs/window-manager.nix
     ];
+
+    <<Emacs Daemon>>
+
+    <<Programs.Emacs>>
+  }
 #+end_src
 
 **** Daemon
+#+NAME: Emacs Daemon
 #+begin_src nix
   services.emacs = {
     enable = true;
@@ -2361,7 +2368,8 @@ https://gitlab.com/rycee/nur-expressions
   };
 #+end_src
 
-**** Extra Packages
+**** Settings for the Template
+#+NAME: Programs.Emacs
 #+begin_src nix :noweb yes
   programs.emacs = {
     enable = true;
@@ -2381,6 +2389,30 @@ https://gitlab.com/rycee/nur-expressions
       recommendedGcSettings = true;
       usePackageVerbose = false;
       largeFileHandling = true;
+
+      usePackage = {
+        <<Emacs Prelude>>
+
+        <<Emacs UI Improvements>>
+
+        <<Emacs Cleanup>>
+
+        <<Emacs Doom Escape>>
+
+        <<Emacs Async>>
+
+        <<Emacs Wgrep>>
+
+        <<Emacs Ledger>>
+
+        <<Emacs GPTel>>
+
+        <<Emacs Notifications>>
+        
+        <<Emacs Postlude>>
+      };
+    };
+  };
 #+end_src
 
 ***** Package Definitions
@@ -2417,14 +2449,13 @@ https://gitlab.com/rycee/nur-expressions
 #+end_src
 
 **** Prelude
+#+NAME: Emacs Prelude
 #+begin_src nix :noweb yes
     prelude =''
       <<emacs-prelude>>
     '';
-    usePackage = {
 #+end_src
 
-I stole the ascii art from the emacs-dashboard repo
 #+NAME: emacs-prelude
 #+begin_src emacs-lisp
   (defalias 'gsetq #'general-setq)
@@ -2526,6 +2557,7 @@ I stole the ascii art from the emacs-dashboard repo
 Most of this was shamelessly lifted from Emacs from Scratch.
 Display buffer rules were taken from noctuid's config.
 https://emacs.stackexchange.com/questions/75528/how-to-define-display-buffer-alist-to-keep-every-buffer-in-the-frame-it-is-curr
+#+NAME: Emacs UI Improvements
 #+begin_src nix :noweb yes
   tooltip = {
     enable = true;
@@ -2577,6 +2609,8 @@ https://emacs.stackexchange.com/questions/75528/how-to-define-display-buffer-ali
 
 ***** Cleanup
 Emacs has a propensity for leaving garbage lying around. This configuration that I stole from David Wilson should make that stop.
+
+#+NAME: Emacs Cleanup
 #+begin_src nix
   no-littering = {
     enable = true;
@@ -2588,7 +2622,8 @@ Emacs has a propensity for leaving garbage lying around. This configuration that
 #+end_src
 
 **** Doom Escape
-Credits: Doom Escape is from doom.
+Credits: Doom Escape is from doom. (Wow)
+#+NAME: Emacs Doom Escape
 #+begin_src nix :noweb yes
   doom-escape = {
     enable = true;
@@ -2614,6 +2649,7 @@ Credits: Doom Escape is from doom.
 
 **** Async
 Async lets emacs create other instances of itself to run functions. It still has to be passed back to the main instance, but it does help with the single-threadedness.
+#+NAME: Emacs Async
 #+begin_src nix :noweb yes
   async = {
     enable = true;
@@ -2640,6 +2676,7 @@ Wgrep basically turns grep into sed.
 + C-c C-p: Toggle read-only
 + C-c C-k: Exit without changes
 + C-x C-q: Exit wgrep
+#+NAME: Emacs Wgrep
 #+begin_src nix
   wgrep = {
     enable = true;
@@ -2649,6 +2686,7 @@ Wgrep basically turns grep into sed.
 #+end_src
 
 **** Ledger
+#+NAME: Emacs Ledger
 #+begin_src nix
   ledger = {
     enable = true;
@@ -2657,6 +2695,7 @@ Wgrep basically turns grep into sed.
 #+end_src
 
 **** GPT.el
+#+NAME: Emacs GPTel
 #+begin_src nix :noweb yes
   gptel = {
     enable = true;
@@ -2728,7 +2767,9 @@ Wgrep basically turns grep into sed.
 
 **** Notifications
 Stolen from EDNC's github page.
-EDNC does the same thing as dunst or tiramisu. It will pop up any new notifications inside of a text buffer.
+
+EDNC does the same thing as dunst. It will pop up any new notifications inside of a text buffer.
+#+NAME: Emacs Notifications
 #+begin_src nix :noweb yes
   ednc = {
     enable = true;
@@ -2747,7 +2788,6 @@ EDNC does the same thing as dunst or tiramisu. It will pop up any new notificati
     bind."M-s-'" = "(lambda () (interactive) (let ((the-buffer (current-buffer))) (evil-window-delete) (pip-frame-add-buffer the-buffer)))";
     generalOne."efs/leader-keys"."k" = '''((lambda () (interactive) (pip-frame-delete-frame) (dolist (notification (cdr ednc--state)) (ednc-dismiss-notification notification))) :which-key "kill pip")'';
     extraConfig = ":autoload pip-frame-add-buffer";
-  };
   };
 #+end_src
 
@@ -2768,17 +2808,14 @@ EDNC does the same thing as dunst or tiramisu. It will pop up any new notificati
 #+end_src
 
 **** Postlude
+#+NAME: Emacs Postlude
 #+begin_src nix :noweb yes
-    postlude = ''
-      <<Emacs Postlude>>
-    '';
-  };
-  };
-  }
-
+  postlude = ''
+    <<Emacs Postlude Config>>
+  '';
 #+end_src
 
-#+NAME: Emacs Postlude
+#+NAME: Emacs Postlude Config
 #+begin_src emacs-lisp
   ;; Stolen from Derek Taylor's config.
   (add-to-list 'default-frame-alist '(alpha-background . 90))
