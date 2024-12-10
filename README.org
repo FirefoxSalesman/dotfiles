@@ -12,29 +12,29 @@ Thank you to everyone who's helped me get this far.
 
 ** Links to (some) of the places I've stolen from
 Not all the stuff I've stolen is still here, & most of the places I've stolen from aren't here
-https://github.com/lrustand/qutebrowser.el/issues/4
-https://github.com/lrustand/qutebrowser.el
-https://github.com/nix-community/nixGL/issues/114
-https://github.com/jaztsong/dotfiles
-https://github.com/hlissner/dotfiles/
-https://github.com/cosmicelijah/dotfiles
-https://github.com/samiulbasirfahim/flakes
-https://gitlab.com/dwt1/dotfiles
-https://github.com/LukeSmithxyz/voidrice
-https://inv.nadeko.net/channel/UCkf4VIqu3Acnfzuk3kRIFwA
-https://github.com/dakra/dmacs
-https://github.com/librephoenix/nixos-config
-https://inv.nadeko.net/channel/UC_zBdZ0_H_jn41FDRG7q4Tw
-https://github.com/k4rthik/dotfiles
-https://github.com/noctuid/dotfiles
-https://github.com/daviwil/dotfiles
-https://github.com/daviwil/emacs-from-scratch
-https://blog.sumtypeofway.com/posts/emacs-config.html
-https://protesilaos.com/emacs/dotemacs
-https://racket-lang.org/
-https://safereddit.com/r/orgmode/comments/mfss6k/is_it_possible_to_add_a_citation_style_org_orgmode/?rdt=36302
-https://gitlab.com/rycee/nur-expressions
-https://gitlab.com/rycee/configurations
++ https://github.com/lrustand/qutebrowser.el/issues/4
++ https://github.com/lrustand/qutebrowser.el
++ https://github.com/nix-community/nixGL/issues/114
++ https://github.com/jaztsong/dotfiles
++ https://github.com/hlissner/dotfiles/
++ https://github.com/cosmicelijah/dotfiles
++ https://github.com/samiulbasirfahim/flakes
++ https://gitlab.com/dwt1/dotfiles
++ https://github.com/LukeSmithxyz/voidrice
++ https://inv.nadeko.net/channel/UCkf4VIqu3Acnfzuk3kRIFwA
++ https://github.com/dakra/dmacs
++ https://github.com/librephoenix/nixos-config
++ https://inv.nadeko.net/channel/UC_zBdZ0_H_jn41FDRG7q4Tw
++ https://github.com/k4rthik/dotfiles
++ https://github.com/noctuid/dotfiles
++ https://github.com/daviwil/dotfiles
++ https://github.com/daviwil/emacs-from-scratch
++ https://blog.sumtypeofway.com/posts/emacs-config.html
++ https://protesilaos.com/emacs/dotemacs
++ https://racket-lang.org/
++ https://safereddit.com/r/orgmode/comments/mfss6k/is_it_possible_to_add_a_citation_style_org_orgmode/?rdt=36302
++ https://gitlab.com/rycee/nur-expressions
++ https://gitlab.com/rycee/configurations
 
 * TODO Future Improvements
 ** Home Manager
