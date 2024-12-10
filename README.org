@@ -1,0 +1,53 @@
+* Introduction
+This started out as an emacs config based on emacs from scratch in 2022. Since then it's gone through a lot of transformation (mostly me jamming code I found on the internet into it), because like most emacs users, I have an unhealthy obsession with tinkering
+The home manager part started as its own thing about a year ago. I don't have a lot to say about it, because I don't feel like I've done anything too big with it
+
+* Credits
+I stole a lot of stuff. Initially, most of my emacs config was from David Wilson & the readme's from the packages I use, but since then, I've been stealing from Prot, Karthinks, Doom Emacs, & Noctuid for a long time
+I should've given credit for the specific things I stole when I stole them, but I didn't & now I've forgotten where most of it came from. Just assume none of the configuration here originates from me.
+Thank you to everyone who's helped me get this far.
+
+** Links to (some) of the places I've stolen from
+Not all the stuff I've stolen is still here, & most of the places I've stolen from aren't here
+https://github.com/lrustand/qutebrowser.el/issues/4
+https://github.com/lrustand/qutebrowser.el
+https://github.com/nix-community/nixGL/issues/114
+https://github.com/jaztsong/dotfiles
+https://github.com/hlissner/dotfiles/
+https://github.com/cosmicelijah/dotfiles
+https://github.com/samiulbasirfahim/flakes
+https://gitlab.com/dwt1/dotfiles
+https://github.com/LukeSmithxyz/voidrice
+https://inv.nadeko.net/channel/UCkf4VIqu3Acnfzuk3kRIFwA
+https://github.com/dakra/dmacs
+https://github.com/librephoenix/nixos-config
+https://inv.nadeko.net/channel/UC_zBdZ0_H_jn41FDRG7q4Tw
+https://github.com/k4rthik/dotfiles
+https://github.com/noctuid/dotfiles
+https://github.com/daviwil/dotfiles
+https://github.com/daviwil/emacs-from-scratch
+https://blog.sumtypeofway.com/posts/emacs-config.html
+https://protesilaos.com/emacs/dotemacs
+https://racket-lang.org/
+https://safereddit.com/r/orgmode/comments/mfss6k/is_it_possible_to_add_a_citation_style_org_orgmode/?rdt=36302
+https://gitlab.com/rycee/nur-expressions
+https://gitlab.com/rycee/configurations
+
+* TODO Future Improvements
+** Home Manager
++ [ ] Figure out how to auto install photogimp
++ [ ] Figure out how to add betterdiscordctl to the package manager manager
++ [ ] Add qutebrowser's userscripts to this file
++ [ ] Add csl to the flake so we don't have to transfer it with a thumbdrive anymore
+
+** Emacs
++ [ ] https://github.com/diadochos/org-babel-eval-in-repl
+  Mildly Interesting, might give it a try
++ [ ] Replace all instances of hook with ghook & all instances of bind with general
++ [ ] Make the minibuffer dissapear
++ [ ] Figure out how to ess good
+  Specifically, we'd like to create a menu to import data files
++ [ ] https://github.com/aurtzy/disproject
++ [ ] https://github.com/mattiasdrp/pokemacs-layout
+  This could be useful for layout types
+
