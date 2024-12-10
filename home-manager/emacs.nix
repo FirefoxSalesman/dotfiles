@@ -47,101 +47,102 @@
       usePackageVerbose = false;
       largeFileHandling = true;
   
+      prelude =''
+        (defalias 'gsetq #'general-setq)
+        
+        (use-package on
+          :demand t)
+        
+        (general-create-definer efs/leader-keys
+          :keymaps 'override
+          :states '(emacs insert normal hybrid motion visual operator)
+          :prefix "SPC"
+          :global-prefix "C-SPC")
+        
+        (efs/leader-keys
+          "f" '(find-file :which-key "find or create file")
+          ;; Help
+          "h" '(:ignore t :which-key "help")
+          "h." '(display-local-help :which-key "display local help")
+          "h4" '(info-other-window :which-key "info other window")
+          "hA" '((lambda () (interactive) (async-shell-command "${(import ./scripts/wiki.nix { inherit pkgs; })}/bin/wiki")) :which-key "arch wiki")
+          "hC" '(describe-coding-system :which-key "describe coding system")
+          "hD" '(view-emacs-debugging :which-key "emacs debugging")
+          "hE" '(view-external-packages :which-key "external packages")
+          "hF" '(Info-goto-emacs-command-node :which-key "info: command node")
+          "hb" '(embark-bindings :which-key "display all keybinds")
+          "hI" '(describe-input-method :which-key "describe input method")
+          "hK" '(Info-goto-emacs-key-command :which-key "info: key command")
+          "hL" '(describe-language-environment :which-key "describe language environment")
+          "hM" '(woman :which-key "man")
+          "hP" '(describe-package :which-key "describe package")
+          "hR" '(info-display-manual :which-key "info: manual")
+          "hS" '(info-lookup-symbol :which-key "info: symbol")
+          "hT" '(view-emacs-todo :which-key "things you can do to help emacs")
+          "ha" '(about-emacs :which-key "about emacs")
+          "hc" '(describe-key-briefly :which-key "short describe key")
+          "hd" '(apropos-documentation :which-key "apropos documentation")
+          "he" '(view-echo-area-messages :which-key "view echoed messages")
+          "hf" '(describe-function :which-key "describe function")
+          "hh" '(help-for-help :which-key "help for help")
+          "hi" '(info :which-key "info pages")
+          "hk" '(describe-key :which-key "describe key")
+          "hl" '(view-lossage :which-key "lossage")
+          "hm" '(describe-mode :which-key "describe mode")
+          "hn" '(view-emacs-news :which-key "emacs news")
+          "ho" '(describe-symbol :which-key "describe symbol")
+          "hp" '(finder-by-keyword :which-key "finder by keyword")
+          "hq" '(help-quit :which-key "help quit")
+          "hr" '(info-emacs-manual :which-key "info: emacs")
+          "hs" '(describe-syntax :which-key "describe syntax")
+          "ht" '(help-with-tutorial :which-key "emacs tutor")
+          "hv" '(describe-variable :which-key "describe variable")
+          "hw" '(where-is :which-key "find binds of command")
+          "hx" '(describe-command :which-key "describe command")
+          "h C-f" '(view-emacs-FAQ :which-key "emacs FAQ")
+          "h C-p" '(view-emacs-problems :which-key "view emacs problems")
+          "h C-s" '(search-forward-help-for-help :which-key "search in help for help")
+          ;;Mouse
+          "l" '(compile :which-key "compile")
+          ;; Mount/unmount drive
+          "u" '((lambda () (interactive) (start-process-shell-command "udisksmenu" nil "${(import ./scripts/udisksmenu.nix { inherit pkgs; })}/bin/udisksmenu")) :which-key "mount/unmount drive"))
+        
+        (general-unbind "C-h")
+        
+        (general-create-definer local-leader
+          :prefix "M-SPC"
+          :states '(emacs insert normal hybrid motion visual operator))
+        
+        (use-package hydra
+          :defer t)
+        
+        (use-package pretty-hydra
+          :config
+          (gsetq hydra-hint-display-type 'posframe
+               hydra-posframe-show-params '(:internal-border-width 1
+           							   :internal-border-color "003f28"
+           							   :parent-frame nil
+           							   :poshandler posframe-poshandler-frame-bottom-center
+           							   :refposhandler posframe-refposhandler-xwininfo))
+          :gfhook ('doom-escape-hook 'hydra-keyboard-quit))
+        
+        (use-package repeaters
+          :demand t
+          :config
+          (repeaters-define-maps
+           '(("next-error" ;; borrowed from the hydra wiki
+              next-error "`"
+              next-error "n"
+              previous-error "e"))))
+        
+        (use-package repeat
+          :config
+          (repeat-mode))
+        
+        (general-def "H-z" 'repeat)
+      '';
+  
       usePackage = {
-        prelude =''
-          (defalias 'gsetq #'general-setq)
-          
-          (use-package on
-            :demand t)
-          
-          (general-create-definer efs/leader-keys
-            :keymaps 'override
-            :states '(emacs insert normal hybrid motion visual operator)
-            :prefix "SPC"
-            :global-prefix "C-SPC")
-          
-          (efs/leader-keys
-            "f" '(find-file :which-key "find or create file")
-            ;; Help
-            "h" '(:ignore t :which-key "help")
-            "h." '(display-local-help :which-key "display local help")
-            "h4" '(info-other-window :which-key "info other window")
-            "hA" '((lambda () (interactive) (async-shell-command "${(import ./scripts/wiki.nix { inherit pkgs; })}/bin/wiki")) :which-key "arch wiki")
-            "hC" '(describe-coding-system :which-key "describe coding system")
-            "hD" '(view-emacs-debugging :which-key "emacs debugging")
-            "hE" '(view-external-packages :which-key "external packages")
-            "hF" '(Info-goto-emacs-command-node :which-key "info: command node")
-            "hb" '(embark-bindings :which-key "display all keybinds")
-            "hI" '(describe-input-method :which-key "describe input method")
-            "hK" '(Info-goto-emacs-key-command :which-key "info: key command")
-            "hL" '(describe-language-environment :which-key "describe language environment")
-            "hM" '(woman :which-key "man")
-            "hP" '(describe-package :which-key "describe package")
-            "hR" '(info-display-manual :which-key "info: manual")
-            "hS" '(info-lookup-symbol :which-key "info: symbol")
-            "hT" '(view-emacs-todo :which-key "things you can do to help emacs")
-            "ha" '(about-emacs :which-key "about emacs")
-            "hc" '(describe-key-briefly :which-key "short describe key")
-            "hd" '(apropos-documentation :which-key "apropos documentation")
-            "he" '(view-echo-area-messages :which-key "view echoed messages")
-            "hf" '(describe-function :which-key "describe function")
-            "hh" '(help-for-help :which-key "help for help")
-            "hi" '(info :which-key "info pages")
-            "hk" '(describe-key :which-key "describe key")
-            "hl" '(view-lossage :which-key "lossage")
-            "hm" '(describe-mode :which-key "describe mode")
-            "hn" '(view-emacs-news :which-key "emacs news")
-            "ho" '(describe-symbol :which-key "describe symbol")
-            "hp" '(finder-by-keyword :which-key "finder by keyword")
-            "hq" '(help-quit :which-key "help quit")
-            "hr" '(info-emacs-manual :which-key "info: emacs")
-            "hs" '(describe-syntax :which-key "describe syntax")
-            "ht" '(help-with-tutorial :which-key "emacs tutor")
-            "hv" '(describe-variable :which-key "describe variable")
-            "hw" '(where-is :which-key "find binds of command")
-            "hx" '(describe-command :which-key "describe command")
-            "h C-f" '(view-emacs-FAQ :which-key "emacs FAQ")
-            "h C-p" '(view-emacs-problems :which-key "view emacs problems")
-            "h C-s" '(search-forward-help-for-help :which-key "search in help for help")
-            ;;Mouse
-            "l" '(compile :which-key "compile")
-            ;; Mount/unmount drive
-            "u" '((lambda () (interactive) (start-process-shell-command "udisksmenu" nil "${(import ./scripts/udisksmenu.nix { inherit pkgs; })}/bin/udisksmenu")) :which-key "mount/unmount drive"))
-          
-          (general-unbind "C-h")
-          
-          (general-create-definer local-leader
-            :prefix "M-SPC"
-            :states '(emacs insert normal hybrid motion visual operator))
-          
-          (use-package hydra
-            :defer t)
-          
-          (use-package pretty-hydra
-            :config
-            (gsetq hydra-hint-display-type 'posframe
-                 hydra-posframe-show-params '(:internal-border-width 1
-             							   :internal-border-color "003f28"
-             							   :parent-frame nil
-             							   :poshandler posframe-poshandler-frame-bottom-center
-             							   :refposhandler posframe-refposhandler-xwininfo))
-            :gfhook ('doom-escape-hook 'hydra-keyboard-quit))
-          
-          (use-package repeaters
-            :demand t
-            :config
-            (repeaters-define-maps
-             '(("next-error" ;; borrowed from the hydra wiki
-                next-error "`"
-                next-error "n"
-                previous-error "e"))))
-          
-          (use-package repeat
-            :config
-            (repeat-mode))
-          
-          (general-def "H-z" 'repeat)
-        '';
   
         tooltip = {
           enable = true;
@@ -302,14 +303,15 @@
           extraConfig = ":autoload pip-frame-add-buffer";
         };
   
-        postlude = ''
-          ;; Stolen from Derek Taylor's config.
-          (add-to-list 'default-frame-alist '(alpha-background . 90))
-          ;; Display buffer rules
-          (cl-pushnew (list (rx "*Async Shell Command*" (0+ any)) #'display-buffer-no-window) display-buffer-alist)
-          (cl-pushnew (list (rx "*Shell Command Output*" (0+ any)) #'display-buffer-no-window) display-buffer-alist)
-        '';
       };
+  
+      postlude = ''
+        ;; Stolen from Derek Taylor's config.
+        (add-to-list 'default-frame-alist '(alpha-background . 90))
+        ;; Display buffer rules
+        (cl-pushnew (list (rx "*Async Shell Command*" (0+ any)) #'display-buffer-no-window) display-buffer-alist)
+        (cl-pushnew (list (rx "*Shell Command Output*" (0+ any)) #'display-buffer-no-window) display-buffer-alist)
+      '';
     };
   };
 }

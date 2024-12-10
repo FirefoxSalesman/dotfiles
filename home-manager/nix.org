@@ -2390,8 +2390,9 @@ https://gitlab.com/rycee/nur-expressions
       usePackageVerbose = false;
       largeFileHandling = true;
 
+      <<Emacs Prelude>>
+
       usePackage = {
-        <<Emacs Prelude>>
 
         <<Emacs UI Improvements>>
 
@@ -2409,8 +2410,9 @@ https://gitlab.com/rycee/nur-expressions
 
         <<Emacs Notifications>>
         
-        <<Emacs Postlude>>
       };
+
+      <<Emacs Postlude>>
     };
   };
 #+end_src
