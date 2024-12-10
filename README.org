@@ -1,10 +1,13 @@
 * Introduction
 This started out as an emacs config based on emacs from scratch in 2022. Since then it's gone through a lot of transformation (mostly me jamming code I found on the internet into it), because like most emacs users, I have an unhealthy obsession with tinkering
+
 The home manager part started as its own thing about a year ago. I don't have a lot to say about it, because I don't feel like I've done anything too big with it
 
 * Credits
 I stole a lot of stuff. Initially, most of my emacs config was from David Wilson & the readme's from the packages I use, but since then, I've been stealing from Prot, Karthinks, Doom Emacs, & Noctuid for a long time
+
 I should've given credit for the specific things I stole when I stole them, but I didn't & now I've forgotten where most of it came from. Just assume none of the configuration here originates from me.
+
 Thank you to everyone who's helped me get this far.
 
 ** Links to (some) of the places I've stolen from
