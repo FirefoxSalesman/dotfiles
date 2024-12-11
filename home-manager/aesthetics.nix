@@ -6,7 +6,10 @@
   stylix = {
     enable = true;
     polarity = "dark";
-    targets.emacs.enable = false;
+    targets = {
+      emacs.enable = false;
+      vesktop.enable = false; # I don't use vesktop, yet stylix outputs a theme for it
+    };
     image = ./wallpaper.png;
     cursor = {
       package = pkgs.nordzy-cursor-theme;
