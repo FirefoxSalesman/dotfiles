@@ -3807,7 +3807,7 @@ Prescient is a big-braned history package that orders completion options by rece
     enable = true;
     defer = true;
     hook = ["(corfu-mode . corfu-prescient-mode)"];
-    custom.corfu-prescient-completion-styles = "'(orderless prescient basic)";
+    custom.corfu-prescient-completion-styles = "'(basic prescient)";
   };
 #+end_src
 

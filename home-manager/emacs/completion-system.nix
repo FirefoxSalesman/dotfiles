@@ -178,7 +178,7 @@
       enable = true;
       defer = true;
       hook = ["(corfu-mode . corfu-prescient-mode)"];
-      custom.corfu-prescient-completion-styles = "'(orderless prescient basic)";
+      custom.corfu-prescient-completion-styles = "'(basic prescient)";
     };
 
     orderless = {
