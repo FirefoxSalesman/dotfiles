@@ -127,7 +127,10 @@
     org-modern = {
       enable = true;
       hook = ["(org-mode . global-org-modern-mode)"];
-      custom.org-modern-star = '''("✇" "○" "●" "○" "●" "○" "●")'';
+      custom = {
+        org-modern-star = "'replace";
+        org-modern-hide-stars = "t";
+      };
     };
     
     org-modern-indent = {

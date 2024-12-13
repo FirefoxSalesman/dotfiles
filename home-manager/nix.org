@@ -3718,6 +3718,7 @@ I took a lot of this from Gavin Freeborn's config
       corfu-autodelay = "0";
       corfu-auto-prefix = "2";
       corfu-auto = "t";
+      corfu-on-exact-match = "'show";
     };
     bind."M-/" = "completion-at-point";
     generalOne.corfu-map = {
@@ -4220,7 +4221,8 @@ Ace-window & avy actions from karthink
 #+begin_src nix :noweb yes
   tempel = {
     enable = true;
-    hook = ["((conf-mode prog-mode text-mode) . tempel-setup-capf)"];
+    command = ["tempel-complete"];
+    # hook = ["((conf-mode prog-mode text-mode) . tempel-setup-capf)"];
     custom.tempel-path = ''"~/.config/emacs/templates.eld"'';
     init = ''
       <<Emacs Templ Init>>
@@ -4760,6 +4762,8 @@ https://github.com/jdtsmith/indent-bars
     mode = [''"\\.plantuml\\'"''];
     custom = {
       org-plantuml-exec-mode = "'plantuml";
+      plantuml-default-exec-mode = "'executable";
+      plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
       org-plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
     }; 
     config = ''
@@ -5284,7 +5288,10 @@ How to add a latex package
   org-modern = {
     enable = true;
     hook = ["(org-mode . global-org-modern-mode)"];
-    custom.org-modern-star = '''("✇" "○" "●" "○" "●" "○" "●")'';
+    custom = {
+      org-modern-star = "'replace";
+      org-modern-hide-stars = "t";
+    };
   };
 
   org-modern-indent = {

@@ -104,6 +104,7 @@
         corfu-autodelay = "0";
         corfu-auto-prefix = "2";
         corfu-auto = "t";
+        corfu-on-exact-match = "'show";
       };
       bind."M-/" = "completion-at-point";
       generalOne.corfu-map = {
@@ -495,7 +496,8 @@
 
     tempel = {
       enable = true;
-      hook = ["((conf-mode prog-mode text-mode) . tempel-setup-capf)"];
+      command = ["tempel-complete"];
+      # hook = ["((conf-mode prog-mode text-mode) . tempel-setup-capf)"];
       custom.tempel-path = ''"~/.config/emacs/templates.eld"'';
       init = ''
         (defun tempel-setup-capf ()
