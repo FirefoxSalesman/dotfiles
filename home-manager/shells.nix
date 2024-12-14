@@ -142,19 +142,20 @@
          '(("gc" "torsocks git clone")
            ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
            ("l" "ls $*")
-           ("halt" "doas shutdown -P now")))
+           ("halt" "doas shutdown -P now")
+           ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'")))
         (with-eval-after-load 'evil-collection-eshell
           (general-add-advice 'evil-collection-eshell-setup-keys
-          	      :after
-          	      '(lambda ()
-          		 (general-def 'normal eshell-mode-map
-          		   "v" 'evil-collection-eshell-evil-delete
-          		   "V" 'evil-collection-eshell-evil-change
-          		   "C-v" 'evil-collection-eshell-evil-delete-line
-          		   "d" 'evil-yank
-          		   "D" 'evil-yank-line
-          		   "c" 'evil-visual-state
-          		   "C" 'evil-visual-line))))
+           	     :after
+           	     '(lambda ()
+           		(general-def 'normal eshell-mode-map
+           		  "v" 'evil-collection-eshell-evil-delete
+           		  "V" 'evil-collection-eshell-evil-change
+           		  "C-v" 'evil-collection-eshell-evil-delete-line
+           		  "d" 'evil-yank
+           		  "D" 'evil-yank-line
+           		  "c" 'evil-visual-state
+           		  "C" 'evil-visual-line))))
       '';
         } ;
       

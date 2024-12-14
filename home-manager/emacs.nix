@@ -14,20 +14,6 @@
     ./emacs/window-manager.nix
   ];
 
-  services.emacs = {
-    enable = true;
-    defaultEditor = true;
-    socketActivation.enable = true;
-    startWithUserSession = true;
-    extraOptions = [
-      # "--init-directory=~/.config/emacs/"
-      # "-mm"
-      "--debug-init"
-      "-f"
-      "exwm-enable"
-    ];
-  };
-
   programs.emacs = {
     enable = true;
     package = pkgs.emacs29-gtk3;
@@ -46,9 +32,11 @@
       recommendedGcSettings = true;
       usePackageVerbose = false;
       largeFileHandling = true;
-  
+
       prelude =''
         (defalias 'gsetq #'general-setq)
+        
+        (server-start)
         
         (use-package on
           :demand t)
@@ -141,9 +129,9 @@
         
         (general-def "H-z" 'repeat)
       '';
-  
+
       usePackage = {
-  
+
         tooltip = {
           enable = true;
           config = ''
@@ -185,7 +173,7 @@
                                            (?\( . ?\))
                                            (?\{ . ?\}))'';
         };
-  
+
         no-littering = {
           enable = true;
           demand = true;
@@ -193,7 +181,7 @@
           #auto save files in the same path as it uses for sessions
           custom.auto-save-file-name-transforms = ''`((".*" ,(no-littering-expand-var-file-name "auto-save/") t))'';
         };
-  
+
         doom-escape = {
           enable = true;
           package = epkgs: (epkgs.callPackage ./emacs/emacs-packages/doom-utils.nix {
@@ -209,7 +197,7 @@
               (eldoc-add-command 'doom/escape))
           '';
         };
-  
+
         async = {
           enable = true;
           config = ''
@@ -217,18 +205,18 @@
             (dired-async-mode)
           '';
         };
-  
+
         wgrep = {
           enable = true;
           custom.wgrep-auto-save-buffer = "t";
           generalTwo."'normal".grep-mode-map."w" = "'wgrep-change-to-wgrep-mode";
         };
-  
+
         ledger = {
           enable = true;
           mode = [''"\\.ledger\\'"''];
         };
-  
+
         gptel = {
           enable = true;
           defer = true;
@@ -272,7 +260,7 @@
             "efs/leader-keys"."Gq" = '''(gptel-quick :which-key "summarize")'';
           };
         };
-  
+
         ednc = {
           enable = true;
           gfhook = [
@@ -302,9 +290,9 @@
           generalOne."efs/leader-keys"."k" = '''((lambda () (interactive) (pip-frame-delete-frame) (dolist (notification (cdr ednc--state)) (ednc-dismiss-notification notification))) :which-key "kill pip")'';
           extraConfig = ":autoload pip-frame-add-buffer";
         };
-  
+
       };
-  
+
       postlude = ''
         ;; Stolen from Derek Taylor's config.
         (add-to-list 'default-frame-alist '(alpha-background . 90))

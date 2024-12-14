@@ -12,13 +12,12 @@
     fi
     
     picom &
-    pywal-discord -t default
     
     if command -v dbus-update-activation-environment >/dev/null 2>&1; then
         dbus-update-activation-environment DISPLAY XAUTHORITY
     fi
     
-    # exec dbus-launch --exit-with-session emacs --init-directory=~/.config/emacs/ -mm --debug-init
-    exec dbus-launch --exit-with-session emacsclient -c
+    # exec dbus-launch --exit-with-session emacsclient -c
+    exec dbus-launch --exit-with-session emacs -mm --debug-init
   '' ;
 }

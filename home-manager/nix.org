@@ -141,6 +141,11 @@
     url = "github:lrustand/qutebrowser.el";
     flake = false;
   };
+
+  pywal-discord = {
+    url = "github:ZephyrCodesStuff/pywal-vencord";
+    flake = false;
+  };
 #+end_src
 
 ** Outputs
@@ -167,7 +172,7 @@
     inherit self;
     inherit inputs;
     inherit system;
-    inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline org-auto-export-pandoc symex2 treesitter-context gptel-quick eglot-x org-modern-indent mpc-wrapper exwm-qutebrowser exwm-outer-gaps; 
+    inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline org-auto-export-pandoc symex2 treesitter-context gptel-quick eglot-x org-modern-indent mpc-wrapper exwm-qutebrowser exwm-outer-gaps pywal-discord; 
     inherit pkgs-stable;
   };
   modules = [
@@ -654,7 +659,7 @@ Stole it from Derek Taylor
     GTK2_RC_FILES="/home/holschcc/.gtkrc-2.0";
     SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)";
     _JAVA_AWT_WM_NONREPARENTING = "1";
-    PATH="/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/holschcc/bin:/home/holschcc/.nix-profile/bin";
+    PATH="/run/system-manager/sw/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/holschcc/bin:/home/holschcc/.nix-profile/bin";
   };
 #+end_src
 
@@ -885,25 +890,26 @@ Eat lets us get away with using eshell all the time. It can be used to get into 
 
 #+NAME: Emacs Eshell Config
 #+begin_src emacs-lisp
-  (with-eval-after-load 'esh-opt
-    (gsetq eshell-destroy-buffer-when-process-dies t))
-  (gsetq eshell-command-aliases-list
-   '(("gc" "torsocks git clone")
-     ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
-     ("l" "ls $*")
-     ("halt" "doas shutdown -P now")))
-  (with-eval-after-load 'evil-collection-eshell
-    (general-add-advice 'evil-collection-eshell-setup-keys
-  		:after
-  		'(lambda ()
-  		   (general-def 'normal eshell-mode-map
-  		     "v" 'evil-collection-eshell-evil-delete
-  		     "V" 'evil-collection-eshell-evil-change
-  		     "C-v" 'evil-collection-eshell-evil-delete-line
-  		     "d" 'evil-yank
-  		     "D" 'evil-yank-line
-  		     "c" 'evil-visual-state
-  		     "C" 'evil-visual-line))))
+   (with-eval-after-load 'esh-opt
+     (gsetq eshell-destroy-buffer-when-process-dies t))
+   (gsetq eshell-command-aliases-list
+    '(("gc" "torsocks git clone")
+      ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
+      ("l" "ls $*")
+      ("halt" "doas shutdown -P now")
+      ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'")))
+   (with-eval-after-load 'evil-collection-eshell
+     (general-add-advice 'evil-collection-eshell-setup-keys
+   		:after
+   		'(lambda ()
+   		   (general-def 'normal eshell-mode-map
+   		     "v" 'evil-collection-eshell-evil-delete
+   		     "V" 'evil-collection-eshell-evil-change
+   		     "C-v" 'evil-collection-eshell-evil-delete-line
+   		     "d" 'evil-yank
+   		     "D" 'evil-yank-line
+   		     "c" 'evil-visual-state
+   		     "C" 'evil-visual-line))))
 #+end_src
 
 #+NAME: Emacs Eat Config
@@ -1608,11 +1614,14 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
       (config.lib.nixGL.wrap gimp)
       (config.lib.nixGL.wrap prismlauncher)
       (config.lib.nixGL.wrap ollama)
+      zbar
       # comms
       (config.lib.nixGL.wrap teams-for-linux)
       (config.lib.nixGL.wrap thunderbird)
-      discord
-      betterdiscordctl
+      (discord.override {
+        withOpenASAR = true;
+        withVencord = true;
+      })
       # things emacs appreciates
       xclip
       xsel
@@ -1621,7 +1630,6 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
       (import ./scripts/ezf.nix { inherit pkgs; })
       (import ./scripts/start-ollama.nix { inherit pkgs; })
       (import ./scripts/pkg.nix { inherit pkgs; })
-      
     ];
   }
 #+end_src
@@ -1639,14 +1647,13 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
   fi
 
   picom &
-  pywal-discord -t default
 
   if command -v dbus-update-activation-environment >/dev/null 2>&1; then
       dbus-update-activation-environment DISPLAY XAUTHORITY
   fi
 
-  # exec dbus-launch --exit-with-session emacs --init-directory=~/.config/emacs/ -mm --debug-init
-  exec dbus-launch --exit-with-session emacsclient -c
+  # exec dbus-launch --exit-with-session emacsclient -c
+  exec dbus-launch --exit-with-session emacs -mm --debug-init
 #+end_src
 
 #+begin_src nix :noweb yes :tangle gui.nix
@@ -2347,77 +2354,51 @@ https://gitlab.com/rycee/nur-expressions
       ./emacs/window-manager.nix
     ];
 
-    <<Emacs Daemon>>
-
-    <<Programs.Emacs>>
-  }
-#+end_src
-
-**** Daemon
-#+NAME: Emacs Daemon
-#+begin_src nix
-  services.emacs = {
-    enable = true;
-    defaultEditor = true;
-    socketActivation.enable = true;
-    startWithUserSession = true;
-    extraOptions = [
-      # "--init-directory=~/.config/emacs/"
-      # "-mm"
-      "--debug-init"
-      "-f"
-      "exwm-enable"
-    ];
-  };
-#+end_src
-
-**** Settings for the Template
-#+NAME: Programs.Emacs
-#+begin_src nix :noweb yes
-  programs.emacs = {
-    enable = true;
-    package = pkgs.emacs29-gtk3;
-    extraPackages = epkgs: with epkgs; [ 
-      on
-      (callPackage ./emacs/emacs-packages/repeaters.nix {
-        inherit inputs;
-        inherit (epkgs) trivialBuild;
-      })
-      epkgs.hydra
-      epkgs.pretty-hydra
-    ] ;
-    init = {
+    programs.emacs = {
       enable = true;
-      packageQuickstart = false;
-      recommendedGcSettings = true;
-      usePackageVerbose = false;
-      largeFileHandling = true;
+      package = pkgs.emacs29-gtk3;
+      extraPackages = epkgs: with epkgs; [ 
+        on
+        (callPackage ./emacs/emacs-packages/repeaters.nix {
+          inherit inputs;
+          inherit (epkgs) trivialBuild;
+        })
+        epkgs.hydra
+        epkgs.pretty-hydra
+      ] ;
+      init = {
+        enable = true;
+        packageQuickstart = false;
+        recommendedGcSettings = true;
+        usePackageVerbose = false;
+        largeFileHandling = true;
 
-      <<Emacs Prelude>>
+        <<Emacs Prelude>>
 
-      usePackage = {
+        usePackage = {
 
-        <<Emacs UI Improvements>>
+          <<Emacs UI Improvements>>
 
-        <<Emacs Cleanup>>
+          <<Emacs Cleanup>>
 
-        <<Emacs Doom Escape>>
+          <<Emacs Doom Escape>>
 
-        <<Emacs Async>>
+          <<Emacs Async>>
 
-        <<Emacs Wgrep>>
+          <<Emacs Wgrep>>
 
-        <<Emacs Ledger>>
+          <<Emacs Ledger>>
 
-        <<Emacs GPTel>>
+          <<Emacs GPTel>>
 
-        <<Emacs Notifications>>
-        
+          <<Emacs Notifications>>
+          
+        };
+
+        <<Emacs Postlude>>
       };
-
-      <<Emacs Postlude>>
     };
-  };
+  }
 #+end_src
 
 ***** Package Definitions
@@ -2464,6 +2445,8 @@ https://gitlab.com/rycee/nur-expressions
 #+NAME: emacs-prelude
 #+begin_src emacs-lisp
   (defalias 'gsetq #'general-setq)
+
+  (server-start)
 
   (use-package on
     :demand t)
@@ -6097,19 +6080,13 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
 
 #+NAME: Emacs Exwm Init
 #+begin_src emacs-lisp
-  (defun efs/run-in-background (command)
-    (let ((command-parts (split-string command "[ ]+")))
-      (apply #'call-process `(,(car command-parts) nil 0 nil ,@(cdr command-parts)))))
-
   (defun efs/exwm-init-hook ()
     ;; Make workspace 0 be the one where we land at startup
     (exwm-workspace-switch-create 0)
     
     ;; Show status in the mode line
     (display-battery-mode 1)
-    
-    ;; Launch apps that will run in the background
-    (efs/run-in-background "xbanish"))
+    (start-process-shell-command "xbanish" nil "${pkgs.xbanish}/bin/xbanish"))
   (defun efs/exwm-update-class ()
     (exwm-workspace-rename-buffer exwm-class-name))
 
@@ -6146,7 +6123,8 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
   ;; Set the screen resolution (update this to be the correct resolution for your screen!)
   (winner-mode)
   (require 'exwm-randr)
-  (exwm-randr-enable)
+  ;; (exwm-randr-enable)
+  (exwm-randr-mode)
 
   (repeaters-define-maps
    '(("delete-windows"

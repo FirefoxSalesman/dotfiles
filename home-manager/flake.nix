@@ -110,6 +110,11 @@
       url = "github:lrustand/qutebrowser.el";
       flake = false;
     };
+    
+    pywal-discord = {
+      url = "github:ZephyrCodesStuff/pywal-vencord";
+      flake = false;
+    };
   };
 
   outputs = { self, home-manager, nixgl, nixpkgs, nixpkgs-stable, stylix, ... }@inputs:
@@ -134,7 +139,7 @@
             inherit self;
             inherit inputs;
             inherit system;
-            inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline org-auto-export-pandoc symex2 treesitter-context gptel-quick eglot-x org-modern-indent mpc-wrapper exwm-qutebrowser exwm-outer-gaps; 
+            inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline org-auto-export-pandoc symex2 treesitter-context gptel-quick eglot-x org-modern-indent mpc-wrapper exwm-qutebrowser exwm-outer-gaps pywal-discord; 
             inherit pkgs-stable;
           };
           modules = [

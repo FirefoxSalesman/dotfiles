@@ -5,11 +5,14 @@
     (config.lib.nixGL.wrap gimp)
     (config.lib.nixGL.wrap prismlauncher)
     (config.lib.nixGL.wrap ollama)
+    zbar
     # comms
     (config.lib.nixGL.wrap teams-for-linux)
     (config.lib.nixGL.wrap thunderbird)
-    discord
-    betterdiscordctl
+    (discord.override {
+      withOpenASAR = true;
+      withVencord = true;
+    })
     # things emacs appreciates
     xclip
     xsel
@@ -18,6 +21,5 @@
     (import ./scripts/ezf.nix { inherit pkgs; })
     (import ./scripts/start-ollama.nix { inherit pkgs; })
     (import ./scripts/pkg.nix { inherit pkgs; })
-
   ];
 }

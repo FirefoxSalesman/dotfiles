@@ -609,6 +609,22 @@
         "type": "github"
       }
     },
+    "pywal-discord": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1732707894,
+        "narHash": "sha256-y3ZQaZ1RXsoBWPp9D56w/aO50kltxj2L/IW3OlHAbfA=",
+        "owner": "ZephyrCodesStuff",
+        "repo": "pywal-vencord",
+        "rev": "f8334f693ef9035c4e5c7c4bb17f6176ac852ce2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ZephyrCodesStuff",
+        "repo": "pywal-vencord",
+        "type": "github"
+      }
+    },
     "repeaters": {
       "flake": false,
       "locked": {
@@ -648,6 +664,7 @@
         "nixpkgs-stable": "nixpkgs-stable_2",
         "org-auto-export-pandoc": "org-auto-export-pandoc",
         "org-modern-indent": "org-modern-indent",
+        "pywal-discord": "pywal-discord",
         "repeaters": "repeaters",
         "stylix": "stylix",
         "symex2": "symex2",

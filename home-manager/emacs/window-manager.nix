@@ -344,19 +344,13 @@
       };
       afterCall = ["on-init-ui-hook"];
       init = ''
-        (defun efs/run-in-background (command)
-          (let ((command-parts (split-string command "[ ]+")))
-            (apply #'call-process `(,(car command-parts) nil 0 nil ,@(cdr command-parts)))))
-        
         (defun efs/exwm-init-hook ()
           ;; Make workspace 0 be the one where we land at startup
           (exwm-workspace-switch-create 0)
         
           ;; Show status in the mode line
           (display-battery-mode 1)
-        
-          ;; Launch apps that will run in the background
-          (efs/run-in-background "xbanish"))
+          (start-process-shell-command "xbanish" nil "${pkgs.xbanish}/bin/xbanish"))
         (defun efs/exwm-update-class ()
           (exwm-workspace-rename-buffer exwm-class-name))
         
@@ -391,7 +385,8 @@
         ;; Set the screen resolution (update this to be the correct resolution for your screen!)
         (winner-mode)
         (require 'exwm-randr)
-        (exwm-randr-enable)
+        ;; (exwm-randr-enable)
+        (exwm-randr-mode)
         
         (repeaters-define-maps
          '(("delete-windows"
