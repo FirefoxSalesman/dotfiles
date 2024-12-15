@@ -1589,7 +1589,7 @@ The powerline separators were borrowed from punchline, because I think they look
 
   (defun doom-nano-modeline--special-mode-p ()
     "Return t if we are in `special-mode' or nil otherwise."
-    (or (derived-mode-p 'special-mode) (eq major-mode 'exwm-mode)))
+    (or (derived-mode-p 'special-mode) (and (eq major-mode 'exwm-mode) (not qutebrowser-exwm-mode))))
 #+end_src
 
 **** Package Definition
@@ -6921,7 +6921,7 @@ This is a very ugly way of doing things
   };
 #+end_src
 
-**** Tabs
+**** WM Related
 #+NAME: Internet Qutebrowser Tabs
 #+begin_src nix
   tabs = {
@@ -6931,6 +6931,7 @@ This is a very ugly way of doing things
 
   window.title_format = "{current_title}{title_sep}{current_url}";
   new_instance_open_target = "tab-silent";
+  statusbar.show = "never";
 #+end_src
 
 **** Extra Config
@@ -6964,7 +6965,8 @@ This is a very ugly way of doing things
   c.fonts.debug_console = '8pt "Source Code Pro"'
   c.fonts.prompts = 'default_size sans-serif'
   c.fonts.statusbar = '8pt "Source Code Pro"'
-
+  config.source("emacs_hooks.py")
+  config.source("emacs_ipc.py")
 #+end_src
 
 #+NAME: Internet Qutebrowser Extraconfig

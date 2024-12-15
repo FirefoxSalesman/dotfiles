@@ -399,7 +399,7 @@
         
         (defun doom-nano-modeline--special-mode-p ()
           "Return t if we are in `special-mode' or nil otherwise."
-          (or (derived-mode-p 'special-mode) (eq major-mode 'exwm-mode)))
+          (or (derived-mode-p 'special-mode) (and (eq major-mode 'exwm-mode) (not qutebrowser-exwm-mode))))
       '';
     };
 

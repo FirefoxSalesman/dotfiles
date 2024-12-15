@@ -246,6 +246,7 @@
       
       window.title_format = "{current_title}{title_sep}{current_url}";
       new_instance_open_target = "tab-silent";
+      statusbar.show = "never";
   
     };
   
@@ -278,7 +279,8 @@
       c.fonts.debug_console = '8pt "Source Code Pro"'
       c.fonts.prompts = 'default_size sans-serif'
       c.fonts.statusbar = '8pt "Source Code Pro"'
-      
+      config.source("emacs_hooks.py")
+      config.source("emacs_ipc.py")
     '';
   };
   
