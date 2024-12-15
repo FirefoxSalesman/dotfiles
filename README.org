@@ -12,6 +12,7 @@ Thank you to everyone who's helped me get this far.
 
 ** Links to (some) of the places I've stolen from
 Not all the stuff I've stolen is still here, & most of the places I've stolen from aren't here
++ https://github.com/ZephyrCodesStuff/pywal-vencord
 + https://github.com/lrustand/qutebrowser.el/issues/4
 + https://github.com/lrustand/qutebrowser.el
 + https://github.com/nix-community/nixGL/issues/114
