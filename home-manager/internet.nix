@@ -286,7 +286,7 @@
     enable = true;
     package = epkgs: (epkgs.callPackage ./emacs/emacs-packages/qutebrowser.nix {
       inherit inputs;
-      inherit (epkgs) trivialBuild dash consult exwm password-store;
+      inherit (epkgs) trivialBuild dash consult exwm password-store evil;
     });
     hook = [
       "(exwm-init . global-qutebrowser-exwm-mode)"
