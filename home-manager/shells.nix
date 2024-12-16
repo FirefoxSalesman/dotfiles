@@ -60,7 +60,7 @@
     
     emacs.init.usePackage.envrc = {
         enable = true;
-        hook = ["(after-init . envrc-global-mode)"];
+        ghook = ["('after-init-hook 'envrc-global-mode)"];
         generalOne."efs/leader-keys" = {
           "e" = '''(:ignore t :which-key "direnv")'';
           "ea" = '''(envrc-allow :which-key "allow")'';
@@ -99,14 +99,14 @@
         eshell = {
           enable = true;
           after = ["evil-collection"];
-          hook = [
-            "(eshell-first-time-mode . efs/configure-eshell)"
+          ghook = [
+            "('eshell-first-time-mode-hook 'efs/configure-eshell)"
             #Save command history when commands are entered
-            "(eshell-precommand . eshell-save-some-history)"
+            "('eshell-precommand-hook 'eshell-save-some-history)"
             #pfetch
-            ''(eshell-banner-load . (lambda ()
-                                     (gsetq eshell-banner-message
-                                            (shell-command-to-string "${pkgs.pfetch}/bin/pfetch"))))''
+            ''('eshell-banner-load-hook  (lambda ()
+                                           (gsetq eshell-banner-message
+                                              (shell-command-to-string "${pkgs.pfetch}/bin/pfetch"))))''
           ];
           bind."s-<enter>" = "efs/make-eshell";
           generalOne.eshell-mode-map = {

@@ -4,7 +4,7 @@
   programs.emacs.init.usePackage = {
     dired = {
       enable = true;
-      hook = ["(dired-mode . dired-omit-mode)"];
+      gfhook = ["('dired-mode-hook 'dired-omit-mode)"];
       bind = {
         "C-x C-j" = "dired-jump";
         "C-x d" = "consult-dir";
@@ -19,7 +19,7 @@
     openwith = {
       enable = true;
       defer = true;
-      hook = ["('dired-mode . openwith-mode)"];
+      ghook = ["('dired-mode-hook 'openwith-mode)"];
       config = ''
     (gsetq openwith-associations
          (list
@@ -65,7 +65,7 @@
     dired-hide-dotfiles = {
       enable = true;
       defer = true;
-      hook = ["(dired-mode . dired-hide-dotfiles-mode)"];
+      ghook = ["('dired-mode-hook 'dired-hide-dotfiles-mode)"];
       config = ''(general-def 'normal dired-mode-map "H" 'dired-hide-dotfiles-mode)'';
     };
 
@@ -133,7 +133,7 @@
 
     diredfl = {
       enable = true;
-      hook = ["(dired-mode . diredfl-mode)"];
+      ghook = ["('dired-mode-hook 'diredfl-mode)"];
     };
 
     dired-posframe = {

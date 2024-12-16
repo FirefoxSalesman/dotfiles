@@ -33,7 +33,7 @@
     
     rainbow-delimiters = {
       enable = true;
-      hook = ["(prog-mode . rainbow-delimiters-mode)"];
+      ghook = ["('prog-mode-hook 'rainbow-delimiters-mode)"];
     };
 
     
@@ -93,13 +93,13 @@
         inherit inputs;
         inherit (epkgs) trivialBuild posframe;
       });
-      hook = ["((js-ts-mode java-ts-mode c-ts-mode python-mode json-ts-mode) . treesitter-context-mode)"];
+      ghook = ["('(js-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-mode-hook json-ts-mode-hook) 'treesitter-context-mode)"];
       custom.treesitter-context-frame-min-width = "30";
     };
     
     treesitter-context-fold = {
       enable = true;
-      hook = ["(treesitter-context-mode . treesitter-context-fold-mode)"];
+      hook = ["('treesitter-context-mode-hook 'treesitter-context-fold-mode)"];
       generalTwo."'normal".treesitter-context-fold-mode-map = {
         "zm" = "'treesitter-context-fold-hide";
         "zo" = "'treesitter-context-fold-show";
@@ -114,7 +114,10 @@
     
     projection = {
       enable = true;
-      config = ''(global-projection-hook-mode)'';
+      config = ''
+        (global-projection-hook-mode)
+        (oset projection-project-type-maven build "mvn -B clean compile")
+      '' ;
       generalOne."efs/leader-keys"."C-p" = "projection-map";
     };
     
@@ -153,10 +156,8 @@
 
     eglot = {
       enable = true;
-      hook = [
-        "(eglot-managed-mode . my/eglot-capf)"
-        "((html-ts-mode js-ts-mode ess-r-mode css-ts-mode json-ts-mode racket-mode bibtex-mode nxml-mode nix-mode markdown-mode LaTeX-mode bash-ts-mode java-ts-mode c-ts-mode python-ts-mode sql-mode) . eglot-ensure)"
-      ];
+      ghook = ["('(html-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook) 'eglot-ensure)"];
+      gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
       generalTwo.local-leader.eglot-mode-map = {
         "f" = "'eglot-format-buffer";
         "a" = "'eglot-code-actions";
@@ -181,9 +182,9 @@
     
     eldoc-box = {
       enable = true;
-      hook = [
-        "((eglot-managed-mode emacs-lisp-mode) . eldoc-box-hover-at-point-mode)"
-        "(org-mode . eldoc-box-hover-mode)"
+      ghook = [
+        "('(eglot-managed-mode-hook emacs-lisp-mode-hook) 'eldoc-box-hover-at-point-mode)"
+        "('org-mode-hook 'eldoc-box-hover-mode)"
       ];
     };
     
@@ -201,7 +202,7 @@
     
     breadcrumb = {
       enable = true;
-      hook = ["((bibtex-mode nxml-mode nix-mode racket-mode markdown-mode LaTeX-mode bash-ts-mode ess-r-mode html-ts-mode css-ts-mode emacs-lisp-mode) . breadcrumb-local-mode)"];
+      ghook = ["('(bibtex-mode-hook nxml-mode-hook nix-mode-hook racket-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook ess-r-mode-hook html-ts-mode-hook css-ts-mode-hook emacs-lisp-mode-hook) 'breadcrumb-local-mode)"];
     };
 
     dape = {
@@ -268,7 +269,7 @@
     # 
     # emmet-mode = {
     #   enable = true;
-    #   hook = ["((js-ts-mode sgml-mode css-ts-mode html-ts-mode) . emmet-mode)"];
+    #   ghook = ["('(js-ts-mode-hook sgml-mode-hook css-ts-mode-hook html-ts-mode-hook) 'emmet-mode)"];
     #   custom.emmet-move-cursor-between-quotes = "t";
     # };
     # 
@@ -280,7 +281,7 @@
     # racket-mode = {
     #   enable = true;
     #   mode = [''"\\.rkt\\'"''];
-    #   hook = ["(racket-mode . hs-minor-mode)"];
+    #   gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
     #   init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
     #   config = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
     #   generalTwo.local-leader.racket-mode-map = {

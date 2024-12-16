@@ -5,7 +5,7 @@
     tab-bar = {
       enable = true;
       config = ''(general-add-advice 'tab-new :after #'dashboard-open)'';
-      hook = ["(exwm-init . tab-bar-mode)"];
+      ghook = ["('exwm-init-hook 'tab-bar-mode)"];
       bind."s-u" = "tab-bar-hydra/body";
       custom.tab-bar-show = "nil";
       extraConfig = ''
@@ -32,7 +32,7 @@
 
     bufler = {
       enable = true;
-      hook = ["(tab-bar-mode . bufler-mode)"];
+      ghook = ["('tab-bar-mode-hook 'bufler-mode)"];
       bind = {
         "s-h" = "hydra:bufler/body";
         "s-b" = "bufler-hydra/body";
@@ -172,11 +172,9 @@
     
     bufler-workspace-tabs = {
       enable = true;
-      hook = [
-        "(bufler-workspace-workspaces-as-tabs-mode . global-tab-line-mode)"
-        "(bufler-mode . bufler-workspace-workspaces-as-tabs-mode)"
-      ];
-    } ;
+      ghook = ["('bufler-mode-hook 'bufler-workspace-workspaces-as-tabs-mode)"];
+      gfhook = ["('bufler-workspace-workspaces-as-tabs-mode-hook global-tab-line-mode)"];
+    };
 
     ace-window = {
       enable = true;
@@ -246,19 +244,19 @@
     golden-ratio = {
       enable = true;
       defer = true;
-      hook = ["(on-first-input . golden-ratio-mode)"];
+      ghook = ["('on-first-input-hook 'golden-ratio-mode)"];
     };
 
     exwm = {
       enable = true;
-      hook = [
+      gfhook = [
         # When window "class" updates, use it to set the buffer name
-        "(exwm-update-class . efs/exwm-update-class)"
+        "('exwm-update-class-hook 'efs/exwm-update-class)"
         # When EXWM starts up, do some extra configuration
-        "('exwm-init . efs/exwm-init-hook)"
-        "(exwm-mode . evil-motion-state)"
+        "('exwm-init-hook 'efs/exwm-init-hook)"
+        "('exwm-mode-hook 'evil-motion-state)"
         # When window title updates, use it to set the buffer name
-        "(exwm-update-title . efs/exwm-update-title)"
+        "('exwm-update-title-hook 'efs/exwm-update-title)"
       ];
       # Ctrl+q will enable the next key to be sent directly
       bindLocal.exwm-mode-map."C-q" = "exwm-input-send-next-key";
@@ -428,9 +426,7 @@
     exwm-mff = {
       enable = true;
       defer = true;
-      # config = "(exwm-mff-mode)";
-      # after = ["exwm"];
-      hook = ["(exwm-init . exwm-mff-mode)"];
+      ghook = ["('exwm-init-hook 'exwm-mff-mode)"];
     };
     
     exwm-edit = {
@@ -452,7 +448,7 @@
 
     popper = {
       enable = true;
-      hook = ["(on-first-buffer . popper-mode)"];
+      ghook = ["('on-first-buffer-hook 'popper-mode)"];
       bind = {
         "s-'" = "popper-toggle";
         "s-\"" = "popper-cycle";

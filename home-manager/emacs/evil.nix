@@ -5,7 +5,7 @@
     evil = {
       enable = true;
       demand = true;
-      hook = ["(doom-escape . evil-normal-state)"];
+      gfhook = ["('doom-escape-hook 'evil-normal-state)"];
       bind."H-u" = "universal-argument";
       bindLocal.universal-argument-map = {
         "H-u" = "universal-argument-more";
@@ -497,7 +497,7 @@
       enable = true;
       defer = true;
       command = ["evil-god-state"];
-      hook = ["(doom-escape . evil-god-state-bail)"];
+      gfhook = ["('doom-escape-hook 'evil-god-state-bail)"];
       bindLocal.evil-god-state-map = {
           "<escape>" = "evil-god-state-bail";
           "<return>" = "evil-emacs-state";
@@ -511,7 +511,7 @@
     evil-org = {
       enable = true;
       defer = true;
-      hook = ["(org-mode . evil-org-mode)"];
+      ghook = ["('org-mode-hook 'evil-org-mode)"];
       custom.evil-org-movement-bindings = ''
         '((up . "o")
           (down . "e")
@@ -594,7 +594,7 @@
     evil-markdown = {
       enable = true;
       defer = true;
-      hook = ["(markdown-mode . evil-markdown-mode)"];
+      ghook = ["('markdown-mode-hook 'evil-markdown-mode)"];
       custom.evil-markdown-movement-bindings = ''
         '((up . "o")
           (down . "e")

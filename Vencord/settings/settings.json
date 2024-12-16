@@ -575,13 +575,13 @@
     "notifications": {
         "timeout": 5000,
         "position": "bottom-right",
-        "useNative": "not-focused",
+        "useNative": "always",
         "logLimit": 50
     },
     "cloud": {
         "authenticated": false,
         "url": "https://api.vencord.dev/",
         "settingsSync": false,
-        "settingsSyncVersion": 1734230930205
+        "settingsSyncVersion": 1734332318880
     }
 }

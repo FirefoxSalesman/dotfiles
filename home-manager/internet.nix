@@ -290,9 +290,12 @@
       inherit inputs;
       inherit (epkgs) trivialBuild dash consult exwm password-store evil;
     });
-    hook = [
-      "(exwm-init . global-qutebrowser-exwm-mode)"
-      "(server-visit . qute/dired-hook)"
+    ghook = [
+      "('exwm-init-hook 'global-qutebrowser-exwm-mode)"
+    ];
+    gfhook = [
+      "('qutebrowser-exwm-mode-hook '(evil-normal-state qutebrowser-rpc-get-connection))"
+      "('server-visit-hook 'qute/dired-hook)"
     ];
     config = ''
       (define-minor-mode qute-dired-mode

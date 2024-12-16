@@ -149,7 +149,7 @@
         display-line-numbers = {
           enable = true;
           config = ''(global-display-line-numbers-mode)'';
-          hook = ["((org-mode term-mode dired-mode eww-mode eat-mode markdown-mode help-mode helpful-mode Info-mode woman-mode shell-mode pdf-view-mode elfeed-search-mode elfeed-show-mode eshell-mode racket-repl-mode sage-shell-mode) . (lambda () (display-line-numbers-mode 0)))"];
+          ghook = ["('(org-mode-hook term-mode-hook dired-mode-hook eww-mode-hook eat-mode-hook markdown-mode-hook help-mode-hook helpful-mode-hook Info-mode-hook woman-mode-hook shell-mode-hook pdf-view-mode-hook elfeed-search-mode-hook elfeed-show-mode-hook eshell-mode-hook racket-repl-mode-hook sage-shell-mode-hook) (lambda () (display-line-numbers-mode 0)))"];
           #Disable line numbers for some modes
           custom = {
             display-line-numbers-type = "'relative";
@@ -159,7 +159,7 @@
         
         elec-pair = {
           enable = true;
-          hook = ["(on-first-buffer . electric-pair-mode)"];
+          ghook = ["('on-first-buffer-hook 'electric-pair-mode)"];
           config = ''
             ;; < & > are not delimiters. Change my mind.
             ;; Courtesy of DT. https://gitlab.com/dwt1/configuring-emacs/-/tree/main/07-the-final-touches?ref_type=heads
@@ -188,9 +188,7 @@
             inherit inputs;
             inherit (epkgs) trivialBuild;
           });
-          hook = [
-            "(doom-escape . transient-quit-one)"
-            "(doom-escape . (lambda () (setq efs/vertico-active nil)))"];
+          gfhook = ["('doom-escape-hook (list (lambda () (setq efs/vertico-active nil)) 'transient-quit-one))"];
           general."[remap keyboard-quit]" = "'doom/escape";
           config = ''
             (with-eval-after-load 'eldoc

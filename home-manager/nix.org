@@ -795,7 +795,7 @@ a prompt for bash & fish
 
   emacs.init.usePackage.envrc = {
       enable = true;
-      hook = ["(after-init . envrc-global-mode)"];
+      ghook = ["('after-init-hook 'envrc-global-mode)"];
       generalOne."efs/leader-keys" = {
         "e" = '''(:ignore t :which-key "direnv")'';
         "ea" = '''(envrc-allow :which-key "allow")'';
@@ -816,14 +816,14 @@ Eat lets us get away with using eshell all the time. It can be used to get into 
     eshell = {
       enable = true;
       after = ["evil-collection"];
-      hook = [
-        "(eshell-first-time-mode . efs/configure-eshell)"
+      ghook = [
+        "('eshell-first-time-mode-hook 'efs/configure-eshell)"
         #Save command history when commands are entered
-        "(eshell-precommand . eshell-save-some-history)"
+        "('eshell-precommand-hook 'eshell-save-some-history)"
         #pfetch
-        ''(eshell-banner-load . (lambda ()
-                                 (gsetq eshell-banner-message
-                                        (shell-command-to-string "${pkgs.pfetch}/bin/pfetch"))))''
+        ''('eshell-banner-load-hook  (lambda ()
+                                       (gsetq eshell-banner-message
+                                          (shell-command-to-string "${pkgs.pfetch}/bin/pfetch"))))''
       ];
       bind."s-<enter>" = "efs/make-eshell";
       generalOne.eshell-mode-map = {
@@ -1355,6 +1355,11 @@ Use =M-x all-the-icons-install-fonts=
     enable = true;
     demand = true;
   };
+
+  nerd-icons-completion = {
+    enable = true;
+    ghook = ["('marginalia-mode-hook 'nerd-icons-completion-marginalia-setup)"];
+  };
 #+end_src
 
 *** Dashboard
@@ -1401,7 +1406,7 @@ The powerline separators were borrowed from punchline, because I think they look
       inherit inputs;
       inherit (epkgs) trivialBuild doom-themes;
     });
-    hook = ["(after-init . doom-nano-modeline-mode)"];
+    ghook = ["('after-init-hook 'doom-nano-modeline-mode)"];
     custom.doom-nano-modeline-position = "'bottom";
     config = ''
       <<Emacs Doom Nano Modeline Config>>
@@ -1647,6 +1652,8 @@ Makes emacs' theme mimic the wallpaper. A good pywal config will get most things
      `(font-lock-number-face ((t (:foreground ,(ewal-get-color 'blue)))))
      `(markdown-header-face ((t (:foreground ,(ewal-get-color 'blue)))))
      `(markdown-header-delimiter-face ((t (:foreground ,(ewal-get-color 'blue)))))
+     `(markdown-bold-face ((t (:foreground ,(ewal-get-color 'green)))))
+     `(org-code ((t (:foreground ,(ewal-get-color 'green)))))
      `(line-number ((t (:foreground ,(ewal-get-color 'blue)))))
      `(eshell-git-prompt-powerline-dir-face ((t (:background ,(ewal-get-color 'blue)))))
      `(eshell-git-prompt-powerline-clean-face ((t (:background ,(ewal-get-color 'green)))))
@@ -1673,14 +1680,14 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
   vertico-posframe = {
     enable = true;
     defer = true;
-    hook = ["(vertico-mode . vertico-posframe-mode)"];
+    ghook = ["('vertico-mode-hook 'vertico-posframe-mode)"];
     config = ''(set-face-attribute 'vertico-posframe-face nil :family 'variable-pitch)'';
   };
 
   which-key-posframe = {
     enable = true;
     defer = true;
-    hook = ["(which-key-mode . which-key-posframe-mode)"];
+    ghook = ["('which-key-mode-hook 'which-key-posframe-mode)"];
     custom = {
       which-key-posframe-poshandler = "'posframe-poshandler-frame-bottom-center"; 
       which-key-posframe-parameters = "'(:parent-frame nil :refposhandler posframe-refposhandler-xwininfo)";
@@ -2677,7 +2684,7 @@ https://emacs.stackexchange.com/questions/75528/how-to-define-display-buffer-ali
   display-line-numbers = {
     enable = true;
     config = ''(global-display-line-numbers-mode)'';
-    hook = ["((org-mode term-mode dired-mode eww-mode eat-mode markdown-mode help-mode helpful-mode Info-mode woman-mode shell-mode pdf-view-mode elfeed-search-mode elfeed-show-mode eshell-mode racket-repl-mode sage-shell-mode) . (lambda () (display-line-numbers-mode 0)))"];
+    ghook = ["('(org-mode-hook term-mode-hook dired-mode-hook eww-mode-hook eat-mode-hook markdown-mode-hook help-mode-hook helpful-mode-hook Info-mode-hook woman-mode-hook shell-mode-hook pdf-view-mode-hook elfeed-search-mode-hook elfeed-show-mode-hook eshell-mode-hook racket-repl-mode-hook sage-shell-mode-hook) (lambda () (display-line-numbers-mode 0)))"];
     #Disable line numbers for some modes
     custom = {
       display-line-numbers-type = "'relative";
@@ -2687,7 +2694,7 @@ https://emacs.stackexchange.com/questions/75528/how-to-define-display-buffer-ali
 
   elec-pair = {
     enable = true;
-    hook = ["(on-first-buffer . electric-pair-mode)"];
+    ghook = ["('on-first-buffer-hook 'electric-pair-mode)"];
     config = ''
       <<Emacs Electric Pair Config>>
     '';
@@ -2732,9 +2739,7 @@ Credits: Doom Escape is from doom. (Wow)
       inherit inputs;
       inherit (epkgs) trivialBuild;
     });
-    hook = [
-      "(doom-escape . transient-quit-one)"
-      "(doom-escape . (lambda () (setq efs/vertico-active nil)))"];
+    gfhook = ["('doom-escape-hook (list (lambda () (setq efs/vertico-active nil)) 'transient-quit-one))"];
     general."[remap keyboard-quit]" = "'doom/escape";
     config = ''
       <<Doom Escape Config>>
@@ -3015,7 +3020,7 @@ M-SPC is our local leader, & it's used for keys specific to a given major mode
   evil = {
     enable = true;
     demand = true;
-    hook = ["(doom-escape . evil-normal-state)"];
+    gfhook = ["('doom-escape-hook 'evil-normal-state)"];
     bind."H-u" = "universal-argument";
     bindLocal.universal-argument-map = {
       "H-u" = "universal-argument-more";
@@ -3590,7 +3595,7 @@ By default, any key pressed while in god state is treated as if it was pressed w
     enable = true;
     defer = true;
     command = ["evil-god-state"];
-    hook = ["(doom-escape . evil-god-state-bail)"];
+    gfhook = ["('doom-escape-hook 'evil-god-state-bail)"];
     bindLocal.evil-god-state-map = {
         "<escape>" = "evil-god-state-bail";
         "<return>" = "evil-emacs-state";
@@ -3608,7 +3613,7 @@ By default, any key pressed while in god state is treated as if it was pressed w
   evil-org = {
     enable = true;
     defer = true;
-    hook = ["(org-mode . evil-org-mode)"];
+    ghook = ["('org-mode-hook 'evil-org-mode)"];
     custom.evil-org-movement-bindings = ''
       '((up . "o")
         (down . "e")
@@ -3653,7 +3658,7 @@ By default, any key pressed while in god state is treated as if it was pressed w
   evil-markdown = {
     enable = true;
     defer = true;
-    hook = ["(markdown-mode . evil-markdown-mode)"];
+    ghook = ["('markdown-mode-hook 'evil-markdown-mode)"];
     custom.evil-markdown-movement-bindings = ''
       '((up . "o")
         (down . "e")
@@ -3772,7 +3777,7 @@ Vertico is basically dmenu for emacs. It lists out all the options in a command 
   vertico = {
     enable = true;
     defer = true;
-    hook = ["(on-first-input . vertico-mode)"];
+    ghook = ["('on-first-input-hook 'vertico-mode)"];
     # Enable cycling for 'vertico-next & 'vertico-previous'.
     custom.vertico-cycle = "t";
     # This is for exwm's minibuffer issue
@@ -3805,10 +3810,10 @@ I took a lot of this from Gavin Freeborn's config
 #+begin_src nix :noweb yes
   corfu = {
     enable = true;
-    hook = [
-      "(minibuffer-setup . corfu-enable-in-minibuffer)"
-      "(on-first-buffer . global-corfu-mode)"
-    ] ;
+    ghook = [
+      "('minibuffer-setup-hook 'corfu-enable-in-minibuffer)"
+      "('on-first-buffer-hook 'global-corfu-mode)"
+    ];
     custom = {
       corfu-cycle = "t";
       corfu-autodelay = "0";
@@ -3850,7 +3855,7 @@ I took a lot of this from Gavin Freeborn's config
 
   corfu-popupinfo = {
     enable = true;
-    hook = ["(corfu-mode-hook . corfu-popupinfo-mode)"];
+    ghook = ["('corfu-mode-hook 'corfu-popupinfo-mode)"];
   };
 
   cape = {
@@ -3892,7 +3897,7 @@ Prescient is a big-braned history package that orders completion options by rece
   vertico-prescient = {
     enable = true;
     defer = true;
-    hook = ["(minibuffer-mode . vertico-prescient-mode)"];
+    ghook = ["('minibuffer-mode-hook 'vertico-prescient-mode)"];
     custom = {
       vertico-prescient-enable-filtering = "nil";
       vertico-prescient-completion-styles = "'(orderless prescient basic)";
@@ -3903,7 +3908,7 @@ Prescient is a big-braned history package that orders completion options by rece
   corfu-prescient = {
     enable = true;
     defer = true;
-    hook = ["(corfu-mode . corfu-prescient-mode)"];
+    ghook = ["('corfu-mode-hook 'corfu-prescient-mode)"];
     custom.corfu-prescient-completion-styles = "'(basic prescient)";
   };
 #+end_src
@@ -3935,11 +3940,6 @@ Marginalia provides extra information on the options in a vertico completion, th
     config = ''(marginalia-mode)'';
     afterCall = ["on-first-input-hook"];
   };
-
-  nerd-icons-completion = {
-    enable = true;
-    hook = ["(marginalia-mode . nerd-icons-completion-marginalia-setup)"];
-  };
 #+end_src
 
 **** Consult
@@ -3951,7 +3951,7 @@ Evil integration is from noctuid & minad
   consult = {
     enable = true;
     defer = true;
-    hook = ["(minibuffer-setup . consult-initial-narrow)"];
+    gfhook = ["('minibuffer-setup-hook 'consult-initial-narrow)"];
     command = ["consult-goto-line" "consult-keep-lines" "noct-consult-ripgrep-or-line"];
     bind = {
       "C-x C-f" = "consult-find";
@@ -4152,7 +4152,7 @@ Ace-window & avy actions from karthink
   embark-consult = {
     enable = true;
     after = ["embark" "consult"];
-    hook = ["(embark-collect-mode . consult-preview-at-point-mode)"];
+    ghook = ["('embark-collect-mode-hook 'consult-preview-at-point-mode)"];
   };
 #+end_src
 
@@ -4283,7 +4283,7 @@ Ace-window & avy actions from karthink
   ace-isearch = {
     enable = true;
     demand = true;
-    hook = ["(pdf-view-mode . (lambda () (ace-isearch-mode -1)))"];
+    gfhook = ["('pdf-view-mode-hook (lambda () (ace-isearch-mode -1)))"];
     bindLocal.isearch-mode-map."C-a" = "avy-isearch";
     config = ''
       <<Emacs Search Config>>
@@ -4318,7 +4318,6 @@ Ace-window & avy actions from karthink
   tempel = {
     enable = true;
     command = ["tempel-complete"];
-    # hook = ["((conf-mode prog-mode text-mode) . tempel-setup-capf)"];
     custom.tempel-path = ''"~/.config/emacs/templates.eld"'';
     init = ''
       <<Emacs Templ Init>>
@@ -4378,8 +4377,8 @@ Ace-window & avy actions from karthink
     (au "#+author: " q)
     (ti "#+title: " q)
     (ci "* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q)
-    (pandoc "#+auto-export-pandoc: to-")
     (pdf "#+auto-export-pandoc: to-latex-pdf")
+    (odt "#+auto-export-pandoc: to-odt")
 
     java-ts-mode
     (doc "/**" n> " * " q n " */")
@@ -4443,7 +4442,7 @@ Helpful gives more information, & which-key tells what keybinds you have availab
         enable = true;
         defer = true;
         config = ''(which-key-enable-god-mode-support)'';
-        hook = ["(on-first-input . which-key-mode)"];
+        ghook = ["('on-first-input-hook 'which-key-mode)"];
         custom = {
           which-key-idle-delay = "1";
           # which-key-popup-type = "'minibuffer";
@@ -4474,7 +4473,7 @@ We use the default dirvish config. It's like ranger.el, but without the bugs.
     programs.emacs.init.usePackage = {
       dired = {
         enable = true;
-        hook = ["(dired-mode . dired-omit-mode)"];
+        gfhook = ["('dired-mode-hook 'dired-omit-mode)"];
         bind = {
           "C-x C-j" = "dired-jump";
           "C-x d" = "consult-dir";
@@ -4489,7 +4488,7 @@ We use the default dirvish config. It's like ranger.el, but without the bugs.
       openwith = {
         enable = true;
         defer = true;
-        hook = ["('dired-mode . openwith-mode)"];
+        ghook = ["('dired-mode-hook 'openwith-mode)"];
         config = ''
       <<Emacs Openwith Config>>
     '';
@@ -4498,7 +4497,7 @@ We use the default dirvish config. It's like ranger.el, but without the bugs.
       dired-hide-dotfiles = {
         enable = true;
         defer = true;
-        hook = ["(dired-mode . dired-hide-dotfiles-mode)"];
+        ghook = ["('dired-mode-hook 'dired-hide-dotfiles-mode)"];
         config = ''(general-def 'normal dired-mode-map "H" 'dired-hide-dotfiles-mode)'';
       };
 
@@ -4564,7 +4563,7 @@ We use the default dirvish config. It's like ranger.el, but without the bugs.
 
       diredfl = {
         enable = true;
-        hook = ["(dired-mode . diredfl-mode)"];
+        ghook = ["('dired-mode-hook 'diredfl-mode)"];
       };
 
       dired-posframe = {
@@ -4712,7 +4711,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 
   rainbow-delimiters = {
     enable = true;
-    hook = ["(prog-mode . rainbow-delimiters-mode)"];
+    ghook = ["('prog-mode-hook 'rainbow-delimiters-mode)"];
   };
 #+end_src
 
@@ -4791,13 +4790,13 @@ https://github.com/jdtsmith/indent-bars
       inherit inputs;
       inherit (epkgs) trivialBuild posframe;
     });
-    hook = ["((js-ts-mode java-ts-mode c-ts-mode python-mode json-ts-mode) . treesitter-context-mode)"];
+    ghook = ["('(js-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-mode-hook json-ts-mode-hook) 'treesitter-context-mode)"];
     custom.treesitter-context-frame-min-width = "30";
   };
 
   treesitter-context-fold = {
     enable = true;
-    hook = ["(treesitter-context-mode . treesitter-context-fold-mode)"];
+    hook = ["('treesitter-context-mode-hook 'treesitter-context-fold-mode)"];
     generalTwo."'normal".treesitter-context-fold-mode-map = {
       "zm" = "'treesitter-context-fold-hide";
       "zo" = "'treesitter-context-fold-show";
@@ -4826,7 +4825,7 @@ https://github.com/jdtsmith/indent-bars
 
 **** Project
 #+NAME: Emacs Development Project
-#+begin_src nix
+#+begin_src nix :noweb yes
   project = {
     enable = true;
     generalOne."efs/leader-keys"."P" = "project-prefix-map";
@@ -4834,7 +4833,9 @@ https://github.com/jdtsmith/indent-bars
 
   projection = {
     enable = true;
-    config = ''(global-projection-hook-mode)'';
+    config = ''
+      <<Emacs Development Projection Config>>
+    '' ;
     generalOne."efs/leader-keys"."C-p" = "projection-map";
   };
 
@@ -4848,6 +4849,12 @@ https://github.com/jdtsmith/indent-bars
       after = ["embark" "projection-multi"];
       config = ''(projection-multi-embark-setup-command-map)'';
   };
+#+end_src
+
+#+NAME: Emacs Development Projection Config
+#+begin_src emacs-lisp
+  (global-projection-hook-mode)
+  (oset projection-project-type-maven build "mvn -B clean compile")
 #+end_src
 
 **** Plantuml
@@ -4886,10 +4893,8 @@ https://github.com/jdtsmith/indent-bars
 #+begin_src nix :noweb yes
   eglot = {
     enable = true;
-    hook = [
-      "(eglot-managed-mode . my/eglot-capf)"
-      "((html-ts-mode js-ts-mode ess-r-mode css-ts-mode json-ts-mode racket-mode bibtex-mode nxml-mode nix-mode markdown-mode LaTeX-mode bash-ts-mode java-ts-mode c-ts-mode python-ts-mode sql-mode) . eglot-ensure)"
-    ];
+    ghook = ["('(html-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook) 'eglot-ensure)"];
+    gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
     generalTwo.local-leader.eglot-mode-map = {
       "f" = "'eglot-format-buffer";
       "a" = "'eglot-code-actions";
@@ -4901,9 +4906,9 @@ https://github.com/jdtsmith/indent-bars
 
   eldoc-box = {
     enable = true;
-    hook = [
-      "((eglot-managed-mode emacs-lisp-mode) . eldoc-box-hover-at-point-mode)"
-      "(org-mode . eldoc-box-hover-mode)"
+    ghook = [
+      "('(eglot-managed-mode-hook emacs-lisp-mode-hook) 'eldoc-box-hover-at-point-mode)"
+      "('org-mode-hook 'eldoc-box-hover-mode)"
     ];
   };
 
@@ -4921,7 +4926,7 @@ https://github.com/jdtsmith/indent-bars
 
   breadcrumb = {
     enable = true;
-    hook = ["((bibtex-mode nxml-mode nix-mode racket-mode markdown-mode LaTeX-mode bash-ts-mode ess-r-mode html-ts-mode css-ts-mode emacs-lisp-mode) . breadcrumb-local-mode)"];
+    ghook = ["('(bibtex-mode-hook nxml-mode-hook nix-mode-hook racket-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook ess-r-mode-hook html-ts-mode-hook css-ts-mode-hook emacs-lisp-mode-hook) 'breadcrumb-local-mode)"];
   };
 #+end_src
 
@@ -5080,7 +5085,7 @@ pyenv allows us to use virtual environments.
 
   emmet-mode = {
     enable = true;
-    hook = ["((js-ts-mode sgml-mode css-ts-mode html-ts-mode) . emmet-mode)"];
+    ghook = ["('(js-ts-mode-hook sgml-mode-hook css-ts-mode-hook html-ts-mode-hook) 'emmet-mode)"];
     custom.emmet-move-cursor-between-quotes = "t";
   };
 
@@ -5096,7 +5101,7 @@ pyenv allows us to use virtual environments.
   racket-mode = {
     enable = true;
     mode = [''"\\.rkt\\'"''];
-    hook = ["(racket-mode . hs-minor-mode)"];
+    gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
     init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
     config = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
     generalTwo.local-leader.racket-mode-map = {
@@ -5137,15 +5142,6 @@ pyenv allows us to use virtual environments.
   (defun zenscript-get-dumpzs (&optional prompt)
     "Returns nothing, because I can't fix the dumpfile problem"
     '(() . ()))
-#+end_src
-
-**** Elisp
-#+begin_src nix :tangle no
-  elisp-mode = {
-    enable = true;
-    mode = [''"\\.el\\"''];
-    bindLocal.emacs-lisp-mode-map."C-c C-c" = "eval-buffer";
-  };
 #+end_src
 
 *** Password Management
@@ -5256,8 +5252,7 @@ How to add a latex package
   org = {
     enable = true;
     mode = [''("\\.org\\'" . org-mode)''];
-    gfhook = ["('org-mode-hook (list 'efs/org-mode-setup 'my/org-capf))"];
-    # gfhook = ["('org-mode-hook 'efs/org-mode-setup)"];
+    gfhook = ["('org-mode-hook '(efs/org-mode-setup my/org-capf))"];
     custom = {
       org-confirm-babel-evaluate = "nil";
       org-src-fontify-natively = "t";
@@ -5383,7 +5378,7 @@ How to add a latex package
 
   org-modern = {
     enable = true;
-    hook = ["(org-mode . global-org-modern-mode)"];
+    ghook = ["('org-mode-hook 'global-org-modern-mode)"];
     custom = {
       org-modern-star = "'replace";
       org-modern-hide-stars = "t";
@@ -5402,7 +5397,7 @@ How to add a latex package
 
   org-auto-tangle = {
     enable = true;
-    hook = ["(org-mode . org-auto-tangle-mode)"];
+    ghook = ["('org-mode-hook 'org-auto-tangle-mode)"];
   };
 
   org-auto-export-pandoc = {
@@ -5456,7 +5451,7 @@ How to add a latex package
   denote = {
     enable = true;
     defer = true;
-    hook = ["(dired-mode . denote-dired-mode-in-directories)"];
+    gfhook = ["('dired-mode-hook 'denote-dired-mode-in-directories)"];
     custom = {
       denote-directory = ''(expand-file-name "~/doc/denote")'';
       denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "cybercrime" "databases" "scifi" "software-requirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics")'';
@@ -5521,17 +5516,19 @@ No idea what the rest of this is for.
     enable = true;
     package = epkgs: epkgs.auctex;
     init = ''(setq-default TeX-master nil)'';
-    hook = [''
-      ('reftex-load-hook . (lambda ()
+    gfhook = [
+      ''
+        ('LaTeX-mode-hook (list 'magic-latex-buffer
+                                       'visual-line-mode
+                                       'LaTeX-math-mode
+                                       'flyspell-mode))
+      ''
+      ''
+        ('reftex-load-hook (lambda ()
                               (gsetq reftex-section-levels
                                  (cons '("poemtitle" . -3) reftex-section-levels))))
-    ''];
-    gfhook = [''
-      ('LaTeX-mode-hook (list 'magic-latex-buffer
-                                     'visual-line-mode
-                                     'LaTeX-math-mode
-                                     'flyspell-mode))
-    ''];
+      ''
+    ];
     custom = {
       reftex-label-alist = '''(("\\poemtitle" ?P "poem:" "\\ref{%s}" nil ("poem" "poemtitle")))'';
       reftex-format-cite-function = ''
@@ -5568,8 +5565,9 @@ No idea what the rest of this is for.
     config = ''
       <<Emacs Pdf Tools Config>>
     '';
-    hook = ["(pdf-view-mode . pdf-view-midnight-minor-mode)"];
-    gfhook = ["('TeX-after-compilation-finished-functions #'TeX-revert-document-beffer)"];
+    gfhook = [
+      "('TeX-after-compilation-finished-functions #'TeX-revert-document-beffer)"
+      "('pdf-view-mode-hook 'pdf-view-midnight-minor-mode)"];
     init = ''(setq-default pdf-view-display-size 'fit-width)'';
     extraConfig = '':magic ("%PDF" . pdf-view-mode)'';
   };
@@ -5582,9 +5580,9 @@ No idea what the rest of this is for.
   cdlatex = {
     enable = true;
     defer = true;
-    hook = [
-      "(LaTeX-mode . turn-on-cdlatex)"
-      "(org-mode . org-cdlatex-mode)"
+    ghook = [
+      "('LaTeX-mode-hook 'turn-on-cdlatex)"
+      "('org-mode-hook 'org-cdlatex-mode)"
     ];
     generalTwo."'insert" = {
       cdlatex-mode-map."TAB" = "'cdlatex-tab";
@@ -5613,7 +5611,10 @@ No idea what the rest of this is for.
     bindLocal.markdown-mode-map."C-c C-e" = "markdown-do";
     gfhook = ["('markdown-mode-hook (list 'outline-minor-mode 'efs/markdown-font-setup))"];
     mode = [''("\\.md\\'" . gfm-mode)''];
-    custom.markdown-command = ''"multimarkdown"'';
+    custom = {
+      markdown-command = ''"multimarkdown"'';
+      markdown-hide-markup = "t";
+    };
     generalTwo = {
       "'normal".markdown-mode-map = {
         "[h" = "'markdown-previous-visible-heading";
@@ -5651,10 +5652,8 @@ I couldn't get olivetti to work.
 #+begin_src nix
   writeroom-mode = {
     enable = true;
-    hook = [
-      "((woman-mode org-agenda-mode org-mode Info-mode markdown-mode) . writeroom-mode)"
-      "(writeroom-mode . visual-line-mode)"
-    ];
+    ghook = ["('(woman-mode-hook org-agenda-mode-hook org-mode-hook Info-mode-hook markdown-mode-hook) 'writeroom-mode)"];
+    gfhook = ["('writeroom-mode-hook 'visual-line-mode)"];
     custom = {
       writeroom-mode-line = "t";
       writeroom-maximize-window = "nil";
@@ -5670,9 +5669,9 @@ I couldn't get olivetti to work.
   flyspell = {
     enable = true;
     custom.ispell-personal-dictionary = "~/.config/emacs/ispell.txt";
-    hook = [
-      "(text-mode . flyspell-mode)"
-      "(prog-mode . flyspell-prog-mode)"
+    ghook = [
+      "('text-mode-hook 'flyspell-mode)"
+      "('prog-mode-hook 'flyspell-prog-mode)"
     ];
   };
 #+end_src
@@ -5683,7 +5682,7 @@ I couldn't get olivetti to work.
   citar = {
     enable = true;
     config = ''(citar-denote-mode)'';
-    hook = ["((LaTeX-mode org-mode) . citar-capf-setup)"];
+    ghook = ["('(LaTeX-mode-hook org-mode-hook) 'citar-capf-setup)"];
     custom = {
       org-cite-insert-processor = "'citar";
       org-cite-follow-processor = "'citar";
@@ -5759,7 +5758,7 @@ You can't get page numbers, though, which becomes unfortunate for doing citation
   tab-bar = {
     enable = true;
     config = ''(general-add-advice 'tab-new :after #'dashboard-open)'';
-    hook = ["(exwm-init . tab-bar-mode)"];
+    ghook = ["('exwm-init-hook 'tab-bar-mode)"];
     bind."s-u" = "tab-bar-hydra/body";
     custom.tab-bar-show = "nil";
     extraConfig = ''
@@ -5791,7 +5790,7 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 #+begin_src nix :noweb yes
   bufler = {
     enable = true;
-    hook = ["(tab-bar-mode . bufler-mode)"];
+    ghook = ["('tab-bar-mode-hook 'bufler-mode)"];
     bind = {
       "s-h" = "hydra:bufler/body";
       "s-b" = "bufler-hydra/body";
@@ -5895,11 +5894,9 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 
   bufler-workspace-tabs = {
     enable = true;
-    hook = [
-      "(bufler-workspace-workspaces-as-tabs-mode . global-tab-line-mode)"
-      "(bufler-mode . bufler-workspace-workspaces-as-tabs-mode)"
-    ];
-  } ;
+    ghook = ["('bufler-mode-hook 'bufler-workspace-workspaces-as-tabs-mode)"];
+    gfhook = ["('bufler-workspace-workspaces-as-tabs-mode-hook global-tab-line-mode)"];
+  };
 #+end_src
 
 #+NAME: Emacs Bufler Init
@@ -6039,7 +6036,7 @@ Almost everything here was copied from David Wilson. Thank you, David, for pract
   golden-ratio = {
     enable = true;
     defer = true;
-    hook = ["(on-first-input . golden-ratio-mode)"];
+    ghook = ["('on-first-input-hook 'golden-ratio-mode)"];
   };
 #+end_src
 
@@ -6064,14 +6061,14 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
 #+begin_src nix :noweb yes
   exwm = {
     enable = true;
-    hook = [
+    gfhook = [
       # When window "class" updates, use it to set the buffer name
-      "(exwm-update-class . efs/exwm-update-class)"
+      "('exwm-update-class-hook 'efs/exwm-update-class)"
       # When EXWM starts up, do some extra configuration
-      "('exwm-init . efs/exwm-init-hook)"
-      "(exwm-mode . evil-motion-state)"
+      "('exwm-init-hook 'efs/exwm-init-hook)"
+      "('exwm-mode-hook 'evil-motion-state)"
       # When window title updates, use it to set the buffer name
-      "(exwm-update-title . efs/exwm-update-title)"
+      "('exwm-update-title-hook 'efs/exwm-update-title)"
     ];
     # Ctrl+q will enable the next key to be sent directly
     bindLocal.exwm-mode-map."C-q" = "exwm-input-send-next-key";
@@ -6168,9 +6165,7 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
   exwm-mff = {
     enable = true;
     defer = true;
-    # config = "(exwm-mff-mode)";
-    # after = ["exwm"];
-    hook = ["(exwm-init . exwm-mff-mode)"];
+    ghook = ["('exwm-init-hook 'exwm-mff-mode)"];
   };
 
   exwm-edit = {
@@ -6298,7 +6293,7 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
 #+begin_src nix :noweb yes
   popper = {
     enable = true;
-    hook = ["(on-first-buffer . popper-mode)"];
+    ghook = ["('on-first-buffer-hook 'popper-mode)"];
     bind = {
       "s-'" = "popper-toggle";
       "s-\"" = "popper-cycle";
@@ -6985,9 +6980,12 @@ This is a very ugly way of doing things
       inherit inputs;
       inherit (epkgs) trivialBuild dash consult exwm password-store evil;
     });
-    hook = [
-      "(exwm-init . global-qutebrowser-exwm-mode)"
-      "(server-visit . qute/dired-hook)"
+    ghook = [
+      "('exwm-init-hook 'global-qutebrowser-exwm-mode)"
+    ];
+    gfhook = [
+      "('qutebrowser-exwm-mode-hook '(evil-normal-state qutebrowser-rpc-get-connection))"
+      "('server-visit-hook 'qute/dired-hook)"
     ];
     config = ''
       <<Emacs Internet Qutebrowser Config>>

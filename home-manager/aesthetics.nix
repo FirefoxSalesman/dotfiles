@@ -188,6 +188,11 @@
       enable = true;
       demand = true;
     };
+    
+    nerd-icons-completion = {
+      enable = true;
+      ghook = ["('marginalia-mode-hook 'nerd-icons-completion-marginalia-setup)"];
+    };
 
     dashboard = {
       enable = true;
@@ -218,7 +223,7 @@
         inherit inputs;
         inherit (epkgs) trivialBuild doom-themes;
       });
-      hook = ["(after-init . doom-nano-modeline-mode)"];
+      ghook = ["('after-init-hook 'doom-nano-modeline-mode)"];
       custom.doom-nano-modeline-position = "'bottom";
       config = ''
         (defun doom-nano-modeline--render (left right &optional hide-evil-mode)
@@ -425,6 +430,8 @@
            `(font-lock-number-face ((t (:foreground ,(ewal-get-color 'blue)))))
            `(markdown-header-face ((t (:foreground ,(ewal-get-color 'blue)))))
            `(markdown-header-delimiter-face ((t (:foreground ,(ewal-get-color 'blue)))))
+           `(markdown-bold-face ((t (:foreground ,(ewal-get-color 'green)))))
+           `(org-code ((t (:foreground ,(ewal-get-color 'green)))))
            `(line-number ((t (:foreground ,(ewal-get-color 'blue)))))
            `(eshell-git-prompt-powerline-dir-face ((t (:background ,(ewal-get-color 'blue)))))
            `(eshell-git-prompt-powerline-clean-face ((t (:background ,(ewal-get-color 'green)))))
@@ -447,14 +454,14 @@
     vertico-posframe = {
       enable = true;
       defer = true;
-      hook = ["(vertico-mode . vertico-posframe-mode)"];
+      ghook = ["('vertico-mode-hook 'vertico-posframe-mode)"];
       config = ''(set-face-attribute 'vertico-posframe-face nil :family 'variable-pitch)'';
     };
     
     which-key-posframe = {
       enable = true;
       defer = true;
-      hook = ["(which-key-mode . which-key-posframe-mode)"];
+      ghook = ["('which-key-mode-hook 'which-key-posframe-mode)"];
       custom = {
         which-key-posframe-poshandler = "'posframe-poshandler-frame-bottom-center"; 
         which-key-posframe-parameters = "'(:parent-frame nil :refposhandler posframe-refposhandler-xwininfo)";

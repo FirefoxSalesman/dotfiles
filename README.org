@@ -45,12 +45,12 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] Add csl to the flake so we don't have to transfer it with a thumbdrive anymore
 
 ** Emacs
-+ [ ] https://github.com/diadochos/org-babel-eval-in-repl
-  Mildly Interesting, might give it a try
-+ [ ] Replace all instances of hook with ghook & all instances of bind with general
++ [ ] Make qutebrowser's rpc behave itself
+  - [ ] The browser should start in normal state
+  - [ ] Emacs should connect to the browser's rpc whenever it's ready
+  - [ ] The python files should be part of the emacs package & be provide by nix
++ [ ] Replace all instances of bind with general
 + [ ] Make the minibuffer dissapear
-+ [ ] Figure out how to ess good
-  Specifically, we'd like to create a menu to import data files
 + [ ] https://github.com/aurtzy/disproject
 + [ ] https://github.com/mattiasdrp/pokemacs-layout
   This could be useful for layout types

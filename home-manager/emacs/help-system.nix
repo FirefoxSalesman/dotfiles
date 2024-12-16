@@ -6,7 +6,7 @@
       enable = true;
       defer = true;
       config = ''(which-key-enable-god-mode-support)'';
-      hook = ["(on-first-input . which-key-mode)"];
+      ghook = ["('on-first-input-hook 'which-key-mode)"];
       custom = {
         which-key-idle-delay = "1";
         # which-key-popup-type = "'minibuffer";

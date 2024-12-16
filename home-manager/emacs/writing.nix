@@ -13,8 +13,7 @@
     org = {
       enable = true;
       mode = [''("\\.org\\'" . org-mode)''];
-      gfhook = ["('org-mode-hook (list 'efs/org-mode-setup 'my/org-capf))"];
-      # gfhook = ["('org-mode-hook 'efs/org-mode-setup)"];
+      gfhook = ["('org-mode-hook '(efs/org-mode-setup my/org-capf))"];
       custom = {
         org-confirm-babel-evaluate = "nil";
         org-src-fontify-natively = "t";
@@ -126,7 +125,7 @@
     
     org-modern = {
       enable = true;
-      hook = ["(org-mode . global-org-modern-mode)"];
+      ghook = ["('org-mode-hook 'global-org-modern-mode)"];
       custom = {
         org-modern-star = "'replace";
         org-modern-hide-stars = "t";
@@ -145,7 +144,7 @@
     
     org-auto-tangle = {
       enable = true;
-      hook = ["(org-mode . org-auto-tangle-mode)"];
+      ghook = ["('org-mode-hook 'org-auto-tangle-mode)"];
     };
     
     org-auto-export-pandoc = {
@@ -160,7 +159,7 @@
     denote = {
       enable = true;
       defer = true;
-      hook = ["(dired-mode . denote-dired-mode-in-directories)"];
+      gfhook = ["('dired-mode-hook 'denote-dired-mode-in-directories)"];
       custom = {
         denote-directory = ''(expand-file-name "~/doc/denote")'';
         denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "cybercrime" "databases" "scifi" "software-requirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics")'';
@@ -201,17 +200,19 @@
       enable = true;
       package = epkgs: epkgs.auctex;
       init = ''(setq-default TeX-master nil)'';
-      hook = [''
-        ('reftex-load-hook . (lambda ()
+      gfhook = [
+        ''
+          ('LaTeX-mode-hook (list 'magic-latex-buffer
+                                         'visual-line-mode
+                                         'LaTeX-math-mode
+                                         'flyspell-mode))
+        ''
+        ''
+          ('reftex-load-hook (lambda ()
                                 (gsetq reftex-section-levels
                                    (cons '("poemtitle" . -3) reftex-section-levels))))
-      ''];
-      gfhook = [''
-        ('LaTeX-mode-hook (list 'magic-latex-buffer
-                                       'visual-line-mode
-                                       'LaTeX-math-mode
-                                       'flyspell-mode))
-      ''];
+        ''
+      ];
       custom = {
         reftex-label-alist = '''(("\\poemtitle" ?P "poem:" "\\ref{%s}" nil ("poem" "poemtitle")))'';
         reftex-format-cite-function = ''
@@ -254,8 +255,9 @@
             "C-o" 'pdf-view-scroll-down-or-previous-page
             "O" 'pdf-view-scroll-down-or-previous-page))
       '';
-      hook = ["(pdf-view-mode . pdf-view-midnight-minor-mode)"];
-      gfhook = ["('TeX-after-compilation-finished-functions #'TeX-revert-document-beffer)"];
+      gfhook = [
+        "('TeX-after-compilation-finished-functions #'TeX-revert-document-beffer)"
+        "('pdf-view-mode-hook 'pdf-view-midnight-minor-mode)"];
       init = ''(setq-default pdf-view-display-size 'fit-width)'';
       extraConfig = '':magic ("%PDF" . pdf-view-mode)'';
     };
@@ -268,9 +270,9 @@
     cdlatex = {
       enable = true;
       defer = true;
-      hook = [
-        "(LaTeX-mode . turn-on-cdlatex)"
-        "(org-mode . org-cdlatex-mode)"
+      ghook = [
+        "('LaTeX-mode-hook 'turn-on-cdlatex)"
+        "('org-mode-hook 'org-cdlatex-mode)"
       ];
       generalTwo."'insert" = {
         cdlatex-mode-map."TAB" = "'cdlatex-tab";
@@ -284,7 +286,10 @@
       bindLocal.markdown-mode-map."C-c C-e" = "markdown-do";
       gfhook = ["('markdown-mode-hook (list 'outline-minor-mode 'efs/markdown-font-setup))"];
       mode = [''("\\.md\\'" . gfm-mode)''];
-      custom.markdown-command = ''"multimarkdown"'';
+      custom = {
+        markdown-command = ''"multimarkdown"'';
+        markdown-hide-markup = "t";
+      };
       generalTwo = {
         "'normal".markdown-mode-map = {
           "[h" = "'markdown-previous-visible-heading";
@@ -312,10 +317,8 @@
 
     writeroom-mode = {
       enable = true;
-      hook = [
-        "((woman-mode org-agenda-mode org-mode Info-mode markdown-mode) . writeroom-mode)"
-        "(writeroom-mode . visual-line-mode)"
-      ];
+      ghook = ["('(woman-mode-hook org-agenda-mode-hook org-mode-hook Info-mode-hook markdown-mode-hook) 'writeroom-mode)"];
+      gfhook = ["('writeroom-mode-hook 'visual-line-mode)"];
       custom = {
         writeroom-mode-line = "t";
         writeroom-maximize-window = "nil";
@@ -327,16 +330,16 @@
     flyspell = {
       enable = true;
       custom.ispell-personal-dictionary = "~/.config/emacs/ispell.txt";
-      hook = [
-        "(text-mode . flyspell-mode)"
-        "(prog-mode . flyspell-prog-mode)"
+      ghook = [
+        "('text-mode-hook 'flyspell-mode)"
+        "('prog-mode-hook 'flyspell-prog-mode)"
       ];
     };
 
     citar = {
       enable = true;
       config = ''(citar-denote-mode)'';
-      hook = ["((LaTeX-mode org-mode) . citar-capf-setup)"];
+      ghook = ["('(LaTeX-mode-hook org-mode-hook) 'citar-capf-setup)"];
       custom = {
         org-cite-insert-processor = "'citar";
         org-cite-follow-processor = "'citar";

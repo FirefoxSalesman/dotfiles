@@ -36,8 +36,8 @@
     (au "#+author: " q)
     (ti "#+title: " q)
     (ci "* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q)
-    (pandoc "#+auto-export-pandoc: to-")
     (pdf "#+auto-export-pandoc: to-latex-pdf")
+    (odt "#+auto-export-pandoc: to-odt")
   
     java-ts-mode
     (doc "/**" n> " * " q n " */")
@@ -67,7 +67,7 @@
     vertico = {
       enable = true;
       defer = true;
-      hook = ["(on-first-input . vertico-mode)"];
+      ghook = ["('on-first-input-hook 'vertico-mode)"];
       # Enable cycling for 'vertico-next & 'vertico-previous'.
       custom.vertico-cycle = "t";
       # This is for exwm's minibuffer issue
@@ -95,10 +95,10 @@
 
     corfu = {
       enable = true;
-      hook = [
-        "(minibuffer-setup . corfu-enable-in-minibuffer)"
-        "(on-first-buffer . global-corfu-mode)"
-      ] ;
+      ghook = [
+        "('minibuffer-setup-hook 'corfu-enable-in-minibuffer)"
+        "('on-first-buffer-hook 'global-corfu-mode)"
+      ];
       custom = {
         corfu-cycle = "t";
         corfu-autodelay = "0";
@@ -144,7 +144,7 @@
     
     corfu-popupinfo = {
       enable = true;
-      hook = ["(corfu-mode-hook . corfu-popupinfo-mode)"];
+      ghook = ["('corfu-mode-hook 'corfu-popupinfo-mode)"];
     };
     
     cape = {
@@ -167,7 +167,7 @@
     vertico-prescient = {
       enable = true;
       defer = true;
-      hook = ["(minibuffer-mode . vertico-prescient-mode)"];
+      ghook = ["('minibuffer-mode-hook 'vertico-prescient-mode)"];
       custom = {
         vertico-prescient-enable-filtering = "nil";
         vertico-prescient-completion-styles = "'(orderless prescient basic)";
@@ -178,7 +178,7 @@
     corfu-prescient = {
       enable = true;
       defer = true;
-      hook = ["(corfu-mode . corfu-prescient-mode)"];
+      ghook = ["('corfu-mode-hook 'corfu-prescient-mode)"];
       custom.corfu-prescient-completion-styles = "'(basic prescient)";
     };
 
@@ -199,16 +199,11 @@
       config = ''(marginalia-mode)'';
       afterCall = ["on-first-input-hook"];
     };
-    
-    nerd-icons-completion = {
-      enable = true;
-      hook = ["(marginalia-mode . nerd-icons-completion-marginalia-setup)"];
-    };
 
     consult = {
       enable = true;
       defer = true;
-      hook = ["(minibuffer-setup . consult-initial-narrow)"];
+      gfhook = ["('minibuffer-setup-hook 'consult-initial-narrow)"];
       command = ["consult-goto-line" "consult-keep-lines" "noct-consult-ripgrep-or-line"];
       bind = {
         "C-x C-f" = "consult-find";
@@ -455,7 +450,7 @@
     embark-consult = {
       enable = true;
       after = ["embark" "consult"];
-      hook = ["(embark-collect-mode . consult-preview-at-point-mode)"];
+      ghook = ["('embark-collect-mode-hook 'consult-preview-at-point-mode)"];
     };
 
     app-launcher = {
@@ -471,7 +466,7 @@
     ace-isearch = {
       enable = true;
       demand = true;
-      hook = ["(pdf-view-mode . (lambda () (ace-isearch-mode -1)))"];
+      gfhook = ["('pdf-view-mode-hook (lambda () (ace-isearch-mode -1)))"];
       bindLocal.isearch-mode-map."C-a" = "avy-isearch";
       config = ''
         (global-ace-isearch-mode)
@@ -497,7 +492,6 @@
     tempel = {
       enable = true;
       command = ["tempel-complete"];
-      # hook = ["((conf-mode prog-mode text-mode) . tempel-setup-capf)"];
       custom.tempel-path = ''"~/.config/emacs/templates.eld"'';
       init = ''
         (defun tempel-setup-capf ()
