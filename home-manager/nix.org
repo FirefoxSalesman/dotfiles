@@ -6686,7 +6686,7 @@ Use S-SPC to load old messages
 
 *** Webjump
 #+NAME: Emacs Internet Webjump
-#+begin_src nix
+#+begin_src nix :noweb yes
   webjump = {
     enable = true;
     generalOne."efs/leader-keys"."s" = "'webjump";
@@ -6694,9 +6694,25 @@ Use S-SPC to load old messages
       '(("DuckDuckGo" . [simple-query "duckduckgo.com" "duckduckgo.com/?q=" ""])
         ("Invidious" . [simple-query "inv.nadeko.net" "inv.nadeko.net/search?q=" ""])
         ("Aur" . [simple-query "aur.archlinux.org" "aur.archlinux.org/packages/?K=" ""])
-        ("Curseforge" . [simple-query "legacy.curseforge.com" "legacy.curseforge.com/minecraft/mc-mods/search?search=" ""]))
+        ;; ("Curseforge" . [simple-query "legacy.curseforge.com" "legacy.curseforge.com/minecraft/mc-mods/search?search=" ""]))
+        ("Curseforge" . webjump-to-curseforge))
+    '';
+    config = ''
+      <<Emacs Internet Webjump Config>>
     '';
   };
+#+end_src
+
+https://legacy.curseforge.com/minecraft/mc-mods/search?search=tetra
+
+#+NAME: Emacs Internet Webjump Config
+#+begin_src emacs-lisp
+  (defun webjump-to-curseforge (name)
+    (let* ((prefix "legacy.curseforge.com/minecraft/")
+           (category (completing-read "Choose a category" '("mc-mods" "modpacks" "shaders" "data-pack" "texture-packs")))
+  	 (url (concat prefix category))
+  	 (term (webjump-read-string (concat name " Search for"))))
+      (concat url "/search?search=" (webjump-url-encode term))))
 #+end_src
 
 *** Elfeed
@@ -6931,7 +6947,7 @@ This is a very ugly way of doing things
 
 **** Extra Config
 #+NAME: Qutebrowser Config
-#+begin_src python
+#+begin_src python-ts
   config.set('content.cookies.accept', 'no-3rdparty', 'chrome-devtools://*')
   config.set('content.cookies.accept', 'no-3rdparty', 'devtools://*')
 
@@ -6961,7 +6977,6 @@ This is a very ugly way of doing things
   c.fonts.prompts = 'default_size sans-serif'
   c.fonts.statusbar = '8pt "Source Code Pro"'
   config.source("emacs_hooks.py")
-  config.source("emacs_ipc.py")
 #+end_src
 
 #+NAME: Internet Qutebrowser Extraconfig

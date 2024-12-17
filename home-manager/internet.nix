@@ -77,7 +77,16 @@
         '(("DuckDuckGo" . [simple-query "duckduckgo.com" "duckduckgo.com/?q=" ""])
           ("Invidious" . [simple-query "inv.nadeko.net" "inv.nadeko.net/search?q=" ""])
           ("Aur" . [simple-query "aur.archlinux.org" "aur.archlinux.org/packages/?K=" ""])
-          ("Curseforge" . [simple-query "legacy.curseforge.com" "legacy.curseforge.com/minecraft/mc-mods/search?search=" ""]))
+          ;; ("Curseforge" . [simple-query "legacy.curseforge.com" "legacy.curseforge.com/minecraft/mc-mods/search?search=" ""]))
+          ("Curseforge" . webjump-to-curseforge))
+      '';
+      config = ''
+        (defun webjump-to-curseforge (name)
+          (let* ((prefix "legacy.curseforge.com/minecraft/")
+                 (category (completing-read "Choose a category" '("mc-mods" "modpacks" "shaders" "data-pack" "texture-packs")))
+               (url (concat prefix category))
+               (term (webjump-read-string (concat name " Search for"))))
+            (concat url "/search?search=" (webjump-url-encode term))))
       '';
     };
 
@@ -280,7 +289,6 @@
       c.fonts.prompts = 'default_size sans-serif'
       c.fonts.statusbar = '8pt "Source Code Pro"'
       config.source("emacs_hooks.py")
-      config.source("emacs_ipc.py")
     '';
   };
   
