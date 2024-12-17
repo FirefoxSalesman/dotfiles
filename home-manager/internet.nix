@@ -14,6 +14,7 @@
           '(("https:\\/\\/www\\.youtu\\.*be." . efs/mpv-browse-url)
             ("https:\\/\\/yewtu\\.*be." . efs/mpv-browse-url)
             ("https:\\/\\/inv\\.*nadeko\\.*net\\/watch." . efs/mpv-browse-url)
+            ("search\\.nixos\\.org[^z-a]*" . qutebrowser-open-url)
             ("." . (lambda (url &rest args) (eww url (prefix-numeric-value 4)))))
         '';
         browse-url-secondary-browser-function = "'browse-url-default-browser";
@@ -77,7 +78,7 @@
         '(("DuckDuckGo" . [simple-query "duckduckgo.com" "duckduckgo.com/?q=" ""])
           ("Invidious" . [simple-query "inv.nadeko.net" "inv.nadeko.net/search?q=" ""])
           ("Aur" . [simple-query "aur.archlinux.org" "aur.archlinux.org/packages/?K=" ""])
-          ;; ("Curseforge" . [simple-query "legacy.curseforge.com" "legacy.curseforge.com/minecraft/mc-mods/search?search=" ""]))
+          ("Nixpkgs" . [simple-query "search.nixos.org" "search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=" ""])
           ("Curseforge" . webjump-to-curseforge))
       '';
       config = ''

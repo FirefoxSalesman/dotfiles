@@ -1,4 +1,4 @@
-{ trivialBuild, inputs, consult, exwm, password-store, dash, evil } :
+{ trivialBuild, inputs, consult, exwm, password-store, dash, evil, doom-modeline } :
 
 trivialBuild rec {
   pname = "qutebrowser";
@@ -11,6 +11,7 @@ trivialBuild rec {
     password-store
     dash
     evil
+    doom-modeline
   ];
 
   buildInputs = propagatedUserEnvPkgs;

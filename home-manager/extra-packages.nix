@@ -9,10 +9,7 @@
     # comms
     (config.lib.nixGL.wrap teams-for-linux)
     (config.lib.nixGL.wrap thunderbird)
-    (discord.override {
-      withOpenASAR = true;
-      withVencord = true;
-    })
+    (vesktop.override {withSystemVencord = true;})
     # things emacs appreciates
     xclip
     xsel
