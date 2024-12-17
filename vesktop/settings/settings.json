@@ -4,7 +4,8 @@
     "useQuickCss": true,
     "themeLinks": [],
     "enabledThemes": [
-        "pywal.css"
+        "pywal.css",
+        "stylix.theme.css"
     ],
     "enableReactDevtools": true,
     "frameless": false,
@@ -570,6 +571,19 @@
         },
         "SupportHelper": {
             "enabled": true
+        },
+        "WebRichPresence (arRPC)": {
+            "enabled": false
+        },
+        "WebKeybinds": {
+            "enabled": true
+        },
+        "WebScreenShareFixes": {
+            "enabled": true
+        },
+        "WebContextMenus": {
+            "enabled": true,
+            "addBack": true
         }
     },
     "notifications": {
@@ -582,6 +596,6 @@
         "authenticated": false,
         "url": "https://api.vencord.dev/",
         "settingsSync": false,
-        "settingsSyncVersion": 1734332318880
+        "settingsSyncVersion": 1734460928683
     }
 }
