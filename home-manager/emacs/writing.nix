@@ -79,6 +79,8 @@
           		  #'cape-dict)))
       '';
       init = ''
+        ;; (add-to-list 'org-emphasis-alist '("‾" (:overline t)))
+        
         (defun efs/org-font-setup ()
           ;; Replace list hyphen with dot
           (font-lock-add-keywords 'org-mode
@@ -264,7 +266,7 @@
     magic-latex-buffer = {
       enable = true;
       defer = true;
-      afterCall = ["LaTeX-mode-hook"];
+      afterCall = ["LaTeX-mode-hook"] ;
     };
     
     cdlatex = {

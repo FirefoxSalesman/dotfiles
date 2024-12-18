@@ -3,8 +3,12 @@
 {
   home.packages = with pkgs; [
     (config.lib.nixGL.wrap gimp)
-    (config.lib.nixGL.wrap prismlauncher)
+    (config.lib.nixGL.wrap (prismlauncher.override {
+      jdks = with pkgs; [(config.lib.nixGL.wrap graalvm-ce)];
+    }))
     (config.lib.nixGL.wrap ollama)
+    wget
+    zip
     zbar
     # comms
     (config.lib.nixGL.wrap teams-for-linux)

@@ -1107,7 +1107,7 @@ Special note: The profile settings here take precedence over bash's, because I'm
 #+end_src
 
 ** Aesthetics
-*** Inputs & Packages
+*** Inputs
 #+begin_src nix :noweb yes :tangle aesthetics.nix
   { config, inputs, lib, pkgs, ... }:
 
@@ -1613,8 +1613,12 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
   {
     home.packages = with pkgs; [
       (config.lib.nixGL.wrap gimp)
-      (config.lib.nixGL.wrap prismlauncher)
+      (config.lib.nixGL.wrap (prismlauncher.override {
+        jdks = with pkgs; [(config.lib.nixGL.wrap graalvm-ce)];
+      }))
       (config.lib.nixGL.wrap ollama)
+      wget
+      zip
       zbar
       # comms
       (config.lib.nixGL.wrap teams-for-linux)
@@ -5207,8 +5211,11 @@ How to add a latex package
   		    #'cape-dict)))
 #+end_src
 
+https://emacs.stackexchange.com/questions/20339/easiest-way-to-render-an-overline-in-org-mode
 #+NAME: Emacs Org Init
 #+begin_src emacs-lisp
+  ;; (add-to-list 'org-emphasis-alist '("‾" (:overline t)))
+
   (defun efs/org-font-setup ()
     ;; Replace list hyphen with dot
     (font-lock-add-keywords 'org-mode
@@ -5452,7 +5459,7 @@ No idea what the rest of this is for.
   magic-latex-buffer = {
     enable = true;
     defer = true;
-    afterCall = ["LaTeX-mode-hook"];
+    afterCall = ["LaTeX-mode-hook"] ;
   };
 
   cdlatex = {
@@ -6078,7 +6085,7 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
 
   (defun efs/exwm-update-title ()
     (pcase exwm-class-name
-      ("qutebrowser" (exwm-workspace-rename-buffer (qutebrowser-propertize-buffer-name (format "Qutebrowser: %s" exwm-title))))
+      ("qutebrowser" (exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title)))
       ("mpv" (exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title)))))
 
   ;; From dmacs
@@ -6653,7 +6660,7 @@ https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance
 #+begin_src nix
   keyBindings = {
     normal = {
-      "search-next" = "m";
+      "ww" = "config-source";
       "m" = "search-next";
       "M" = "search-prev";
       "e" = "fake-key <Down>";
@@ -6709,6 +6716,7 @@ https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance
         "https://easylist-downloads.adblockplus.org/abp-filters-anti-cv.txt"
         #"https://gitlab.com/curben/urlhaus-filter/-/raw/master/urlhaus-filter.txt"
         "https://pgl.yoyo.org/adservers/serverlist.php?showintro=0;hostformat=hosts"
+        "https://raw.githubusercontent.com/DandelionSprout/adfilt/master/NorwegianExperimentalList%20alternate%20versions/NordicFiltersABP-Inclusion.txt"
         "https://github.com/uBlockOrigin/uAssets/raw/master/filters/legacy.txt"
         "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters.txt"
         "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters-2020.txt"
@@ -6721,6 +6729,7 @@ https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance
         "https://www.i-dont-care-about-cookies.eu/abp/"
         "https://secure.fanboy.co.nz/fanboy-cookiemonster.txt"
         "https://github.com/uBlockOrigin/uAssets/raw/master/filters/unbreak.txt"
+        "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/quick-fixes.txt"
       ];
     };
     autoplay = false;
@@ -6818,7 +6827,7 @@ This is a very ugly way of doing things
     show = "never";
   };
 
-  window.title_format = "{current_title}{title_sep}{current_url}";
+  window.title_format = "{current_title}";
   new_instance_open_target = "tab-silent";
   statusbar.show = "never";
 #+end_src
@@ -6854,7 +6863,7 @@ This is a very ugly way of doing things
   c.fonts.debug_console = '8pt "Source Code Pro"'
   c.fonts.prompts = 'default_size sans-serif'
   c.fonts.statusbar = '8pt "Source Code Pro"'
-  config.source("emacs_hooks.py")
+  config.source("emacs_ipc.py")
 #+end_src
 
 #+NAME: Internet Qutebrowser Extraconfig
@@ -6877,7 +6886,6 @@ This is a very ugly way of doing things
       "('exwm-init-hook 'global-qutebrowser-exwm-mode)"
     ];
     gfhook = [
-      "('qutebrowser-exwm-mode-hook '(evil-normal-state qutebrowser-rpc-get-connection))"
       "('server-visit-hook 'qute/dired-hook)"
     ];
     config = ''
@@ -6888,6 +6896,7 @@ This is a very ugly way of doing things
 
 #+NAME: Emacs Internet Qutebrowser Config
 #+begin_src emacs-lisp
+  (add-to-list 'qutebrowser-process-names "QtWebEngineProc")
   (define-minor-mode qute-dired-mode
     "Used for dired buffers qutebrowser is using as a file picker"
     :keymap '())

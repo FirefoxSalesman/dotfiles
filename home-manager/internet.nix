@@ -117,7 +117,7 @@
   
     keyBindings = {
       normal = {
-        "search-next" = "m";
+        "ww" = "config-source";
         "m" = "search-next";
         "M" = "search-prev";
         "e" = "fake-key <Down>";
@@ -162,6 +162,7 @@
             "https://easylist-downloads.adblockplus.org/abp-filters-anti-cv.txt"
             #"https://gitlab.com/curben/urlhaus-filter/-/raw/master/urlhaus-filter.txt"
             "https://pgl.yoyo.org/adservers/serverlist.php?showintro=0;hostformat=hosts"
+            "https://raw.githubusercontent.com/DandelionSprout/adfilt/master/NorwegianExperimentalList%20alternate%20versions/NordicFiltersABP-Inclusion.txt"
             "https://github.com/uBlockOrigin/uAssets/raw/master/filters/legacy.txt"
             "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters.txt"
             "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters-2020.txt"
@@ -174,6 +175,7 @@
             "https://www.i-dont-care-about-cookies.eu/abp/"
             "https://secure.fanboy.co.nz/fanboy-cookiemonster.txt"
             "https://github.com/uBlockOrigin/uAssets/raw/master/filters/unbreak.txt"
+            "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/quick-fixes.txt"
           ];
         };
         autoplay = false;
@@ -254,7 +256,7 @@
         show = "never";
       };
       
-      window.title_format = "{current_title}{title_sep}{current_url}";
+      window.title_format = "{current_title}";
       new_instance_open_target = "tab-silent";
       statusbar.show = "never";
   
@@ -289,7 +291,7 @@
       c.fonts.debug_console = '8pt "Source Code Pro"'
       c.fonts.prompts = 'default_size sans-serif'
       c.fonts.statusbar = '8pt "Source Code Pro"'
-      config.source("emacs_hooks.py")
+      config.source("emacs_ipc.py")
     '';
   };
   
@@ -303,10 +305,10 @@
       "('exwm-init-hook 'global-qutebrowser-exwm-mode)"
     ];
     gfhook = [
-      "('qutebrowser-exwm-mode-hook '(evil-normal-state qutebrowser-rpc-get-connection))"
       "('server-visit-hook 'qute/dired-hook)"
     ];
     config = ''
+      (add-to-list 'qutebrowser-process-names "QtWebEngineProc")
       (define-minor-mode qute-dired-mode
         "Used for dired buffers qutebrowser is using as a file picker"
         :keymap '())

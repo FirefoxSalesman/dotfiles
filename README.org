@@ -40,8 +40,7 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 * TODO Future Improvements
 ** Home Manager
 + [ ] Figure out how to auto install photogimp
-+ [ ] Figure out how to add betterdiscordctl to the package manager manager
-+ [ ] Add qutebrowser's userscripts to this file
++ [ ] Add qutebrowser's userscripts to nix
 + [ ] Add csl to the flake so we don't have to transfer it with a thumbdrive anymore
 
 ** Emacs

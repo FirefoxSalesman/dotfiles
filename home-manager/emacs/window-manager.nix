@@ -354,7 +354,7 @@
         
         (defun efs/exwm-update-title ()
           (pcase exwm-class-name
-            ("qutebrowser" (exwm-workspace-rename-buffer (qutebrowser-propertize-buffer-name (format "Qutebrowser: %s" exwm-title))))
+            ("qutebrowser" (exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title)))
             ("mpv" (exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title)))))
         
         ;; From dmacs
