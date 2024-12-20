@@ -331,6 +331,7 @@
            `(markdown-header-face ((t (:foreground ,(ewal-get-color 'blue)))))
            `(markdown-header-delimiter-face ((t (:foreground ,(ewal-get-color 'blue)))))
            `(markdown-bold-face ((t (:foreground ,(ewal-get-color 'green)))))
+           `(markdown-list-face ((t (:foreground ,(ewal-get-color 'green)))))
            `(org-code ((t (:foreground ,(ewal-get-color 'green)))))
            `(line-number ((t (:foreground ,(ewal-get-color 'blue)))))
            `(eshell-git-prompt-powerline-dir-face ((t (:background ,(ewal-get-color 'blue)))))

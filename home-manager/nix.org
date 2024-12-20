@@ -1534,6 +1534,7 @@ Makes emacs' theme mimic the wallpaper. A good pywal config will get most things
      `(markdown-header-face ((t (:foreground ,(ewal-get-color 'blue)))))
      `(markdown-header-delimiter-face ((t (:foreground ,(ewal-get-color 'blue)))))
      `(markdown-bold-face ((t (:foreground ,(ewal-get-color 'green)))))
+     `(markdown-list-face ((t (:foreground ,(ewal-get-color 'green)))))
      `(org-code ((t (:foreground ,(ewal-get-color 'green)))))
      `(line-number ((t (:foreground ,(ewal-get-color 'blue)))))
      `(eshell-git-prompt-powerline-dir-face ((t (:background ,(ewal-get-color 'blue)))))
@@ -2762,8 +2763,8 @@ EDNC does the same thing as dunst. It will pop up any new notifications inside o
   ednc = {
     enable = true;
     gfhook = [
-      # "('ednc-notification-presentation-functions #'show-notification-in-echo-area)"
-      "('ednc-notification-presentation-functions #'show-notification-in-buffer)"
+      "('ednc-notification-presentation-functions #'show-notification-in-echo-area)"
+      # "('ednc-notification-presentation-functions #'show-notification-in-buffer)"
     ];
     deferIncrementally = true;
     config = ''
@@ -2771,12 +2772,12 @@ EDNC does the same thing as dunst. It will pop up any new notifications inside o
     '';
   };
 
-  pip-frame = {
-    enable = true;
-    bind."M-s-'" = "(lambda () (interactive) (let ((the-buffer (current-buffer))) (evil-window-delete) (pip-frame-add-buffer the-buffer)))";
-    generalOne."efs/leader-keys"."k" = '''((lambda () (interactive) (pip-frame-delete-frame) (dolist (notification (cdr ednc--state)) (ednc-dismiss-notification notification))) :which-key "kill pip")'';
-    extraConfig = ":autoload pip-frame-add-buffer";
-  };
+  # pip-frame = {
+  #   enable = true;
+  #   bind."M-s-'" = "(lambda () (interactive) (let ((the-buffer (current-buffer))) (evil-window-delete) (pip-frame-add-buffer the-buffer)))";
+  #   generalOne."efs/leader-keys"."k" = '''((lambda () (interactive) (pip-frame-delete-frame) (dolist (notification (cdr ednc--state)) (ednc-dismiss-notification notification))) :which-key "kill pip")'';
+  #   extraConfig = ":autoload pip-frame-add-buffer";
+  # };
 #+end_src
 
 #+NAME: Emacs EDNC Config
@@ -2784,15 +2785,16 @@ EDNC does the same thing as dunst. It will pop up any new notifications inside o
   (ednc-mode)
   ;; (defun show-notification-in-echo-area (old new)
   ;;   (message (ednc-format-notification new t)))
-  (defun show-notification-in-buffer (old new)
-    (let ((name (format "Notification %d" (ednc-notification-id (or old new)))))
-      (with-current-buffer (get-buffer-create name)
-        (if new (let ((inhibit-read-only t))
-                  (if old (erase-buffer) (ednc-view-mode))
-                  (insert (ednc-format-notification new t))
-                  ;; (pop-to-buffer (current-buffer)))
-                  (pip-frame-add-buffer (current-buffer)))
-          (kill-buffer)))))
+  (defun show-notification-in-echo-area (old new)
+    (when new (message (ednc-format-notification new t))))
+  ;; (defun show-notification-in-buffer (old new)
+  ;;   (let ((name (format "Notification %d" (ednc-notification-id (or old new)))))
+  ;;     (with-current-buffer (get-buffer-create name)
+  ;;       (if new (let ((inhibit-read-only t))
+  ;;                 (if old (erase-buffer) (ednc-view-mode))
+  ;;                 (insert (ednc-format-notification new t))
+  ;;                 (pip-frame-add-buffer (current-buffer)))
+  ;;         (kill-buffer)))))
 #+end_src
 
 **** Postlude
@@ -4744,11 +4746,11 @@ https://github.com/jdtsmith/indent-bars
 #+begin_src nix :noweb yes
   plantuml-mode = {
     enable = true;
-    mode = [''"\\.plantuml\\'"''];
+    mode = [''"\\.plantuml\\'"'' ''"\\.puml\\'"''];
     custom = {
       org-plantuml-exec-mode = "'plantuml";
-      plantuml-default-exec-mode = "'executable";
-      plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
+      # plantuml-default-exec-mode = "'executable";
+      # plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
       org-plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
     }; 
     config = ''
@@ -5266,7 +5268,7 @@ https://emacs.stackexchange.com/questions/20339/easiest-way-to-render-an-overlin
     ghook = ["('org-mode-hook 'global-org-modern-mode)"];
     custom = {
       org-modern-star = "'replace";
-      org-modern-hide-stars = "t";
+      org-modern-hide-stars = "'leading";
     };
   };
 
@@ -6485,12 +6487,14 @@ You need regexes to do this, & you can build them easily using =rx=
 #+begin_src nix
   browse-url = {
     enable = true;
+    config = "(defun qutebrowser-browse-url (url &rest args) (qutebrowser-open-url url 'tab))";
     custom = {
       browse-url-handlers = ''
         '(("https:\\/\\/www\\.youtu\\.*be." . efs/mpv-browse-url)
           ("https:\\/\\/yewtu\\.*be." . efs/mpv-browse-url)
           ("https:\\/\\/inv\\.*nadeko\\.*net\\/watch." . efs/mpv-browse-url)
-          ("search\\.nixos\\.org[^z-a]*" . qutebrowser-open-url)
+          ("search\\.nixos\\.org[^z-a]*" . qutebrowser-browse-url)
+          ("melpa\.org\.*" . qutebrowser-browse-url)
           ("." . (lambda (url &rest args) (eww url (prefix-numeric-value 4)))))
       '';
       browse-url-secondary-browser-function = "'browse-url-default-browser";
@@ -6655,16 +6659,20 @@ https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance
   <<Internet Qutebrowser Emacs Integration>>
 #+end_src
 
-**** Keybinds & Enables
+**** Keybinds
+https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_with_emacs_keybindings/
 #+NAME:Internet Qutebrowser Keybinds
 #+begin_src nix
   keyBindings = {
     normal = {
-      "ww" = "config-source";
       "m" = "search-next";
       "M" = "search-prev";
       "e" = "fake-key <Down>";
       "o" = "fake-key <Up>";
+      "O" = "scroll-page 0 -0.5";
+      "E" = "scroll-page 0 0.5";
+      "<ctrl-o>" = "scroll-page 0 -1";
+      "<ctrl-e>" = "scroll-page 0 1";
       "t" = "mode-enter insert";
       "I" = "forward";
       "i" = "fake-key <Right>";
@@ -6678,6 +6686,7 @@ https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance
       ";p" = "spawn --userscript qute-pass --password-only";
       ";o" = "spawn --userscript qute-pass --otp-only";
       ";P" = "spawn --userscript emacsclient-wrapper '(qutebrowser-pass \"{url}\")'";
+      "a" = "cmd-set-text :";
     };
   };
 #+end_src
@@ -6862,7 +6871,6 @@ This is a very ugly way of doing things
   c.fonts.completion.entry = '8pt "Source Code Pro"'
   c.fonts.debug_console = '8pt "Source Code Pro"'
   c.fonts.prompts = 'default_size sans-serif'
-  c.fonts.statusbar = '8pt "Source Code Pro"'
   config.source("emacs_ipc.py")
 #+end_src
 

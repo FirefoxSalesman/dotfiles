@@ -134,11 +134,11 @@
 
     plantuml-mode = {
       enable = true;
-      mode = [''"\\.plantuml\\'"''];
+      mode = [''"\\.plantuml\\'"'' ''"\\.puml\\'"''];
       custom = {
         org-plantuml-exec-mode = "'plantuml";
-        plantuml-default-exec-mode = "'executable";
-        plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
+        # plantuml-default-exec-mode = "'executable";
+        # plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
         org-plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
       }; 
       config = ''

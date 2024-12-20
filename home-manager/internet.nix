@@ -9,12 +9,14 @@
   programs.emacs.init.usePackage = {
     browse-url = {
       enable = true;
+      config = "(defun qutebrowser-browse-url (url &rest args) (qutebrowser-open-url url 'tab))";
       custom = {
         browse-url-handlers = ''
           '(("https:\\/\\/www\\.youtu\\.*be." . efs/mpv-browse-url)
             ("https:\\/\\/yewtu\\.*be." . efs/mpv-browse-url)
             ("https:\\/\\/inv\\.*nadeko\\.*net\\/watch." . efs/mpv-browse-url)
-            ("search\\.nixos\\.org[^z-a]*" . qutebrowser-open-url)
+            ("search\\.nixos\\.org[^z-a]*" . qutebrowser-browse-url)
+            ("melpa\.org\.*" . qutebrowser-browse-url)
             ("." . (lambda (url &rest args) (eww url (prefix-numeric-value 4)))))
         '';
         browse-url-secondary-browser-function = "'browse-url-default-browser";
@@ -117,11 +119,14 @@
   
     keyBindings = {
       normal = {
-        "ww" = "config-source";
         "m" = "search-next";
         "M" = "search-prev";
         "e" = "fake-key <Down>";
         "o" = "fake-key <Up>";
+        "O" = "scroll-page 0 -0.5";
+        "E" = "scroll-page 0 0.5";
+        "<ctrl-o>" = "scroll-page 0 -1";
+        "<ctrl-e>" = "scroll-page 0 1";
         "t" = "mode-enter insert";
         "I" = "forward";
         "i" = "fake-key <Right>";
@@ -135,6 +140,7 @@
         ";p" = "spawn --userscript qute-pass --password-only";
         ";o" = "spawn --userscript qute-pass --otp-only";
         ";P" = "spawn --userscript emacsclient-wrapper '(qutebrowser-pass \"{url}\")'";
+        "a" = "cmd-set-text :";
       };
     };
   
@@ -290,7 +296,6 @@
       c.fonts.completion.entry = '8pt "Source Code Pro"'
       c.fonts.debug_console = '8pt "Source Code Pro"'
       c.fonts.prompts = 'default_size sans-serif'
-      c.fonts.statusbar = '8pt "Source Code Pro"'
       config.source("emacs_ipc.py")
     '';
   };

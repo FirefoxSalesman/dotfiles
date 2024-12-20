@@ -130,7 +130,7 @@
       ghook = ["('org-mode-hook 'global-org-modern-mode)"];
       custom = {
         org-modern-star = "'replace";
-        org-modern-hide-stars = "t";
+        org-modern-hide-stars = "'leading";
       };
     };
     
