@@ -297,7 +297,7 @@
         
             `((,(concat buffer-modified buffer-name) . nil)
               ("  " . nil)
-              (,(if vc-branch-name (concat vc-branch-name "  ") "") . doom-nano-modeline-vc-branch-name-face)
+              (,(if vc-branch-name (concat vc-branch-name " ") "") . doom-nano-modeline-vc-branch-name-face)
               (,(if vc-branch-name " " "") . nil)
               (,(if (or (equal major-mode 'nix-mode) (equal major-mode 'bibtex-mode)) (all-the-icons-icon-for-buffer) (nerd-icons-icon-for-buffer)) . doom-nano-modeline-major-mode-face)
               ("  " . nil))))

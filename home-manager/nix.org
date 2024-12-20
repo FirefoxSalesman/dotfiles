@@ -1468,7 +1468,7 @@ The powerline separators were borrowed from punchline, because I think they look
 
       `((,(concat buffer-modified buffer-name) . nil)
         ("  " . nil)
-        (,(if vc-branch-name (concat vc-branch-name "  ") "") . doom-nano-modeline-vc-branch-name-face)
+        (,(if vc-branch-name (concat vc-branch-name " ") "") . doom-nano-modeline-vc-branch-name-face)
         (,(if vc-branch-name " " "") . nil)
         (,(if (or (equal major-mode 'nix-mode) (equal major-mode 'bibtex-mode)) (all-the-icons-icon-for-buffer) (nerd-icons-icon-for-buffer)) . doom-nano-modeline-major-mode-face)
         ("  " . nil))))
@@ -6627,6 +6627,7 @@ https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance
 #+end_src
 
 *** Qutebrowser
+https://greasyfork.org/en/scripts/374833-yt2invidio
 #+NAME: Internet Qutebrowser
 #+begin_src nix :noweb yes
   programs.qutebrowser = {
@@ -6635,6 +6636,8 @@ https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance
     package = (config.lib.nixGL.wrap pkgs.qutebrowser);
 
     <<Internet Qutebrowser Keybinds>>
+
+    <<Internet Qutebrowser Greasemonkey>>
 
     <<Internet Qutebrowser Aliases>>
 
@@ -6689,6 +6692,21 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
       "a" = "cmd-set-text :";
     };
   };
+#+end_src
+
+**** Greasemonkey Scripts
+#+NAME: Internet Qutebrowser Greasemonkey
+#+begin_src nix
+  greasemonkey = [
+    (pkgs.fetchurl {
+  		url = "https://raw.githubusercontent.com/afreakk/greasemonkeyscripts/1d1be041a65c251692ee082eda64d2637edf6444/youtube_sponsorblock.js";
+  		sha256 = "sha256-e3QgDPa3AOpPyzwvVjPQyEsSUC9goisjBUDMxLwg8ZE=";
+  	})
+    (pkgs.fetchurl {
+  		url = "https://raw.githubusercontent.com/afreakk/greasemonkeyscripts/refs/heads/master/youtube_adblock.js";
+  		sha256 = "sha256-AyD9VoLJbKPfqmDEwFIEBMl//EIV/FYnZ1+ona+VU9c=";
+  	})
+  ];
 #+end_src
 
 **** Aliases
