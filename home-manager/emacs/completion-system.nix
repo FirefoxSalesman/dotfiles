@@ -467,7 +467,7 @@
       enable = true;
       demand = true;
       gfhook = ["('pdf-view-mode-hook (lambda () (ace-isearch-mode -1)))"];
-      bindLocal.isearch-mode-map."C-a" = "avy-isearch";
+      generalOne.isearch-mode-map."C-a" = "'avy-isearch";
       config = ''
         (global-ace-isearch-mode)
         (defun ace-isearch-consult-ripgrep-or-line-from-isearch ()

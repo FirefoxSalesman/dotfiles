@@ -66,11 +66,6 @@
       flake = false;
     };
     
-    org-auto-export-pandoc = {
-      url = "github:Y0ngg4n/org-auto-export-pandoc";
-      flake = false;
-    };
-    
     symex2 = {
       url = "github:firefoxsalesman/symex.el/2.0-integration";
       flake = false;
@@ -119,6 +114,7 @@
       pkgs = import nixpkgs {
         inherit system;
         config.allowUnfree = true;
+        overlays = [inputs.emacs-overlay.overlay];
       };
       pkgs-stable = import nixpkgs-stable {
         inherit system;
@@ -134,7 +130,7 @@
             inherit self;
             inherit inputs;
             inherit system;
-            inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline org-auto-export-pandoc symex2 treesitter-context gptel-quick eglot-x org-modern-indent mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
+            inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline symex2 treesitter-context gptel-quick eglot-x org-modern-indent mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
             inherit pkgs-stable;
           };
           modules = [

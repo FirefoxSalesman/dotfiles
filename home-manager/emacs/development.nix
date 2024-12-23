@@ -109,7 +109,7 @@
 
     project = {
       enable = true;
-      generalOne."efs/leader-keys"."P" = "project-prefix-map";
+      # generalOne."efs/leader-keys"."P" = "project-prefix-map";
     };
     
     projection = {
@@ -123,13 +123,18 @@
     
     projection-multi = {
       enable = true;
-      bindLocal.projection-map."RET" = "projection-multi-compile";
+      generalOne.projection-map."RET" = "'projection-multi-compile";
     };
     
     projection-multi-embark = {
         enable = true;
         after = ["embark" "projection-multi"];
         config = ''(projection-multi-embark-setup-command-map)'';
+    };
+    
+    disproject = {
+      enable = true;
+      generalOne."efs/leader-keys"."P" = "'disproject-dispatch";
     };
 
     plantuml-mode = {

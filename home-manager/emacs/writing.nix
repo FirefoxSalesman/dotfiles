@@ -151,10 +151,6 @@
     
     org-auto-export-pandoc = {
       enable = true;
-      package = epkgs: (pkgs.callPackage ./emacs-packages/org-auto-export-pandoc.nix {
-        inherit inputs;
-        inherit (epkgs) trivialBuild ox-pandoc;
-      });
       ghook = ["('after-save-hook (lambda () (when (equal major-mode 'org-mode) (org-auto-export-pandoc))))"];
     };
 
@@ -241,7 +237,7 @@
     pdf-tools = {
       enable = true;
       defer = true;
-      bindLocal.pdf-view-mode-map."C-s" = "search-forward";
+      generalOne.pdf-view-mode-map."C-s" = "'search-forward";
       custom = {
         # Makes PDFtools the default
         TeX-view-program-selection = '''((output-pdf "PDF Tools"))'';
@@ -285,7 +281,7 @@
     markdown = {
       enable = true;
       defer = true;
-      bindLocal.markdown-mode-map."C-c C-e" = "markdown-do";
+      generalOne.markdown-mode-map."C-c C-e" = "'markdown-do";
       gfhook = ["('markdown-mode-hook (list 'outline-minor-mode 'efs/markdown-font-setup))"];
       mode = [''("\\.md\\'" . gfm-mode)''];
       custom = {

@@ -82,8 +82,6 @@
   };
 
   programs.emacs.init.usePackage = {
-
-
     pulseaudio-control = {
       enable = true;
       custom.pulseaudio-control-volume-step = ''"5%"'';

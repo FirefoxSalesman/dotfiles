@@ -44,10 +44,7 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] Add csl to the flake so we don't have to transfer it with a thumbdrive anymore
 
 ** Emacs
-+ [ ] Make qutebrowser's rpc behave itself
-  - [ ] The browser should start in normal state
-  - [ ] Emacs should connect to the browser's rpc whenever it's ready
-  - [ ] The python files should be part of the emacs package & be provide by nix
++ [ ] The python files from emacs-qutebrowser should be part of the emacs package & be provided by nix
 + [ ] Replace all instances of bind with general
 + [ ] Make the minibuffer dissapear
 + [ ] https://github.com/aurtzy/disproject

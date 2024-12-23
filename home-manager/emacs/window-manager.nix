@@ -259,7 +259,7 @@
         "('exwm-update-title-hook 'efs/exwm-update-title)"
       ];
       # Ctrl+q will enable the next key to be sent directly
-      bindLocal.exwm-mode-map."C-q" = "exwm-input-send-next-key";
+      generalOne.exwm-mode-map."C-q" = "'exwm-input-send-next-key";
       generalTwo.local-leader.exwm-mode-map = {
         "n" = '''(lambda () (interactive) (start-process-shell-command "warpd" nil "warpd --normal"))'';
         "x" = '''(lambda () (interactive) (start-process-shell-command "warpd" nil "warpd --hint"))'';

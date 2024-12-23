@@ -97,11 +97,6 @@
     flake = false;
   };
 
-  org-auto-export-pandoc = {
-    url = "github:Y0ngg4n/org-auto-export-pandoc";
-    flake = false;
-  };
-
   symex2 = {
     url = "github:firefoxsalesman/symex.el/2.0-integration";
     flake = false;
@@ -152,6 +147,7 @@
   pkgs = import nixpkgs {
     inherit system;
     config.allowUnfree = true;
+    overlays = [inputs.emacs-overlay.overlay];
   };
   pkgs-stable = import nixpkgs-stable {
     inherit system;
@@ -167,7 +163,7 @@
     inherit self;
     inherit inputs;
     inherit system;
-    inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline org-auto-export-pandoc symex2 treesitter-context gptel-quick eglot-x org-modern-indent mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
+    inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline symex2 treesitter-context gptel-quick eglot-x org-modern-indent mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
     inherit pkgs-stable;
   };
   modules = [
@@ -2764,37 +2760,19 @@ EDNC does the same thing as dunst. It will pop up any new notifications inside o
     enable = true;
     gfhook = [
       "('ednc-notification-presentation-functions #'show-notification-in-echo-area)"
-      # "('ednc-notification-presentation-functions #'show-notification-in-buffer)"
     ];
     deferIncrementally = true;
     config = ''
       <<Emacs EDNC Config>>
     '';
   };
-
-  # pip-frame = {
-  #   enable = true;
-  #   bind."M-s-'" = "(lambda () (interactive) (let ((the-buffer (current-buffer))) (evil-window-delete) (pip-frame-add-buffer the-buffer)))";
-  #   generalOne."efs/leader-keys"."k" = '''((lambda () (interactive) (pip-frame-delete-frame) (dolist (notification (cdr ednc--state)) (ednc-dismiss-notification notification))) :which-key "kill pip")'';
-  #   extraConfig = ":autoload pip-frame-add-buffer";
-  # };
 #+end_src
 
 #+NAME: Emacs EDNC Config
 #+begin_src emacs-lisp
   (ednc-mode)
-  ;; (defun show-notification-in-echo-area (old new)
-  ;;   (message (ednc-format-notification new t)))
   (defun show-notification-in-echo-area (old new)
     (when new (message (ednc-format-notification new t))))
-  ;; (defun show-notification-in-buffer (old new)
-  ;;   (let ((name (format "Notification %d" (ednc-notification-id (or old new)))))
-  ;;     (with-current-buffer (get-buffer-create name)
-  ;;       (if new (let ((inhibit-read-only t))
-  ;;                 (if old (erase-buffer) (ednc-view-mode))
-  ;;                 (insert (ednc-format-notification new t))
-  ;;                 (pip-frame-add-buffer (current-buffer)))
-  ;;         (kill-buffer)))))
 #+end_src
 
 **** Postlude
@@ -2906,9 +2884,9 @@ M-SPC is our local leader, & it's used for keys specific to a given major mode
     demand = true;
     gfhook = ["('doom-escape-hook 'evil-normal-state)"];
     bind."H-u" = "universal-argument";
-    bindLocal.universal-argument-map = {
-      "H-u" = "universal-argument-more";
-      "C-u" = "nil";
+    generalOne.universal-argument-map = {
+      "H-u" = "'universal-argument-more";
+      "C-u" = "'nil";
     };
     custom = {
       # Various settings to make it more like vim
@@ -3480,13 +3458,13 @@ By default, any key pressed while in god state is treated as if it was pressed w
     defer = true;
     command = ["evil-god-state"];
     gfhook = ["('doom-escape-hook 'evil-god-state-bail)"];
-    bindLocal.evil-god-state-map = {
-        "<escape>" = "evil-god-state-bail";
-        "<return>" = "evil-emacs-state";
-    };
     generalOne = {
       "'normal"."," = "'evil-execute-in-god-state";
       "'emacs"."<escape>" = "'evil-god-state";
+      evil-god-state-map = {
+        "<escape>" = "'evil-god-state-bail";
+        "<return>" = "'evil-emacs-state";
+      };
     };
   };
 #+end_src
@@ -4168,7 +4146,7 @@ Ace-window & avy actions from karthink
     enable = true;
     demand = true;
     gfhook = ["('pdf-view-mode-hook (lambda () (ace-isearch-mode -1)))"];
-    bindLocal.isearch-mode-map."C-a" = "avy-isearch";
+    generalOne.isearch-mode-map."C-a" = "'avy-isearch";
     config = ''
       <<Emacs Search Config>>
     '';
@@ -4712,7 +4690,7 @@ https://github.com/jdtsmith/indent-bars
 #+begin_src nix :noweb yes
   project = {
     enable = true;
-    generalOne."efs/leader-keys"."P" = "project-prefix-map";
+    # generalOne."efs/leader-keys"."P" = "project-prefix-map";
   };
 
   projection = {
@@ -4725,13 +4703,18 @@ https://github.com/jdtsmith/indent-bars
 
   projection-multi = {
     enable = true;
-    bindLocal.projection-map."RET" = "projection-multi-compile";
+    generalOne.projection-map."RET" = "'projection-multi-compile";
   };
 
   projection-multi-embark = {
       enable = true;
       after = ["embark" "projection-multi"];
       config = ''(projection-multi-embark-setup-command-map)'';
+  };
+
+  disproject = {
+    enable = true;
+    generalOne."efs/leader-keys"."P" = "'disproject-dispatch";
   };
 #+end_src
 
@@ -5289,10 +5272,6 @@ https://emacs.stackexchange.com/questions/20339/easiest-way-to-render-an-overlin
 
   org-auto-export-pandoc = {
     enable = true;
-    package = epkgs: (pkgs.callPackage ./emacs-packages/org-auto-export-pandoc.nix {
-      inherit inputs;
-      inherit (epkgs) trivialBuild ox-pandoc;
-    });
     ghook = ["('after-save-hook (lambda () (when (equal major-mode 'org-mode) (org-auto-export-pandoc))))"];
   };
 #+end_src
@@ -5308,23 +5287,6 @@ https://emacs.stackexchange.com/questions/20339/easiest-way-to-render-an-overlin
 
     propagatedUserEnvPkgs = [
       compat
-    ];
-
-    buildInputs = propagatedUserEnvPkgs;
-  }
-
-#+end_src
-
-#+begin_src nix :tangle emacs/emacs-packages/org-auto-export-pandoc.nix
-  { inputs, trivialBuild, ox-pandoc } :
-
-  trivialBuild rec {
-    pname = "org-modern-indent";
-    version = "current";
-    src = inputs.org-auto-export-pandoc;
-
-    propagatedUserEnvPkgs = [
-      ox-pandoc
     ];
 
     buildInputs = propagatedUserEnvPkgs;
@@ -5442,7 +5404,7 @@ No idea what the rest of this is for.
   pdf-tools = {
     enable = true;
     defer = true;
-    bindLocal.pdf-view-mode-map."C-s" = "search-forward";
+    generalOne.pdf-view-mode-map."C-s" = "'search-forward";
     custom = {
       # Makes PDFtools the default
       TeX-view-program-selection = '''((output-pdf "PDF Tools"))'';
@@ -5495,7 +5457,7 @@ No idea what the rest of this is for.
   markdown = {
     enable = true;
     defer = true;
-    bindLocal.markdown-mode-map."C-c C-e" = "markdown-do";
+    generalOne.markdown-mode-map."C-c C-e" = "'markdown-do";
     gfhook = ["('markdown-mode-hook (list 'outline-minor-mode 'efs/markdown-font-setup))"];
     mode = [''("\\.md\\'" . gfm-mode)''];
     custom = {
@@ -5958,7 +5920,7 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
       "('exwm-update-title-hook 'efs/exwm-update-title)"
     ];
     # Ctrl+q will enable the next key to be sent directly
-    bindLocal.exwm-mode-map."C-q" = "exwm-input-send-next-key";
+    generalOne.exwm-mode-map."C-q" = "'exwm-input-send-next-key";
     generalTwo.local-leader.exwm-mode-map = {
       "n" = '''(lambda () (interactive) (start-process-shell-command "warpd" nil "warpd --normal"))'';
       "x" = '''(lambda () (interactive) (start-process-shell-command "warpd" nil "warpd --hint"))'';
@@ -6246,8 +6208,6 @@ This is where all the audio/video stuff goes
     <<Mpv>>
 
     programs.emacs.init.usePackage = {
-
-      
       <<Emacs Pulseaudio Control>>
     };
   }
@@ -6654,6 +6614,8 @@ https://greasyfork.org/en/scripts/374833-yt2invidio
 
       <<Internet Qutebrowser Tabs>>
 
+      <<Internet Qutebrowser Links>>
+
     };
 
     <<Internet Qutebrowser Extraconfig>>
@@ -6690,13 +6652,14 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
       ";o" = "spawn --userscript qute-pass --otp-only";
       ";P" = "spawn --userscript emacsclient-wrapper '(qutebrowser-pass \"{url}\")'";
       "a" = "cmd-set-text :";
+      "<ctrl-f>" = "hint links spawn mpv {hint-url}";
     };
   };
 #+end_src
 
 **** Greasemonkey Scripts
 #+NAME: Internet Qutebrowser Greasemonkey
-#+begin_src nix
+#+begin_src nix :noweb yes
   greasemonkey = [
     (pkgs.fetchurl {
   		url = "https://raw.githubusercontent.com/afreakk/greasemonkeyscripts/1d1be041a65c251692ee082eda64d2637edf6444/youtube_sponsorblock.js";
@@ -6859,6 +6822,12 @@ This is a very ugly way of doing things
   statusbar.show = "never";
 #+end_src
 
+**** Link Hints
+#+NAME: Internet Qutebrowser Links
+#+begin_src nix
+  hints.chars = "crstbfneia";
+#+end_src
+
 **** Extra Config
 #+NAME: Qutebrowser Config
 #+begin_src python-ts
@@ -6913,6 +6882,7 @@ This is a very ugly way of doing things
     ];
     gfhook = [
       "('server-visit-hook 'qute/dired-hook)"
+      "('qutebrowser-exwm-mode-hook 'evil-normal-state)"
     ];
     config = ''
       <<Emacs Internet Qutebrowser Config>>

@@ -141,6 +141,7 @@
         ";o" = "spawn --userscript qute-pass --otp-only";
         ";P" = "spawn --userscript emacsclient-wrapper '(qutebrowser-pass \"{url}\")'";
         "a" = "cmd-set-text :";
+        "<ctrl-f>" = "hint links spawn mpv {hint-url}";
       };
     };
   
@@ -277,6 +278,8 @@
       new_instance_open_target = "tab-silent";
       statusbar.show = "never";
   
+      hints.chars = "crstbfneia";
+  
     };
   
     extraConfig = ''
@@ -322,6 +325,7 @@
     ];
     gfhook = [
       "('server-visit-hook 'qute/dired-hook)"
+      "('qutebrowser-exwm-mode-hook 'evil-normal-state)"
     ];
     config = ''
       (add-to-list 'qutebrowser-process-names "QtWebEngineProc")

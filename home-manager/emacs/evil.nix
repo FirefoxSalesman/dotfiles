@@ -7,9 +7,9 @@
       demand = true;
       gfhook = ["('doom-escape-hook 'evil-normal-state)"];
       bind."H-u" = "universal-argument";
-      bindLocal.universal-argument-map = {
-        "H-u" = "universal-argument-more";
-        "C-u" = "nil";
+      generalOne.universal-argument-map = {
+        "H-u" = "'universal-argument-more";
+        "C-u" = "'nil";
       };
       custom = {
         # Various settings to make it more like vim
@@ -498,13 +498,13 @@
       defer = true;
       command = ["evil-god-state"];
       gfhook = ["('doom-escape-hook 'evil-god-state-bail)"];
-      bindLocal.evil-god-state-map = {
-          "<escape>" = "evil-god-state-bail";
-          "<return>" = "evil-emacs-state";
-      };
       generalOne = {
         "'normal"."," = "'evil-execute-in-god-state";
         "'emacs"."<escape>" = "'evil-god-state";
+        evil-god-state-map = {
+          "<escape>" = "'evil-god-state-bail";
+          "<return>" = "'evil-emacs-state";
+        };
       };
     };
 

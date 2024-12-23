@@ -263,32 +263,14 @@
           enable = true;
           gfhook = [
             "('ednc-notification-presentation-functions #'show-notification-in-echo-area)"
-            # "('ednc-notification-presentation-functions #'show-notification-in-buffer)"
           ];
           deferIncrementally = true;
           config = ''
             (ednc-mode)
-            ;; (defun show-notification-in-echo-area (old new)
-            ;;   (message (ednc-format-notification new t)))
             (defun show-notification-in-echo-area (old new)
               (when new (message (ednc-format-notification new t))))
-            ;; (defun show-notification-in-buffer (old new)
-            ;;   (let ((name (format "Notification %d" (ednc-notification-id (or old new)))))
-            ;;     (with-current-buffer (get-buffer-create name)
-            ;;       (if new (let ((inhibit-read-only t))
-            ;;                 (if old (erase-buffer) (ednc-view-mode))
-            ;;                 (insert (ednc-format-notification new t))
-            ;;                 (pip-frame-add-buffer (current-buffer)))
-            ;;         (kill-buffer)))))
           '';
         };
-        
-        # pip-frame = {
-        #   enable = true;
-        #   bind."M-s-'" = "(lambda () (interactive) (let ((the-buffer (current-buffer))) (evil-window-delete) (pip-frame-add-buffer the-buffer)))";
-        #   generalOne."efs/leader-keys"."k" = '''((lambda () (interactive) (pip-frame-delete-frame) (dolist (notification (cdr ednc--state)) (ednc-dismiss-notification notification))) :which-key "kill pip")'';
-        #   extraConfig = ":autoload pip-frame-add-buffer";
-        # };
 
       };
 

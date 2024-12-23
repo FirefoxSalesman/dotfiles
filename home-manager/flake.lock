@@ -577,22 +577,6 @@
         "url": "https://devimages-cdn.apple.com/design/resources/download/NY.dmg"
       }
     },
-    "org-auto-export-pandoc": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1729931567,
-        "narHash": "sha256-83sKFHPwWLkA1NpLEh6iNRfkPkcTq4vejSRA3+kdrAw=",
-        "owner": "Y0ngg4n",
-        "repo": "org-auto-export-pandoc",
-        "rev": "4c63da7ed3c6bae6fd512d2b886ed3c57c850219",
-        "type": "github"
-      },
-      "original": {
-        "owner": "Y0ngg4n",
-        "repo": "org-auto-export-pandoc",
-        "type": "github"
-      }
-    },
     "org-modern-indent": {
       "flake": false,
       "locked": {
@@ -646,7 +630,6 @@
         "nixgl": "nixgl",
         "nixpkgs": "nixpkgs_3",
         "nixpkgs-stable": "nixpkgs-stable_2",
-        "org-auto-export-pandoc": "org-auto-export-pandoc",
         "org-modern-indent": "org-modern-indent",
         "repeaters": "repeaters",
         "stylix": "stylix",
