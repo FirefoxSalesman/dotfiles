@@ -463,7 +463,7 @@
                                          inferior-python-mode
                                          occur-mode
                                          grep-mode
-                                         "^\\*eshell\\*"
+                                         "^\\*.*eshell\\*"
                                          "^\\*eat\\*"
                                          "^\\*Sage\\*"
                                          flymake-diagnostics-buffer-mode

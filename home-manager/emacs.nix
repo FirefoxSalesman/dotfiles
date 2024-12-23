@@ -220,9 +220,9 @@
           defer = true;
           command = ["start-ollama"];
           generalOne."efs/leader-keys" = {
-            "G" = '''(:ignore t :which-key "gptel")'';
-            "Gs" = '''(start-ollama :which-key "start")'';
-            "Gp" = '''(gptel :which-key "prompt")'';
+            "g" = '''(:ignore t :which-key "gptel")'';
+            "gs" = '''(start-ollama :which-key "start")'';
+            "gp" = '''(gptel :which-key "prompt")'';
           };
           generalTwo."local-leader".gptel-mode-map = {
             "d" = '''(gptel-send :which-key "send")'';
@@ -255,7 +255,7 @@
           });
           generalOne = {
             embark-general-map."?" = '''(gptel-quick :which-key "summarize")''; 
-            "efs/leader-keys"."Gq" = '''(gptel-quick :which-key "summarize")'';
+            "efs/leader-keys"."gq" = '''(gptel-quick :which-key "summarize")'';
           };
         };
 

@@ -107,23 +107,47 @@
       };
     };
 
+    magit = {
+      enable = true;
+      defer = true;
+      custom.magit-display-buffer-function = "#'magit-display-buffer-same-window-except-diff-v1";
+      config = ''
+        (defun dired-git-add ()
+            (interactive)
+            (start-process "git" nil "git" "add" (dired-get-marked-files)))
+      '';
+    };
+    
     project = {
       enable = true;
-      # generalOne."efs/leader-keys"."P" = "project-prefix-map";
     };
     
     projection = {
       enable = true;
+      command = [
+        "projection-set-primary-project-type"
+        "projection-set-extra-project-types"
+        "projection-find-other-file"
+        "projection-show-project-info"
+        "projection-commands-build-project"
+        "projection-commands-configure-project"
+        "projection-commands-install-project"
+        "projection-commands-package-project"
+        "projection-artifacts-list"
+        "projection-hook"
+        "projection-hook-clear"
+        "projection-commands-run-project"
+        "projection-commands-test-project"
+      ];
       config = ''
         (global-projection-hook-mode)
         (oset projection-project-type-maven build "mvn -B clean compile")
       '' ;
-      generalOne."efs/leader-keys"."C-p" = "projection-map";
     };
     
     projection-multi = {
       enable = true;
-      generalOne.projection-map."RET" = "'projection-multi-compile";
+      command = ["projection-multi-compile"];
     };
     
     projection-multi-embark = {
@@ -135,6 +159,50 @@
     disproject = {
       enable = true;
       generalOne."efs/leader-keys"."P" = "'disproject-dispatch";
+      custom.disproject-custom-suffixes = '''(("1" "Set Primary Type"
+                                                   :command-type call
+                                                   :command #'projection-set-primary-project-type)
+                                              ("2" "Set Extra Types"
+                                                   :command-type call
+                                                   :command #'projection-set-extra-project-types)
+                                              ("RET" "Compile Multi"
+                                                   :command-type call
+                                                   :command #'projection-multi-compile)
+                                              ("o" "Other File"
+                                                   :command-type call
+                                                   :command #'projection-find-other-file)
+                                              ("I" "Info"
+                                                   :command-type call
+                                                   :command #'projection-show-project-info)
+                                              ("c" "Build"
+                                                   :command-type call
+                                                   :command #'projection-commands-build-project)
+                                              ("g" "Configure"
+                                                   :command-type call
+                                                   :command #'projection-commands-configure-project)
+                                              ("i" "Install"
+                                                   :command-type call
+                                                   :command #'projection-commands-install-project)
+                                              ("k" "Make Package"
+                                                   :command-type call
+                                                   :command #'projection-commands-package-project)
+                                              ("l" "List Artifacts"
+                                                   :command-type call
+                                                   :command #'projection-artifacts-list)
+                                              ("h" "Hook"
+                                                   :command-type call
+                                                   :command #'projection-hook)
+                                              ("H" "Clear Hook"
+                                                   :command-type call
+                                                   :command #'projection-hook-clear)
+                                              ("r" "Run"
+                                                   :command-type call
+                                                   :command #'projection-commands-run-project)
+                                              ("t" "Test"
+                                                   :command-type call
+                                                   :command #'projection-commands-test-project))
+      '';
+      config = "(require 'magit)";
     };
 
     plantuml-mode = {
@@ -218,27 +286,6 @@
         dape-window-arrangement = "gud";
         dape-key-prefix = ''"\C-x\C-a"'';
       };
-    };
-
-    magit = {
-      enable = true;
-      defer = true;
-      custom.magit-display-buffer-function = "#'magit-display-buffer-same-window-except-diff-v1";
-      generalOne."efs/leader-keys" = {
-        "g" = '''(:ignore t :which-key "git")'';
-        "gg" = '''(magit-status :which-key "status")'';
-        "gc" = '''(magit-commit :which-key "commit")'';
-        "gb" = '''(magit-branch :which-key "branch")'';
-        "gi" = '''(magit-commit :which-key "init")'';
-        "gl" = '''(magit-clone :which-key "clone")'';
-        "gp" = '''(magit-pull :which-key "pull")'';
-        "gP" = '''(magit-push :which-key "push")'';
-      };
-      config = ''
-        (defun dired-git-add ()
-            (interactive)
-            (start-process "git" nil "git" "add" (dired-get-marked-files)))
-      '';
     };
 
     python-mode = {
