@@ -29,6 +29,7 @@
       ./emacs.nix
       ./shells.nix
       ./sage.nix
+      ./keyboard.nix
     ];
 
   nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];

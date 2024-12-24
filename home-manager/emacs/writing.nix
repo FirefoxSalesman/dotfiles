@@ -51,7 +51,8 @@
         (org-babel-do-load-languages
          'org-babel-load-languages
          '((emacs-lisp . t )
-           (python . t)))
+           (python . t)
+           (R . t)))
         (push '("conf-unix" . conf-unix) org-src-lang-modes)
         
         ;; This is needed as of Org 9.2

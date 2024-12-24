@@ -348,8 +348,7 @@
       package = epkgs: epkgs.ess;
       mode = [''"\\.R\\'"''];
       custom.ess-ask-for-ess-directory = "nil";
-      config = "(org-babel-do-load-languages 'org-babel-load-languages '((R . t)))";
-    } ;
+    };
 
     zenscript-mode = {
       enable = true;

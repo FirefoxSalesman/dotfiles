@@ -47,7 +47,5 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] The python files from emacs-qutebrowser should be part of the emacs package & be provided by nix
 + [ ] Replace all instances of bind with general
 + [ ] Make the minibuffer dissapear
-+ [ ] https://github.com/aurtzy/disproject
-+ [ ] https://github.com/mattiasdrp/pokemacs-layout
-  This could be useful for layout types
++ [ ] https://github.com/sympodius/org-novelist
 
