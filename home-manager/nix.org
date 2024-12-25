@@ -4433,6 +4433,15 @@ We use the default dirvish config. It's like ranger.el, but without the bugs.
         enable = true;
         generalTwo."'normal".dirvish-mode-map."M-t" = "'dired-posframe-mode";
       };
+      
+      image = {
+        enable = true;
+        generalTwo."'normal".image-map = {
+          "E" = "'image-next-file";
+          "O" = "'image-previous-file";
+        };
+        custom.image-animate-loop = "t";
+      };
     };
   }
 #+end_src
@@ -4516,36 +4525,44 @@ I think most of it was from the github page for lsp mode, but it's been a while,
       sqls
     ];
 
-    programs.emacs.init.usePackage = {
-      <<Emacs Development Misc>>
-      
-      <<Emacs Development Direnv>>
+    programs.emacs = {
+      extraPackages = epkgs: with epkgs; [
+        project
+      ];
 
-      <<Emacs Development Treesitter Setup>>
+      init.usePackage = {
+        <<Emacs Development Misc>>
+        
+        <<Emacs Development Direnv>>
 
-      <<Emacs Development Treesitter Context>>
-      
-      <<Emacs Development Project>>
+        <<Emacs Development Treesitter Setup>>
 
-      <<Emacs Development Plantuml>>
+        <<Emacs Development Treesitter Context>>
+        
+        <<Emacs Development Project>>
 
-      <<Emacs Development Eglot>>
-      
-      <<Emacs Development Dape>>
-      
-      <<Emacs Development Python>>
+        <<Emacs Development DevDocs>>
 
-      <<Emacs Development Java>>
-      
-      <<Emacs Development Nix>>
+        <<Emacs Development Plantuml>>
 
-      # <<Emacs Development Webdev>>
+        <<Emacs Development Eglot>>
+        
+        # <<Emacs Development Dape>>
+        
+        <<Emacs Development Python>>
 
-      # <<Emacs Development Racket>>
+        <<Emacs Development Java>>
+        
+        <<Emacs Development Nix>>
 
-      <<Emacs Development R>>
+        # <<Emacs Development Webdev>>
 
-      <<Emacs Development Zenscript>>
+        # <<Emacs Development Racket>>
+
+        <<Emacs Development R>>
+
+        <<Emacs Development Zenscript>>
+      };    
     };
   }
 #+end_src
@@ -4689,42 +4706,29 @@ https://github.com/jdtsmith/indent-bars
 #+begin_src nix :noweb yes
   magit = {
     enable = true;
-    defer = true;
     custom.magit-display-buffer-function = "#'magit-display-buffer-same-window-except-diff-v1";
     config = ''
       <<Emacs Magit Config>>
     '';
+    generalOne.project-prefix-map = {
+      "v" = "'magit-status";
+      "c" = "'magit-commit";
+      "p" = "'magit-pull";
+      "P" = "'magit-push";
+    };
   };
 
   project = {
     enable = true;
-  };
-
-  projection = {
-    enable = true;
-    command = [
-      "projection-set-primary-project-type"
-      "projection-set-extra-project-types"
-      "projection-find-other-file"
-      "projection-show-project-info"
-      "projection-commands-build-project"
-      "projection-commands-configure-project"
-      "projection-commands-install-project"
-      "projection-commands-package-project"
-      "projection-artifacts-list"
-      "projection-hook"
-      "projection-hook-clear"
-      "projection-commands-run-project"
-      "projection-commands-test-project"
-    ];
-    config = ''
-      <<Emacs Development Projection Config>>
-    '' ;
+    generalOne."efs/leader-keys"."P" = "project-prefix-map";
   };
 
   projection-multi = {
     enable = true;
-    command = ["projection-multi-compile"];
+    generalOne.project-prefix-map."RET" = "'projection-multi-compile";
+    config = ''
+      <<Emacs Development Projection Config>>
+    '' ;
   };
 
   projection-multi-embark = {
@@ -4732,59 +4736,11 @@ https://github.com/jdtsmith/indent-bars
       after = ["embark" "projection-multi"];
       config = ''(projection-multi-embark-setup-command-map)'';
   };
-
-  disproject = {
-    enable = true;
-    generalOne."efs/leader-keys"."P" = "'disproject-dispatch";
-    custom.disproject-custom-suffixes = '''(("1" "Set Primary Type"
-                                                 :command-type call
-                                                 :command #'projection-set-primary-project-type)
-                                            ("2" "Set Extra Types"
-                                                 :command-type call
-                                                 :command #'projection-set-extra-project-types)
-                                            ("RET" "Compile Multi"
-                                                 :command-type call
-                                                 :command #'projection-multi-compile)
-                                            ("o" "Other File"
-                                                 :command-type call
-                                                 :command #'projection-find-other-file)
-                                            ("I" "Info"
-                                                 :command-type call
-                                                 :command #'projection-show-project-info)
-                                            ("c" "Build"
-                                                 :command-type call
-                                                 :command #'projection-commands-build-project)
-                                            ("g" "Configure"
-                                                 :command-type call
-                                                 :command #'projection-commands-configure-project)
-                                            ("i" "Install"
-                                                 :command-type call
-                                                 :command #'projection-commands-install-project)
-                                            ("k" "Make Package"
-                                                 :command-type call
-                                                 :command #'projection-commands-package-project)
-                                            ("l" "List Artifacts"
-                                                 :command-type call
-                                                 :command #'projection-artifacts-list)
-                                            ("h" "Hook"
-                                                 :command-type call
-                                                 :command #'projection-hook)
-                                            ("H" "Clear Hook"
-                                                 :command-type call
-                                                 :command #'projection-hook-clear)
-                                            ("r" "Run"
-                                                 :command-type call
-                                                 :command #'projection-commands-run-project)
-                                            ("t" "Test"
-                                                 :command-type call
-                                                 :command #'projection-commands-test-project))
-    '';
-    config = "(require 'magit)";
-  };
 #+end_src
 
 #+NAME: Emacs Development Projection Config
 #+begin_src emacs-lisp
+  (require 'projection)
   (global-projection-hook-mode)
   (oset projection-project-type-maven build "mvn -B clean compile")
 #+end_src
@@ -4794,6 +4750,15 @@ https://github.com/jdtsmith/indent-bars
   (defun dired-git-add ()
       (interactive)
       (start-process "git" nil "git" "add" (dired-get-marked-files)))
+#+end_src
+
+**** DevDocs
+#+NAME: Emacs Development DevDocs
+#+begin_src nix
+  devdocs = {
+    enable = true;
+    generalOne."efs/leader-keys"."hO" = "'devdocs-lookup";
+  };
 #+end_src
 
 **** Plantuml
@@ -4946,13 +4911,13 @@ pyenv allows us to use virtual environments.
 ,cc- evaluate your code in the repl that you just opened up.
 #+NAME: Emacs Development Python
 #+begin_src nix
-  python-mode = {
+  python-ts-mode = {
     enable = true;
+    mode = [''"\\.py\\'"''];
     custom = {
       python-shell-interpreter = ''"ipython"'';
     	python-shell-interpreter-args = ''"-i --simple-prompt"'';
     };
-    deferIncrementally = true;
   };
 #+end_src
 
@@ -4962,13 +4927,6 @@ pyenv allows us to use virtual environments.
   groovy-mode = {
     enable = true;
     mode = [''"\\.gradle\\'"''];
-  };
-
-  gradle-mode = {
-    enable = true;
-    ghook = [
-      "('(java-ts-mode-hook groovy-mode-hook) 'gradle-mode)"
-    ];
   };
 #+end_src
 

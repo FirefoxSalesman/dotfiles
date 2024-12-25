@@ -140,5 +140,14 @@
       enable = true;
       generalTwo."'normal".dirvish-mode-map."M-t" = "'dired-posframe-mode";
     };
+
+    image = {
+      enable = true;
+      generalTwo."'normal".image-map = {
+        "E" = "'image-next-file";
+        "O" = "'image-previous-file";
+      };
+      custom.image-animate-loop = "t";
+    };
   };
 }
