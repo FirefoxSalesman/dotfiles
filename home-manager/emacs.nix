@@ -1,4 +1,4 @@
-{ pkgs, inputs, ... }:
+{ config, pkgs, inputs, ... }:
 
 {
   imports = [
@@ -36,7 +36,7 @@
       prelude =''
         (defalias 'gsetq #'general-setq)
         
-        (server-start)
+        ;; (server-start)
         
         (use-package on
           :demand t)
@@ -71,22 +71,22 @@
           "hc" '(describe-key-briefly :which-key "short describe key")
           "hd" '(apropos-documentation :which-key "apropos documentation")
           "he" '(view-echo-area-messages :which-key "view echoed messages")
-          "hf" '(describe-function :which-key "describe function")
+          ;; "hf" '(describe-function :which-key "describe function")
           "hh" '(help-for-help :which-key "help for help")
           "hi" '(info :which-key "info pages")
-          "hk" '(describe-key :which-key "describe key")
+          ;; "hk" '(describe-key :which-key "describe key")
           "hl" '(view-lossage :which-key "lossage")
           "hm" '(describe-mode :which-key "describe mode")
           "hn" '(view-emacs-news :which-key "emacs news")
-          "ho" '(describe-symbol :which-key "describe symbol")
+          ;; "ho" '(describe-symbol :which-key "describe symbol")
           "hp" '(finder-by-keyword :which-key "finder by keyword")
           "hq" '(help-quit :which-key "help quit")
           "hr" '(info-emacs-manual :which-key "info: emacs")
           "hs" '(describe-syntax :which-key "describe syntax")
           "ht" '(help-with-tutorial :which-key "emacs tutor")
-          "hv" '(describe-variable :which-key "describe variable")
+          ;; "hv" '(describe-variable :which-key "describe variable")
           "hw" '(where-is :which-key "find binds of command")
-          "hx" '(describe-command :which-key "describe command")
+          ;; "hx" '(describe-command :which-key "describe command")
           "h C-f" '(view-emacs-FAQ :which-key "emacs FAQ")
           "h C-p" '(view-emacs-problems :which-key "view emacs problems")
           "h C-s" '(search-forward-help-for-help :which-key "search in help for help")
@@ -142,20 +142,22 @@
         
         simple = {
           enable = true;
-          config = ''(column-number-mode)'';
-          custom.save-interprogram-paste-before-kill = "t";
+          config = ''
+            (gsetq save-interprogram-paste-before-kill t)
+            (column-number-mode)
+          '';
         };
         
         display-line-numbers = {
           enable = true;
-          config = ''(global-display-line-numbers-mode)'';
-          ghook = ["('(org-mode-hook term-mode-hook dired-mode-hook eww-mode-hook eat-mode-hook markdown-mode-hook help-mode-hook helpful-mode-hook Info-mode-hook woman-mode-hook shell-mode-hook pdf-view-mode-hook elfeed-search-mode-hook elfeed-show-mode-hook eshell-mode-hook racket-repl-mode-hook sage-shell-mode-hook) (lambda () (display-line-numbers-mode 0)))"];
+          config = ''
+            (gsetq display-line-numbers-type 'relative
+                   display-line-numbers-width 3)
+            (global-display-line-numbers-mode)
+          '' ;
           #Disable line numbers for some modes
-          custom = {
-            display-line-numbers-type = "'relative";
-            display-line-numbers-width = "3";
-          }; 
-        };
+          ghook = ["('(org-mode-hook term-mode-hook dired-mode-hook eww-mode-hook eat-mode-hook markdown-mode-hook help-mode-hook helpful-mode-hook Info-mode-hook woman-mode-hook shell-mode-hook pdf-view-mode-hook elfeed-search-mode-hook elfeed-show-mode-hook eshell-mode-hook racket-repl-mode-hook sage-shell-mode-hook) (lambda () (display-line-numbers-mode 0)))"];
+        } ;
         
         elec-pair = {
           enable = true;
@@ -166,12 +168,18 @@
             (gsetq electric-pair-inhibit-predicate `(lambda (c)
                                                       (if (or (char-equal c ?<) (char-equal c ?>))
                                                           t
-                                                          (,electric-pair-inhibit-predicate c))))
+                                                          (,electric-pair-inhibit-predicate c)))
+                   electric-pair-pairs '((?\" . ?\")
+              			   (?\[ . ?\])
+              			   (?\( . ?\))
+              			   (?\{ . ?\})))
           '';
-          custom.electric-pair-pairs = '''((?\" . ?\")
-                                           (?\[ . ?\])
-                                           (?\( . ?\))
-                                           (?\{ . ?\}))'';
+        };
+        
+        server = {
+          enable = true;
+          deferIncrementally = true;
+          config = "(server-start)";
         };
 
         no-littering = {
@@ -189,7 +197,7 @@
             inherit (epkgs) trivialBuild;
           });
           gfhook = ["('doom-escape-hook (list (lambda () (setq efs/vertico-active nil)) 'transient-quit-one))"];
-          general."[remap keyboard-quit]" = "'doom/escape";
+          general."C-g" = "'doom/escape";
           config = ''
             (with-eval-after-load 'eldoc
               (eldoc-add-command 'doom/escape))
@@ -206,58 +214,59 @@
 
         wgrep = {
           enable = true;
-          custom.wgrep-auto-save-buffer = "t";
+          config = "(gsetq wgrep-auto-save-buffer t)";
           generalTwo."'normal".grep-mode-map."w" = "'wgrep-change-to-wgrep-mode";
         };
 
         ledger = {
           enable = true;
+          package = epkgs: epkgs.ledger-mode;
           mode = [''"\\.ledger\\'"''];
         };
 
-        gptel = {
-          enable = true;
-          defer = true;
-          command = ["start-ollama"];
-          generalOne."efs/leader-keys" = {
-            "g" = '''(:ignore t :which-key "gptel")'';
-            "gs" = '''(start-ollama :which-key "start")'';
-            "gp" = '''(gptel :which-key "prompt")'';
-          };
-          generalTwo."local-leader".gptel-mode-map = {
-            "d" = '''(gptel-send :which-key "send")'';
-            "m" = '''(gptel-menu :which-key "menu")'';
-          };
-          config = ''
-            (gsetq gptel-backend (gptel-make-ollama "Ollama"
-              		     :stream t
-              		     :protocol "http"
-              		     :host "localhost:11434"
-              		     :models '(llama3.2:latest))
-                   gptel-max-tokens 10000000
-                   gptel-prompt-prefix-alist '((default . "You are a large language model and a helpful assistant. Respond concisely.")
-              				 (programming . "You are a large language model and a careful programmer. Provide code and only code as output without any additional text, prompt or note.")
-              				 (writing . "You are a large language model and a writing assistant. Respond concisely.")
-              				 (chat . "You are a large language model and a conversation partner. Respond concisely.")))
-            
-            (defun start-ollama ()
-              (interactive)
-              (start-process-shell-command "start-ollama" nil "start-ollama"))
-          '';
-        };
-        
-        gptel-quick = {
-          enable = true;
-          defer = true;
-          package = epkgs: (pkgs.callPackage ./emacs/emacs-packages/gptel-quick.nix {
-            inherit inputs;
-            inherit (epkgs) trivialBuild gptel;
-          });
-          generalOne = {
-            embark-general-map."?" = '''(gptel-quick :which-key "summarize")''; 
-            "efs/leader-keys"."gq" = '''(gptel-quick :which-key "summarize")'';
-          };
-        };
+        # gptel = {
+        #   enable = true;
+        #   defer = true;
+        #   command = ["start-ollama"];
+        #   generalOne."efs/leader-keys" = {
+        #     "g" = '''(:ignore t :which-key "gptel")'';
+        #     "gs" = '''(start-ollama :which-key "start")'';
+        #     "gp" = '''(gptel :which-key "prompt")'';
+        #   };
+        #   generalTwo."local-leader".gptel-mode-map = {
+        #     "d" = '''(gptel-send :which-key "send")'';
+        #     "m" = '''(gptel-menu :which-key "menu")'';
+        #   };
+        #   config = ''
+        #     (gsetq gptel-backend (gptel-make-ollama "Ollama"
+        #       		     :stream t
+        #       		     :protocol "http"
+        #       		     :host "localhost:11434"
+        #       		     :models '(llama3.2:latest))
+        #            gptel-max-tokens 10000000
+        #            gptel-prompt-prefix-alist '((default . "You are a large language model and a helpful assistant. Respond concisely.")
+        #       				 (programming . "You are a large language model and a careful programmer. Provide code and only code as output without any additional text, prompt or note.")
+        #       				 (writing . "You are a large language model and a writing assistant. Respond concisely.")
+        #       				 (chat . "You are a large language model and a conversation partner. Respond concisely.")))
+        #     
+        #     (defun start-ollama ()
+        #       (interactive)
+        #       (start-process-shell-command "start-ollama" nil "${(import ./scripts/start-ollama.nix { inherit pkgs config; })}/bin/start-ollama"))
+        #   '';
+        # };
+        # 
+        # gptel-quick = {
+        #   enable = true;
+        #   defer = true;
+        #   package = epkgs: (pkgs.callPackage ./emacs/emacs-packages/gptel-quick.nix {
+        #     inherit inputs;
+        #     inherit (epkgs) trivialBuild gptel;
+        #   });
+        #   generalOne = {
+        #     embark-general-map."?" = '''(gptel-quick :which-key "summarize")''; 
+        #     "efs/leader-keys"."gq" = '''(gptel-quick :which-key "summarize")'';
+        #   };
+        # };
 
         ednc = {
           enable = true;

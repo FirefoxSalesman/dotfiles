@@ -106,7 +106,7 @@
         corfu-auto = "t";
         corfu-on-exact-match = "'show";
       };
-      bind."M-/" = "completion-at-point";
+      general."M-/" = "'completion-at-point";
       generalOne.corfu-map = {
         "RET" = "nil";
         "TAB" = "nil";
@@ -205,35 +205,35 @@
       defer = true;
       gfhook = ["('minibuffer-setup-hook 'consult-initial-narrow)"];
       command = ["consult-goto-line" "consult-keep-lines" "noct-consult-ripgrep-or-line"];
-      bind = {
-        "C-x C-f" = "consult-find";
-        "C-x b" = "nil";
-        "M-y" = "nil";
+      general = {
+        "C-x C-f" = "'consult-find";
+        "C-x b" = "'nil";
+        "M-y" = "'nil";
         # C-c bindings (mode-specific-map)
-        "C-c m" = "consult-mode-command";
-        "C-c k" = "consult-kmacro";
+        "C-c m" = "'consult-mode-command";
+        "C-c k" = "'consult-kmacro";
         # C-x bindings (ctl-x-map)
-        "C-x M-:" = "consult-complex-command"; # orig. repeat-complex-command
-        "C-x 5 b" = "consult-buffer-other-frame"; # orig. switch-to-buffer-other-frame
+        "C-x M-:" = "'consult-complex-command"; # orig. repeat-complex-command
+        "C-x 5 b" = "'consult-buffer-other-frame"; # orig. switch-to-buffer-other-frame
         # Custom M-# bindings for fast register access
-        "M-#" = "consult-register-load";
-        "M-'" = "consult-register-store";       # orig. abbrev-prefix-mark (unrelated)
-        "C-M-#" = "consult-register";
+        "M-#" = "'consult-register-load";
+        "M-'" = "'consult-register-store";       # orig. abbrev-prefix-mark (unrelated)
+        "C-M-#" = "'consult-register";
         # M-g bindings (goto-map)
-        "M-g e" = "consult-compile-error";
-        "M-g f" = "consult-flymake"; # Alternative: consult-flycheck
-        "M-g m" = "consult-mark";
-        "M-g k" = "consult-global-mark";
-        "M-g i" = "consult-imenu-multi";
+        "M-g e" = "'consult-compile-error";
+        "M-g f" = "'consult-flymake"; # Alternative: consult-flycheck
+        "M-g m" = "'consult-mark";
+        "M-g k" = "'consult-global-mark";
+        "M-g i" = "'consult-imenu-multi";
         # M-s bindings (search-map)
-        "M-s D" = "consult-locate";
-        "M-s G" = "consult-git-grep";
-        "M-s g" = "consult-ripgrep";
-        "M-s m" = "consult-multi-occur";
-        "M-s u" = "consult-focus-lines";
+        "M-s D" = "'consult-locate";
+        "M-s G" = "'consult-git-grep";
+        "M-s g" = "'consult-ripgrep";
+        "M-s m" = "'consult-multi-occur";
+        "M-s u" = "'consult-focus-lines";
         # Isearch integration
-        "M-s e" = "consult-isearch-history"; # orig. isearch-edit-string
-        "M-s L" = "consult-line-multi"; # needed by consult-line to detect isearch
+        "M-s e" = "'consult-isearch-history"; # orig. isearch-edit-string
+        "M-s L" = "'consult-line-multi"; # needed by consult-line to detect isearch
       };
       custom = {
         consult-buffer-sources = "'(consult--source-buffer)";
@@ -344,7 +344,7 @@
       });
       defer = true;
       command = ["embark-act"];
-      bind."M-a" = "embark-dwim";
+      general."M-a" = "'embark-dwim";
       custom = {
         # Replace key help with a completing-read interface
         prefix-help-command = "#'embark-prefix-help-command";

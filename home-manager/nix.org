@@ -442,13 +442,13 @@ I stole this from this git repo https://github.com/sylsau/ffmpeg-bulk
 :header-args:nix: :tangle scripts/start-ollama.nix
 :END:
 #+begin_src nix
-  { pkgs }:
+  { config, pkgs }:
 
   pkgs.writeShellScriptBin "start-ollama" ''
     if [[ "$(pidof ollama)" -gt 0 ]]; then
         echo "ollama already running"
     else
-        ollama serve
+        ${(config.lib.nixGL.wrap pkgs.ollama)}/bin/ollama serve
     fi
   ''
 #+end_src
@@ -817,7 +817,7 @@ Eat lets us get away with using eshell all the time. It can be used to get into 
                                        (gsetq eshell-banner-message
                                           (shell-command-to-string "${pkgs.pfetch}/bin/pfetch"))))''
       ];
-      bind."s-<enter>" = "efs/make-eshell";
+      general."s-<enter>" = "'efs/make-eshell";
       generalOne.eshell-mode-map = {
         "M-o" = "'eshell-previous-matching-input-from-input";
         "M-e" = "'eshell-next-matching-input-from-input";
@@ -837,13 +837,13 @@ Eat lets us get away with using eshell all the time. It can be used to get into 
     eshell-syntax-highlighting = {
       enable = true;
       defer = true;
-      hook = ["(eshell-mode . eshell-syntax-highlighting-global-mode)"];
+      ghook = ["('eshell-mode-hook 'eshell-syntax-highlighting-global-mode)"];
     };
 
     fish-completion = {
       enable = true;
       defer = true;
-      hook = ["(eshell-mode . fish-completion-mode)"];
+      ghook = ["('eshell-mode-hook 'fish-completion-mode)"];
     };
 
     eshell-git-prompt = {
@@ -867,6 +867,11 @@ Eat lets us get away with using eshell all the time. It can be used to get into 
   (defun efs/make-eshell ()
     (interactive)
     (eshell 'N))
+
+#+end_src
+
+#+NAME: Emacs Eshell Config
+#+begin_src emacs-lisp
   (defun efs/configure-eshell ()
     ;; Truncate buffer for perforance
     (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
@@ -880,30 +885,28 @@ Eat lets us get away with using eshell all the time. It can be used to get into 
            eshell-hist-ignoredups t
            eshell-scroll-to-bottom-on-input t))
 
-#+end_src
+  (with-eval-after-load 'esh-opt
+    (gsetq eshell-destroy-buffer-when-process-dies t))
 
-#+NAME: Emacs Eshell Config
-#+begin_src emacs-lisp
-   (with-eval-after-load 'esh-opt
-     (gsetq eshell-destroy-buffer-when-process-dies t))
-   (gsetq eshell-command-aliases-list
-    '(("gc" "torsocks git clone")
-      ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
-      ("l" "ls $*")
-      ("halt" "doas shutdown -P now")
-      ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'")))
-   (with-eval-after-load 'evil-collection-eshell
-     (general-add-advice 'evil-collection-eshell-setup-keys
-   		:after
-   		'(lambda ()
-   		   (general-def 'normal eshell-mode-map
-   		     "v" 'evil-collection-eshell-evil-delete
-   		     "V" 'evil-collection-eshell-evil-change
-   		     "C-v" 'evil-collection-eshell-evil-delete-line
-   		     "d" 'evil-yank
-   		     "D" 'evil-yank-line
-   		     "c" 'evil-visual-state
-   		     "C" 'evil-visual-line))))
+  (gsetq eshell-command-aliases-list
+   '(("gc" "torsocks git clone")
+     ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
+     ("l" "ls $*")
+     ("halt" "doas shutdown -P now")
+     ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'")))
+
+  (with-eval-after-load 'evil-collection-eshell
+    (general-add-advice 'evil-collection-eshell-setup-keys
+  		:after
+  		'(lambda ()
+  		   (general-def 'normal eshell-mode-map
+  		     "v" 'evil-collection-eshell-evil-delete
+  		     "V" 'evil-collection-eshell-evil-change
+  		     "C-v" 'evil-collection-eshell-evil-delete-line
+  		     "d" 'evil-yank
+  		     "D" 'evil-yank-line
+  		     "c" 'evil-visual-state
+  		     "C" 'evil-visual-line))))
 #+end_src
 
 #+NAME: Emacs Eat Config
@@ -1231,7 +1234,6 @@ Use =M-x all-the-icons-install-fonts=
 
   all-the-icons = {
     enable = true;
-    demand = true;
   };
 
   nerd-icons-completion = {
@@ -1255,10 +1257,10 @@ Use =M-x all-the-icons-install-fonts=
                             (bookmarks . 5)
                             (projects  . 5)
                             (agenda    . 5))'';
-      dashboard-icon-type = "'nerd-icons";
-      dashboard-set-heading-icons = "t";
-      dashboard-set-file-icons = "t";
-      dashboard-agenda-sort-strategy = "'(time-up)";
+     dashboard-icon-type = "'nerd-icons";
+     dashboard-set-heading-icons = "t";
+     dashboard-set-file-icons = "t";
+    #   dashboard-agenda-sort-strategy = "'(time-up)";
     };
   };
 #+end_src
@@ -1285,7 +1287,6 @@ The powerline separators were borrowed from punchline, because I think they look
       inherit (epkgs) trivialBuild doom-themes;
     });
     ghook = ["('after-init-hook 'doom-nano-modeline-mode)"];
-    custom.doom-nano-modeline-position = "'bottom";
     config = ''
       <<Emacs Doom Nano Modeline Config>>
     '';
@@ -1294,6 +1295,8 @@ The powerline separators were borrowed from punchline, because I think they look
 
 #+NAME: Emacs Doom Nano Modeline Config
 #+begin_src emacs-lisp
+  (gsetq doom-nano-modeline-position 'bottom)
+
   (defun doom-nano-modeline--render (left right &optional hide-evil-mode)
     "Render the doom-nano modeline string.
 
@@ -1555,7 +1558,7 @@ Solaire dims certain parts of the frame.
 *** Posframes
 Vertico Posframe puts vertico in a separate frame, causing it to actually look like dmenu.
 #+NAME: Emacs Ricing Posframes
-#+begin_src nix
+#+begin_src nix :noweb yes
   vertico-posframe = {
     enable = true;
     defer = true;
@@ -1567,11 +1570,16 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
     enable = true;
     defer = true;
     ghook = ["('which-key-mode-hook 'which-key-posframe-mode)"];
-    custom = {
-      which-key-posframe-poshandler = "'posframe-poshandler-frame-bottom-center"; 
-      which-key-posframe-parameters = "'(:parent-frame nil :refposhandler posframe-refposhandler-xwininfo)";
-    };
+    config = ''
+      <<Emacs Ricing Posframes Config>>
+    '';
   };
+#+end_src
+
+#+NAME: Emacs Ricing Posframes Config
+#+begin_src emacs-lisp
+  (gsetq which-key-posframe-poshandler 'posframe-poshandler-frame-bottom-center
+         which-key-posframe-parameters '(:parent-frame nil :refposhandler posframe-refposhandler-xwininfo))
 #+end_src
 
 *** Mustache File
@@ -1611,10 +1619,7 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
   {
     home.packages = with pkgs; [
       (config.lib.nixGL.wrap gimp)
-      (config.lib.nixGL.wrap (prismlauncher.override {
-        jdks = with pkgs; [(config.lib.nixGL.wrap graalvm-ce)];
-      }))
-      (config.lib.nixGL.wrap ollama)
+      (config.lib.nixGL.wrap prismlauncher)
       wget
       zip
       zbar
@@ -1628,7 +1633,6 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
       xdotool
       # scripts
       (import ./scripts/ezf.nix { inherit pkgs; })
-      (import ./scripts/start-ollama.nix { inherit pkgs; })
       (import ./scripts/pkg.nix { inherit pkgs; })
     ];
   }
@@ -2017,8 +2021,8 @@ https://gitlab.com/rycee/nur-expressions
       mkBind = mkBindHelper "bind" "";
       mkGeneral = bs:
         optionals (bs != { }) ([ ":general ("]
-                               ++ mapAttrsToList (n: v: "  ${n} ${v}") bs ++ [ ")" ]);
-      
+                               ++ mapAttrsToList (n: v: ''  "${n}" ${v}'') bs ++ [ ")" ]);
+
       mkGeneralOne = bs:
         let mkMap = n: v: mkGeneralHelper "${n}" "" v;
         in flatten (mapAttrsToList mkMap bs);
@@ -2338,7 +2342,7 @@ https://gitlab.com/rycee/nur-expressions
 *** Main
 **** Inputs & Imports
 #+begin_src nix :tangle emacs.nix :noweb yes
-  { pkgs, inputs, ... }:
+  { config, pkgs, inputs, ... }:
 
   {
     imports = [
@@ -2389,7 +2393,7 @@ https://gitlab.com/rycee/nur-expressions
 
           <<Emacs Ledger>>
 
-          <<Emacs GPTel>>
+          # <<Emacs GPTel>>
 
           <<Emacs Notifications>>
           
@@ -2446,7 +2450,7 @@ https://gitlab.com/rycee/nur-expressions
 #+begin_src emacs-lisp
   (defalias 'gsetq #'general-setq)
 
-  (server-start)
+  ;; (server-start)
 
   (use-package on
     :demand t)
@@ -2481,22 +2485,22 @@ https://gitlab.com/rycee/nur-expressions
     "hc" '(describe-key-briefly :which-key "short describe key")
     "hd" '(apropos-documentation :which-key "apropos documentation")
     "he" '(view-echo-area-messages :which-key "view echoed messages")
-    "hf" '(describe-function :which-key "describe function")
+    ;; "hf" '(describe-function :which-key "describe function")
     "hh" '(help-for-help :which-key "help for help")
     "hi" '(info :which-key "info pages")
-    "hk" '(describe-key :which-key "describe key")
+    ;; "hk" '(describe-key :which-key "describe key")
     "hl" '(view-lossage :which-key "lossage")
     "hm" '(describe-mode :which-key "describe mode")
     "hn" '(view-emacs-news :which-key "emacs news")
-    "ho" '(describe-symbol :which-key "describe symbol")
+    ;; "ho" '(describe-symbol :which-key "describe symbol")
     "hp" '(finder-by-keyword :which-key "finder by keyword")
     "hq" '(help-quit :which-key "help quit")
     "hr" '(info-emacs-manual :which-key "info: emacs")
     "hs" '(describe-syntax :which-key "describe syntax")
     "ht" '(help-with-tutorial :which-key "emacs tutor")
-    "hv" '(describe-variable :which-key "describe variable")
+    ;; "hv" '(describe-variable :which-key "describe variable")
     "hw" '(where-is :which-key "find binds of command")
-    "hx" '(describe-command :which-key "describe command")
+    ;; "hx" '(describe-command :which-key "describe command")
     "h C-f" '(view-emacs-FAQ :which-key "emacs FAQ")
     "h C-p" '(view-emacs-problems :which-key "view emacs problems")
     "h C-s" '(search-forward-help-for-help :which-key "search in help for help")
@@ -2557,20 +2561,20 @@ https://emacs.stackexchange.com/questions/75528/how-to-define-display-buffer-ali
 
   simple = {
     enable = true;
-    config = ''(column-number-mode)'';
-    custom.save-interprogram-paste-before-kill = "t";
+    config = ''
+      (gsetq save-interprogram-paste-before-kill t)
+      (column-number-mode)
+    '';
   };
 
   display-line-numbers = {
     enable = true;
-    config = ''(global-display-line-numbers-mode)'';
-    ghook = ["('(org-mode-hook term-mode-hook dired-mode-hook eww-mode-hook eat-mode-hook markdown-mode-hook help-mode-hook helpful-mode-hook Info-mode-hook woman-mode-hook shell-mode-hook pdf-view-mode-hook elfeed-search-mode-hook elfeed-show-mode-hook eshell-mode-hook racket-repl-mode-hook sage-shell-mode-hook) (lambda () (display-line-numbers-mode 0)))"];
+    config = ''
+      <<Emacs Display Line Numbers Config>>
+    '' ;
     #Disable line numbers for some modes
-    custom = {
-      display-line-numbers-type = "'relative";
-      display-line-numbers-width = "3";
-    }; 
-  };
+    ghook = ["('(org-mode-hook term-mode-hook dired-mode-hook eww-mode-hook eat-mode-hook markdown-mode-hook help-mode-hook helpful-mode-hook Info-mode-hook woman-mode-hook shell-mode-hook pdf-view-mode-hook elfeed-search-mode-hook elfeed-show-mode-hook eshell-mode-hook racket-repl-mode-hook sage-shell-mode-hook) (lambda () (display-line-numbers-mode 0)))"];
+  } ;
 
   elec-pair = {
     enable = true;
@@ -2578,10 +2582,12 @@ https://emacs.stackexchange.com/questions/75528/how-to-define-display-buffer-ali
     config = ''
       <<Emacs Electric Pair Config>>
     '';
-    custom.electric-pair-pairs = '''((?\" . ?\")
-                                     (?\[ . ?\])
-                                     (?\( . ?\))
-                                     (?\{ . ?\}))'';
+  };
+
+  server = {
+    enable = true;
+    deferIncrementally = true;
+    config = "(server-start)";
   };
 #+end_src
 
@@ -2592,7 +2598,18 @@ https://emacs.stackexchange.com/questions/75528/how-to-define-display-buffer-ali
   (gsetq electric-pair-inhibit-predicate `(lambda (c)
                                             (if (or (char-equal c ?<) (char-equal c ?>))
                                                 t
-                                                (,electric-pair-inhibit-predicate c))))
+                                                (,electric-pair-inhibit-predicate c)))
+         electric-pair-pairs '((?\" . ?\")
+  			     (?\[ . ?\])
+  			     (?\( . ?\))
+  			     (?\{ . ?\})))
+#+end_src
+
+#+NAME: Emacs Display Line Numbers Config
+#+begin_src emacs-lisp
+  (gsetq display-line-numbers-type 'relative
+         display-line-numbers-width 3)
+  (global-display-line-numbers-mode)
 #+end_src
 
 ***** Cleanup
@@ -2620,7 +2637,7 @@ Credits: Doom Escape is from doom. (Wow)
       inherit (epkgs) trivialBuild;
     });
     gfhook = ["('doom-escape-hook (list (lambda () (setq efs/vertico-active nil)) 'transient-quit-one))"];
-    general."[remap keyboard-quit]" = "'doom/escape";
+    general."C-g" = "'doom/escape";
     config = ''
       <<Doom Escape Config>>
     '';
@@ -2666,7 +2683,7 @@ Wgrep basically turns grep into sed.
 #+begin_src nix
   wgrep = {
     enable = true;
-    custom.wgrep-auto-save-buffer = "t";
+    config = "(gsetq wgrep-auto-save-buffer t)";
     generalTwo."'normal".grep-mode-map."w" = "'wgrep-change-to-wgrep-mode";
   };
 #+end_src
@@ -2676,6 +2693,7 @@ Wgrep basically turns grep into sed.
 #+begin_src nix
   ledger = {
     enable = true;
+    package = epkgs: epkgs.ledger-mode;
     mode = [''"\\.ledger\\'"''];
   };
 #+end_src
@@ -2730,7 +2748,7 @@ Wgrep basically turns grep into sed.
 
   (defun start-ollama ()
     (interactive)
-    (start-process-shell-command "start-ollama" nil "start-ollama"))
+    (start-process-shell-command "start-ollama" nil "${(import ./scripts/start-ollama.nix { inherit pkgs config; })}/bin/start-ollama"))
 #+end_src
 
 ***** Package Definitions
@@ -2884,9 +2902,9 @@ M-SPC is our local leader, & it's used for keys specific to a given major mode
     enable = true;
     demand = true;
     gfhook = ["('doom-escape-hook 'evil-normal-state)"];
-    bind."H-u" = "universal-argument";
+    general."M-u" = "'universal-argument";
     generalOne.universal-argument-map = {
-      "H-u" = "'universal-argument-more";
+      "M-u" = "'universal-argument-more";
       "C-u" = "'nil";
     };
     custom = {
@@ -3114,18 +3132,6 @@ Repeat map idea: https://hungyi.net/posts/hydra-for-evil-mc/
         "H-o" = "'evilem-motion-previous-visual-line";
       };
     };
-    custom = {
-      avy-dispatch-alist = ''
-        '((?m . avy-action-cursor)
-          (?l . avy-action-ispell)
-          (?o  . avy-action-embark)
-          (?h . avy-action-helpful)
-          (?g . avy-action-yank)
-          (?p . avy-action-teleport)
-          (?q . avy-action-fold))
-      '';
-      avy-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
-    };
     config = ''
       <<Emacs Evil Easymotion Config>>
     '';
@@ -3224,6 +3230,7 @@ Repeat map idea: https://hungyi.net/posts/hydra-for-evil-mc/
     (select-window
      (cdr (ring-ref avy-ring 0)))
     t)
+
   (defun avy-action-helpful (pt)
     (save-excursion
       (goto-char pt)
@@ -3231,6 +3238,7 @@ Repeat map idea: https://hungyi.net/posts/hydra-for-evil-mc/
     (select-window
      (cdr (ring-ref avy-ring 0)))
     t)
+
   (defun avy-action-fold (pt)
     (save-excursion
       (goto-char pt)
@@ -3238,6 +3246,7 @@ Repeat map idea: https://hungyi.net/posts/hydra-for-evil-mc/
     (select-window
      (cdr (ring-ref avy-ring 0)))
     t)
+
   (defun avy-action-embark (pt)
     (unwind-protect
         (save-excursion
@@ -3246,6 +3255,15 @@ Repeat map idea: https://hungyi.net/posts/hydra-for-evil-mc/
       (select-window
        (cdr (ring-ref avy-ring 0))))
     t)
+
+  (gsetq avy-dispatch-alist '((?m . avy-action-cursor)
+  			    (?l . avy-action-ispell)
+  			    (?o  . avy-action-embark)
+  			    (?h . avy-action-helpful)
+  			    (?g . avy-action-yank)
+  			    (?p . avy-action-teleport)
+  			    (?q . avy-action-fold))
+         avy-keys '(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a))
 #+end_src
 
 #+NAME: Emacs Evil-MC Config
@@ -3276,7 +3294,6 @@ Gives us an entire state where we can rapidly make specific edits to code.
       inherit inputs;
       inherit (epkgs) trivialBuild tsc tree-sitter evil evil-surround seq paredit;
     });
-    custom.symex-modal-backend = "'evil";
     generalTwo."'normal"."(org-mode-map evil-markdown-mode-map racket-repl-mode-map racket-mode-map python-ts-mode-map java-ts-mode-map ess-r-mode-map groovy-mode-map c-ts-mode-map js-ts-mode-map json-ts-mode-map bibtex-mode-map nxml-mode-map css-ts-mode-map nix-mode-map makefile-mode-map sql-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
     init = ''
       <<Emacs Symex Init>>    
@@ -3411,6 +3428,7 @@ Gives us an entire state where we can rapidly make specific edits to code.
 
 #+NAME: Emacs Symex Config
 #+begin_src emacs-lisp
+  (gsetq symex-modal-backend 'evil)
   (symex-initialize)
   (repeaters-define-maps
    '(("symex-visual-line"
@@ -3684,7 +3702,7 @@ I took a lot of this from Gavin Freeborn's config
       corfu-auto = "t";
       corfu-on-exact-match = "'show";
     };
-    bind."M-/" = "completion-at-point";
+    general."M-/" = "'completion-at-point";
     generalOne.corfu-map = {
       "RET" = "nil";
       "TAB" = "nil";
@@ -3816,35 +3834,35 @@ Evil integration is from noctuid & minad
     defer = true;
     gfhook = ["('minibuffer-setup-hook 'consult-initial-narrow)"];
     command = ["consult-goto-line" "consult-keep-lines" "noct-consult-ripgrep-or-line"];
-    bind = {
-      "C-x C-f" = "consult-find";
-      "C-x b" = "nil";
-      "M-y" = "nil";
+    general = {
+      "C-x C-f" = "'consult-find";
+      "C-x b" = "'nil";
+      "M-y" = "'nil";
       # C-c bindings (mode-specific-map)
-      "C-c m" = "consult-mode-command";
-      "C-c k" = "consult-kmacro";
+      "C-c m" = "'consult-mode-command";
+      "C-c k" = "'consult-kmacro";
       # C-x bindings (ctl-x-map)
-      "C-x M-:" = "consult-complex-command"; # orig. repeat-complex-command
-      "C-x 5 b" = "consult-buffer-other-frame"; # orig. switch-to-buffer-other-frame
+      "C-x M-:" = "'consult-complex-command"; # orig. repeat-complex-command
+      "C-x 5 b" = "'consult-buffer-other-frame"; # orig. switch-to-buffer-other-frame
       # Custom M-# bindings for fast register access
-      "M-#" = "consult-register-load";
-      "M-'" = "consult-register-store";       # orig. abbrev-prefix-mark (unrelated)
-      "C-M-#" = "consult-register";
+      "M-#" = "'consult-register-load";
+      "M-'" = "'consult-register-store";       # orig. abbrev-prefix-mark (unrelated)
+      "C-M-#" = "'consult-register";
       # M-g bindings (goto-map)
-      "M-g e" = "consult-compile-error";
-      "M-g f" = "consult-flymake"; # Alternative: consult-flycheck
-      "M-g m" = "consult-mark";
-      "M-g k" = "consult-global-mark";
-      "M-g i" = "consult-imenu-multi";
+      "M-g e" = "'consult-compile-error";
+      "M-g f" = "'consult-flymake"; # Alternative: consult-flycheck
+      "M-g m" = "'consult-mark";
+      "M-g k" = "'consult-global-mark";
+      "M-g i" = "'consult-imenu-multi";
       # M-s bindings (search-map)
-      "M-s D" = "consult-locate";
-      "M-s G" = "consult-git-grep";
-      "M-s g" = "consult-ripgrep";
-      "M-s m" = "consult-multi-occur";
-      "M-s u" = "consult-focus-lines";
+      "M-s D" = "'consult-locate";
+      "M-s G" = "'consult-git-grep";
+      "M-s g" = "'consult-ripgrep";
+      "M-s m" = "'consult-multi-occur";
+      "M-s u" = "'consult-focus-lines";
       # Isearch integration
-      "M-s e" = "consult-isearch-history"; # orig. isearch-edit-string
-      "M-s L" = "consult-line-multi"; # needed by consult-line to detect isearch
+      "M-s e" = "'consult-isearch-history"; # orig. isearch-edit-string
+      "M-s L" = "'consult-line-multi"; # needed by consult-line to detect isearch
     };
     custom = {
       consult-buffer-sources = "'(consult--source-buffer)";
@@ -3973,7 +3991,7 @@ Ace-window & avy actions from karthink
     });
     defer = true;
     command = ["embark-act"];
-    bind."M-a" = "embark-dwim";
+    general."M-a" = "'embark-dwim";
     custom = {
       # Replace key help with a completing-read interface
       prefix-help-command = "#'embark-prefix-help-command";
@@ -4315,13 +4333,13 @@ Helpful gives more information, & which-key tells what keybinds you have availab
       helpful = {
         enable = true;
         defer = true;
-        general = {
-          "[remap describe-function]" = "'helpful-function";
-          "[remap describe-symbol]" = "'helpful-symbol";
-          "[remap describe-variable]" = "'helpful-variable";
-          "[remap describe-command]" = "'helpful-command";
-          "[remap describe-key]" = "'helpful-key";
-        }; 
+        generalOne."efs/leader-keys" = {
+          "hf" = "'helpful-function";
+          "hs" = "'helpful-symbol";
+          "hv" = "'helpful-variable";
+          "hx" = "'helpful-command";
+          "hk" = "'helpful-key";
+        };
       };
     };
   }
@@ -4337,9 +4355,9 @@ We use the default dirvish config. It's like ranger.el, but without the bugs.
       dired = {
         enable = true;
         gfhook = ["('dired-mode-hook 'dired-omit-mode)"];
-        bind = {
-          "C-x C-j" = "dired-jump";
-          "C-x d" = "consult-dir";
+        general = {
+          "C-x C-j" = "'dired-jump";
+          "C-x d" = "'consult-dir";
         };
         custom = {
           dired-recursive-deletes = "'always";
@@ -4366,7 +4384,7 @@ We use the default dirvish config. It's like ranger.el, but without the bugs.
 
       dirvish = {
         enable = true;
-        bind."H-f" = "dirvish-fd";
+        general."H-f" = "'dirvish-fd";
         custom = {
           dirvish-attributes = "'(nerd-icons file-size subtree-state)";
           dirvish-yank-overwrite-existing-files = "'always";
@@ -4525,12 +4543,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
       sqls
     ];
 
-    programs.emacs = {
-      extraPackages = epkgs: with epkgs; [
-        project
-      ];
-
-      init.usePackage = {
+    programs.emacs.init.usePackage = {
         <<Emacs Development Misc>>
         
         <<Emacs Development Direnv>>
@@ -4562,7 +4575,6 @@ I think most of it was from the github page for lsp mode, but it's been a while,
         <<Emacs Development R>>
 
         <<Emacs Development Zenscript>>
-      };    
     };
   }
 #+end_src
@@ -5605,7 +5617,7 @@ You can't get page numbers, though, which becomes unfortunate for doing citation
     enable = true;
     config = ''(general-add-advice 'tab-new :after #'dashboard-open)'';
     ghook = ["('exwm-init-hook 'tab-bar-mode)"];
-    bind."s-u" = "tab-bar-hydra/body";
+    general."s-u" = "'tab-bar-hydra/body";
     custom.tab-bar-show = "nil";
     extraConfig = ''
       :pretty-hydra
@@ -5637,11 +5649,11 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
   bufler = {
     enable = true;
     ghook = ["('tab-bar-mode-hook 'bufler-mode)"];
-    bind = {
-      "s-h" = "hydra:bufler/body";
-      "s-b" = "bufler-hydra/body";
-      "s-f" = "bufler-workspace-focus-buffer";
-      "s-F" = "bufler-workspace-set";
+    general = {
+      "s-h" = "'hydra:bufler/body";
+      "s-b" = "'bufler-hydra/body";
+      "s-f" = "'bufler-workspace-focus-buffer";
+      "s-F" = "'bufler-workspace-set";
     };
     generalTwo."'normal".evil-collection-unimpaired-mode-map = {
       "]b" = "'bufler-cycle-buffers-forward";
@@ -5800,7 +5812,7 @@ Almost everything here was copied from David Wilson. Thank you, David, for pract
     enable = true;
     defer = true;
     command = ["ace-window"];
-    bind."C-x o" = "ace-window";
+    general."C-x o" = "'ace-window";
     config = ''(ace-window-posframe-mode)'';
     custom = {
       aw-scope = "'visible";
@@ -5946,7 +5958,7 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
                                    ?\M-&
                                    ?\s-\M-'
                                    ?\s-b
-                                   ?\H-u
+                                   ?\M-u
                                    ?\M-:
                                    ?\s-o
                                    ?\s-c
@@ -6140,10 +6152,10 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
   popper = {
     enable = true;
     ghook = ["('on-first-buffer-hook 'popper-mode)"];
-    bind = {
-      "s-'" = "popper-toggle";
-      "s-\"" = "popper-cycle";
-      "C-s-'" = "popper-toggle-type";
+    general = {
+      "s-'" = "'popper-toggle";
+      "s-\\\"" = "'popper-cycle";
+      "C-s-'" = "'popper-toggle-type";
     };
     custom = {
       popper-window-height = "30";
@@ -6317,11 +6329,11 @@ The mpv package lets us start an mpv process & puppeteer it with emacs. I'm defi
   pulseaudio-control = {
     enable = true;
     custom.pulseaudio-control-volume-step = ''"5%"'';
-    bind = {
-      "<XF86AudioRaiseVolume>" = "pulseaudio-control-increase-sink-volume";
-      "<XF86AudioLowerVolume>" = "pulseaudio-control-decrease-sink-volume";
-      "<XF86AudioMute>" = "pulseaudio-control-toggle-current-sink-mute";
-      "s-v" = "pulseaudio-control-default-sink-mode";
+    general = {
+      "<XF86AudioRaiseVolume>" = "'pulseaudio-control-increase-sink-volume";
+      "<XF86AudioLowerVolume>" = "'pulseaudio-control-decrease-sink-volume";
+      "<XF86AudioMute>" = "'pulseaudio-control-toggle-current-sink-mute";
+      "s-v" = "'pulseaudio-control-default-sink-mode";
     };
   };
 #+end_src
@@ -6569,7 +6581,6 @@ https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance
     defer = true;
     custom.elfeed-feeds = '''("https://lukesmith.xyz/index.xml"
                               "https://yewtu.be/feeds/videos.xml?channel_id=UCSJPFQdZwrOutnmSFYtbstA"
-                              "https://karthinks.com/index.xml"
                               "https://planet.emacslife.com/atom.xml"
                               "https://inv.nadeko.net/feeds/videos.xml?channel_id=UC_GQ4mac4oN3wl1UdbFuTEA"
                               "https://inv.nadeko.net/feeds/videos.xml?channel_id=UC6UBbvEA8uh6Ulc6ax1Zs0g"

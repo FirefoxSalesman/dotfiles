@@ -86,7 +86,6 @@
     
     all-the-icons = {
       enable = true;
-      demand = true;
     };
     
     nerd-icons-completion = {
@@ -110,10 +109,10 @@
                               (bookmarks . 5)
                               (projects  . 5)
                               (agenda    . 5))'';
-        dashboard-icon-type = "'nerd-icons";
-        dashboard-set-heading-icons = "t";
-        dashboard-set-file-icons = "t";
-        dashboard-agenda-sort-strategy = "'(time-up)";
+       dashboard-icon-type = "'nerd-icons";
+       dashboard-set-heading-icons = "t";
+       dashboard-set-file-icons = "t";
+      #   dashboard-agenda-sort-strategy = "'(time-up)";
       };
     };
 
@@ -124,8 +123,9 @@
         inherit (epkgs) trivialBuild doom-themes;
       });
       ghook = ["('after-init-hook 'doom-nano-modeline-mode)"];
-      custom.doom-nano-modeline-position = "'bottom";
       config = ''
+        (gsetq doom-nano-modeline-position 'bottom)
+        
         (defun doom-nano-modeline--render (left right &optional hide-evil-mode)
           "Render the doom-nano modeline string.
         
@@ -363,10 +363,10 @@
       enable = true;
       defer = true;
       ghook = ["('which-key-mode-hook 'which-key-posframe-mode)"];
-      custom = {
-        which-key-posframe-poshandler = "'posframe-poshandler-frame-bottom-center"; 
-        which-key-posframe-parameters = "'(:parent-frame nil :refposhandler posframe-refposhandler-xwininfo)";
-      };
+      config = ''
+        (gsetq which-key-posframe-poshandler 'posframe-poshandler-frame-bottom-center
+               which-key-posframe-parameters '(:parent-frame nil :refposhandler posframe-refposhandler-xwininfo))
+      '';
     };
   };
 }

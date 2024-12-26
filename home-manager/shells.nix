@@ -108,7 +108,7 @@
                                            (gsetq eshell-banner-message
                                               (shell-command-to-string "${pkgs.pfetch}/bin/pfetch"))))''
           ];
-          bind."s-<enter>" = "efs/make-eshell";
+          general."s-<enter>" = "'efs/make-eshell";
           generalOne.eshell-mode-map = {
             "M-o" = "'eshell-previous-matching-input-from-input";
             "M-e" = "'eshell-next-matching-input-from-input";
@@ -121,6 +121,9 @@
         (defun efs/make-eshell ()
           (interactive)
           (eshell 'N))
+        
+      '';
+          config = ''
         (defun efs/configure-eshell ()
           ;; Truncate buffer for perforance
           (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
@@ -134,41 +137,41 @@
                  eshell-hist-ignoredups t
                  eshell-scroll-to-bottom-on-input t))
         
-      '';
-          config = ''
         (with-eval-after-load 'esh-opt
           (gsetq eshell-destroy-buffer-when-process-dies t))
+        
         (gsetq eshell-command-aliases-list
          '(("gc" "torsocks git clone")
            ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
            ("l" "ls $*")
            ("halt" "doas shutdown -P now")
            ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'")))
+        
         (with-eval-after-load 'evil-collection-eshell
           (general-add-advice 'evil-collection-eshell-setup-keys
-           	     :after
-           	     '(lambda ()
-           		(general-def 'normal eshell-mode-map
-           		  "v" 'evil-collection-eshell-evil-delete
-           		  "V" 'evil-collection-eshell-evil-change
-           		  "C-v" 'evil-collection-eshell-evil-delete-line
-           		  "d" 'evil-yank
-           		  "D" 'evil-yank-line
-           		  "c" 'evil-visual-state
-           		  "C" 'evil-visual-line))))
+          	      :after
+          	      '(lambda ()
+          		 (general-def 'normal eshell-mode-map
+          		   "v" 'evil-collection-eshell-evil-delete
+          		   "V" 'evil-collection-eshell-evil-change
+          		   "C-v" 'evil-collection-eshell-evil-delete-line
+          		   "d" 'evil-yank
+          		   "D" 'evil-yank-line
+          		   "c" 'evil-visual-state
+          		   "C" 'evil-visual-line))))
       '';
         } ;
       
         eshell-syntax-highlighting = {
           enable = true;
           defer = true;
-          hook = ["(eshell-mode . eshell-syntax-highlighting-global-mode)"];
+          ghook = ["('eshell-mode-hook 'eshell-syntax-highlighting-global-mode)"];
         };
       
         fish-completion = {
           enable = true;
           defer = true;
-          hook = ["(eshell-mode . fish-completion-mode)"];
+          ghook = ["('eshell-mode-hook 'fish-completion-mode)"];
         };
       
         eshell-git-prompt = {

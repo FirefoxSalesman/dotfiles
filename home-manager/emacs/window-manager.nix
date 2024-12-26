@@ -6,7 +6,7 @@
       enable = true;
       config = ''(general-add-advice 'tab-new :after #'dashboard-open)'';
       ghook = ["('exwm-init-hook 'tab-bar-mode)"];
-      bind."s-u" = "tab-bar-hydra/body";
+      general."s-u" = "'tab-bar-hydra/body";
       custom.tab-bar-show = "nil";
       extraConfig = ''
         :pretty-hydra
@@ -33,11 +33,11 @@
     bufler = {
       enable = true;
       ghook = ["('tab-bar-mode-hook 'bufler-mode)"];
-      bind = {
-        "s-h" = "hydra:bufler/body";
-        "s-b" = "bufler-hydra/body";
-        "s-f" = "bufler-workspace-focus-buffer";
-        "s-F" = "bufler-workspace-set";
+      general = {
+        "s-h" = "'hydra:bufler/body";
+        "s-b" = "'bufler-hydra/body";
+        "s-f" = "'bufler-workspace-focus-buffer";
+        "s-F" = "'bufler-workspace-set";
       };
       generalTwo."'normal".evil-collection-unimpaired-mode-map = {
         "]b" = "'bufler-cycle-buffers-forward";
@@ -180,7 +180,7 @@
       enable = true;
       defer = true;
       command = ["ace-window"];
-      bind."C-x o" = "ace-window";
+      general."C-x o" = "'ace-window";
       config = ''(ace-window-posframe-mode)'';
       custom = {
         aw-scope = "'visible";
@@ -288,7 +288,7 @@
                                      ?\M-&
                                      ?\s-\M-'
                                      ?\s-b
-                                     ?\H-u
+                                     ?\M-u
                                      ?\M-:
                                      ?\s-o
                                      ?\s-c
@@ -449,10 +449,10 @@
     popper = {
       enable = true;
       ghook = ["('on-first-buffer-hook 'popper-mode)"];
-      bind = {
-        "s-'" = "popper-toggle";
-        "s-\"" = "popper-cycle";
-        "C-s-'" = "popper-toggle-type";
+      general = {
+        "s-'" = "'popper-toggle";
+        "s-\\\"" = "'popper-cycle";
+        "C-s-'" = "'popper-toggle-type";
       };
       custom = {
         popper-window-height = "30";

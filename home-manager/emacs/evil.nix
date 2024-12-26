@@ -6,9 +6,9 @@
       enable = true;
       demand = true;
       gfhook = ["('doom-escape-hook 'evil-normal-state)"];
-      bind."H-u" = "universal-argument";
+      general."M-u" = "'universal-argument";
       generalOne.universal-argument-map = {
-        "H-u" = "'universal-argument-more";
+        "M-u" = "'universal-argument-more";
         "C-u" = "'nil";
       };
       custom = {
@@ -246,18 +246,6 @@
           "H-o" = "'evilem-motion-previous-visual-line";
         };
       };
-      custom = {
-        avy-dispatch-alist = ''
-          '((?m . avy-action-cursor)
-            (?l . avy-action-ispell)
-            (?o  . avy-action-embark)
-            (?h . avy-action-helpful)
-            (?g . avy-action-yank)
-            (?p . avy-action-teleport)
-            (?q . avy-action-fold))
-        '';
-        avy-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
-      };
       config = ''
         ;; Stolen from karthink
         (defun avy-action-cursor (pt)
@@ -267,6 +255,7 @@
           (select-window
            (cdr (ring-ref avy-ring 0)))
           t)
+        
         (defun avy-action-helpful (pt)
           (save-excursion
             (goto-char pt)
@@ -274,6 +263,7 @@
           (select-window
            (cdr (ring-ref avy-ring 0)))
           t)
+        
         (defun avy-action-fold (pt)
           (save-excursion
             (goto-char pt)
@@ -281,6 +271,7 @@
           (select-window
            (cdr (ring-ref avy-ring 0)))
           t)
+        
         (defun avy-action-embark (pt)
           (unwind-protect
               (save-excursion
@@ -289,6 +280,15 @@
             (select-window
              (cdr (ring-ref avy-ring 0))))
           t)
+        
+        (gsetq avy-dispatch-alist '((?m . avy-action-cursor)
+          			  (?l . avy-action-ispell)
+          			  (?o  . avy-action-embark)
+          			  (?h . avy-action-helpful)
+          			  (?g . avy-action-yank)
+          			  (?p . avy-action-teleport)
+          			  (?q . avy-action-fold))
+               avy-keys '(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a))
       '';
     };
     
@@ -361,7 +361,6 @@
         inherit inputs;
         inherit (epkgs) trivialBuild tsc tree-sitter evil evil-surround seq paredit;
       });
-      custom.symex-modal-backend = "'evil";
       generalTwo."'normal"."(org-mode-map evil-markdown-mode-map racket-repl-mode-map racket-mode-map python-ts-mode-map java-ts-mode-map ess-r-mode-map groovy-mode-map c-ts-mode-map js-ts-mode-map json-ts-mode-map bibtex-mode-map nxml-mode-map css-ts-mode-map nix-mode-map makefile-mode-map sql-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
       init = ''
         (with-eval-after-load 'evil-easymotion
@@ -484,6 +483,7 @@
                  ("<escape>" . symex-escape-higher)))    
       '';
       config = ''
+        (gsetq symex-modal-backend 'evil)
         (symex-initialize)
         (repeaters-define-maps
          '(("symex-visual-line"

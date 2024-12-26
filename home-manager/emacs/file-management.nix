@@ -5,9 +5,9 @@
     dired = {
       enable = true;
       gfhook = ["('dired-mode-hook 'dired-omit-mode)"];
-      bind = {
-        "C-x C-j" = "dired-jump";
-        "C-x d" = "consult-dir";
+      general = {
+        "C-x C-j" = "'dired-jump";
+        "C-x d" = "'consult-dir";
       };
       custom = {
         dired-recursive-deletes = "'always";
@@ -71,7 +71,7 @@
 
     dirvish = {
       enable = true;
-      bind."H-f" = "dirvish-fd";
+      general."H-f" = "'dirvish-fd";
       custom = {
         dirvish-attributes = "'(nerd-icons file-size subtree-state)";
         dirvish-yank-overwrite-existing-files = "'always";

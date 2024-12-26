@@ -13,12 +13,7 @@
     sqls
   ];
 
-  programs.emacs = {
-    extraPackages = epkgs: with epkgs; [
-      project
-    ];
-
-    init.usePackage = {
+  programs.emacs.init.usePackage = {
       nxml = {
         enable = true;
         generalTwo.local-leader.nxml-mode-map = {
@@ -302,6 +297,5 @@
             '(() . ()))
         '';
       };
-    };    
   };
 }

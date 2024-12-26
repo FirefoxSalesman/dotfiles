@@ -85,11 +85,11 @@
     pulseaudio-control = {
       enable = true;
       custom.pulseaudio-control-volume-step = ''"5%"'';
-      bind = {
-        "<XF86AudioRaiseVolume>" = "pulseaudio-control-increase-sink-volume";
-        "<XF86AudioLowerVolume>" = "pulseaudio-control-decrease-sink-volume";
-        "<XF86AudioMute>" = "pulseaudio-control-toggle-current-sink-mute";
-        "s-v" = "pulseaudio-control-default-sink-mode";
+      general = {
+        "<XF86AudioRaiseVolume>" = "'pulseaudio-control-increase-sink-volume";
+        "<XF86AudioLowerVolume>" = "'pulseaudio-control-decrease-sink-volume";
+        "<XF86AudioMute>" = "'pulseaudio-control-toggle-current-sink-mute";
+        "s-v" = "'pulseaudio-control-default-sink-mode";
       };
     };
   };

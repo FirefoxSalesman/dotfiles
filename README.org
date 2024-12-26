@@ -45,7 +45,4 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 
 ** Emacs
 + [ ] The python files from emacs-qutebrowser should be part of the emacs package & be provided by nix
-+ [ ] Replace all instances of bind with general
 + [ ] Make the minibuffer dissapear
-+ [ ] https://github.com/sympodius/org-novelist
-

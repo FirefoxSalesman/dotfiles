@@ -98,7 +98,6 @@
       defer = true;
       custom.elfeed-feeds = '''("https://lukesmith.xyz/index.xml"
                                 "https://yewtu.be/feeds/videos.xml?channel_id=UCSJPFQdZwrOutnmSFYtbstA"
-                                "https://karthinks.com/index.xml"
                                 "https://planet.emacslife.com/atom.xml"
                                 "https://inv.nadeko.net/feeds/videos.xml?channel_id=UC_GQ4mac4oN3wl1UdbFuTEA"
                                 "https://inv.nadeko.net/feeds/videos.xml?channel_id=UC6UBbvEA8uh6Ulc6ax1Zs0g"

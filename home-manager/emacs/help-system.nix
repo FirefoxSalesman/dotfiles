@@ -16,13 +16,13 @@
     helpful = {
       enable = true;
       defer = true;
-      general = {
-        "[remap describe-function]" = "'helpful-function";
-        "[remap describe-symbol]" = "'helpful-symbol";
-        "[remap describe-variable]" = "'helpful-variable";
-        "[remap describe-command]" = "'helpful-command";
-        "[remap describe-key]" = "'helpful-key";
-      }; 
+      generalOne."efs/leader-keys" = {
+        "hf" = "'helpful-function";
+        "hs" = "'helpful-symbol";
+        "hv" = "'helpful-variable";
+        "hx" = "'helpful-command";
+        "hk" = "'helpful-key";
+      };
     };
   };
 }

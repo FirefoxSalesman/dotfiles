@@ -298,7 +298,7 @@ let
         mkBind = mkBindHelper "bind" "";
         mkGeneral = bs:
           optionals (bs != { }) ([ ":general ("]
-                                 ++ mapAttrsToList (n: v: "  ${n} ${v}") bs ++ [ ")" ]);
+                                 ++ mapAttrsToList (n: v: ''  "${n}" ${v}'') bs ++ [ ")" ]);
     
         mkGeneralOne = bs:
           let mkMap = n: v: mkGeneralHelper "${n}" "" v;
