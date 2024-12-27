@@ -1,8 +1,8 @@
-{ inputs, pkgs, ... }:
+{ inputs, pkgs, pkgs-stable, ... }:
 
 {
   home.packages = with pkgs; [
-    python311Packages.python-lsp-server
+    pkgs-stable.python311Packages.python-lsp-server
     ccls
     vscode-langservers-extracted
     typescript-language-server
@@ -35,7 +35,7 @@
         enable = true;
         ghook = ["('prog-mode-hook 'rainbow-delimiters-mode)"];
       };
-
+      
       
 
       treesit-auto = {
@@ -69,14 +69,14 @@
         config = ''
           (global-tree-sitter-mode)
           (dolist (mode (list '(java-ts-mode . java)
-            		  '(html-ts-mode . html)
-            		  '(python-ts-mode . python)
-            		  '(js-ts-mode . javascript)
-            		  '(json-ts-mode . json)
-            		  '(gfm-mode . markdown)
-            		  '(css-ts-mode . css)
-            		  '(c-ts-mode . c)
-            		  '(racket-repl-mode . racket)))
+          		    '(html-ts-mode . html)
+          		    '(python-ts-mode . python)
+          		    '(js-ts-mode . javascript)
+          		    '(json-ts-mode . json)
+          		    '(gfm-mode . markdown)
+          		    '(css-ts-mode . css)
+          		    '(c-ts-mode . c)
+          		    '(racket-repl-mode . racket)))
             (add-to-list 'tree-sitter-major-mode-language-alist mode))
         '';
       };
@@ -106,7 +106,7 @@
           "za" = "'treesitter-context-fold-toggle";
         };
       };
-
+      
       magit = {
         enable = true;
         custom.magit-display-buffer-function = "#'magit-display-buffer-same-window-except-diff-v1";
@@ -181,8 +181,8 @@
         };
         config = ''
           (dolist (server (list '((nxml-mode) . ("lemminx"))
-            		    '((html-ts-mode) . ("vscode-html-language-server" "--stdio"))
-            		    '((sql-mode) . ("sqls"))))
+          		      '((html-ts-mode) . ("vscode-html-language-server" "--stdio"))
+          		      '((sql-mode) . ("sqls"))))
             (add-to-list 'eglot-server-programs server))
           (defun my/eglot-capf ()
             (setq-local completion-at-point-functions
@@ -221,7 +221,7 @@
       #   enable = true;
       #   ghook = ["('(bibtex-mode-hook nxml-mode-hook nix-mode-hook racket-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook ess-r-mode-hook html-ts-mode-hook css-ts-mode-hook emacs-lisp-mode-hook) 'breadcrumb-local-mode)"];
       # };
-
+      
       # dape = {
       #   enable = true;
       #   after = ["eglot"];
@@ -231,13 +231,13 @@
       #     dape-key-prefix = ''"\C-x\C-a"'';
       #   };
       # };
-
+      
       python-ts-mode = {
         enable = true;
         mode = [''"\\.py\\'"''];
         custom = {
           python-shell-interpreter = ''"ipython"'';
-            python-shell-interpreter-args = ''"-i --simple-prompt"'';
+        	python-shell-interpreter-args = ''"-i --simple-prompt"'';
         };
       };
 
@@ -245,7 +245,7 @@
         enable = true;
         mode = [''"\\.gradle\\'"''];
       };
-
+      
       nix-mode = {
         enable = true;
         mode = [''"\\.nix\\'"''];

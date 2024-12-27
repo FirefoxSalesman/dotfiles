@@ -154,7 +154,7 @@ let
         '';
       };
       
-    
+      
       hook = mkOption {
         type = types.listOf types.str;
         default = [ ];
@@ -389,7 +389,7 @@ let
       "Restores the file-name-handler-alist variable."
       (setq file-name-handler-alist hm/file-name-handler-alist)
       (makunbound 'hm/file-name-handler-alist))
-  
+    
     (add-hook 'emacs-startup-hook #'hm/restore-file-name-handler-alist)
   '';
   

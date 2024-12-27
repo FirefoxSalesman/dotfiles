@@ -107,10 +107,10 @@
           (hydra-hint-display-type 'posframe)
           :config
           (gsetq hydra-posframe-show-params '(:internal-border-width 1
-          							   :internal-border-color "003f28"
-          							   :parent-frame nil
-          							   :poshandler posframe-poshandler-frame-bottom-center
-          							   :refposhandler posframe-refposhandler-xwininfo))
+        							     :internal-border-color "003f28"
+        							     :parent-frame nil
+        							     :poshandler posframe-poshandler-frame-bottom-center
+        							     :refposhandler posframe-refposhandler-xwininfo))
           :gfhook ('doom-escape-hook 'hydra-keyboard-quit))
         
         (use-package repeaters
@@ -171,9 +171,9 @@
             ;; < & > are not delimiters. Change my mind.
             ;; Courtesy of DT. https://gitlab.com/dwt1/configuring-emacs/-/tree/main/07-the-final-touches?ref_type=heads
             (gsetq electric-pair-inhibit-predicate `(lambda (c)
-              					 (if (or (char-equal c ?<) (char-equal c ?>))
-              					     t
-              					     (,electric-pair-inhibit-predicate c))))
+            					   (if (or (char-equal c ?<) (char-equal c ?>))
+            					       t
+            					       (,electric-pair-inhibit-predicate c))))
           '';
         };
         
@@ -240,15 +240,15 @@
         #   };
         #   config = ''
         #     (gsetq gptel-backend (gptel-make-ollama "Ollama"
-        #       		     :stream t
-        #       		     :protocol "http"
-        #       		     :host "localhost:11434"
-        #       		     :models '(llama3.2:latest))
+        #     		       :stream t
+        #     		       :protocol "http"
+        #     		       :host "localhost:11434"
+        #     		       :models '(llama3.2:latest))
         #            gptel-max-tokens 10000000
         #            gptel-prompt-prefix-alist '((default . "You are a large language model and a helpful assistant. Respond concisely.")
-        #       				 (programming . "You are a large language model and a careful programmer. Provide code and only code as output without any additional text, prompt or note.")
-        #       				 (writing . "You are a large language model and a writing assistant. Respond concisely.")
-        #       				 (chat . "You are a large language model and a conversation partner. Respond concisely.")))
+        #     				   (programming . "You are a large language model and a careful programmer. Provide code and only code as output without any additional text, prompt or note.")
+        #     				   (writing . "You are a large language model and a writing assistant. Respond concisely.")
+        #     				   (chat . "You are a large language model and a conversation partner. Respond concisely.")))
         #     
         #     (defun start-ollama ()
         #       (interactive)
@@ -281,7 +281,7 @@
               (when new (message (ednc-format-notification new t))))
           '';
         };
-
+        
       };
 
       postlude = ''

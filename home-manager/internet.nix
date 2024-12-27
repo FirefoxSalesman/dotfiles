@@ -48,11 +48,11 @@
       init = ''
         (with-eval-after-load 'evil-collection-eww
           (general-add-advice 'evil-collection-eww-setup
-          		    :after
-          		    '(lambda ()
-          		       (general-def 'normal eww-mode-map
-          			 "d" 'evil-yank
-          			 "p" 'efs/mpv-eww-url))))
+        		      :after
+        		      '(lambda ()
+        			 (general-def 'normal eww-mode-map
+        			   "d" 'evil-yank
+        			   "p" 'efs/mpv-eww-url))))
       '';
     };
 
@@ -87,8 +87,8 @@
         (defun webjump-to-curseforge (name)
           (let* ((prefix "legacy.curseforge.com/minecraft/")
                  (category (completing-read "Choose a category" '("mc-mods" "modpacks" "shaders" "data-pack" "texture-packs")))
-               (url (concat prefix category))
-               (term (webjump-read-string (concat name " Search for"))))
+        	 (url (concat prefix category))
+        	 (term (webjump-read-string (concat name " Search for"))))
             (concat url "/search?search=" (webjump-url-encode term))))
       '';
     };
@@ -102,8 +102,8 @@
                                 "https://inv.nadeko.net/feeds/videos.xml?channel_id=UC_GQ4mac4oN3wl1UdbFuTEA"
                                 "https://inv.nadeko.net/feeds/videos.xml?channel_id=UC6UBbvEA8uh6Ulc6ax1Zs0g"
                                 "https://inv.nadeko.net/feeds/videos.xml?channel_id=UCNzZD3otfZVlIdvYYRRqNSw"
-          		                  "https://inv.nadeko.net/feeds/videos.xml?channel_id=UC9OZkS1Mhl5UvKSiPrYqsxg"
-          		                  "https://inv.nadeko.net/feeds/videos.xml?channel_id=UCgVLFBokgO85hyVl7tIoJvw"
+        		                    "https://inv.nadeko.net/feeds/videos.xml?channel_id=UC9OZkS1Mhl5UvKSiPrYqsxg"
+        		                    "https://inv.nadeko.net/feeds/videos.xml?channel_id=UCgVLFBokgO85hyVl7tIoJvw"
                                 "https://notrelated.xyz/rss")
         '';
       generalOne."efs/leader-keys"."r" = '''((lambda () (interactive) (elfeed) (elfeed-update)) :which-key "rss")'';
@@ -146,13 +146,13 @@
   
     greasemonkey = [
       (pkgs.fetchurl {
-      	      url = "https://raw.githubusercontent.com/afreakk/greasemonkeyscripts/1d1be041a65c251692ee082eda64d2637edf6444/youtube_sponsorblock.js";
-      	      sha256 = "sha256-e3QgDPa3AOpPyzwvVjPQyEsSUC9goisjBUDMxLwg8ZE=";
-          })
+    		url = "https://raw.githubusercontent.com/afreakk/greasemonkeyscripts/1d1be041a65c251692ee082eda64d2637edf6444/youtube_sponsorblock.js";
+    		sha256 = "sha256-e3QgDPa3AOpPyzwvVjPQyEsSUC9goisjBUDMxLwg8ZE=";
+    	})
       (pkgs.fetchurl {
-      	      url = "https://raw.githubusercontent.com/afreakk/greasemonkeyscripts/refs/heads/master/youtube_adblock.js";
-      	      sha256 = "sha256-AyD9VoLJbKPfqmDEwFIEBMl//EIV/FYnZ1+ona+VU9c=";
-          })
+    		url = "https://raw.githubusercontent.com/afreakk/greasemonkeyscripts/refs/heads/master/youtube_adblock.js";
+    		sha256 = "sha256-AyD9VoLJbKPfqmDEwFIEBMl//EIV/FYnZ1+ona+VU9c=";
+    	})
     ];
   
     aliases = {
@@ -165,7 +165,7 @@
     searchEngines = {
       "DEFAULT" = "https://search.inetol.net/search?q={}";
     };
-  
+    
     settings = {
       content = {
         blocking = {
@@ -215,40 +215,20 @@
       colors = {
         completion = {
           category = {
-            bg = lib.mkForce "#90001f28";
+            bg = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
             border = {
-              bottom = lib.mkForce "#90001f28";
-              top = lib.mkForce "#90001f28";
+              bottom = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
+              top = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
             };
           };
-          even.bg = lib.mkForce "#90001f28";
-          odd.bg = lib.mkForce "#90001f28";
+          even.bg = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
+          odd.bg = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
         };
         statusbar = {
-          caret = {
-            bg = lib.mkForce "#50009bda";
-          };
-      
-          insert = {
-            bg = lib.mkForce "#503f3f81";
-          };
-      
-          private = {
-            bg = lib.mkForce "#50001f28";
-          };
-      
-          passthrough = {
-            bg = lib.mkForce "#500096f1";
-          };
-      
           command = {
-            bg = lib.mkForce "#50001f28";
-      
-            private = {
-              bg = lib.mkForce "#50001f28";
-            };
+            bg = lib.mkForce ("#50" + config.lib.stylix.colors.base00);
+            private.bg = lib.mkForce ("#50" + config.lib.stylix.colors.base00);
           };
-          # progress.bg = info;
         };
       };
   
@@ -309,25 +289,24 @@
       c.fonts.completion.entry = '8pt "Source Code Pro"'
       c.fonts.debug_console = '8pt "Source Code Pro"'
       c.fonts.prompts = 'default_size sans-serif'
-      config.source("emacs_ipc.py")
     '';
   };
   
-  programs.emacs.init.usePackage.qutebrowser = {
-    enable = true;
-    package = epkgs: (epkgs.callPackage ./emacs/emacs-packages/qutebrowser.nix {
-      inherit inputs;
-      inherit (epkgs) trivialBuild dash consult exwm password-store evil;
-    });
-    ghook = [
-      "('exwm-init-hook 'global-qutebrowser-exwm-mode)"
-    ];
-    gfhook = [
-      "('server-visit-hook 'qute/dired-hook)"
-      "('qutebrowser-exwm-mode-hook 'evil-normal-state)"
-    ];
-    config = ''
-      (add-to-list 'qutebrowser-process-names "QtWebEngineProc")
+  programs.emacs.init.usePackage = {
+    qutebrowser = {
+      enable = true;
+      package = epkgs: (epkgs.callPackage ./emacs/emacs-packages/qutebrowser.nix {
+        inherit inputs;
+        inherit (epkgs) trivialBuild dash consult exwm password-store evil;
+      });
+      ghook = [
+        "('exwm-init-hook 'global-qutebrowser-exwm-mode)"
+      ];
+      gfhook = [
+        "('server-visit-hook 'qute/dired-hook)"
+        "('qutebrowser-exwm-mode-hook 'evil-normal-state)"
+      ];
+      config = ''
       (define-minor-mode qute-dired-mode
         "Used for dired buffers qutebrowser is using as a file picker"
         :keymap '())
@@ -354,5 +333,16 @@
           (add-hook 'dired-mode-hook 'qute-dired-mode)
           (setq qute-dired-buffers (list (dired "~/")))))
     '';
+    };
+    qutebrowser-evil = {
+      enable = true;
+      package = epkgs: (epkgs.callPackage ./emacs/emacs-packages/qutebrowser.nix {
+        inherit inputs;
+        inherit (epkgs) trivialBuild dash consult exwm password-store evil;
+      });
+      ghook = [
+        "('global-qutebrowser-exwm-mode-hook 'qutebrowser-evil-state-mode)"
+      ];
+    };
   };
 }

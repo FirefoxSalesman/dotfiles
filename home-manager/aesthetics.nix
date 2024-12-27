@@ -92,7 +92,7 @@
       enable = true;
       ghook = ["('marginalia-mode-hook 'nerd-icons-completion-marginalia-setup)"];
     };
-
+    
     dashboard = {
       enable = true;
       ghook = ["('on-init-ui-hook '(dashboard-insert-startupify-lists dashboard-initialize))"];
@@ -115,7 +115,7 @@
         dashboard-agenda-sort-strategy = "'(time-up)";
       };
     };
-
+    
     doom-nano-modeline = {
       enable = true;
       package = epkgs: (epkgs.callPackage ./emacs/emacs-packages/doom-nano-modeline.nix {
@@ -140,7 +140,7 @@
           (let* ((window (get-buffer-window (current-buffer)))
         
                  ;; Variable to store if the this window is active.
-               (active t)
+        	 (active t)
         
                  ;; Status of the buffer.
                  (status (doom-nano-modeline-status))
@@ -172,7 +172,7 @@
                  (macrostring (if hasmacro (concat "● " macroname ) nil))
         
                  ;; Select the modeline face.
-               (modeline-face 'doom-nano-modeline-active-face)
+        	 (modeline-face 'doom-nano-modeline-active-face)
         
                  ;; Select the face to highlight the evil state.
                  (evilstate-face
@@ -233,9 +233,9 @@
                      (buffer-modified (if (and buffer-file-name (buffer-modified-p)) "** " "")))
         
                 `((,(concat buffer-modified buffer-name) . nil)
-          	("  " . nil)
+        	  ("  " . nil)
                   (,(nerd-icons-icon-for-buffer) . doom-nano-modeline-major-mode-face)
-          	("  " . nil)))
+        	  ("  " . nil)))
             (doom-nano-modeline-default-mode)))
         
         (defun doom-nano-modeline-buffer-name-vc-and-major-mode ()
@@ -276,16 +276,16 @@
         (defun doom-nano-tabline ()
           "Format the modeline for the tabline"
           (let* ((the-format '((:eval
-          		      (funcall
-          		       (or (catch 'found
-          			     (dolist (elt doom-nano-modeline-mode-formats)
-          			       (let* ((config (cdr elt))
-          				      (mode-p (plist-get config :mode-p))
-          				      (format (plist-get config :format)))
-          				 (when mode-p
-          				   (when (funcall mode-p)
-          				     (throw 'found format))))))
-          			   #'doom-nano-modeline-default-mode-format))))))
+        			(funcall
+        			 (or (catch 'found
+        			       (dolist (elt doom-nano-modeline-mode-formats)
+        				 (let* ((config (cdr elt))
+        					(mode-p (plist-get config :mode-p))
+        					(format (plist-get config :format)))
+        				   (when mode-p
+        				     (when (funcall mode-p)
+        				       (throw 'found format))))))
+        			     #'doom-nano-modeline-default-mode-format))))))
             `((global menu-item ,(format-mode-line the-format) ignore))))
       '';
     };
@@ -328,13 +328,13 @@
         doom-themes-enable-italic = "t";
       };
     };
-
+    
     solaire-mode = {
       enable = true;
       demand = true;
       config = ''(solaire-global-mode)'';
     };
-
+    
     vertico-posframe = {
       enable = true;
       defer = true;

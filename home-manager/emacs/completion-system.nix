@@ -92,7 +92,7 @@
         "H-e" = "'vertico-quick-jump";
       };
     };
-
+    
     corfu = {
       enable = true;
       ghook = [
@@ -255,13 +255,13 @@
       };
       config = ''
         (defun efs/save-search-history (pattern)
-              "Gets history from pattern, & saves it where evil mode can find it"
-              (add-to-history 'evil-search-forward-history pattern)
-              (add-to-history 'search-ring pattern)
-              (add-to-history 'regexp-search-ring pattern)
-              (setq evil-ex-search-pattern (list pattern t t))
-              (setq evil-ex-search-direction 'forward)
-              (when evil-ex-search-persistent-highlight
+        	"Gets history from pattern, & saves it where evil mode can find it"
+        	(add-to-history 'evil-search-forward-history pattern)
+        	(add-to-history 'search-ring pattern)
+        	(add-to-history 'regexp-search-ring pattern)
+        	(setq evil-ex-search-pattern (list pattern t t))
+        	(setq evil-ex-search-direction 'forward)
+        	(when evil-ex-search-persistent-highlight
                   (evil-ex-search-activate-highlight evil-ex-search-pattern)))
         
         (defun noct-consult-line-evil-history (&rest _)
@@ -270,7 +270,7 @@
           (when (and (bound-and-true-p evil-mode)
                      (eq evil-search-module 'isearch))
             (efs/save-search-history (cadr (orderless-compile
-          				  (car consult--line-history))))))
+        				    (car consult--line-history))))))
         
         (general-add-advice #'consult-line :after #'noct-consult-line-evil-history)
         
@@ -320,10 +320,10 @@
               (consult-line initial)
             ((lambda ()
                (when (file-writable-p buffer-file-name)
-               (save-buffer))
+        	 (save-buffer))
                (let ((consult-project-function (lambda (x) nil)))
-               (consult-ripgrep (list (shell-quote-argument buffer-file-name)) (concat " " initial))
-               (efs/save-search-history (string-trim-left (car consult--grep-history) "# ")))))))
+        	 (consult-ripgrep (list (shell-quote-argument buffer-file-name)) (concat " " initial))
+        	 (efs/save-search-history (string-trim-left (car consult--grep-history) "# ")))))))
       '';
     } ;
 
@@ -474,8 +474,8 @@
           "Invoke `noct-consult-ripgrep-or-line' from ace-isearch."
           (interactive)
           (let (($query (if isearch-regexp
-          		  isearch-string
-          		(regexp-quote isearch-string))))
+        		    isearch-string
+        		  (regexp-quote isearch-string))))
             (isearch-update-ring isearch-string isearch-regexp)
             (let (search-nonincremental-instead)
               (ignore-errors (isearch-done t t)))

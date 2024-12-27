@@ -59,8 +59,8 @@
                                 arg))
          arg t)
         (async-start (lambda ()
-      		 (dolist (m markers) (set-marker m nil)))
-      	       'ignore)))
+    		   (dolist (m markers) (set-marker m nil)))
+    		 'ignore)))
   '';
     };
 
@@ -144,7 +144,7 @@
       enable = true;
       generalTwo."'normal".dirvish-mode-map."M-t" = "'dired-posframe-mode";
     };
-
+    
     image = {
       enable = true;
       generalTwo."'normal".image-map = {

@@ -21,7 +21,7 @@
       defer = true;
       generalOne."efs/leader-keys"."po" = '''(password-store-otp-token-copy :which-key "copy otp")'';
     };
-
+    
     pinentry = {
       enable = true;
       custom.epa-pinentry-mode = "'loopback";

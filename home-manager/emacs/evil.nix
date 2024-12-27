@@ -114,7 +114,7 @@
           "y" 'evil-shift-right
           "Y" 'evil-shift-left
           "<escape>" 'doom/escape)
-        
+          
         
         (general-def 'motion
           "i" 'evil-forward-char
@@ -189,7 +189,7 @@
         
       '';
     };
-
+    
     evil-collection = {
       enable = true;
       custom.evil-collection-unimpaired-want-repeat-mode-integration = "t";
@@ -249,12 +249,12 @@
       custom = {
         avy-dispatch-alist = ''
           '((?m . avy-action-cursor)
-      			(?l . avy-action-ispell)
-      			(?o . avy-action-embark)
-      			(?h . avy-action-helpful)
-      			(?g . avy-action-yank)
-      			(?p . avy-action-teleport)
-      			(?q . avy-action-fold))
+    			  (?l . avy-action-ispell)
+    			  (?o . avy-action-embark)
+    			  (?h . avy-action-helpful)
+    			  (?g . avy-action-yank)
+    			  (?p . avy-action-teleport)
+    			  (?q . avy-action-fold))
         '';
         avy-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
       };
@@ -323,18 +323,18 @@
         (global-evil-mc-mode)
         
         (general-add-hook 'doom-escape-hook (lambda () (when (evil-mc-has-cursors-p)
-          					       (evil-mc-undo-all-cursors)
-          					       (evil-mc-resume-cursors) t)))
+        						 (evil-mc-undo-all-cursors)
+        						 (evil-mc-resume-cursors) t)))
         
         ;; Don't mess with my macros.
         ;; https://github.com/gabesoft/evil-mc/issues/83
         (gsetq evil-mc-cursor-variables
                (mapcar
-              (lambda (s)
-          	(remove 'register-alist
-          		(remove 'evil-markers-alist
-          			(remove evil-was-yanked-without-register s))))
-              evil-mc-cursor-variables))
+        	(lambda (s)
+        	  (remove 'register-alist
+        		  (remove 'evil-markers-alist
+        			  (remove evil-was-yanked-without-register s))))
+        	evil-mc-cursor-variables))
       '';
       extraConfig = ''
         :pretty-hydra
@@ -358,7 +358,7 @@
            ("O" #'evil-mc-make-cursor-move-prev-line "Prev Line"))))
       '';
     };
-
+    
     symex = {
       enable = true;
       defer = true;
@@ -497,7 +497,7 @@
             
       '';
     } ;
-
+    
     evil-god-state = {
       enable = true;
       defer = true;
@@ -512,7 +512,7 @@
         };
       };
     };
-
+    
     evil-org = {
       enable = true;
       defer = true;

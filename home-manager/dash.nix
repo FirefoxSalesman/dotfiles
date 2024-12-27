@@ -82,7 +82,7 @@ in {
       };
     };
   };
-
+  
   config = let
     aliasesStr = concatStringsSep "\n"
       ((mapAttrsToList (k: v: "alias ${k}=${escapeShellArg v}")

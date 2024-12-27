@@ -33,7 +33,7 @@
                                    ("+" (:strike-through t))
                                    ("!" (:overline t) verbatim))'';
     
-    
+        
       };
       generalOne."efs/leader-keys" = {
         "o" = '''(:ignore t :which-key "org")'';
@@ -59,15 +59,15 @@
         (require 'org-tempo)
         
         (dolist (mode (list '("sh" . "src shell")
-          		  '("sg" . "src sage")
-          		  '("el" . "src emacs-lisp")
-          		  '("cc" . "src C")
-          		  '("cs" . "src css")
-          		  '("hl" . "src html")
-          		  '("js" . "src javascript")
-          		  '("nx" . "src nix")
-          		  '("jv" . "src java")
-          		  '("py" . "src python")))
+        		    '("sg" . "src sage")
+        		    '("el" . "src emacs-lisp")
+        		    '("cc" . "src C")
+        		    '("cs" . "src css")
+        		    '("hl" . "src html")
+        		    '("js" . "src javascript")
+        		    '("nx" . "src nix")
+        		    '("jv" . "src java")
+        		    '("py" . "src python")))
           (add-to-list 'org-structure-template-alist mode))
         
         (defun my/org-capf ()
@@ -75,9 +75,9 @@
                       (list (cape-capf-super
                              #'tempel-complete
                              #'cape-file)
-          		  #'pcomplete-completions-at-point
-          		  #'cape-dabbrev
-          		  #'cape-dict)))
+        		    #'pcomplete-completions-at-point
+        		    #'cape-dabbrev
+        		    #'cape-dict)))
       '';
       init = ''
         ;; (add-to-list 'org-emphasis-alist '("‾" (:overline t)))
@@ -154,7 +154,7 @@
       enable = true;
       ghook = ["('after-save-hook (lambda () (when (equal major-mode 'org-mode) (org-auto-export-pandoc))))"];
     };
-
+    
     denote = {
       enable = true;
       defer = true;
@@ -164,7 +164,7 @@
         denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "cybercrime" "databases" "scifi" "software-requirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics")'';
         denote-file-type = "nil";
         denote-dired-directories = "(list denote-directory)";
-    
+        
       };
       generalOne."efs/leader-keys" = {
         "oc" = '''(denote :which-key "create note")'';
@@ -194,7 +194,7 @@
         "os" = '''(consult-notes-search-in-all-notes :which-key "search notes")'';
       };
     };
-
+    
     tex = {
       enable = true;
       package = epkgs: epkgs.auctex;
@@ -278,7 +278,7 @@
         org-cdlatex-mode-map."TAB" = "'cdlatex-tab";
       };
     };
-
+    
     markdown = {
       enable = true;
       defer = true;
@@ -313,7 +313,7 @@
             (set-face-attribute (car face) nil :font "SF Pro" :weight 'regular :height (cdr face))))
       '';
     };
-
+    
     writeroom-mode = {
       enable = true;
       ghook = ["('(woman-mode-hook org-agenda-mode-hook org-mode-hook Info-mode-hook markdown-mode-hook) 'writeroom-mode)"];
@@ -334,7 +334,7 @@
         "('prog-mode-hook 'flyspell-prog-mode)"
       ];
     };
-
+    
     citar = {
       enable = true;
       config = ''(citar-denote-mode)'';
