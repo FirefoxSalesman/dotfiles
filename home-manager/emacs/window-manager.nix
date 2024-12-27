@@ -7,7 +7,7 @@
       config = ''(general-add-advice 'tab-new :after #'dashboard-open)'';
       ghook = ["('exwm-init-hook 'tab-bar-mode)"];
       general."s-u" = "'tab-bar-hydra/body";
-      custom.tab-bar-show = "nil";
+      custom.tab-bar-format = "'(doom-nano-tabline tab-bar-format-align-right tab-bar-format-global)";
       extraConfig = ''
         :pretty-hydra
         ((:color amaranth)
@@ -347,7 +347,8 @@
           (exwm-workspace-switch-create 0)
         
           ;; Show status in the mode line
-          (display-battery-mode 1)
+          (display-battery-mode)
+          (display-time-mode)
           (start-process-shell-command "xbanish" nil "${pkgs.xbanish}/bin/xbanish"))
         (defun efs/exwm-update-class ()
           (exwm-workspace-rename-buffer exwm-class-name))

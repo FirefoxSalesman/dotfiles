@@ -867,7 +867,6 @@ Eat lets us get away with using eshell all the time. It can be used to get into 
   (defun efs/make-eshell ()
     (interactive)
     (eshell 'N))
-
 #+end_src
 
 #+NAME: Emacs Eshell Config
@@ -880,20 +879,18 @@ Eat lets us get away with using eshell all the time. It can be used to get into 
     (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
     (evil-normalize-keymaps)
     (setenv "TERM" "xterm")
-    (gsetq eshell-history-size         0
+    (gsetq eshell-command-aliases-list '(("gc" "torsocks git clone")
+  				       ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
+  				       ("l" "ls $*")
+  				       ("halt" "doas shutdown -P now")
+  				       ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'"))
+  	 eshell-history-size 0
            eshell-buffer-maximum-lines 100
            eshell-hist-ignoredups t
            eshell-scroll-to-bottom-on-input t))
 
   (with-eval-after-load 'esh-opt
     (gsetq eshell-destroy-buffer-when-process-dies t))
-
-  (gsetq eshell-command-aliases-list
-   '(("gc" "torsocks git clone")
-     ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
-     ("l" "ls $*")
-     ("halt" "doas shutdown -P now")
-     ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'")))
 
   (with-eval-after-load 'evil-collection-eshell
     (general-add-advice 'evil-collection-eshell-setup-keys
@@ -1252,22 +1249,22 @@ Use =M-x all-the-icons-install-fonts=
       <<Emacs Dashboard Config>>  
     '' ;
     custom = {
+      dashboard-banner-logo-title = ''"Emacs: The one true desktop environment"'';
       dashboard-center-content = "t";
       dashboard-items = '''((recents   . 5)
                             (bookmarks . 5)
                             (projects  . 5)
                             (agenda    . 5))'';
-     dashboard-icon-type = "'nerd-icons";
-     dashboard-set-heading-icons = "t";
-     dashboard-set-file-icons = "t";
-    #   dashboard-agenda-sort-strategy = "'(time-up)";
+      dashboard-icon-type = "'nerd-icons";
+      dashboard-set-heading-icons = "t";
+      dashboard-set-file-icons = "t";
+      dashboard-agenda-sort-strategy = "'(time-up)";
     };
   };
 #+end_src
 
 #+NAME: Emacs Dashboard Config
 #+begin_src emacs-lisp
-  (gsetq dashboard-banner-logo-title "Emacs: The one true desktop environment")
   (dashboard-setup-startup-hook)
   (dashboard-open)
   (evil-collection-dashboard-setup)
@@ -1275,7 +1272,9 @@ Use =M-x all-the-icons-install-fonts=
 #+end_src
 
 *** Nano
-Using nano modeline to cut down clutter
+Using nano modeline to cut down clutter.
+
+I'm not using the minor mode, because its text is being sent to the tab bar.
 
 The powerline separators were borrowed from punchline, because I think they look cool
 #+NAME: Emacs Ricing Nano
@@ -1286,17 +1285,17 @@ The powerline separators were borrowed from punchline, because I think they look
       inherit inputs;
       inherit (epkgs) trivialBuild doom-themes;
     });
-    ghook = ["('after-init-hook 'doom-nano-modeline-mode)"];
+    afterCall = ["after-init-hook"];
+    custom.mode-line-format = "nil";
     config = ''
       <<Emacs Doom Nano Modeline Config>>
     '';
   };
 #+end_src
 
+This is just overriding a bunch of functions so that I can put all the info in the tab bar
 #+NAME: Emacs Doom Nano Modeline Config
 #+begin_src emacs-lisp
-  (gsetq doom-nano-modeline-position 'bottom)
-
   (defun doom-nano-modeline--render (left right &optional hide-evil-mode)
     "Render the doom-nano modeline string.
 
@@ -1312,8 +1311,7 @@ The powerline separators were borrowed from punchline, because I think they look
     (let* ((window (get-buffer-window (current-buffer)))
 
            ;; Variable to store if the this window is active.
-           (active (and (frame-focus-state)
-                        (eq window doom-nano-modeline--selected-window)))
+  	 (active t)
 
            ;; Status of the buffer.
            (status (doom-nano-modeline-status))
@@ -1345,9 +1343,7 @@ The powerline separators were borrowed from punchline, because I think they look
            (macrostring (if hasmacro (concat "● " macroname ) nil))
 
            ;; Select the modeline face.
-           (modeline-face (if active
-                              'doom-nano-modeline-active-face
-                            'doom-nano-modeline-inactive-face))
+  	 (modeline-face 'doom-nano-modeline-active-face)
 
            ;; Select the face to highlight the evil state.
            (evilstate-face
@@ -1390,39 +1386,10 @@ The powerline separators were borrowed from punchline, because I think they look
                             (propertize (car element) 'face modeline-face)))
                         left
                         "")
-                     "")))
-
-           ;; Assemble the right string with the highlights.
-           (pright (concat
-
-                    (propertize " "
-                                'face modeline-face
-                                'display `(raise ,(- 0 doom-nano-modeline-bottom-padding)))
-
-                    (if right
-                        (mapconcat
-                         (lambda (element)
-                           (if (and active (cdr element))
-                               (propertize (car element) 'face (cdr element))
-                             (propertize (car element) 'face modeline-face)))
-                         right
-                         "")
-                      "")))
-
-           ;; Compute the right string length, which is used to align the string
-           ;; to the right.
-           (pright-length (length (format-mode-line pright))))
+                     ""))))
 
       ;; Concatenate and return the modeline string.
       (concat pleft
-              (propertize " "
-                          'face modeline-face
-                          'display `(space
-                                     :align-to
-                                     (- (+ right right-fringe right-margin scroll-bar)
-                                        ,pright-length 1)))
-              pright
-
               ;; We have one final space as margin, so we make sure it is
               ;; highlighted with the correct face.
               (propertize " " 'face modeline-face))))
@@ -1476,6 +1443,22 @@ The powerline separators were borrowed from punchline, because I think they look
   (defun doom-nano-modeline--special-mode-p ()
     "Return t if we are in `special-mode' or nil otherwise."
     (or (derived-mode-p 'special-mode) (and (eq major-mode 'exwm-mode) (not qutebrowser-exwm-mode))))
+
+  (defun doom-nano-tabline ()
+    "Format the modeline for the tabline"
+    (let* ((the-format
+            '((:eval
+               (funcall
+                (or (catch 'found
+                      (dolist (elt doom-nano-modeline-mode-formats)
+                        (let* ((config (cdr elt))
+                               (mode-p (plist-get config :mode-p))
+                               (format (plist-get config :format)))
+                          (when mode-p
+                            (when (funcall mode-p)
+                              (throw 'found format))))))
+                    #'doom-nano-modeline-default-mode-format))))))
+      `((global menu-item ,(format-mode-line the-format) ignore))))
 #+end_src
 
 **** Package Definition
@@ -1538,6 +1521,7 @@ Makes emacs' theme mimic the wallpaper. A good pywal config will get most things
      `(org-code ((t (:foreground ,(ewal-get-color 'green)))))
      `(line-number ((t (:foreground ,(ewal-get-color 'blue)))))
      `(eshell-git-prompt-powerline-dir-face ((t (:background ,(ewal-get-color 'blue)))))
+     `(tab-bar ((t :inherit mode-line)))
      `(eshell-git-prompt-powerline-clean-face ((t (:background ,(ewal-get-color 'green)))))
      `(eshell-git-prompt-powerline-not-clean-face ((t (:background ,(ewal-get-color 'red)))))))
   (doom-themes-visual-bell-config)
@@ -1558,7 +1542,7 @@ Solaire dims certain parts of the frame.
 *** Posframes
 Vertico Posframe puts vertico in a separate frame, causing it to actually look like dmenu.
 #+NAME: Emacs Ricing Posframes
-#+begin_src nix :noweb yes
+#+begin_src nix
   vertico-posframe = {
     enable = true;
     defer = true;
@@ -1570,16 +1554,11 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
     enable = true;
     defer = true;
     ghook = ["('which-key-mode-hook 'which-key-posframe-mode)"];
-    config = ''
-      <<Emacs Ricing Posframes Config>>
-    '';
+    custom = {
+      which-key-posframe-poshandler = "'posframe-poshandler-frame-bottom-center";
+      which-key-posframe-parameters = "'(:parent-frame nil :refposhandler posframe-refposhandler-xwininfo)";
+    };
   };
-#+end_src
-
-#+NAME: Emacs Ricing Posframes Config
-#+begin_src emacs-lisp
-  (gsetq which-key-posframe-poshandler 'posframe-poshandler-frame-bottom-center
-         which-key-posframe-parameters '(:parent-frame nil :refposhandler posframe-refposhandler-xwininfo))
 #+end_src
 
 *** Mustache File
@@ -2450,8 +2429,6 @@ https://gitlab.com/rycee/nur-expressions
 #+begin_src emacs-lisp
   (defalias 'gsetq #'general-setq)
 
-  ;; (server-start)
-
   (use-package on
     :demand t)
 
@@ -2519,13 +2496,14 @@ https://gitlab.com/rycee/nur-expressions
     :defer t)
 
   (use-package pretty-hydra
+    :custom
+    (hydra-hint-display-type 'posframe)
     :config
-    (gsetq hydra-hint-display-type 'posframe
-  	 hydra-posframe-show-params '(:internal-border-width 1
-   							     :internal-border-color "003f28"
-   							     :parent-frame nil
-   							     :poshandler posframe-poshandler-frame-bottom-center
-   							     :refposhandler posframe-refposhandler-xwininfo))
+    (gsetq hydra-posframe-show-params '(:internal-border-width 1
+  							     :internal-border-color "003f28"
+  							     :parent-frame nil
+  							     :poshandler posframe-poshandler-frame-bottom-center
+  							     :refposhandler posframe-refposhandler-xwininfo))
     :gfhook ('doom-escape-hook 'hydra-keyboard-quit))
 
   (use-package repeaters
@@ -2569,9 +2547,11 @@ https://emacs.stackexchange.com/questions/75528/how-to-define-display-buffer-ali
 
   display-line-numbers = {
     enable = true;
-    config = ''
-      <<Emacs Display Line Numbers Config>>
-    '' ;
+    custom = {
+      display-line-numbers-type = "'relative";
+      display-line-numbers-width = "3";
+    }; 
+    config = "(global-display-line-numbers-mode)";
     #Disable line numbers for some modes
     ghook = ["('(org-mode-hook term-mode-hook dired-mode-hook eww-mode-hook eat-mode-hook markdown-mode-hook help-mode-hook helpful-mode-hook Info-mode-hook woman-mode-hook shell-mode-hook pdf-view-mode-hook elfeed-search-mode-hook elfeed-show-mode-hook eshell-mode-hook racket-repl-mode-hook sage-shell-mode-hook) (lambda () (display-line-numbers-mode 0)))"];
   } ;
@@ -2579,6 +2559,12 @@ https://emacs.stackexchange.com/questions/75528/how-to-define-display-buffer-ali
   elec-pair = {
     enable = true;
     ghook = ["('on-first-buffer-hook 'electric-pair-mode)"];
+    custom.electric-pair-pairs = ''
+     '((?\" . ?\")
+       (?\[ . ?\])
+       (?\( . ?\))
+       (?\{ . ?\}))
+    '';
     config = ''
       <<Emacs Electric Pair Config>>
     '';
@@ -2596,20 +2582,9 @@ https://emacs.stackexchange.com/questions/75528/how-to-define-display-buffer-ali
   ;; < & > are not delimiters. Change my mind.
   ;; Courtesy of DT. https://gitlab.com/dwt1/configuring-emacs/-/tree/main/07-the-final-touches?ref_type=heads
   (gsetq electric-pair-inhibit-predicate `(lambda (c)
-                                            (if (or (char-equal c ?<) (char-equal c ?>))
-                                                t
-                                                (,electric-pair-inhibit-predicate c)))
-         electric-pair-pairs '((?\" . ?\")
-  			     (?\[ . ?\])
-  			     (?\( . ?\))
-  			     (?\{ . ?\})))
-#+end_src
-
-#+NAME: Emacs Display Line Numbers Config
-#+begin_src emacs-lisp
-  (gsetq display-line-numbers-type 'relative
-         display-line-numbers-width 3)
-  (global-display-line-numbers-mode)
+  					   (if (or (char-equal c ?<) (char-equal c ?>))
+  					       t
+  					       (,electric-pair-inhibit-predicate c))))
 #+end_src
 
 ***** Cleanup
@@ -2683,7 +2658,7 @@ Wgrep basically turns grep into sed.
 #+begin_src nix
   wgrep = {
     enable = true;
-    config = "(gsetq wgrep-auto-save-buffer t)";
+    custom.wgrep-auto-save-buffer = "t";
     generalTwo."'normal".grep-mode-map."w" = "'wgrep-change-to-wgrep-mode";
   };
 #+end_src
@@ -3132,6 +3107,18 @@ Repeat map idea: https://hungyi.net/posts/hydra-for-evil-mc/
         "H-o" = "'evilem-motion-previous-visual-line";
       };
     };
+    custom = {
+      avy-dispatch-alist = ''
+        '((?m . avy-action-cursor)
+  			  (?l . avy-action-ispell)
+  			  (?o . avy-action-embark)
+  			  (?h . avy-action-helpful)
+  			  (?g . avy-action-yank)
+  			  (?p . avy-action-teleport)
+  			  (?q . avy-action-fold))
+      '';
+      avy-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
+    };
     config = ''
       <<Emacs Evil Easymotion Config>>
     '';
@@ -3255,32 +3242,25 @@ Repeat map idea: https://hungyi.net/posts/hydra-for-evil-mc/
       (select-window
        (cdr (ring-ref avy-ring 0))))
     t)
-
-  (gsetq avy-dispatch-alist '((?m . avy-action-cursor)
-  			    (?l . avy-action-ispell)
-  			    (?o  . avy-action-embark)
-  			    (?h . avy-action-helpful)
-  			    (?g . avy-action-yank)
-  			    (?p . avy-action-teleport)
-  			    (?q . avy-action-fold))
-         avy-keys '(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a))
 #+end_src
 
 #+NAME: Emacs Evil-MC Config
 #+begin_src emacs-lisp
   (global-evil-mc-mode)
+
   (general-add-hook 'doom-escape-hook (lambda () (when (evil-mc-has-cursors-p)
-                                                   (evil-mc-undo-all-cursors)
-                                                   (evil-mc-resume-cursors) t)))
+  						 (evil-mc-undo-all-cursors)
+  						 (evil-mc-resume-cursors) t)))
+
   ;; Don't mess with my macros.
   ;; https://github.com/gabesoft/evil-mc/issues/83
   (gsetq evil-mc-cursor-variables
          (mapcar
-          (lambda (s)
-            (remove 'register-alist
-                    (remove 'evil-markers-alist
-                            (remove evil-was-yanked-without-register s))))
-          evil-mc-cursor-variables))
+  	(lambda (s)
+  	  (remove 'register-alist
+  		  (remove 'evil-markers-alist
+  			  (remove evil-was-yanked-without-register s))))
+  	evil-mc-cursor-variables))
 #+end_src
 
 **** Symex
@@ -4386,6 +4366,8 @@ We use the default dirvish config. It's like ranger.el, but without the bugs.
         enable = true;
         general."H-f" = "'dirvish-fd";
         custom = {
+          dirvish-use-mode-line = "nil";
+          dirvish-use-header-line = "nil";
           dirvish-attributes = "'(nerd-icons file-size subtree-state)";
           dirvish-yank-overwrite-existing-files = "'always";
           dirvish-side-window-parameters = "nil";
@@ -4840,10 +4822,10 @@ https://github.com/jdtsmith/indent-bars
     config = ''(eglot-tempel-mode)'';
   };
 
-  breadcrumb = {
-    enable = true;
-    ghook = ["('(bibtex-mode-hook nxml-mode-hook nix-mode-hook racket-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook ess-r-mode-hook html-ts-mode-hook css-ts-mode-hook emacs-lisp-mode-hook) 'breadcrumb-local-mode)"];
-  };
+  # breadcrumb = {
+  #   enable = true;
+  #   ghook = ["('(bibtex-mode-hook nxml-mode-hook nix-mode-hook racket-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook ess-r-mode-hook html-ts-mode-hook css-ts-mode-hook emacs-lisp-mode-hook) 'breadcrumb-local-mode)"];
+  # };
 #+end_src
 
 #+NAME: Emacs Eglot Config
@@ -5618,7 +5600,7 @@ You can't get page numbers, though, which becomes unfortunate for doing citation
     config = ''(general-add-advice 'tab-new :after #'dashboard-open)'';
     ghook = ["('exwm-init-hook 'tab-bar-mode)"];
     general."s-u" = "'tab-bar-hydra/body";
-    custom.tab-bar-show = "nil";
+    custom.tab-bar-format = "'(doom-nano-tabline tab-bar-format-align-right tab-bar-format-global)";
     extraConfig = ''
       :pretty-hydra
       ((:color amaranth)
@@ -6051,7 +6033,8 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
     (exwm-workspace-switch-create 0)
     
     ;; Show status in the mode line
-    (display-battery-mode 1)
+    (display-battery-mode)
+    (display-time-mode)
     (start-process-shell-command "xbanish" nil "${pkgs.xbanish}/bin/xbanish"))
   (defun efs/exwm-update-class ()
     (exwm-workspace-rename-buffer exwm-class-name))

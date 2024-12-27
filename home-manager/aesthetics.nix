@@ -97,22 +97,22 @@
       enable = true;
       ghook = ["('on-init-ui-hook '(dashboard-insert-startupify-lists dashboard-initialize))"];
       config = ''
-        (gsetq dashboard-banner-logo-title "Emacs: The one true desktop environment")
         (dashboard-setup-startup-hook)
         (dashboard-open)
         (evil-collection-dashboard-setup)
         (evil-collection-dashboard-setup-jump-commands)  
       '' ;
       custom = {
+        dashboard-banner-logo-title = ''"Emacs: The one true desktop environment"'';
         dashboard-center-content = "t";
         dashboard-items = '''((recents   . 5)
                               (bookmarks . 5)
                               (projects  . 5)
                               (agenda    . 5))'';
-       dashboard-icon-type = "'nerd-icons";
-       dashboard-set-heading-icons = "t";
-       dashboard-set-file-icons = "t";
-      #   dashboard-agenda-sort-strategy = "'(time-up)";
+        dashboard-icon-type = "'nerd-icons";
+        dashboard-set-heading-icons = "t";
+        dashboard-set-file-icons = "t";
+        dashboard-agenda-sort-strategy = "'(time-up)";
       };
     };
 
@@ -122,10 +122,9 @@
         inherit inputs;
         inherit (epkgs) trivialBuild doom-themes;
       });
-      ghook = ["('after-init-hook 'doom-nano-modeline-mode)"];
+      afterCall = ["after-init-hook"];
+      custom.mode-line-format = "nil";
       config = ''
-        (gsetq doom-nano-modeline-position 'bottom)
-        
         (defun doom-nano-modeline--render (left right &optional hide-evil-mode)
           "Render the doom-nano modeline string.
         
@@ -141,8 +140,7 @@
           (let* ((window (get-buffer-window (current-buffer)))
         
                  ;; Variable to store if the this window is active.
-                 (active (and (frame-focus-state)
-                              (eq window doom-nano-modeline--selected-window)))
+               (active t)
         
                  ;; Status of the buffer.
                  (status (doom-nano-modeline-status))
@@ -174,9 +172,7 @@
                  (macrostring (if hasmacro (concat "● " macroname ) nil))
         
                  ;; Select the modeline face.
-                 (modeline-face (if active
-                                    'doom-nano-modeline-active-face
-                                  'doom-nano-modeline-inactive-face))
+               (modeline-face 'doom-nano-modeline-active-face)
         
                  ;; Select the face to highlight the evil state.
                  (evilstate-face
@@ -219,39 +215,10 @@
                                   (propertize (car element) 'face modeline-face)))
                               left
                               "")
-                           "")))
-        
-                 ;; Assemble the right string with the highlights.
-                 (pright (concat
-        
-                          (propertize " "
-                                      'face modeline-face
-                                      'display `(raise ,(- 0 doom-nano-modeline-bottom-padding)))
-        
-                          (if right
-                              (mapconcat
-                               (lambda (element)
-                                 (if (and active (cdr element))
-                                     (propertize (car element) 'face (cdr element))
-                                   (propertize (car element) 'face modeline-face)))
-                               right
-                               "")
-                            "")))
-        
-                 ;; Compute the right string length, which is used to align the string
-                 ;; to the right.
-                 (pright-length (length (format-mode-line pright))))
+                           ""))))
         
             ;; Concatenate and return the modeline string.
             (concat pleft
-                    (propertize " "
-                                'face modeline-face
-                                'display `(space
-                                           :align-to
-                                           (- (+ right right-fringe right-margin scroll-bar)
-                                              ,pright-length 1)))
-                    pright
-        
                     ;; We have one final space as margin, so we make sure it is
                     ;; highlighted with the correct face.
                     (propertize " " 'face modeline-face))))
@@ -305,6 +272,22 @@
         (defun doom-nano-modeline--special-mode-p ()
           "Return t if we are in `special-mode' or nil otherwise."
           (or (derived-mode-p 'special-mode) (and (eq major-mode 'exwm-mode) (not qutebrowser-exwm-mode))))
+        
+        (defun doom-nano-tabline ()
+          "Format the modeline for the tabline"
+          (let* ((the-format
+                  '((:eval
+                     (funcall
+                      (or (catch 'found
+                            (dolist (elt doom-nano-modeline-mode-formats)
+                              (let* ((config (cdr elt))
+                                     (mode-p (plist-get config :mode-p))
+                                     (format (plist-get config :format)))
+                                (when mode-p
+                                  (when (funcall mode-p)
+                                    (throw 'found format))))))
+                          #'doom-nano-modeline-default-mode-format))))))
+            `((global menu-item ,(format-mode-line the-format) ignore))))
       '';
     };
 
@@ -335,6 +318,7 @@
            `(org-code ((t (:foreground ,(ewal-get-color 'green)))))
            `(line-number ((t (:foreground ,(ewal-get-color 'blue)))))
            `(eshell-git-prompt-powerline-dir-face ((t (:background ,(ewal-get-color 'blue)))))
+           `(tab-bar ((t :inherit mode-line)))
            `(eshell-git-prompt-powerline-clean-face ((t (:background ,(ewal-get-color 'green)))))
            `(eshell-git-prompt-powerline-not-clean-face ((t (:background ,(ewal-get-color 'red)))))))
         (doom-themes-visual-bell-config)
@@ -363,10 +347,10 @@
       enable = true;
       defer = true;
       ghook = ["('which-key-mode-hook 'which-key-posframe-mode)"];
-      config = ''
-        (gsetq which-key-posframe-poshandler 'posframe-poshandler-frame-bottom-center
-               which-key-posframe-parameters '(:parent-frame nil :refposhandler posframe-refposhandler-xwininfo))
-      '';
+      custom = {
+        which-key-posframe-poshandler = "'posframe-poshandler-frame-bottom-center";
+        which-key-posframe-parameters = "'(:parent-frame nil :refposhandler posframe-refposhandler-xwininfo)";
+      };
     };
   };
 }

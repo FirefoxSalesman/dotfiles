@@ -36,8 +36,6 @@
       prelude =''
         (defalias 'gsetq #'general-setq)
         
-        ;; (server-start)
-        
         (use-package on
           :demand t)
         
@@ -105,13 +103,14 @@
           :defer t)
         
         (use-package pretty-hydra
+          :custom
+          (hydra-hint-display-type 'posframe)
           :config
-          (gsetq hydra-hint-display-type 'posframe
-               hydra-posframe-show-params '(:internal-border-width 1
-           							   :internal-border-color "003f28"
-           							   :parent-frame nil
-           							   :poshandler posframe-poshandler-frame-bottom-center
-           							   :refposhandler posframe-refposhandler-xwininfo))
+          (gsetq hydra-posframe-show-params '(:internal-border-width 1
+          							   :internal-border-color "003f28"
+          							   :parent-frame nil
+          							   :poshandler posframe-poshandler-frame-bottom-center
+          							   :refposhandler posframe-refposhandler-xwininfo))
           :gfhook ('doom-escape-hook 'hydra-keyboard-quit))
         
         (use-package repeaters
@@ -150,11 +149,11 @@
         
         display-line-numbers = {
           enable = true;
-          config = ''
-            (gsetq display-line-numbers-type 'relative
-                   display-line-numbers-width 3)
-            (global-display-line-numbers-mode)
-          '' ;
+          custom = {
+            display-line-numbers-type = "'relative";
+            display-line-numbers-width = "3";
+          }; 
+          config = "(global-display-line-numbers-mode)";
           #Disable line numbers for some modes
           ghook = ["('(org-mode-hook term-mode-hook dired-mode-hook eww-mode-hook eat-mode-hook markdown-mode-hook help-mode-hook helpful-mode-hook Info-mode-hook woman-mode-hook shell-mode-hook pdf-view-mode-hook elfeed-search-mode-hook elfeed-show-mode-hook eshell-mode-hook racket-repl-mode-hook sage-shell-mode-hook) (lambda () (display-line-numbers-mode 0)))"];
         } ;
@@ -162,17 +161,19 @@
         elec-pair = {
           enable = true;
           ghook = ["('on-first-buffer-hook 'electric-pair-mode)"];
+          custom.electric-pair-pairs = ''
+           '((?\" . ?\")
+             (?\[ . ?\])
+             (?\( . ?\))
+             (?\{ . ?\}))
+          '';
           config = ''
             ;; < & > are not delimiters. Change my mind.
             ;; Courtesy of DT. https://gitlab.com/dwt1/configuring-emacs/-/tree/main/07-the-final-touches?ref_type=heads
             (gsetq electric-pair-inhibit-predicate `(lambda (c)
-                                                      (if (or (char-equal c ?<) (char-equal c ?>))
-                                                          t
-                                                          (,electric-pair-inhibit-predicate c)))
-                   electric-pair-pairs '((?\" . ?\")
-              			   (?\[ . ?\])
-              			   (?\( . ?\))
-              			   (?\{ . ?\})))
+              					 (if (or (char-equal c ?<) (char-equal c ?>))
+              					     t
+              					     (,electric-pair-inhibit-predicate c))))
           '';
         };
         
@@ -214,7 +215,7 @@
 
         wgrep = {
           enable = true;
-          config = "(gsetq wgrep-auto-save-buffer t)";
+          custom.wgrep-auto-save-buffer = "t";
           generalTwo."'normal".grep-mode-map."w" = "'wgrep-change-to-wgrep-mode";
         };
 

@@ -121,7 +121,6 @@
         (defun efs/make-eshell ()
           (interactive)
           (eshell 'N))
-        
       '';
           config = ''
         (defun efs/configure-eshell ()
@@ -132,20 +131,18 @@
           (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
           (evil-normalize-keymaps)
           (setenv "TERM" "xterm")
-          (gsetq eshell-history-size         0
+          (gsetq eshell-command-aliases-list '(("gc" "torsocks git clone")
+          				     ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
+          				     ("l" "ls $*")
+          				     ("halt" "doas shutdown -P now")
+          				     ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'"))
+               eshell-history-size 0
                  eshell-buffer-maximum-lines 100
                  eshell-hist-ignoredups t
                  eshell-scroll-to-bottom-on-input t))
         
         (with-eval-after-load 'esh-opt
           (gsetq eshell-destroy-buffer-when-process-dies t))
-        
-        (gsetq eshell-command-aliases-list
-         '(("gc" "torsocks git clone")
-           ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
-           ("l" "ls $*")
-           ("halt" "doas shutdown -P now")
-           ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'")))
         
         (with-eval-after-load 'evil-collection-eshell
           (general-add-advice 'evil-collection-eshell-setup-keys

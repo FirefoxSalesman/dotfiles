@@ -246,6 +246,18 @@
           "H-o" = "'evilem-motion-previous-visual-line";
         };
       };
+      custom = {
+        avy-dispatch-alist = ''
+          '((?m . avy-action-cursor)
+      			(?l . avy-action-ispell)
+      			(?o . avy-action-embark)
+      			(?h . avy-action-helpful)
+      			(?g . avy-action-yank)
+      			(?p . avy-action-teleport)
+      			(?q . avy-action-fold))
+        '';
+        avy-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
+      };
       config = ''
         ;; Stolen from karthink
         (defun avy-action-cursor (pt)
@@ -280,15 +292,6 @@
             (select-window
              (cdr (ring-ref avy-ring 0))))
           t)
-        
-        (gsetq avy-dispatch-alist '((?m . avy-action-cursor)
-          			  (?l . avy-action-ispell)
-          			  (?o  . avy-action-embark)
-          			  (?h . avy-action-helpful)
-          			  (?g . avy-action-yank)
-          			  (?p . avy-action-teleport)
-          			  (?q . avy-action-fold))
-               avy-keys '(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a))
       '';
     };
     
@@ -318,18 +321,20 @@
       };
       config = ''
         (global-evil-mc-mode)
+        
         (general-add-hook 'doom-escape-hook (lambda () (when (evil-mc-has-cursors-p)
-                                                         (evil-mc-undo-all-cursors)
-                                                         (evil-mc-resume-cursors) t)))
+          					       (evil-mc-undo-all-cursors)
+          					       (evil-mc-resume-cursors) t)))
+        
         ;; Don't mess with my macros.
         ;; https://github.com/gabesoft/evil-mc/issues/83
         (gsetq evil-mc-cursor-variables
                (mapcar
-                (lambda (s)
-                  (remove 'register-alist
-                          (remove 'evil-markers-alist
-                                  (remove evil-was-yanked-without-register s))))
-                evil-mc-cursor-variables))
+              (lambda (s)
+          	(remove 'register-alist
+          		(remove 'evil-markers-alist
+          			(remove evil-was-yanked-without-register s))))
+              evil-mc-cursor-variables))
       '';
       extraConfig = ''
         :pretty-hydra
