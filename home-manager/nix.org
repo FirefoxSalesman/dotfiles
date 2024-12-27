@@ -1446,18 +1446,17 @@ This is just overriding a bunch of functions so that I can put all the info in t
 
   (defun doom-nano-tabline ()
     "Format the modeline for the tabline"
-    (let* ((the-format
-            '((:eval
-               (funcall
-                (or (catch 'found
-                      (dolist (elt doom-nano-modeline-mode-formats)
-                        (let* ((config (cdr elt))
-                               (mode-p (plist-get config :mode-p))
-                               (format (plist-get config :format)))
-                          (when mode-p
-                            (when (funcall mode-p)
-                              (throw 'found format))))))
-                    #'doom-nano-modeline-default-mode-format))))))
+    (let* ((the-format '((:eval
+  			(funcall
+  			 (or (catch 'found
+  			       (dolist (elt doom-nano-modeline-mode-formats)
+  				 (let* ((config (cdr elt))
+  					(mode-p (plist-get config :mode-p))
+  					(format (plist-get config :format)))
+  				   (when mode-p
+  				     (when (funcall mode-p)
+  				       (throw 'found format))))))
+  			     #'doom-nano-modeline-default-mode-format))))))
       `((global menu-item ,(format-mode-line the-format) ignore))))
 #+end_src
 
@@ -4342,6 +4341,8 @@ We use the default dirvish config. It's like ranger.el, but without the bugs.
         custom = {
           dired-recursive-deletes = "'always";
           dired-listing-switches = ''"-agho --group-directories-first"'';
+          # We're doing our best to get rid of that 1st extraneous line
+          dired-free-space = "nil";
         };
         generalOne."efs/leader-keys"."d" = '''(dired :which-key "dired")'';
       };
@@ -5570,6 +5571,8 @@ You can't get page numbers, though, which becomes unfortunate for doing citation
 #+end_src
 
 *** Window Management
+Almost everything here was copied from David Wilson. Thank you, David, for practically writing my config for me.
+
 #+begin_src nix :noweb yes :tangle emacs/window-manager.nix
   { inputs, pkgs, ... }:
 
@@ -5593,6 +5596,7 @@ You can't get page numbers, though, which becomes unfortunate for doing citation
 #+end_src
 
 **** Tab Bar
+I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.el
 #+NAME: Emacs Window Management Tab Bar
 #+begin_src nix
   tab-bar = {
@@ -5600,7 +5604,11 @@ You can't get page numbers, though, which becomes unfortunate for doing citation
     config = ''(general-add-advice 'tab-new :after #'dashboard-open)'';
     ghook = ["('exwm-init-hook 'tab-bar-mode)"];
     general."s-u" = "'tab-bar-hydra/body";
-    custom.tab-bar-format = "'(doom-nano-tabline tab-bar-format-align-right tab-bar-format-global)";
+    custom = {
+      tab-bar-format = "'(tab-bar-format-tabs-groups tab-bar-separator doom-nano-tabline tab-bar-format-align-right tab-bar-format-global)";
+      tab-bar-close-button-show = "nil";
+      tab-bar-auto-width = "nil";
+    };
     extraConfig = ''
       :pretty-hydra
       ((:color amaranth)
@@ -5648,9 +5656,6 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
                                 (group (auto-project))
                                 ;; Subgroup collecting tramp buffers
                                 (group (auto-tramp))
-                                (group
-                                  (group-or "OS"
-                                            (dir "~/.config/home-manager/")))
                                 ;; Grouping browser windows
                                 (group
                                   (group-or "Browsers"
@@ -5784,8 +5789,6 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
     "D" 'bufler-list-buffer-kill)
 
 #+end_src
-
-Almost everything here was copied from David Wilson. Thank you, David, for practically writing my config for me.
 
 **** Ace Window
 #+NAME: Emacs Window Management Ace Window

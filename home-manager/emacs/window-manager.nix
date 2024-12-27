@@ -7,7 +7,11 @@
       config = ''(general-add-advice 'tab-new :after #'dashboard-open)'';
       ghook = ["('exwm-init-hook 'tab-bar-mode)"];
       general."s-u" = "'tab-bar-hydra/body";
-      custom.tab-bar-format = "'(doom-nano-tabline tab-bar-format-align-right tab-bar-format-global)";
+      custom = {
+        tab-bar-format = "'(tab-bar-format-tabs-groups tab-bar-separator doom-nano-tabline tab-bar-format-align-right tab-bar-format-global)";
+        tab-bar-close-button-show = "nil";
+        tab-bar-auto-width = "nil";
+      };
       extraConfig = ''
         :pretty-hydra
         ((:color amaranth)
@@ -50,9 +54,6 @@
                                   (group (auto-project))
                                   ;; Subgroup collecting tramp buffers
                                   (group (auto-tramp))
-                                  (group
-                                    (group-or "OS"
-                                              (dir "~/.config/home-manager/")))
                                   ;; Grouping browser windows
                                   (group
                                     (group-or "Browsers"

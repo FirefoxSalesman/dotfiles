@@ -12,6 +12,8 @@
       custom = {
         dired-recursive-deletes = "'always";
         dired-listing-switches = ''"-agho --group-directories-first"'';
+        # We're doing our best to get rid of that 1st extraneous line
+        dired-free-space = "nil";
       };
       generalOne."efs/leader-keys"."d" = '''(dired :which-key "dired")'';
     };

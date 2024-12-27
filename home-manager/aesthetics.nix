@@ -275,18 +275,17 @@
         
         (defun doom-nano-tabline ()
           "Format the modeline for the tabline"
-          (let* ((the-format
-                  '((:eval
-                     (funcall
-                      (or (catch 'found
-                            (dolist (elt doom-nano-modeline-mode-formats)
-                              (let* ((config (cdr elt))
-                                     (mode-p (plist-get config :mode-p))
-                                     (format (plist-get config :format)))
-                                (when mode-p
-                                  (when (funcall mode-p)
-                                    (throw 'found format))))))
-                          #'doom-nano-modeline-default-mode-format))))))
+          (let* ((the-format '((:eval
+          		      (funcall
+          		       (or (catch 'found
+          			     (dolist (elt doom-nano-modeline-mode-formats)
+          			       (let* ((config (cdr elt))
+          				      (mode-p (plist-get config :mode-p))
+          				      (format (plist-get config :format)))
+          				 (when mode-p
+          				   (when (funcall mode-p)
+          				     (throw 'found format))))))
+          			   #'doom-nano-modeline-default-mode-format))))))
             `((global menu-item ,(format-mode-line the-format) ignore))))
       '';
     };
