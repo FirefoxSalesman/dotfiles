@@ -134,7 +134,7 @@ fi
 
 [[ $OPT_EXT ]] || fn_err "please specify the output extension with -t EXT" 2
 
-# Rajoute un point à l'extension si absent
+# Rajoute un point Ã  l'extension si absent
 if [[ ''${OPT_EXT:0:1} != '.' ]]; then
         OPT_EXT=.$OPT_EXT
 fi

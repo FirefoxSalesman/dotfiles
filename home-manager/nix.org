@@ -431,7 +431,7 @@ I stole this from this git repo https://github.com/sylsau/ffmpeg-bulk
   { pkgs }:
 
   pkgs.writeShellScriptBin "masstube" ''
-    $EDITOR ~/.download.txt
+    emacsclient ~/.download.txt
     ${pkgs.yt-dlp}/bin/yt-dlp $1 --verbose -ci --batch-file=~/.download.txt --proxy socks://localhost:9050
     ${pkgs.coreutils}/bin/rm ~/.download.txt
   ''
@@ -3285,7 +3285,7 @@ Gives us an entire state where we can rapidly make specific edits to code.
       inherit inputs;
       inherit (epkgs) trivialBuild tsc tree-sitter evil evil-surround seq paredit;
     });
-    generalTwo."'normal"."(org-mode-map evil-markdown-mode-map racket-repl-mode-map racket-mode-map python-ts-mode-map java-ts-mode-map ess-r-mode-map groovy-mode-map c-ts-mode-map js-ts-mode-map json-ts-mode-map bibtex-mode-map nxml-mode-map css-ts-mode-map nix-mode-map makefile-mode-map sql-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
+    generalTwo."'normal"."(org-mode-map toml-ts-mode-map evil-markdown-mode-map racket-repl-mode-map racket-mode-map python-ts-mode-map java-ts-mode-map ess-r-mode-map groovy-mode-map c-ts-mode-map js-ts-mode-map json-ts-mode-map bibtex-mode-map nxml-mode-map css-ts-mode-map nix-mode-map makefile-mode-map sql-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
     init = ''
       <<Emacs Symex Init>>    
     '';
@@ -4380,7 +4380,6 @@ We use the default dirvish config. It's like ranger.el, but without the bugs.
         general."H-f" = "'dirvish-fd";
         custom = {
           dirvish-use-mode-line = "nil";
-          dirvish-use-header-line = "nil";
           dirvish-attributes = "'(nerd-icons file-size subtree-state)";
           dirvish-yank-overwrite-existing-files = "'always";
           dirvish-side-window-parameters = "nil";
@@ -4662,7 +4661,10 @@ https://github.com/jdtsmith/indent-bars
   		    '(gfm-mode . markdown)
   		    '(css-ts-mode . css)
   		    '(c-ts-mode . c)
-  		    '(racket-repl-mode . racket)))
+  		    '(racket-repl-mode . racket)
+  		    '(ess-r-mode . r)
+  		    '(inferior-ess-r-mode . r)
+  		    '(toml-ts-mode . toml)))
     (add-to-list 'tree-sitter-major-mode-language-alist mode))
 #+end_src
 
@@ -4681,12 +4683,17 @@ https://github.com/jdtsmith/indent-bars
 
   treesitter-context-fold = {
     enable = true;
-    hook = ["('treesitter-context-mode-hook 'treesitter-context-fold-mode)"];
+    ghook = ["('treesitter-context-mode-hook 'treesitter-context-fold-mode)"];
     generalTwo."'normal".treesitter-context-fold-mode-map = {
       "zm" = "'treesitter-context-fold-hide";
       "zo" = "'treesitter-context-fold-show";
       "za" = "'treesitter-context-fold-toggle";
     };
+  };
+
+  treesitter-context-focus = {
+    enable = true;
+    command = ["treesitter-context-focus-mode"];
   };
 #+end_src
 
@@ -5117,6 +5124,7 @@ The org agenda syntax:
 DEADLINE:<year-month-date>
 How to add a latex package
 : #+LATEX_HEADER: \usepackage{times}
+
 #+NAME: Emacs Org Main
 #+begin_src nix :noweb yes
   org = {
@@ -5141,8 +5149,6 @@ How to add a latex package
                                  ("~" org-code verbatim)
                                  ("+" (:strike-through t))
                                  ("!" (:overline t) verbatim))'';
-
-      
     };
     generalOne."efs/leader-keys" = {
       "o" = '''(:ignore t :which-key "org")'';
@@ -5307,7 +5313,7 @@ https://emacs.stackexchange.com/questions/20339/easiest-way-to-render-an-overlin
     gfhook = ["('dired-mode-hook 'denote-dired-mode-in-directories)"];
     custom = {
       denote-directory = ''(expand-file-name "~/doc/denote")'';
-      denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "cybercrime" "databases" "scifi" "software-requirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics")'';
+      denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "databases" "scifi" "softwarerequirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics")'';
       denote-file-type = "nil";
       denote-dired-directories = "(list denote-directory)";
       
@@ -5681,72 +5687,9 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
       "]b" = "'bufler-cycle-buffers-forward";
       "[b" = "'bufler-cycle-buffers-backward";
     };
-    custom.bufler-groups = ''(bufler-defgroups
-                                ;; Subgroup collecting all named workspaces.
-                                (group (auto-workspace))
-                                ;; Subgroup collecting buffers in a project.
-                                (group (auto-project))
-                                ;; Subgroup collecting tramp buffers
-                                (group (auto-tramp))
-                                ;; Grouping browser windows
-                                (group
-                                  (group-or "Browsers"
-                                            (name-match "Qutebrowser" (rx bos "Qutebrowser"))
-                                            (mode-match "eww-mode" (rx bos "eww-"))
-                                            (name-match "Tor Browser" (rx bos "Tor Browser"))))
-                                (group
-                                  (group-or "Chat"
-                                            (name-match "Thunderbird" (rx bos "Thunderbird"))
-                                            (name-match "teams-for-linux" (rx bos "teams-for-linux"))
-                                            (mode-match "ement" (rx bos "ement-"))
-                                            (name-match "Vesktop" (rx bos "Vesktop"))))
-                                (group
-                                  (group-or "Media"
-                                            (name-match "mpv" (rx bos "Mpv"))
-                                            (mode-match "elfeed-search-mode" (rx bos "elfeed-"))
-                                            (mode-match "elfeed-show-mode" (rx bos "elfeed-"))))
-                                (group
-                                  (group-or "Agenda"
-                                            (name-match "tasks.org" (rx bos "tasks.org"))
-                                            (mode-match "org-agenda-mode" (rx bos "org-agenda-"))))
-                                (group
-                                  (group-or "Notes"
-                                            (dir "~/doc/denote/")))
-                                (group
-                                  (group-or "Writing"
-                                            (name-match "libreoffice" (rx bos "libreoffice"))
-                                            (mode-match "org-mode" (rx bos "org-"))
-                                            (mode-match "gfm-mode" (rx bos "gfm-"))))
-                                (group
-                                  (group-or "AV"
-                                            (name-match "lmms" (rx bos "lmms"))
-                                            (name-match "Gimp-2.10" (rx bos "Gimp-2.10"))
-                                            (name-match "kdenlive" (rx bos "kdenlive"))))
-                                (group
-                                  (group-or "Games"
-                                            (dir "~/.local/PrismLauncher/")
-                                            (name-match "Minecraft" (rx bos "Minecraft"))
-                                            (name-match "PrismLauncher" (rx bos "PrismLauncher"))))
-                                (group
-                                  ;; Subgroup collecting all `help-mode' and `info-mode' buffers.
-                                  (group-or "Help/Info"
-                                            (mode-match "*Help*" (rx bos (or "help-" "helpful-")))
-                                            (mode-match "*Info*" (rx bos "info-"))))
-                                (group
-                                  ;; Subgroup collecting all special buffers (i.e. ones that are not
-                                  ;; file-backed), except `magit-status-mode' buffers (which are allowed to fall
-                                  ;; through to other groups, so they end up grouped with their project buffers).
-                                  (group-and "*Special*"
-                                             (name-match "**Special**"
-                                                         (rx bos "*" (or "Messages" "Warnings" "scratch" "Backtrace" "Pinentry") "*"))
-                                             (lambda (buffer)
-                                                     (unless (or (funcall (mode-match "Magit" (rx bos "magit-status"))
-                                                                          buffer)
-                                                                 (funcall (mode-match "Dired" (rx bos "dired"))
-                                                                          buffer)
-                                                                 (funcall (auto-file) buffer))
-                                                     "*Special*"))))
-                                (auto-directory))'';
+    custom.bufler-groups = ''
+      <<Emacs Bufler Defgroups>>
+    '' ;
     init = ''
       <<Emacs Bufler Init>>
     '';
@@ -5774,6 +5717,76 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
     ghook = ["('bufler-mode-hook 'bufler-workspace-workspaces-as-tabs-mode)"];
     gfhook = ["('bufler-workspace-workspaces-as-tabs-mode-hook global-tab-line-mode)"];
   };
+#+end_src
+
+#+NAME: Emacs Bufler Defgroups
+#+begin_src emacs-lisp
+  (bufler-defgroups
+    ;; Subgroup collecting all named workspaces.
+    (group (auto-workspace))
+    ;; Subgroup collecting buffers in a project.
+    (group (auto-project))
+    ;; Subgroup collecting tramp buffers
+    (group (auto-tramp))
+    ;; Grouping browser windows
+    (group
+     (group-or "Browsers"
+               (name-match "Qutebrowser" (rx bos "Qutebrowser"))
+               (mode-match "eww-mode" (rx bos "eww-"))
+               (name-match "Tor Browser" (rx bos "Tor Browser"))))
+    (group
+     (group-or "Chat"
+               (name-match "Thunderbird" (rx bos "Thunderbird"))
+               (name-match "teams-for-linux" (rx bos "teams-for-linux"))
+               (mode-match "ement" (rx bos "ement-"))
+               (name-match "Vesktop" (rx bos "Vesktop"))))
+    (group
+     (group-or "Media"
+               (name-match "mpv" (rx bos "Mpv"))
+               (mode-match "elfeed-search-mode" (rx bos "elfeed-"))
+               (mode-match "elfeed-show-mode" (rx bos "elfeed-"))))
+    (group
+     (group-or "Agenda"
+               (name-match "tasks.org" (rx bos "tasks.org"))
+               (mode-match "org-agenda-mode" (rx bos "org-agenda-"))))
+    (group
+     (group-or "Notes"
+               (dir "~/doc/denote/")))
+    ;; (group
+    ;;  (group-or "Writing"
+    ;;            (name-match "libreoffice" (rx bos "libreoffice"))
+    ;;            (mode-match "org-mode" (rx bos "org-"))
+    ;;            (mode-match "gfm-mode" (rx bos "gfm-"))))
+    (group
+     (group-or "AV"
+               (name-match "lmms" (rx bos "lmms"))
+               (name-match "Gimp-2.10" (rx bos "Gimp-2.10"))
+               (name-match "kdenlive" (rx bos "kdenlive"))))
+    (group
+     (group-or "Games"
+               (dir "~/.local/PrismLauncher/")
+               (name-match "Minecraft" (rx bos "Minecraft"))
+               (name-match "PrismLauncher" (rx bos "PrismLauncher"))))
+    (group
+     ;; Subgroup collecting all `help-mode' and `info-mode' buffers.
+     (group-or "Help/Info"
+               (mode-match "*Help*" (rx bos (or "help-" "helpful-")))
+               (mode-match "*Info*" (rx bos "info-"))))
+    (group
+     ;; Subgroup collecting all special buffers (i.e. ones that are not
+     ;; file-backed), except `magit-status-mode' buffers (which are allowed to fall
+     ;; through to other groups, so they end up grouped with their project buffers).
+     (group-and "*Special*"
+                (name-match "**Special**"
+                            (rx bos "*" (or "Messages" "Warnings" "scratch" "Backtrace" "Pinentry") "*"))
+                (lambda (buffer)
+                  (unless (or (funcall (mode-match "Magit" (rx bos "magit-status"))
+                                       buffer)
+                              (funcall (mode-match "Dired" (rx bos "dired"))
+                                       buffer)
+                              (funcall (auto-file) buffer))
+                    "*Special*"))))
+    (auto-directory))
 #+end_src
 
 #+NAME: Emacs Bufler Init
@@ -6088,9 +6101,13 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
     (interactive)
     (if (= (count-windows) 1)
         (when single-window--last-configuration
-          (set-window-configuration single-window--last-configuration))
+          (set-window-configuration single-window--last-configuration)
+  	(when treesitter-context-mode (treesitter-context-focus-mode -1)))
       (setq single-window--last-configuration (current-window-configuration))
-      (delete-other-windows)))
+      (delete-other-windows)
+      (when (and treesitter-context-mode)
+        (treesitter-context-focus-mode 1))))
+
   (defun evil-delete-buffer-and-window ()
     "kill the current buffer & its window"
     (interactive)
@@ -6116,30 +6133,30 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
   (exwm-input-set-key (kbd "s-<return>") 'efs/make-eshell)
   (exwm-enable)
 
-  (defun exwm-workspace-attach-minibuffer ()
-    "Attach the minibuffer making it always visible."
-    (interactive)
-    (unless efs/vertico-active
-      (exwm--log)
-      (when (and (exwm-workspace--minibuffer-own-frame-p)
-                 (not (exwm-workspace--minibuffer-attached-p)))
-        ;; Reset the frame size.
-        (set-frame-height exwm-workspace--minibuffer 1)
-        (redisplay)                       ;FIXME.
-        (setq exwm-workspace--attached-minibuffer-height
-              (frame-pixel-height exwm-workspace--minibuffer))
-        (exwm-workspace--show-minibuffer)
-        (let ((container (frame-parameter exwm-workspace--minibuffer
-  					'exwm-container)))
-  	(push (cons container
-                      (if (eq exwm-workspace-minibuffer-position 'top)
-  			(vector 0 0 exwm-workspace--attached-minibuffer-height 0)
-                        (vector 0 0 0 exwm-workspace--attached-minibuffer-height)))
-                exwm-workspace--id-struts-alist)
-  	(exwm-workspace--update-struts)
-  	(exwm-workspace--update-workareas)
-  	(dolist (f exwm-workspace--list)
-            (exwm-workspace--set-fullscreen f))))))
+  ;; (defun exwm-workspace-attach-minibuffer ()
+  ;;   "Attach the minibuffer making it always visible."
+  ;;   (interactive)
+  ;;   (unless efs/vertico-active
+  ;;     (exwm--log)
+  ;;     (when (and (exwm-workspace--minibuffer-own-frame-p)
+  ;;                (not (exwm-workspace--minibuffer-attached-p)))
+  ;;       ;; Reset the frame size.
+  ;;       (set-frame-height exwm-workspace--minibuffer 1)
+  ;;       (redisplay)                       ;FIXME.
+  ;;       (setq exwm-workspace--attached-minibuffer-height
+  ;;             (frame-pixel-height exwm-workspace--minibuffer))
+  ;;       (exwm-workspace--show-minibuffer)
+  ;;       (let ((container (frame-parameter exwm-workspace--minibuffer
+  ;; 					'exwm-container)))
+  ;; 	(push (cons container
+  ;;                     (if (eq exwm-workspace-minibuffer-position 'top)
+  ;; 			(vector 0 0 exwm-workspace--attached-minibuffer-height 0)
+  ;;                       (vector 0 0 0 exwm-workspace--attached-minibuffer-height)))
+  ;;               exwm-workspace--id-struts-alist)
+  ;; 	(exwm-workspace--update-struts)
+  ;; 	(exwm-workspace--update-workareas)
+  ;; 	(dolist (f exwm-workspace--list)
+  ;;           (exwm-workspace--set-fullscreen f))))))
 #+end_src
 
 **** Package Definitions
@@ -6365,11 +6382,12 @@ The mpv package lets us start an mpv process & puppeteer it with emacs. I'm defi
 
   programs.mpv = {
     enable = true;
-    package = pkgs.mpv;
-    scripts = with pkgs.mpvScripts; [
-      thumbnail
-      sponsorblock
-    ];
+    package = (config.lib.nixGL.wrap (pkgs.mpv.override {
+      scripts = with pkgs.mpvScripts; [
+        thumbnail
+        sponsorblock
+      ];
+    }));
     config = {
       fs = "no";
       hwdec = "auto";

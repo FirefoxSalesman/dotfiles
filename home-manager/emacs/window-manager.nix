@@ -110,72 +110,74 @@
           "]b" = "'bufler-cycle-buffers-forward";
           "[b" = "'bufler-cycle-buffers-backward";
         };
-        custom.bufler-groups = ''(bufler-defgroups
-                                    ;; Subgroup collecting all named workspaces.
-                                    (group (auto-workspace))
-                                    ;; Subgroup collecting buffers in a project.
-                                    (group (auto-project))
-                                    ;; Subgroup collecting tramp buffers
-                                    (group (auto-tramp))
-                                    ;; Grouping browser windows
-                                    (group
-                                      (group-or "Browsers"
-                                                (name-match "Qutebrowser" (rx bos "Qutebrowser"))
-                                                (mode-match "eww-mode" (rx bos "eww-"))
-                                                (name-match "Tor Browser" (rx bos "Tor Browser"))))
-                                    (group
-                                      (group-or "Chat"
-                                                (name-match "Thunderbird" (rx bos "Thunderbird"))
-                                                (name-match "teams-for-linux" (rx bos "teams-for-linux"))
-                                                (mode-match "ement" (rx bos "ement-"))
-                                                (name-match "Vesktop" (rx bos "Vesktop"))))
-                                    (group
-                                      (group-or "Media"
-                                                (name-match "mpv" (rx bos "Mpv"))
-                                                (mode-match "elfeed-search-mode" (rx bos "elfeed-"))
-                                                (mode-match "elfeed-show-mode" (rx bos "elfeed-"))))
-                                    (group
-                                      (group-or "Agenda"
-                                                (name-match "tasks.org" (rx bos "tasks.org"))
-                                                (mode-match "org-agenda-mode" (rx bos "org-agenda-"))))
-                                    (group
-                                      (group-or "Notes"
-                                                (dir "~/doc/denote/")))
-                                    (group
-                                      (group-or "Writing"
-                                                (name-match "libreoffice" (rx bos "libreoffice"))
-                                                (mode-match "org-mode" (rx bos "org-"))
-                                                (mode-match "gfm-mode" (rx bos "gfm-"))))
-                                    (group
-                                      (group-or "AV"
-                                                (name-match "lmms" (rx bos "lmms"))
-                                                (name-match "Gimp-2.10" (rx bos "Gimp-2.10"))
-                                                (name-match "kdenlive" (rx bos "kdenlive"))))
-                                    (group
-                                      (group-or "Games"
-                                                (dir "~/.local/PrismLauncher/")
-                                                (name-match "Minecraft" (rx bos "Minecraft"))
-                                                (name-match "PrismLauncher" (rx bos "PrismLauncher"))))
-                                    (group
-                                      ;; Subgroup collecting all `help-mode' and `info-mode' buffers.
-                                      (group-or "Help/Info"
-                                                (mode-match "*Help*" (rx bos (or "help-" "helpful-")))
-                                                (mode-match "*Info*" (rx bos "info-"))))
-                                    (group
-                                      ;; Subgroup collecting all special buffers (i.e. ones that are not
-                                      ;; file-backed), except `magit-status-mode' buffers (which are allowed to fall
-                                      ;; through to other groups, so they end up grouped with their project buffers).
-                                      (group-and "*Special*"
-                                                 (name-match "**Special**"
-                                                             (rx bos "*" (or "Messages" "Warnings" "scratch" "Backtrace" "Pinentry") "*"))
-                                                 (lambda (buffer)
-                                                         (unless (or (funcall (mode-match "Magit" (rx bos "magit-status"))
-                                                                              buffer)
-                                                                     (funcall (mode-match "Dired" (rx bos "dired"))
-                                                                              buffer)
-                                                                     (funcall (auto-file) buffer))
-                                                         "*Special*"))))
-                                    (auto-directory))'';
+        custom.bufler-groups = ''
+          (bufler-defgroups
+            ;; Subgroup collecting all named workspaces.
+            (group (auto-workspace))
+            ;; Subgroup collecting buffers in a project.
+            (group (auto-project))
+            ;; Subgroup collecting tramp buffers
+            (group (auto-tramp))
+            ;; Grouping browser windows
+            (group
+             (group-or "Browsers"
+                       (name-match "Qutebrowser" (rx bos "Qutebrowser"))
+                       (mode-match "eww-mode" (rx bos "eww-"))
+                       (name-match "Tor Browser" (rx bos "Tor Browser"))))
+            (group
+             (group-or "Chat"
+                       (name-match "Thunderbird" (rx bos "Thunderbird"))
+                       (name-match "teams-for-linux" (rx bos "teams-for-linux"))
+                       (mode-match "ement" (rx bos "ement-"))
+                       (name-match "Vesktop" (rx bos "Vesktop"))))
+            (group
+             (group-or "Media"
+                       (name-match "mpv" (rx bos "Mpv"))
+                       (mode-match "elfeed-search-mode" (rx bos "elfeed-"))
+                       (mode-match "elfeed-show-mode" (rx bos "elfeed-"))))
+            (group
+             (group-or "Agenda"
+                       (name-match "tasks.org" (rx bos "tasks.org"))
+                       (mode-match "org-agenda-mode" (rx bos "org-agenda-"))))
+            (group
+             (group-or "Notes"
+                       (dir "~/doc/denote/")))
+            ;; (group
+            ;;  (group-or "Writing"
+            ;;            (name-match "libreoffice" (rx bos "libreoffice"))
+            ;;            (mode-match "org-mode" (rx bos "org-"))
+            ;;            (mode-match "gfm-mode" (rx bos "gfm-"))))
+            (group
+             (group-or "AV"
+                       (name-match "lmms" (rx bos "lmms"))
+                       (name-match "Gimp-2.10" (rx bos "Gimp-2.10"))
+                       (name-match "kdenlive" (rx bos "kdenlive"))))
+            (group
+             (group-or "Games"
+                       (dir "~/.local/PrismLauncher/")
+                       (name-match "Minecraft" (rx bos "Minecraft"))
+                       (name-match "PrismLauncher" (rx bos "PrismLauncher"))))
+            (group
+             ;; Subgroup collecting all `help-mode' and `info-mode' buffers.
+             (group-or "Help/Info"
+                       (mode-match "*Help*" (rx bos (or "help-" "helpful-")))
+                       (mode-match "*Info*" (rx bos "info-"))))
+            (group
+             ;; Subgroup collecting all special buffers (i.e. ones that are not
+             ;; file-backed), except `magit-status-mode' buffers (which are allowed to fall
+             ;; through to other groups, so they end up grouped with their project buffers).
+             (group-and "*Special*"
+                        (name-match "**Special**"
+                                    (rx bos "*" (or "Messages" "Warnings" "scratch" "Backtrace" "Pinentry") "*"))
+                        (lambda (buffer)
+                          (unless (or (funcall (mode-match "Magit" (rx bos "magit-status"))
+                                               buffer)
+                                      (funcall (mode-match "Dired" (rx bos "dired"))
+                                               buffer)
+                                      (funcall (auto-file) buffer))
+                            "*Special*"))))
+            (auto-directory))
+        '' ;
         init = ''
           ;; These functions were adapted from perspective-exwm
           (defun bufler-cycle-buffers (proc)
@@ -431,9 +433,13 @@
             (interactive)
             (if (= (count-windows) 1)
                 (when single-window--last-configuration
-                  (set-window-configuration single-window--last-configuration))
+                  (set-window-configuration single-window--last-configuration)
+          	(when treesitter-context-mode (treesitter-context-focus-mode -1)))
               (setq single-window--last-configuration (current-window-configuration))
-              (delete-other-windows)))
+              (delete-other-windows)
+              (when (and treesitter-context-mode)
+                (treesitter-context-focus-mode 1))))
+          
           (defun evil-delete-buffer-and-window ()
             "kill the current buffer & its window"
             (interactive)
@@ -457,30 +463,30 @@
           (exwm-input-set-key (kbd "s-<return>") 'efs/make-eshell)
           (exwm-enable)
           
-          (defun exwm-workspace-attach-minibuffer ()
-            "Attach the minibuffer making it always visible."
-            (interactive)
-            (unless efs/vertico-active
-              (exwm--log)
-              (when (and (exwm-workspace--minibuffer-own-frame-p)
-                         (not (exwm-workspace--minibuffer-attached-p)))
-                ;; Reset the frame size.
-                (set-frame-height exwm-workspace--minibuffer 1)
-                (redisplay)                       ;FIXME.
-                (setq exwm-workspace--attached-minibuffer-height
-                      (frame-pixel-height exwm-workspace--minibuffer))
-                (exwm-workspace--show-minibuffer)
-                (let ((container (frame-parameter exwm-workspace--minibuffer
-          					'exwm-container)))
-          	(push (cons container
-                              (if (eq exwm-workspace-minibuffer-position 'top)
-          			(vector 0 0 exwm-workspace--attached-minibuffer-height 0)
-                                (vector 0 0 0 exwm-workspace--attached-minibuffer-height)))
-                        exwm-workspace--id-struts-alist)
-          	(exwm-workspace--update-struts)
-          	(exwm-workspace--update-workareas)
-          	(dolist (f exwm-workspace--list)
-                    (exwm-workspace--set-fullscreen f))))))
+          ;; (defun exwm-workspace-attach-minibuffer ()
+          ;;   "Attach the minibuffer making it always visible."
+          ;;   (interactive)
+          ;;   (unless efs/vertico-active
+          ;;     (exwm--log)
+          ;;     (when (and (exwm-workspace--minibuffer-own-frame-p)
+          ;;                (not (exwm-workspace--minibuffer-attached-p)))
+          ;;       ;; Reset the frame size.
+          ;;       (set-frame-height exwm-workspace--minibuffer 1)
+          ;;       (redisplay)                       ;FIXME.
+          ;;       (setq exwm-workspace--attached-minibuffer-height
+          ;;             (frame-pixel-height exwm-workspace--minibuffer))
+          ;;       (exwm-workspace--show-minibuffer)
+          ;;       (let ((container (frame-parameter exwm-workspace--minibuffer
+          ;; 					'exwm-container)))
+          ;; 	(push (cons container
+          ;;                     (if (eq exwm-workspace-minibuffer-position 'top)
+          ;; 			(vector 0 0 exwm-workspace--attached-minibuffer-height 0)
+          ;;                       (vector 0 0 0 exwm-workspace--attached-minibuffer-height)))
+          ;;               exwm-workspace--id-struts-alist)
+          ;; 	(exwm-workspace--update-struts)
+          ;; 	(exwm-workspace--update-workareas)
+          ;; 	(dolist (f exwm-workspace--list)
+          ;;           (exwm-workspace--set-fullscreen f))))))
         '';
         after = ["repeaters"];
       };

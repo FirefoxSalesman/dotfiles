@@ -32,8 +32,6 @@
                                    ("~" org-code verbatim)
                                    ("+" (:strike-through t))
                                    ("!" (:overline t) verbatim))'';
-    
-        
       };
       generalOne."efs/leader-keys" = {
         "o" = '''(:ignore t :which-key "org")'';
@@ -161,7 +159,7 @@
       gfhook = ["('dired-mode-hook 'denote-dired-mode-in-directories)"];
       custom = {
         denote-directory = ''(expand-file-name "~/doc/denote")'';
-        denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "cybercrime" "databases" "scifi" "software-requirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics")'';
+        denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "databases" "scifi" "softwarerequirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics")'';
         denote-file-type = "nil";
         denote-dired-directories = "(list denote-directory)";
         

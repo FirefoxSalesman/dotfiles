@@ -76,7 +76,10 @@
           		    '(gfm-mode . markdown)
           		    '(css-ts-mode . css)
           		    '(c-ts-mode . c)
-          		    '(racket-repl-mode . racket)))
+          		    '(racket-repl-mode . racket)
+          		    '(ess-r-mode . r)
+          		    '(inferior-ess-r-mode . r)
+          		    '(toml-ts-mode . toml)))
             (add-to-list 'tree-sitter-major-mode-language-alist mode))
         '';
       };
@@ -99,12 +102,17 @@
       
       treesitter-context-fold = {
         enable = true;
-        hook = ["('treesitter-context-mode-hook 'treesitter-context-fold-mode)"];
+        ghook = ["('treesitter-context-mode-hook 'treesitter-context-fold-mode)"];
         generalTwo."'normal".treesitter-context-fold-mode-map = {
           "zm" = "'treesitter-context-fold-hide";
           "zo" = "'treesitter-context-fold-show";
           "za" = "'treesitter-context-fold-toggle";
         };
+      };
+      
+      treesitter-context-focus = {
+        enable = true;
+        command = ["treesitter-context-focus-mode"];
       };
       
       magit = {

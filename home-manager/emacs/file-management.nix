@@ -76,7 +76,6 @@
       general."H-f" = "'dirvish-fd";
       custom = {
         dirvish-use-mode-line = "nil";
-        dirvish-use-header-line = "nil";
         dirvish-attributes = "'(nerd-icons file-size subtree-state)";
         dirvish-yank-overwrite-existing-files = "'always";
         dirvish-side-window-parameters = "nil";
