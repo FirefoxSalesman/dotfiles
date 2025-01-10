@@ -5204,6 +5204,16 @@ How to add a latex package
   		    #'pcomplete-completions-at-point
   		    #'cape-dabbrev
   		    #'cape-dict)))
+
+  (add-to-list 'evil-fold-list
+  	     `((org-mode)
+  	       :open org-cycle
+  	       :open-all nil
+  	       :close org-cycle
+  	       :close-all nil
+  	       :toggle org-cycle
+  	       :delete nil
+  	       :open-rec nil))
 #+end_src
 
 https://emacs.stackexchange.com/questions/20339/easiest-way-to-render-an-overline-in-org-mode

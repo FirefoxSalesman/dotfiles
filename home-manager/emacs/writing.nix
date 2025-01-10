@@ -76,6 +76,16 @@
         		    #'pcomplete-completions-at-point
         		    #'cape-dabbrev
         		    #'cape-dict)))
+        
+        (add-to-list 'evil-fold-list
+        	     `((org-mode)
+        	       :open org-cycle
+        	       :open-all nil
+        	       :close org-cycle
+        	       :close-all nil
+        	       :toggle org-cycle
+        	       :delete nil
+        	       :open-rec nil))
       '';
       init = ''
         ;; (add-to-list 'org-emphasis-alist '("‾" (:overline t)))
