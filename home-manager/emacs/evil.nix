@@ -360,7 +360,7 @@
     };
     
     symex = {
-      enable = true;
+      enable = false;
       defer = true;
       package = epkgs: (epkgs.callPackage ./emacs-packages/symex2.nix {
         inherit inputs;

@@ -3279,7 +3279,7 @@ Gives us an entire state where we can rapidly make specific edits to code.
 #+NAME: Emacs Evil Symex
 #+begin_src nix :noweb yes
   symex = {
-    enable = true;
+    enable = false;
     defer = true;
     package = epkgs: (epkgs.callPackage ./emacs-packages/symex2.nix {
       inherit inputs;
@@ -4630,7 +4630,7 @@ https://github.com/jdtsmith/indent-bars
   };
 
   tree-sitter = {
-    enable = true;
+    enable = false;
     afterCall = ["on-first-file-hook"];
     config = ''
       <<Emacs Treesitter Config>>
@@ -4638,7 +4638,7 @@ https://github.com/jdtsmith/indent-bars
   };
 
   tree-sitter-langs = {
-    enable = true;
+    enable = false;
     custom.tree-sitter-langs-grammar-dir = ''"~/.cache/emacs/tree-sitter"'';
     afterCall = ["global-tree-sitter-mode-hook"];
   };
@@ -5597,7 +5597,6 @@ You can't get page numbers, though, which becomes unfortunate for doing citation
     mode = [''("\\.epub\\'" . nov-mode)''];
   };
 #+end_src
-
 
 ** Window Management
 Almost everything here was copied from David Wilson. Thank you, David, for practically writing my config for me.

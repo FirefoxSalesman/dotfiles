@@ -64,7 +64,7 @@
       };
       
       tree-sitter = {
-        enable = true;
+        enable = false;
         afterCall = ["on-first-file-hook"];
         config = ''
           (global-tree-sitter-mode)
@@ -85,7 +85,7 @@
       };
       
       tree-sitter-langs = {
-        enable = true;
+        enable = false;
         custom.tree-sitter-langs-grammar-dir = ''"~/.cache/emacs/tree-sitter"'';
         afterCall = ["global-tree-sitter-mode-hook"];
       };
