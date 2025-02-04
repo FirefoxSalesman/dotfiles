@@ -134,7 +134,8 @@
              (group-or "Media"
                        (name-match "mpv" (rx bos "Mpv"))
                        (mode-match "elfeed-search-mode" (rx bos "elfeed-"))
-                       (mode-match "elfeed-show-mode" (rx bos "elfeed-"))))
+                       (mode-match "elfeed-show-mode" (rx bos "elfeed-"))
+          	     (mode-match "yeetube-mode" (rx bos "yeetube-"))))
             (group
              (group-or "Agenda"
                        (name-match "tasks.org" (rx bos "tasks.org"))
@@ -239,7 +240,7 @@
       bufler-workspace-tabs = {
         enable = true;
         ghook = ["('bufler-mode-hook 'bufler-workspace-workspaces-as-tabs-mode)"];
-        gfhook = ["('bufler-workspace-workspaces-as-tabs-mode-hook global-tab-line-mode)"];
+        gfhook = ["('bufler-workspace-workspaces-as-tabs-mode-hook '(global-tab-line-mode burly-tabs-mode))"];
       };
 
       ace-window = {

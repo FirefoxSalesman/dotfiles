@@ -1,8 +1,6 @@
 { config, inputs, lib, pkgs, ... }:
 
 {
-  qt.platformTheme = "gtk3";
-  
   stylix = {
     enable = true;
     polarity = "dark";

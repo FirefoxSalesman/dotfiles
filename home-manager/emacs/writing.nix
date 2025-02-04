@@ -6,6 +6,7 @@
     hunspell
     hunspellDicts.en-us-large
     pandoc
+    texliveFull
     unzip #for nov
   ];
 
@@ -19,7 +20,7 @@
         org-src-fontify-natively = "t";
         org-src-tab-acts-natively = "t";
         org-ellipsis = ''" ▾"'';
-        org-log-done = "'time";
+        org-log-done = "nil";
         org-log-into-drawer = "t";
         org-hide-emphasis-markers = "t";
         org-agenda-files = '''("~/doc/tasks.org")'';
@@ -377,6 +378,46 @@
           "ob" = "'citar-denote-find-reference";
           "ow" = "'citar-denote-find-citation";
         };
+        config = ''
+          (defun citar-denote--create-note (citekey &optional _entry)
+            "Create a bibliographic note for CITEKEY with properties ENTRY.
+          
+          The note file type is determined by `citar-denote-file-type'.
+          
+          The title format is set by `citar-denote-title-format'.
+          
+          When `citar-denote-subdir' is non-nil, prompt for a subdirectory.
+          
+          When `citar-denote-template' is a symbol, use the specified
+          template, if otherwise non-nil, prompt for a Denote template.
+          
+          When `citar-denote-signature' is non-nil, prompt for a signature or
+          use citation key."
+            (denote
+             (read-string "Title: " (citar-denote--generate-title citekey))
+             (citar-denote--keywords-prompt citekey)
+             citar-denote-file-type
+             (when citar-denote-subdir
+               (if (stringp citar-denote-subdir)
+                   (expand-file-name
+                    (concat denote-directory citar-denote-subdir))
+                 (denote-subdirectory-prompt)))
+             nil
+             (when citar-denote-template
+               (or (alist-get citar-denote-template denote-templates)
+                   (denote-template-prompt)))
+             (cond ((eq citar-denote-signature 'ask)
+                    (denote-signature-prompt nil "Signature: "))
+                   ((eq citar-denote-signature 'citekey)
+                    citekey)
+                   (nil nil)))
+            (citar-denote--add-reference citekey)
+            ;; Open available atachment in other window
+            (when (one-window-p)
+              (split-window-right))
+            (other-window 1)
+            (citar-open-files citekey))
+        '';
         afterCall = ["citar"];
       };
 

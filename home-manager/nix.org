@@ -517,7 +517,6 @@ Dev templates: https://github.com/the-nix-way/dev-templates
   ''
 #+end_src
 
-
 ** Udisksmenu
 :PROPERTIES:
 :header-args:nix: :tangle scripts/udisksmenu.nix
@@ -591,7 +590,7 @@ Stole it from Derek Taylor
         ./gui.nix
         ./emacs.nix
         ./shells.nix
-        # ./sage.nix
+        ./sage.nix
         ./keyboard.nix
       ];
 
@@ -1173,8 +1172,6 @@ Stylix does a bad job of theming emacs, so we use pywal instead
 Pywal integration: https://github.com/danth/stylix/issues/99
 #+NAME: Stylix Config
 #+begin_src nix
-  qt.platformTheme = "gtk3";
-
   stylix = {
     enable = true;
     polarity = "dark";
@@ -1609,7 +1606,7 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
   {
     home.packages = with pkgs; [
       (config.lib.nixGL.wrap gimp)
-      (config.lib.nixGL.wrap prismlauncher)
+      # (config.lib.nixGL.wrap prismlauncher)
       wget
       zip
       zbar
@@ -2383,7 +2380,7 @@ https://gitlab.com/rycee/nur-expressions
 
           <<Emacs Ledger>>
 
-          # <<Emacs GPTel>>
+          <<Emacs GPTel>>
 
           <<Emacs Notifications>>
           
@@ -2855,7 +2852,7 @@ Evil mode provides vim-like keybinds.
       
       <<Emacs Evil Extensions>>
       
-      <<Emacs Evil Symex>>
+      # <<Emacs Evil Symex>>
       
       <<Emacs Evil God State>>
       
@@ -2931,6 +2928,12 @@ M-SPC is our local leader, & it's used for keys specific to a given major mode
   (evil-set-initial-state 'messages-buffer-mode 'normal)
   (evil-set-initial-state 'dashboard-mode 'normal)
   (general-advice-add '(evil-scroll-down evil-scroll-up evil-scroll-page-up evil-scroll-page-down) :after #'(lambda (arg) (evil-window-middle)))
+
+  (evil-add-command-properties #'flymake-goto-next-error :jump t)
+  (evil-add-command-properties #'flymake-goto-prev-error :jump t)
+  (evil-add-command-properties #'evil-scroll-up :jump t)
+  (evil-add-command-properties #'evil-scroll-down :jump t)
+  (evil-add-command-properties #'consult-grep :jump t)
 
   (evil-define-operator ergo-word-delete (beg end type register yank-handler)
     "Delete word."
@@ -3279,7 +3282,7 @@ Gives us an entire state where we can rapidly make specific edits to code.
 #+NAME: Emacs Evil Symex
 #+begin_src nix :noweb yes
   symex = {
-    enable = false;
+    enable = true;
     defer = true;
     package = epkgs: (epkgs.callPackage ./emacs-packages/symex2.nix {
       inherit inputs;
@@ -3823,7 +3826,7 @@ Evil integration is from noctuid & minad
   consult = {
     enable = true;
     defer = true;
-    gfhook = ["('minibuffer-setup-hook 'consult-initial-narrow)"];
+    ghook = ["('minibuffer-setup-hook 'consult-initial-narrow)"];
     command = ["consult-goto-line" "consult-keep-lines" "noct-consult-ripgrep-or-line"];
     general = {
       "C-x C-f" = "'consult-find";
@@ -4566,7 +4569,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 
         # <<Emacs Development Racket>>
 
-        <<Emacs Development R>>
+        # <<Emacs Development R>>
 
         <<Emacs Development Zenscript>>
     };
@@ -4629,19 +4632,19 @@ https://github.com/jdtsmith/indent-bars
     '';
   };
 
-  tree-sitter = {
-    enable = false;
-    afterCall = ["on-first-file-hook"];
-    config = ''
-      <<Emacs Treesitter Config>>
-    '';
-  };
+  # tree-sitter = {
+  #   enable = true;
+  #   afterCall = ["on-first-file-hook"];
+  #   config = ''
+  #     <<Emacs Treesitter Config>>
+  #   '';
+  # };
 
-  tree-sitter-langs = {
-    enable = false;
-    custom.tree-sitter-langs-grammar-dir = ''"~/.cache/emacs/tree-sitter"'';
-    afterCall = ["global-tree-sitter-mode-hook"];
-  };
+  # tree-sitter-langs = {
+  #   enable = true;
+  #   custom.tree-sitter-langs-grammar-dir = ''"~/.cache/emacs/tree-sitter"'';
+  #   afterCall = ["global-tree-sitter-mode-hook"];
+  # };
 #+end_src
 
 #+NAME: Emacs Treesit Auto Config
@@ -5093,6 +5096,7 @@ When you're prompted for your gpg password, the place for entry will be your mod
       hunspell
       hunspellDicts.en-us-large
       pandoc
+      texliveFull
       unzip #for nov
     ];
 
@@ -5136,7 +5140,7 @@ How to add a latex package
       org-src-fontify-natively = "t";
       org-src-tab-acts-natively = "t";
       org-ellipsis = ''" ▾"'';
-      org-log-done = "'time";
+      org-log-done = "nil";
       org-log-into-drawer = "t";
       org-hide-emphasis-markers = "t";
       org-agenda-files = '''("~/doc/tasks.org")'';
@@ -5547,7 +5551,7 @@ I couldn't get olivetti to work.
 
 **** Citations
 #+NAME: Emacs Citations
-#+begin_src nix
+#+begin_src nix :noweb yes
   citar = {
     enable = true;
     config = ''(citar-denote-mode)'';
@@ -5582,8 +5586,53 @@ I couldn't get olivetti to work.
         "ob" = "'citar-denote-find-reference";
         "ow" = "'citar-denote-find-citation";
       };
+      config = ''
+        <<Emacs Writing Citar Denote Config>>
+      '';
       afterCall = ["citar"];
     };
+#+end_src
+
+#+NAME: Emacs Writing Citar Denote Config
+#+begin_src emacs-lisp
+  (defun citar-denote--create-note (citekey &optional _entry)
+    "Create a bibliographic note for CITEKEY with properties ENTRY.
+
+  The note file type is determined by `citar-denote-file-type'.
+
+  The title format is set by `citar-denote-title-format'.
+
+  When `citar-denote-subdir' is non-nil, prompt for a subdirectory.
+
+  When `citar-denote-template' is a symbol, use the specified
+  template, if otherwise non-nil, prompt for a Denote template.
+
+  When `citar-denote-signature' is non-nil, prompt for a signature or
+  use citation key."
+    (denote
+     (read-string "Title: " (citar-denote--generate-title citekey))
+     (citar-denote--keywords-prompt citekey)
+     citar-denote-file-type
+     (when citar-denote-subdir
+       (if (stringp citar-denote-subdir)
+           (expand-file-name
+            (concat denote-directory citar-denote-subdir))
+         (denote-subdirectory-prompt)))
+     nil
+     (when citar-denote-template
+       (or (alist-get citar-denote-template denote-templates)
+           (denote-template-prompt)))
+     (cond ((eq citar-denote-signature 'ask)
+            (denote-signature-prompt nil "Signature: "))
+           ((eq citar-denote-signature 'citekey)
+            citekey)
+           (nil nil)))
+    (citar-denote--add-reference citekey)
+    ;; Open available atachment in other window
+    (when (one-window-p)
+      (split-window-right))
+    (other-window 1)
+    (citar-open-files citekey))
 #+end_src
 
 **** Epub Reader
@@ -5724,7 +5773,7 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
   bufler-workspace-tabs = {
     enable = true;
     ghook = ["('bufler-mode-hook 'bufler-workspace-workspaces-as-tabs-mode)"];
-    gfhook = ["('bufler-workspace-workspaces-as-tabs-mode-hook global-tab-line-mode)"];
+    gfhook = ["('bufler-workspace-workspaces-as-tabs-mode-hook '(global-tab-line-mode burly-tabs-mode))"];
   };
 #+end_src
 
@@ -5753,7 +5802,8 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
      (group-or "Media"
                (name-match "mpv" (rx bos "Mpv"))
                (mode-match "elfeed-search-mode" (rx bos "elfeed-"))
-               (mode-match "elfeed-show-mode" (rx bos "elfeed-"))))
+               (mode-match "elfeed-show-mode" (rx bos "elfeed-"))
+  	     (mode-match "yeetube-mode" (rx bos "yeetube-"))))
     (group
      (group-or "Agenda"
                (name-match "tasks.org" (rx bos "tasks.org"))
@@ -6530,6 +6580,8 @@ Putting =:session= in an org block is necessary for evaluation
 
       <<Emacs Internet EWW>>
 
+      <<Emacs Internet Yeetube>>
+
       # <<Emacs Internet Ement>>
 
       <<Emacs Internet Webjump>>
@@ -6607,6 +6659,20 @@ It's a simple text based web browser. I use it for short web searches & for find
   			   "p" 'efs/mpv-eww-url))))
 #+end_src
 
+*** Yeetube
+#+NAME: Emacs Internet Yeetube
+#+begin_src nix
+  yeetube = {
+    enable = true;
+    generalOne."efs/leader-keys"."y" = '''(yeetube-search :which-key "search")'';
+    generalTwo."'normal"."yeetube-mode-map" = {
+      "RET" = "'yeetube-play";
+      "r" = "'yeetube-channel-videos";
+      "s" = "'yeetube-channel-search";
+    };
+  };
+#+end_src
+
 *** Ement
 Ement username: @holscherhead:matrix.org
 Use S-SPC to load old messages
@@ -6634,7 +6700,6 @@ Use S-SPC to load old messages
       (gsetq window-size-fixed 'width)
       (window-resize (selected-window) (- 45 (window-total-width)) t t)))
 #+end_src
-
 
 *** Webjump
 #+NAME: Emacs Internet Webjump
@@ -6673,13 +6738,13 @@ https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance
     enable = true;
     defer = true;
     custom.elfeed-feeds = '''("https://lukesmith.xyz/index.xml"
-                              "https://yewtu.be/feeds/videos.xml?channel_id=UCSJPFQdZwrOutnmSFYtbstA"
+                              "https://youtube.com/feeds/videos.xml?channel_id=UCSJPFQdZwrOutnmSFYtbstA"
                               "https://planet.emacslife.com/atom.xml"
-                              "https://inv.nadeko.net/feeds/videos.xml?channel_id=UC_GQ4mac4oN3wl1UdbFuTEA"
-                              "https://inv.nadeko.net/feeds/videos.xml?channel_id=UC6UBbvEA8uh6Ulc6ax1Zs0g"
-                              "https://inv.nadeko.net/feeds/videos.xml?channel_id=UCNzZD3otfZVlIdvYYRRqNSw"
-      		                    "https://inv.nadeko.net/feeds/videos.xml?channel_id=UC9OZkS1Mhl5UvKSiPrYqsxg"
-      		                    "https://inv.nadeko.net/feeds/videos.xml?channel_id=UCgVLFBokgO85hyVl7tIoJvw"
+                              "https://youtube.com/feeds/videos.xml?channel_id=UC_GQ4mac4oN3wl1UdbFuTEA"
+                              "https://youtube.com/feeds/videos.xml?channel_id=UC6UBbvEA8uh6Ulc6ax1Zs0g"
+                              "https://youtube.com/feeds/videos.xml?channel_id=UCNzZD3otfZVlIdvYYRRqNSw"
+      		                    "https://youtube.com/feeds/videos.xml?channel_id=UC9OZkS1Mhl5UvKSiPrYqsxg"
+      		                    "https://youtube.com/feeds/videos.xml?channel_id=UCgVLFBokgO85hyVl7tIoJvw"
                               "https://notrelated.xyz/rss")
       '';
     generalOne."efs/leader-keys"."r" = '''((lambda () (interactive) (elfeed) (elfeed-update)) :which-key "rss")'';

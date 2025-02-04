@@ -56,6 +56,16 @@
       '';
     };
 
+    yeetube = {
+      enable = true;
+      generalOne."efs/leader-keys"."y" = '''(yeetube-search :which-key "search")'';
+      generalTwo."'normal"."yeetube-mode-map" = {
+        "RET" = "'yeetube-play";
+        "r" = "'yeetube-channel-videos";
+        "s" = "'yeetube-channel-search";
+      };
+    };
+
     # ement = {
     #   enable = true;
     #   defer = true;
@@ -97,13 +107,13 @@
       enable = true;
       defer = true;
       custom.elfeed-feeds = '''("https://lukesmith.xyz/index.xml"
-                                "https://yewtu.be/feeds/videos.xml?channel_id=UCSJPFQdZwrOutnmSFYtbstA"
+                                "https://youtube.com/feeds/videos.xml?channel_id=UCSJPFQdZwrOutnmSFYtbstA"
                                 "https://planet.emacslife.com/atom.xml"
-                                "https://inv.nadeko.net/feeds/videos.xml?channel_id=UC_GQ4mac4oN3wl1UdbFuTEA"
-                                "https://inv.nadeko.net/feeds/videos.xml?channel_id=UC6UBbvEA8uh6Ulc6ax1Zs0g"
-                                "https://inv.nadeko.net/feeds/videos.xml?channel_id=UCNzZD3otfZVlIdvYYRRqNSw"
-        		                    "https://inv.nadeko.net/feeds/videos.xml?channel_id=UC9OZkS1Mhl5UvKSiPrYqsxg"
-        		                    "https://inv.nadeko.net/feeds/videos.xml?channel_id=UCgVLFBokgO85hyVl7tIoJvw"
+                                "https://youtube.com/feeds/videos.xml?channel_id=UC_GQ4mac4oN3wl1UdbFuTEA"
+                                "https://youtube.com/feeds/videos.xml?channel_id=UC6UBbvEA8uh6Ulc6ax1Zs0g"
+                                "https://youtube.com/feeds/videos.xml?channel_id=UCNzZD3otfZVlIdvYYRRqNSw"
+        		                    "https://youtube.com/feeds/videos.xml?channel_id=UC9OZkS1Mhl5UvKSiPrYqsxg"
+        		                    "https://youtube.com/feeds/videos.xml?channel_id=UCgVLFBokgO85hyVl7tIoJvw"
                                 "https://notrelated.xyz/rss")
         '';
       generalOne."efs/leader-keys"."r" = '''((lambda () (interactive) (elfeed) (elfeed-update)) :which-key "rss")'';

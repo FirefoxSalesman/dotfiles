@@ -203,7 +203,7 @@
     consult = {
       enable = true;
       defer = true;
-      gfhook = ["('minibuffer-setup-hook 'consult-initial-narrow)"];
+      ghook = ["('minibuffer-setup-hook 'consult-initial-narrow)"];
       command = ["consult-goto-line" "consult-keep-lines" "noct-consult-ripgrep-or-line"];
       general = {
         "C-x C-f" = "'consult-find";
