@@ -3,7 +3,7 @@
 {
   home.packages = with pkgs; [
     (config.lib.nixGL.wrap gimp)
-    # (config.lib.nixGL.wrap prismlauncher)
+    (config.lib.nixGL.wrap prismlauncher)
     wget
     zip
     zbar

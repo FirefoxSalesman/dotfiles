@@ -164,6 +164,11 @@
       ghook = ["('after-save-hook (lambda () (when (equal major-mode 'org-mode) (org-auto-export-pandoc))))"];
     };
     
+    org-appear = {
+      enable = true;
+      ghook = ["('org-mode-hook 'org-appear-mode)"];
+    };
+    
     denote = {
       enable = true;
       defer = true;
@@ -357,69 +362,92 @@
       };
     };
     
-      citar-embark = {
-        enable = true;
-        after = ["citar" "embark"];
-        config = ''(citar-embark-mode)'';
-        custom.citar-at-point-function = "'embark-act";
-      };
+    citar-embark = {
+      enable = true;
+      after = ["citar" "embark"];
+      config = ''(citar-embark-mode)'';
+      custom.citar-at-point-function = "'embark-act";
+    };
     
-      citar-denote = {
-        enable = true;
-        command = ["citar-denote-mode"];
-        generalOne."efs/leader-keys" = {
-          "on" = '''(citar-create-note :which-key "new citar note")'';
-          "oo" = '''(citar-denote-open-note :which-key "open citar note")'';
-          "od" = "'citar-denote-dwim";
-          "oe" = "'citar-denote-open-reference-entry";
-          "ok" = "'citar-denote-add-citekey";
-          "oK" = "'citar-denoter-remove-citekey";
-          "ol" = "'citar-denote-link-reference";
-          "ob" = "'citar-denote-find-reference";
-          "ow" = "'citar-denote-find-citation";
-        };
-        config = ''
-          (defun citar-denote--create-note (citekey &optional _entry)
-            "Create a bibliographic note for CITEKEY with properties ENTRY.
-          
-          The note file type is determined by `citar-denote-file-type'.
-          
-          The title format is set by `citar-denote-title-format'.
-          
-          When `citar-denote-subdir' is non-nil, prompt for a subdirectory.
-          
-          When `citar-denote-template' is a symbol, use the specified
-          template, if otherwise non-nil, prompt for a Denote template.
-          
-          When `citar-denote-signature' is non-nil, prompt for a signature or
-          use citation key."
-            (denote
-             (read-string "Title: " (citar-denote--generate-title citekey))
-             (citar-denote--keywords-prompt citekey)
-             citar-denote-file-type
-             (when citar-denote-subdir
-               (if (stringp citar-denote-subdir)
-                   (expand-file-name
-                    (concat denote-directory citar-denote-subdir))
-                 (denote-subdirectory-prompt)))
-             nil
-             (when citar-denote-template
-               (or (alist-get citar-denote-template denote-templates)
-                   (denote-template-prompt)))
-             (cond ((eq citar-denote-signature 'ask)
-                    (denote-signature-prompt nil "Signature: "))
-                   ((eq citar-denote-signature 'citekey)
-                    citekey)
-                   (nil nil)))
-            (citar-denote--add-reference citekey)
-            ;; Open available atachment in other window
-            (when (one-window-p)
-              (split-window-right))
-            (other-window 1)
-            (citar-open-files citekey))
-        '';
-        afterCall = ["citar"];
+    citar-denote = {
+      enable = true;
+      command = ["citar-denote-mode"];
+      generalOne."efs/leader-keys" = {
+        "on" = '''(citar-create-note :which-key "new citar note")'';
+        "oo" = '''(citar-denote-open-note :which-key "open citar note")'';
+        "ol" = "'citar-denote-link-reference";
+        "ow" = "'citar-denote-find-citation";
       };
+      config = ''
+        (defun citar-denote--create-note (citekey &optional _entry)
+          "Create a bibliographic note for CITEKEY with properties ENTRY.
+        
+        The note file type is determined by `citar-denote-file-type'.
+        
+        The title format is set by `citar-denote-title-format'.
+        
+        When `citar-denote-subdir' is non-nil, prompt for a subdirectory.
+        
+        When `citar-denote-template' is a symbol, use the specified
+        template, if otherwise non-nil, prompt for a Denote template.
+        
+        When `citar-denote-signature' is non-nil, prompt for a signature or
+        use citation key."
+          (denote
+           (read-string "Title: " (citar-denote--generate-title citekey))
+           (citar-denote--keywords-prompt citekey)
+           citar-denote-file-type
+           (when citar-denote-subdir
+             (if (stringp citar-denote-subdir)
+                 (expand-file-name
+                  (concat denote-directory citar-denote-subdir))
+               (denote-subdirectory-prompt)))
+           nil
+           (when citar-denote-template
+             (or (alist-get citar-denote-template denote-templates)
+                 (denote-template-prompt)))
+           (cond ((eq citar-denote-signature 'ask)
+                  (denote-signature-prompt nil "Signature: "))
+                 ((eq citar-denote-signature 'citekey)
+                  citekey)
+                 (nil nil)))
+          (citar-denote--add-reference citekey)
+          ;; Open available atachment in other window
+          (when (one-window-p)
+            (split-window-right))
+          (other-window 1)
+          (citar-open-files citekey))
+      '';
+      afterCall = ["citar"];
+    };
+    
+    biblio = {
+      enable = true;
+      generalOne."efs/leader-keys"."ob" = "'ews-bibtex-biblio-lookup";
+      config = ''
+        (defun ews--bibtex-combined-biblio-lookup ()
+          "Combines `biblio-lookup' and `biblio-doi-insert-bibtex'."
+          (require 'biblio)
+          (let* ((dbs (biblio--named-backends))
+                 (db-list (append dbs '(("DOI" . biblio-doi-backend))))
+                 (db-selected (biblio-completing-read-alist
+                               "Backend:"
+                               db-list)))
+            (if (eq db-selected 'biblio-doi-backend)
+                (let ((doi (read-string "DOI: ")))
+                  (biblio-doi-insert-bibtex doi))
+              (biblio-lookup db-selected))))
+        
+        (defun ews-bibtex-biblio-lookup ()
+          "Insert Biblio search results into current buffer or select BibTeX file."
+          (interactive)
+          (progn (find-file "~/doc/uni.bib")
+        	     (goto-char (point-max))
+        	     (ews--bibtex-combined-biblio-lookup)
+        	     (save-buffer))
+        	     (message "No BibTeX file(s) defined."))
+      '';
+    };
 
     nov = {
       enable = true;

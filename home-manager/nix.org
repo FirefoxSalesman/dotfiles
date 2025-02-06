@@ -590,7 +590,7 @@ Stole it from Derek Taylor
         ./gui.nix
         ./emacs.nix
         ./shells.nix
-        ./sage.nix
+        # ./sage.nix
         ./keyboard.nix
       ];
 
@@ -1606,7 +1606,7 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
   {
     home.packages = with pkgs; [
       (config.lib.nixGL.wrap gimp)
-      # (config.lib.nixGL.wrap prismlauncher)
+      (config.lib.nixGL.wrap prismlauncher)
       wget
       zip
       zbar
@@ -2380,7 +2380,7 @@ https://gitlab.com/rycee/nur-expressions
 
           <<Emacs Ledger>>
 
-          <<Emacs GPTel>>
+          # <<Emacs GPTel>>
 
           <<Emacs Notifications>>
           
@@ -5298,6 +5298,11 @@ https://emacs.stackexchange.com/questions/20339/easiest-way-to-render-an-overlin
     enable = true;
     ghook = ["('after-save-hook (lambda () (when (equal major-mode 'org-mode) (org-auto-export-pandoc))))"];
   };
+
+  org-appear = {
+    enable = true;
+    ghook = ["('org-mode-hook 'org-appear-mode)"];
+  };
 #+end_src
 
 ****** Package Definition
@@ -5565,32 +5570,35 @@ I couldn't get olivetti to work.
     };
   };
 
-    citar-embark = {
-      enable = true;
-      after = ["citar" "embark"];
-      config = ''(citar-embark-mode)'';
-      custom.citar-at-point-function = "'embark-act";
-    };
+  citar-embark = {
+    enable = true;
+    after = ["citar" "embark"];
+    config = ''(citar-embark-mode)'';
+    custom.citar-at-point-function = "'embark-act";
+  };
 
-    citar-denote = {
-      enable = true;
-      command = ["citar-denote-mode"];
-      generalOne."efs/leader-keys" = {
-        "on" = '''(citar-create-note :which-key "new citar note")'';
-        "oo" = '''(citar-denote-open-note :which-key "open citar note")'';
-        "od" = "'citar-denote-dwim";
-        "oe" = "'citar-denote-open-reference-entry";
-        "ok" = "'citar-denote-add-citekey";
-        "oK" = "'citar-denoter-remove-citekey";
-        "ol" = "'citar-denote-link-reference";
-        "ob" = "'citar-denote-find-reference";
-        "ow" = "'citar-denote-find-citation";
-      };
-      config = ''
-        <<Emacs Writing Citar Denote Config>>
-      '';
-      afterCall = ["citar"];
+  citar-denote = {
+    enable = true;
+    command = ["citar-denote-mode"];
+    generalOne."efs/leader-keys" = {
+      "on" = '''(citar-create-note :which-key "new citar note")'';
+      "oo" = '''(citar-denote-open-note :which-key "open citar note")'';
+      "ol" = "'citar-denote-link-reference";
+      "ow" = "'citar-denote-find-citation";
     };
+    config = ''
+      <<Emacs Writing Citar Denote Config>>
+    '';
+    afterCall = ["citar"];
+  };
+
+  biblio = {
+    enable = true;
+    generalOne."efs/leader-keys"."ob" = "'ews-bibtex-biblio-lookup";
+    config = ''
+      <<Emacs Writing Biblio Config>>
+    '';
+  };
 #+end_src
 
 #+NAME: Emacs Writing Citar Denote Config
@@ -5633,6 +5641,32 @@ I couldn't get olivetti to work.
       (split-window-right))
     (other-window 1)
     (citar-open-files citekey))
+#+end_src
+
+Taken from emacs writing studio
+#+NAME: Emacs Writing Biblio Config
+#+begin_src emacs-lisp
+  (defun ews--bibtex-combined-biblio-lookup ()
+    "Combines `biblio-lookup' and `biblio-doi-insert-bibtex'."
+    (require 'biblio)
+    (let* ((dbs (biblio--named-backends))
+           (db-list (append dbs '(("DOI" . biblio-doi-backend))))
+           (db-selected (biblio-completing-read-alist
+                         "Backend:"
+                         db-list)))
+      (if (eq db-selected 'biblio-doi-backend)
+          (let ((doi (read-string "DOI: ")))
+            (biblio-doi-insert-bibtex doi))
+        (biblio-lookup db-selected))))
+
+  (defun ews-bibtex-biblio-lookup ()
+    "Insert Biblio search results into current buffer or select BibTeX file."
+    (interactive)
+    (progn (find-file "~/doc/uni.bib")
+  	     (goto-char (point-max))
+  	     (ews--bibtex-combined-biblio-lookup)
+  	     (save-buffer))
+  	     (message "No BibTeX file(s) defined."))
 #+end_src
 
 **** Epub Reader

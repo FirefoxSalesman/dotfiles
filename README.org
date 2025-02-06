@@ -47,9 +47,6 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] The python files from emacs-qutebrowser should be part of the emacs package & be provided by nix
 + [ ] Make the minibuffer dissapear
 + [ ] Look into gptel aibo. Or don't
-+ [ ] Disable ess
 + [ ] Read through this https://github.com/pprevos/emacs-writing-studio
-  - [ ] Consider adding org-appear
-  - [ ] Consider adding biblio https://github.com/cpitclaudel/biblio.el
   - [ ] Consider adding powerthesaurus
   - [ ] Consider adding writegood mode
