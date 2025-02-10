@@ -42,7 +42,7 @@
     java-ts-mode
     (doc "/**" n> " * " q n " */")
     (if "if (" p ") {" n> q n "}")
-    (class "class " p " {" n> q n "}")
+    (class "public class " (p (file-name-base (or (buffer-file-name) (buffer-name)))) " {" n> r> n "}")
     (method p " " p " " p "(" p ") {" n> q n "}")
     (while "while (" p ") {" n> q n "}")
     (for "for (int i = " p "; i < " p "; i++) {" n> q n "}")

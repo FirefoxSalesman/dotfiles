@@ -2852,7 +2852,7 @@ Evil mode provides vim-like keybinds.
       
       <<Emacs Evil Extensions>>
       
-      # <<Emacs Evil Symex>>
+      <<Emacs Evil Symex>>
       
       <<Emacs Evil God State>>
       
@@ -4258,7 +4258,7 @@ Ace-window & avy actions from karthink
     java-ts-mode
     (doc "/**" n> " * " q n " */")
     (if "if (" p ") {" n> q n "}")
-    (class "class " p " {" n> q n "}")
+    (class "public class " (p (file-name-base (or (buffer-file-name) (buffer-name)))) " {" n> r> n "}")
     (method p " " p " " p "(" p ") {" n> q n "}")
     (while "while (" p ") {" n> q n "}")
     (for "for (int i = " p "; i < " p "; i++) {" n> q n "}")
@@ -4632,19 +4632,19 @@ https://github.com/jdtsmith/indent-bars
     '';
   };
 
-  # tree-sitter = {
-  #   enable = true;
-  #   afterCall = ["on-first-file-hook"];
-  #   config = ''
-  #     <<Emacs Treesitter Config>>
-  #   '';
-  # };
+  tree-sitter = {
+    enable = true;
+    afterCall = ["on-first-file-hook"];
+    config = ''
+      <<Emacs Treesitter Config>>
+    '';
+  };
 
-  # tree-sitter-langs = {
-  #   enable = true;
-  #   custom.tree-sitter-langs-grammar-dir = ''"~/.cache/emacs/tree-sitter"'';
-  #   afterCall = ["global-tree-sitter-mode-hook"];
-  # };
+  tree-sitter-langs = {
+    enable = true;
+    custom.tree-sitter-langs-grammar-dir = ''"~/.cache/emacs/tree-sitter"'';
+    afterCall = ["global-tree-sitter-mode-hook"];
+  };
 #+end_src
 
 #+NAME: Emacs Treesit Auto Config

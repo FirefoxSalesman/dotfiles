@@ -63,32 +63,32 @@
         '';
       };
       
-      # tree-sitter = {
-      #   enable = true;
-      #   afterCall = ["on-first-file-hook"];
-      #   config = ''
-      #     (global-tree-sitter-mode)
-      #     (dolist (mode (list '(java-ts-mode . java)
-      #     		    '(html-ts-mode . html)
-      #     		    '(python-ts-mode . python)
-      #     		    '(js-ts-mode . javascript)
-      #     		    '(json-ts-mode . json)
-      #     		    '(gfm-mode . markdown)
-      #     		    '(css-ts-mode . css)
-      #     		    '(c-ts-mode . c)
-      #     		    '(racket-repl-mode . racket)
-      #     		    '(ess-r-mode . r)
-      #     		    '(inferior-ess-r-mode . r)
-      #     		    '(toml-ts-mode . toml)))
-      #       (add-to-list 'tree-sitter-major-mode-language-alist mode))
-      #   '';
-      # };
+      tree-sitter = {
+        enable = true;
+        afterCall = ["on-first-file-hook"];
+        config = ''
+          (global-tree-sitter-mode)
+          (dolist (mode (list '(java-ts-mode . java)
+          		    '(html-ts-mode . html)
+          		    '(python-ts-mode . python)
+          		    '(js-ts-mode . javascript)
+          		    '(json-ts-mode . json)
+          		    '(gfm-mode . markdown)
+          		    '(css-ts-mode . css)
+          		    '(c-ts-mode . c)
+          		    '(racket-repl-mode . racket)
+          		    '(ess-r-mode . r)
+          		    '(inferior-ess-r-mode . r)
+          		    '(toml-ts-mode . toml)))
+            (add-to-list 'tree-sitter-major-mode-language-alist mode))
+        '';
+      };
       
-      # tree-sitter-langs = {
-      #   enable = true;
-      #   custom.tree-sitter-langs-grammar-dir = ''"~/.cache/emacs/tree-sitter"'';
-      #   afterCall = ["global-tree-sitter-mode-hook"];
-      # };
+      tree-sitter-langs = {
+        enable = true;
+        custom.tree-sitter-langs-grammar-dir = ''"~/.cache/emacs/tree-sitter"'';
+        afterCall = ["global-tree-sitter-mode-hook"];
+      };
 
       treesitter-context = {
         enable = true;

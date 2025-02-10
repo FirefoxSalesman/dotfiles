@@ -220,9 +220,6 @@
         "GreetStickerPicker": {
             "enabled": false
         },
-        "HideAttachments": {
-            "enabled": false
-        },
         "iLoveSpam": {
             "enabled": false
         },
@@ -590,6 +587,9 @@
         "WebContextMenus": {
             "enabled": true,
             "addBack": true
+        },
+        "HideMedia": {
+            "enabled": false
         }
     },
     "notifications": {
@@ -602,6 +602,6 @@
         "authenticated": false,
         "url": "https://api.vencord.dev/",
         "settingsSync": false,
-        "settingsSyncVersion": 1734492754855
+        "settingsSyncVersion": 1739070483540
     }
 }
