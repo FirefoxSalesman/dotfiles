@@ -701,8 +701,6 @@ Stole it from Derek Taylor
 
       <<Bash Shell>>
 
-      <<Atuin>>
-
       <<Starship>>
 
       <<Direnv>>
@@ -755,24 +753,6 @@ It's mostly here for eshell to get completions from, but it's a usable shell
     enable = true;
     initExtra = ''${pkgs.pfetch}/bin/pfetch'';
     shellAliases.z = "cd ./$(ls -d */ .*/ | ezf)";
-  };
-#+end_src
-
-*** atuin
-Gives us a consistent shell history across all our shells
-#+NAME: Atuin
-#+begin_src nix
-  atuin = {
-    enable = true;
-    enableFishIntegration = true;
-    enableBashIntegration = true;
-  };
-
-  emacs.init.usePackage.eshell-atuin = {
-      enable = true;
-      afterCall = ["eshell-mode"];
-      generalTwo."'insert".eshell-mode-map."M-O" = "'eshell-atuin-history";
-      config = "(eshell-atuin-mode)";
   };
 #+end_src
 
@@ -1175,7 +1155,11 @@ Pywal integration: https://github.com/danth/stylix/issues/99
   stylix = {
     enable = true;
     polarity = "dark";
-    targets.emacs.enable = false;
+    targets = {
+      vencord.enable = false;
+      vesktop.enable = true;
+      emacs.enable = false;
+    };
     image = ./wallpaper.png;
     cursor = {
       package = pkgs.nordzy-cursor-theme;
@@ -1529,6 +1513,8 @@ Makes emacs' theme mimic the wallpaper. A good pywal config will get most things
      `(org-code ((t (:foreground ,(ewal-get-color 'green)))))
      `(line-number ((t (:foreground ,(ewal-get-color 'blue)))))
      `(eshell-git-prompt-powerline-dir-face ((t (:background ,(ewal-get-color 'blue)))))
+     `(hl-line-face ((t (:background ,(ewal-get-color 'green)))))
+     `(solaire-hl-line-face ((t (:background ,(ewal-get-color 'green)))))
      `(tab-bar ((t :inherit mode-line)))
      `(eshell-git-prompt-powerline-clean-face ((t (:background ,(ewal-get-color 'green)))))
      `(eshell-git-prompt-powerline-not-clean-face ((t (:background ,(ewal-get-color 'red)))))))
@@ -1613,7 +1599,7 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
       # comms
       (config.lib.nixGL.wrap teams-for-linux)
       (config.lib.nixGL.wrap thunderbird)
-      (vesktop.override {withSystemVencord = true;})
+      (pkgs-stable.vesktop.override {withSystemVencord = true;})
       # things emacs appreciates
       xclip
       xsel
@@ -4348,18 +4334,20 @@ We use the default dirvish config. It's like ranger.el, but without the bugs.
     programs.emacs.init.usePackage = {
       dired = {
         enable = true;
-        gfhook = ["('dired-mode-hook 'dired-omit-mode)"];
+        gfhook = ["('dired-mode-hook (list 'dired-omit-mode 'hl-line-mode (lambda () (setq-local
+        visible-cursor nil))))"];
         general = {
           "C-x C-j" = "'dired-jump";
           "C-x d" = "'consult-dir";
         };
+        generalOne."efs/leader-keys"."d" = '''(dired :which-key "dired")'';
+        generalTwo."'normal".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
         custom = {
           dired-recursive-deletes = "'always";
           dired-listing-switches = ''"-agho --group-directories-first"'';
           # We're doing our best to get rid of that 1st extraneous line
           dired-free-space = "nil";
         };
-        generalOne."efs/leader-keys"."d" = '''(dired :which-key "dired")'';
       };
 
       openwith = {
@@ -4367,8 +4355,8 @@ We use the default dirvish config. It's like ranger.el, but without the bugs.
         defer = true;
         ghook = ["('dired-mode-hook 'openwith-mode)"];
         config = ''
-      <<Emacs Openwith Config>>
-    '';
+          <<Emacs Openwith Config>>
+        '';
       };
 
       dired-hide-dotfiles = {
@@ -4378,51 +4366,9 @@ We use the default dirvish config. It's like ranger.el, but without the bugs.
         config = ''(general-def 'normal dired-mode-map "H" 'dired-hide-dotfiles-mode)'';
       };
 
-      dirvish = {
+      all-the-icons-dired = {
         enable = true;
-        general."H-f" = "'dirvish-fd";
-        custom = {
-          dirvish-use-mode-line = "nil";
-          dirvish-attributes = "'(nerd-icons file-size subtree-state)";
-          dirvish-yank-overwrite-existing-files = "'always";
-          dirvish-side-window-parameters = "nil";
-          dirvish-quick--entries = ''
-         '(("h" "~/" "Home"
-            "r" "~/game/rejuvenation/"))
-      '';
-        };
-        afterCall = ["on-first-buffer-hook"];
-        generalTwo = {
-          local-leader.dirvish-mode-map."s" = "'dirvish-setup-menu";
-          "'normal".dirvish-mode-map = {
-            "d" = "'dired-do-async-delete";
-            "/" = "'consult-line";
-            "c" = "'dirvish-quick-access";
-            "w" = "'wdired-change-to-wdired-mode";
-            "q" = "'evil-record-macro";
-            "m" = "'evil-search-next";
-            "I" = "'dirvish-file-info-menu";
-            "y" = "'dirvish-yank-menu";
-            "N" = "'dirvish-narrow";
-            "B" = "'evil-goto-line";
-            "^" = "'dirvish-history-last";
-            "u" = "'dirvish-history-jump";
-            "j" = "'dired-unmark";
-            "s" = "'dirvish-quicksort ;remapped 'dired-sort-toggle-or-edit'";
-            "v" = "'dirvish-vc-menu ;remapped 'dired-view-file'";
-            "TAB" = "'dirvish-subtree-toggle";
-            "M-f" = "'dirvish-history-go-forward";
-            "M-b" = "'dirvish-history-go-backward";
-            "M-l" = "'dirvish-ls-switches-menu";
-            "M-m" = "'dirvish-mark-menu";
-            "M-E" = "'dirvish-emerge-menu";
-            "M-j" = "'dirvish-fd-jump";
-          };
-        };
-        generalOne."efs/leader-keys"."t" = '''(dirvish-side :which-key "side-bar")'';
-        config = ''
-      <<Emacs Dirvish Config>>
-    '';
+        ghook = ["('dired-mode-hook 'all-the-icons-dired-mode)"];
       };
 
       dired-single = {
@@ -4431,12 +4377,12 @@ We use the default dirvish config. It's like ranger.el, but without the bugs.
           inherit inputs;
           inherit (epkgs) trivialBuild;
         });
-        generalTwo = {
-          "'normal".dirvish-mode-map = {
-            "i" = "'dired-single-prev";
-            "n" = "'dired-single-next";
-          };
-        };
+        ghook = [''
+          ('dired-mode-hook (lambda () (general-def 'normal dired-mode-map
+               "B" 'evil-goto-line
+               "n" 'dired-single-prev
+               "i" 'dired-single-next)))
+        ''];
       };
 
       diredfl = {
@@ -4446,7 +4392,7 @@ We use the default dirvish config. It's like ranger.el, but without the bugs.
 
       dired-posframe = {
         enable = true;
-        generalTwo."'normal".dirvish-mode-map."M-t" = "'dired-posframe-mode";
+        generalTwo."'normal".dired-mode-map."M-t" = "'dired-posframe-mode";
       };
       
       image = {
@@ -4503,13 +4449,6 @@ We use the default dirvish config. It's like ranger.el, but without the bugs.
   		 'ignore)))
 #+end_src
 
-#+NAME: Emacs Dirvish Config
-#+begin_src emacs-lisp
-  (dirvish-override-dired-mode)
-  (dirvish-peek-mode)
-  (require 'dirvish-yank)
-#+end_src
-
 **** Package Definition
 #+begin_src nix :tangle emacs/emacs-packages/dired-single.nix
   { trivialBuild, inputs } :
@@ -4529,8 +4468,6 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 
   {
     home.packages = with pkgs; [
-      pkgs-stable.python311Packages.python-lsp-server
-      ccls
       vscode-langservers-extracted
       typescript-language-server
       lemminx
@@ -4732,6 +4669,7 @@ https://github.com/jdtsmith/indent-bars
       "c" = "'magit-commit";
       "p" = "'magit-pull";
       "P" = "'magit-push";
+      "b" = "'magit-branch";
     };
   };
 
@@ -5591,14 +5529,6 @@ I couldn't get olivetti to work.
     '';
     afterCall = ["citar"];
   };
-
-  biblio = {
-    enable = true;
-    generalOne."efs/leader-keys"."ob" = "'ews-bibtex-biblio-lookup";
-    config = ''
-      <<Emacs Writing Biblio Config>>
-    '';
-  };
 #+end_src
 
 #+NAME: Emacs Writing Citar Denote Config
@@ -5641,32 +5571,6 @@ I couldn't get olivetti to work.
       (split-window-right))
     (other-window 1)
     (citar-open-files citekey))
-#+end_src
-
-Taken from emacs writing studio
-#+NAME: Emacs Writing Biblio Config
-#+begin_src emacs-lisp
-  (defun ews--bibtex-combined-biblio-lookup ()
-    "Combines `biblio-lookup' and `biblio-doi-insert-bibtex'."
-    (require 'biblio)
-    (let* ((dbs (biblio--named-backends))
-           (db-list (append dbs '(("DOI" . biblio-doi-backend))))
-           (db-selected (biblio-completing-read-alist
-                         "Backend:"
-                         db-list)))
-      (if (eq db-selected 'biblio-doi-backend)
-          (let ((doi (read-string "DOI: ")))
-            (biblio-doi-insert-bibtex doi))
-        (biblio-lookup db-selected))))
-
-  (defun ews-bibtex-biblio-lookup ()
-    "Insert Biblio search results into current buffer or select BibTeX file."
-    (interactive)
-    (progn (find-file "~/doc/uni.bib")
-  	     (goto-char (point-max))
-  	     (ews--bibtex-combined-biblio-lookup)
-  	     (save-buffer))
-  	     (message "No BibTeX file(s) defined."))
 #+end_src
 
 **** Epub Reader
@@ -6380,7 +6284,7 @@ This is where all the audio/video stuff goes
     home.packages = with pkgs; [
       yt-dlp
       (config.lib.nixGL.wrap obs-studio)
-      (config.lib.nixGL.wrap kdenlive)
+      # (config.lib.nixGL.wrap kdenlive)
       lmms
       mpc-cli
       (import ./scripts/doomer.nix { inherit pkgs; })

@@ -420,34 +420,6 @@
       '';
       afterCall = ["citar"];
     };
-    
-    biblio = {
-      enable = true;
-      generalOne."efs/leader-keys"."ob" = "'ews-bibtex-biblio-lookup";
-      config = ''
-        (defun ews--bibtex-combined-biblio-lookup ()
-          "Combines `biblio-lookup' and `biblio-doi-insert-bibtex'."
-          (require 'biblio)
-          (let* ((dbs (biblio--named-backends))
-                 (db-list (append dbs '(("DOI" . biblio-doi-backend))))
-                 (db-selected (biblio-completing-read-alist
-                               "Backend:"
-                               db-list)))
-            (if (eq db-selected 'biblio-doi-backend)
-                (let ((doi (read-string "DOI: ")))
-                  (biblio-doi-insert-bibtex doi))
-              (biblio-lookup db-selected))))
-        
-        (defun ews-bibtex-biblio-lookup ()
-          "Insert Biblio search results into current buffer or select BibTeX file."
-          (interactive)
-          (progn (find-file "~/doc/uni.bib")
-        	     (goto-char (point-max))
-        	     (ews--bibtex-combined-biblio-lookup)
-        	     (save-buffer))
-        	     (message "No BibTeX file(s) defined."))
-      '';
-    };
 
     nov = {
       enable = true;

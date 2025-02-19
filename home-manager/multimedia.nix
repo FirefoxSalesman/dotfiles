@@ -4,7 +4,7 @@
   home.packages = with pkgs; [
     yt-dlp
     (config.lib.nixGL.wrap obs-studio)
-    (config.lib.nixGL.wrap kdenlive)
+    # (config.lib.nixGL.wrap kdenlive)
     lmms
     mpc-cli
     (import ./scripts/doomer.nix { inherit pkgs; })

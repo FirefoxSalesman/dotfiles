@@ -33,19 +33,6 @@
       shellAliases.z = "cd ./$(ls -d */ .*/ | ezf)";
     };
 
-    atuin = {
-      enable = true;
-      enableFishIntegration = true;
-      enableBashIntegration = true;
-    };
-    
-    emacs.init.usePackage.eshell-atuin = {
-        enable = true;
-        afterCall = ["eshell-mode"];
-        generalTwo."'insert".eshell-mode-map."M-O" = "'eshell-atuin-history";
-        config = "(eshell-atuin-mode)";
-    };
-
     starship = {
       enable = true;
       enableFishIntegration = true;

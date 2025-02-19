@@ -4,7 +4,11 @@
   stylix = {
     enable = true;
     polarity = "dark";
-    targets.emacs.enable = false;
+    targets = {
+      vencord.enable = false;
+      vesktop.enable = true;
+      emacs.enable = false;
+    };
     image = ./wallpaper.png;
     cursor = {
       package = pkgs.nordzy-cursor-theme;
@@ -315,6 +319,8 @@
            `(org-code ((t (:foreground ,(ewal-get-color 'green)))))
            `(line-number ((t (:foreground ,(ewal-get-color 'blue)))))
            `(eshell-git-prompt-powerline-dir-face ((t (:background ,(ewal-get-color 'blue)))))
+           `(hl-line-face ((t (:background ,(ewal-get-color 'green)))))
+           `(solaire-hl-line-face ((t (:background ,(ewal-get-color 'green)))))
            `(tab-bar ((t :inherit mode-line)))
            `(eshell-git-prompt-powerline-clean-face ((t (:background ,(ewal-get-color 'green)))))
            `(eshell-git-prompt-powerline-not-clean-face ((t (:background ,(ewal-get-color 'red)))))))

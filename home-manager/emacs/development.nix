@@ -2,8 +2,6 @@
 
 {
   home.packages = with pkgs; [
-    pkgs-stable.python311Packages.python-lsp-server
-    ccls
     vscode-langservers-extracted
     typescript-language-server
     lemminx
@@ -128,6 +126,7 @@
           "c" = "'magit-commit";
           "p" = "'magit-pull";
           "P" = "'magit-push";
+          "b" = "'magit-branch";
         };
       };
       
