@@ -110,5 +110,10 @@
       };
       custom.image-animate-loop = "t";
     };
+
+    dired-narrow = {
+      enable = true;
+      generalTwo."'normal".dired-mode-map."N" = "'dired-narrow-fuzzy";
+    };
   };
 }

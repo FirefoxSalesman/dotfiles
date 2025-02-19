@@ -2809,6 +2809,7 @@ All of the repeaters config was origally stolen from Karthinks. I don't think an
         inhibit-startup-screen t
         visible-bell t
         use-short-answers t
+        switch-to-buffer-obey-display-actions t
         ;; Scratch is an org mode buffer
         initial-major-mode 'org-mode
         initial-scratch-message ""
@@ -4402,6 +4403,11 @@ We use the default dirvish config. It's like ranger.el, but without the bugs.
           "O" = "'image-previous-file";
         };
         custom.image-animate-loop = "t";
+      };
+
+      dired-narrow = {
+        enable = true;
+        generalTwo."'normal".dired-mode-map."N" = "'dired-narrow-fuzzy";
       };
     };
   }

@@ -16,6 +16,7 @@
             inhibit-startup-screen t
             visible-bell t
             use-short-answers t
+            switch-to-buffer-obey-display-actions t
             ;; Scratch is an org mode buffer
             initial-major-mode 'org-mode
             initial-scratch-message ""
