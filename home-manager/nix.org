@@ -4327,7 +4327,7 @@ Helpful gives more information, & which-key tells what keybinds you have availab
 #+end_src
 
 *** File Management
-We use the default dirvish config. It's like ranger.el, but without the bugs.
+I'm running dired with a couple of small packages that improve on it
 #+begin_src nix :noweb yes :tangle emacs/file-management.nix
   { inputs, ... }:
 
@@ -4383,6 +4383,16 @@ We use the default dirvish config. It's like ranger.el, but without the bugs.
                "B" 'evil-goto-line
                "n" 'dired-single-prev
                "i" 'dired-single-next)))
+        ''];
+      };
+
+      dired-ranger = {
+        enable = true;
+        ghook = [''
+          ('dired-mode-hook (lambda () (general-def 'normal dired-mode-map
+               "d" 'dired-ranger-copy
+               "O" 'dired-ranger-move
+               "G" 'dired-ranger-paste)))
         ''];
       };
 

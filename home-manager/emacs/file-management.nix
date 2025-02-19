@@ -92,6 +92,16 @@
       ''];
     };
 
+    dired-ranger = {
+      enable = true;
+      ghook = [''
+        ('dired-mode-hook (lambda () (general-def 'normal dired-mode-map
+             "d" 'dired-ranger-copy
+             "O" 'dired-ranger-move
+             "G" 'dired-ranger-paste)))
+      ''];
+    };
+
     diredfl = {
       enable = true;
       ghook = ["('dired-mode-hook 'diredfl-mode)"];
