@@ -159,10 +159,10 @@
       ghook = ["('org-mode-hook 'org-auto-tangle-mode)"];
     };
     
-    org-auto-export-pandoc = {
-      enable = true;
-      ghook = ["('after-save-hook (lambda () (when (equal major-mode 'org-mode) (org-auto-export-pandoc))))"];
-    };
+     org-auto-export-pandoc = {
+       enable = true;
+       ghook = ["('after-save-hook (lambda () (when (equal major-mode 'org-mode) (org-auto-export-pandoc))))"];
+     };
     
     org-appear = {
       enable = true;
@@ -175,7 +175,7 @@
       gfhook = ["('dired-mode-hook 'denote-dired-mode-in-directories)"];
       custom = {
         denote-directory = ''(expand-file-name "~/doc/denote")'';
-        denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "databases" "scifi" "softwarerequirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics")'';
+        denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "databases" "scifi" "softwarerequirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics" "plp")'';
         denote-file-type = "nil";
         denote-dired-directories = "(list denote-directory)";
         

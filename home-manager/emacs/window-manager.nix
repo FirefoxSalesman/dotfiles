@@ -1,4 +1,4 @@
-{ inputs, pkgs, config, ... }:
+{ inputs, pkgs, pkgs-stable, config, ... }:
 
 {
   programs = {
@@ -58,7 +58,8 @@
         custom = {
           tab-bar-format = "'(tab-bar-format-tabs-groups tab-bar-separator doom-nano-tabline tab-bar-format-align-right tab-bar-format-global)";
           tab-bar-close-button-show = "nil";
-          # tab-bar-auto-width = "nil";
+          tab-bar-select-restore-windows = "nil";
+          tab-bar-auto-width-max = "'((150) 20)";
         };
         extraConfig = ''
           :pretty-hydra
@@ -404,7 +405,7 @@
                                           ;; Shell bindings
                                           ([?\s-s] . (lambda () (interactive) (shell-command "slock")))
                                           ([?\s-y] . (lambda () (interactive) (start-process-shell-command
-                                                                               "maim" nil  "${pkgs.maim}/bin/maim ~/pic/screenshot.png"))))'';
+                                                                               "maim" nil  "${pkgs-stable.maim}/bin/maim ~/pic/screenshot.png"))))'';
           
         };
         afterCall = ["on-init-ui-hook"];
@@ -535,6 +536,7 @@
                                            "^\\*.*eshell\\*"
                                            "^\\*eat\\*"
                                            "^\\*Sage\\*"
+                                           "^\\*prolog\\*"
                                            flymake-diagnostics-buffer-mode
         			                             geiser-repl-mode
                                            dape-repl-mode

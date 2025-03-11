@@ -16,7 +16,7 @@
 
   programs.emacs = {
     enable = true;
-    package = pkgs.emacs29-gtk3;
+    package = pkgs.emacs30-gtk3;
     extraPackages = epkgs: with epkgs; [ 
       on
       (callPackage ./emacs/emacs-packages/repeaters.nix {

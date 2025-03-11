@@ -127,6 +127,7 @@
           "p" = "'magit-pull";
           "P" = "'magit-push";
           "b" = "'magit-branch";
+          "m" = "'magit-merge";
         };
       };
       
@@ -151,32 +152,27 @@
           config = ''(projection-multi-embark-setup-command-map)'';
       };
 
-      devdocs = {
-        enable = true;
-        generalOne."efs/leader-keys"."hO" = "'devdocs-lookup";
-      };
-
-      plantuml-mode = {
-        enable = true;
-        mode = [''"\\.plantuml\\'"'' ''"\\.puml\\'"''];
-        custom = {
-          org-plantuml-exec-mode = "'plantuml";
-          # plantuml-default-exec-mode = "'executable";
-          # plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
-          org-plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
-        }; 
-        config = ''
-          (org-babel-do-load-languages 'org-babel-load-languages '((plantuml . t)))
-          
-          (defun hex-encode (str)
-            (string-join (mapcar (lambda (c) (format "%02x" c)) str)))
-          
-          (defun plantuml-server-encode-url (string)
-            "Encode the string STRING into a URL suitable for PlantUML server interactions."
-            (let* ((encoded-string (hex-encode string)))
-              (concat plantuml-server-url "/" plantuml-output-type "/~h" encoded-string)))
-        '';
-      };
+      # plantuml-mode = {
+      #   enable = true;
+      #   mode = [''"\\.plantuml\\'"'' ''"\\.puml\\'"''];
+      #   custom = {
+      #     org-plantuml-exec-mode = "'plantuml";
+      #     # plantuml-default-exec-mode = "'executable";
+      #     # plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
+      #     org-plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
+      #   }; 
+      #   config = ''
+      #     (org-babel-do-load-languages 'org-babel-load-languages '((plantuml . t)))
+      #     
+      #     (defun hex-encode (str)
+      #       (string-join (mapcar (lambda (c) (format "%02x" c)) str)))
+      #     
+      #     (defun plantuml-server-encode-url (string)
+      #       "Encode the string STRING into a URL suitable for PlantUML server interactions."
+      #       (let* ((encoded-string (hex-encode string)))
+      #         (concat plantuml-server-url "/" plantuml-output-type "/~h" encoded-string)))
+      #   '';
+      # };
 
       eglot = {
         enable = true;
@@ -258,6 +254,12 @@
         mode = [''"\\.nix\\'"''];
       };
 
+      prolog-mode = {
+        enable = true;
+        mode = [''"\\.pl$"''];
+        generalTwo."local-leader".prolog-mode-map."r" = '''(run-prolog :which-key "run")'';
+      };
+
       # html-ts-mode = {
       #   enable = true;
       #   mode = [''"\\.[px]?html?\\'"''];
@@ -293,6 +295,11 @@
       #   mode = [''"\\.R\\'"''];
       #   custom.ess-ask-for-ess-directory = "nil";
       # };
+
+      jupyter = {
+        enable = true;
+        command = ["jupyter-run-repl" "jupyter-connect-repl"];
+      };
 
       zenscript-mode = {
         enable = true;

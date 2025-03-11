@@ -1,7 +1,6 @@
 #+title: Holscher's Home Manager Config
 #+startup: overview
 #+auto_tangle: t
-
 * Notes to my future self
 + To get eduroam working, you need ppp & pptclient
 + Don't let xorg use the nvidia card. It breaks everything
@@ -432,7 +431,8 @@ I stole this from this git repo https://github.com/sylsau/ffmpeg-bulk
 
   pkgs.writeShellScriptBin "masstube" ''
     emacsclient ~/.download.txt
-    ${pkgs.yt-dlp}/bin/yt-dlp $1 --verbose -ci --batch-file=~/.download.txt --proxy socks://localhost:9050
+    # ${pkgs.yt-dlp}/bin/yt-dlp $1 --verbose -ci --batch-file=~/.download.txt --proxy socks://localhost:9050
+    ${pkgs.yt-dlp}/bin/yt-dlp $1 --verbose -ci --batch-file=~/.download.txt 
     ${pkgs.coreutils}/bin/rm ~/.download.txt
   ''
 #+end_src
@@ -1599,7 +1599,7 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
       # comms
       (config.lib.nixGL.wrap teams-for-linux)
       (config.lib.nixGL.wrap thunderbird)
-      (pkgs-stable.vesktop.override {withSystemVencord = true;})
+      (vesktop.override {withSystemVencord = true;})
       # things emacs appreciates
       xclip
       xsel
@@ -1615,7 +1615,10 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
 #+NAME: xinitrc-config
 #+begin_src shell
   #!/usr/bin/sh
-  xrandr --output eDP-1 --mode 2560x1600
+  xrandr --setprovideroutputsource modesetting NVIDIA-0
+  xrandr --auto
+  xrandr --dpi 96
+  # xrandr --output eDP-1 --mode 2560x1600
   ${pkgs.xwallpaper}/bin/xwallpaper --stretch ~/.config/home-manager/wallpaper.png 
   xrdb load ~/.cache/wal/colors.Xresources 
 
@@ -1641,6 +1644,521 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
       <<xinitrc-config>>
     '' ;
   }
+#+end_src
+
+** Development
+This was more directly stolen than the other parts
+I think most of it was from the github page for lsp mode, but it's been a while, & I don't remember much.
+#+begin_src nix :noweb yes :tangle emacs/development.nix
+  { inputs, pkgs, pkgs-stable, ... }:
+
+  {
+    home.packages = with pkgs; [
+      vscode-langservers-extracted
+      typescript-language-server
+      lemminx
+      marksman
+      nodePackages.bash-language-server
+      nixd
+      sqls
+    ];
+
+    programs.emacs.init.usePackage = {
+        <<Development Misc>>
+        
+        <<Development Direnv>>
+
+        <<Development Treesitter Setup>>
+
+        <<Development Treesitter Context>>
+        
+        <<Development Project>>
+
+        # <<Development Plantuml>>
+
+        <<Development Eglot>>
+        
+        # <<Development Dape>>
+        
+        <<Development Python>>
+
+        <<Development Java>>
+        
+        <<Development Nix>>
+
+        <<Development Prolog>>
+
+        # <<Development Webdev>>
+
+        # <<Development Racket>>
+
+        # <<Development R>>
+
+        <<Development Jupyter>>
+
+        <<Development Zenscript>>
+    };
+  }
+#+end_src
+
+*** Misc
+#+NAME: Development Misc
+#+begin_src nix
+  nxml = {
+    enable = true;
+    generalTwo.local-leader.nxml-mode-map = {
+      "a" = '''(eglot-code-actions :which-key "code actions")'';
+      "n" = '''(flymake-goto-next-error :which-key "next error")'';
+      "e" = '''(flymake-goto-prev-error :which-key "previous error")'';
+      "f" = '''(eglot-format :which-key "format")'';
+    };
+    deferIncrementally = true;
+  };
+
+  editorconfig = {
+    enable = true;
+    afterCall = ["on-first-file-hook"];
+    config = ''(editorconfig-mode)'';
+  };
+
+  rainbow-delimiters = {
+    enable = true;
+    ghook = ["('prog-mode-hook 'rainbow-delimiters-mode)"];
+  };
+#+end_src
+
+*** Treesitter
+https://github.com/jdtsmith/indent-bars
+
+**** Setup
+#+NAME: Development Treesitter Setup
+#+begin_src nix :noweb yes
+  treesit-auto = {
+    enable = true;
+    custom.treesit-auto-install = "'prompt";
+    deferIncrementally = ["treesitter"];
+    config = ''
+      <<Emacs Treesit Auto Config>>
+    '';
+    extraConfig = ''
+      :preface (defun mp-setup-install-grammars ()
+                 "Install Tree-sitter grammars if they are absent."
+                 (interactive)
+                 (dolist (grammar
+                          '(;(xml "https://github.com/ObserverOfTime/tree-sitter-xml")
+                            (toml "https://github.com/ikatyang/tree-sitter-toml")
+                            (elisp "https://github.com/Wilfred/tree-sitter-elisp")))
+                   (add-to-list 'treesit-language-source-alist grammar)
+                   ;; Only install `grammar' if we don't already have it
+                   ;; installed. However, if you want to *update* a grammar then
+                   ;; this obviously prevents that from happening.
+                   (unless (treesit-language-available-p (car grammar))
+                     (treesit-install-language-grammar (car grammar)))))
+    '';
+  };
+
+  tree-sitter = {
+    enable = true;
+    afterCall = ["on-first-file-hook"];
+    config = ''
+      <<Emacs Treesitter Config>>
+    '';
+  };
+
+  tree-sitter-langs = {
+    enable = true;
+    custom.tree-sitter-langs-grammar-dir = ''"~/.cache/emacs/tree-sitter"'';
+    afterCall = ["global-tree-sitter-mode-hook"];
+  };
+#+end_src
+
+#+NAME: Emacs Treesit Auto Config
+#+begin_src emacs-lisp
+  (mp-setup-install-grammars)
+  (global-treesit-auto-mode)
+#+end_src
+
+#+NAME: Emacs Treesitter Config
+#+begin_src emacs-lisp
+  (global-tree-sitter-mode)
+  (dolist (mode (list '(java-ts-mode . java)
+  		    '(html-ts-mode . html)
+  		    '(python-ts-mode . python)
+  		    '(js-ts-mode . javascript)
+  		    '(json-ts-mode . json)
+  		    '(gfm-mode . markdown)
+  		    '(css-ts-mode . css)
+  		    '(c-ts-mode . c)
+  		    '(racket-repl-mode . racket)
+  		    '(ess-r-mode . r)
+  		    '(inferior-ess-r-mode . r)
+  		    '(toml-ts-mode . toml)))
+    (add-to-list 'tree-sitter-major-mode-language-alist mode))
+#+end_src
+
+**** Context
+#+NAME: Development Treesitter Context
+#+begin_src nix
+  treesitter-context = {
+    enable = true;
+    package = epkgs: (epkgs.callPackage ./emacs-packages/treesitter-context.nix {
+      inherit inputs;
+      inherit (epkgs) trivialBuild posframe;
+    });
+    ghook = ["('(js-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-mode-hook json-ts-mode-hook) 'treesitter-context-mode)"];
+    custom.treesitter-context-frame-min-width = "30";
+  };
+
+  treesitter-context-fold = {
+    enable = true;
+    ghook = ["('treesitter-context-mode-hook 'treesitter-context-fold-mode)"];
+    generalTwo."'normal".treesitter-context-fold-mode-map = {
+      "zm" = "'treesitter-context-fold-hide";
+      "zo" = "'treesitter-context-fold-show";
+      "za" = "'treesitter-context-fold-toggle";
+    };
+  };
+
+  treesitter-context-focus = {
+    enable = true;
+    command = ["treesitter-context-focus-mode"];
+  };
+#+end_src
+
+***** Package Definitions
+#+begin_src nix :tangle emacs/emacs-packages/treesitter-context.nix
+  { inputs, trivialBuild, posframe } :
+
+  trivialBuild rec {
+    pname = "treesitter-context";
+    version = "current";
+    src = inputs.treesitter-context;
+
+    propagatedUserEnvPkgs = [
+      posframe
+    ];
+
+    buildInputs = propagatedUserEnvPkgs;
+  }
+
+#+end_src
+
+*** Project
+#+NAME: Development Project
+#+begin_src nix :noweb yes
+  magit = {
+    enable = true;
+    custom.magit-display-buffer-function = "#'magit-display-buffer-same-window-except-diff-v1";
+    config = ''
+      <<Emacs Magit Config>>
+    '';
+    generalOne.project-prefix-map = {
+      "v" = "'magit-status";
+      "c" = "'magit-commit";
+      "p" = "'magit-pull";
+      "P" = "'magit-push";
+      "b" = "'magit-branch";
+      "m" = "'magit-merge";
+    };
+  };
+
+  project = {
+    enable = true;
+    generalOne."efs/leader-keys"."P" = "project-prefix-map";
+  };
+
+  projection-multi = {
+    enable = true;
+    generalOne.project-prefix-map."RET" = "'projection-multi-compile";
+    config = ''
+      <<Emacs Development Projection Config>>
+    '' ;
+  };
+
+  projection-multi-embark = {
+      enable = true;
+      after = ["embark" "projection-multi"];
+      config = ''(projection-multi-embark-setup-command-map)'';
+  };
+#+end_src
+
+#+NAME: Emacs Development Projection Config
+#+begin_src emacs-lisp
+  (require 'projection)
+  (global-projection-hook-mode)
+  (oset projection-project-type-maven build "mvn -B clean compile")
+#+end_src
+
+#+NAME: Emacs Magit Config
+#+begin_src emacs-lisp
+  (defun dired-git-add ()
+      (interactive)
+      (start-process "git" nil "git" "add" (dired-get-marked-files)))
+#+end_src
+
+*** Plantuml
+#+NAME: Development Plantuml
+#+begin_src nix :noweb yes
+  plantuml-mode = {
+    enable = true;
+    mode = [''"\\.plantuml\\'"'' ''"\\.puml\\'"''];
+    custom = {
+      org-plantuml-exec-mode = "'plantuml";
+      # plantuml-default-exec-mode = "'executable";
+      # plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
+      org-plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
+    }; 
+    config = ''
+      <<Emacs Development Plantuml Config>>
+    '';
+  };
+#+end_src
+
+#+NAME: Emacs Development Plantuml Config
+#+begin_src emacs-lisp
+  (org-babel-do-load-languages 'org-babel-load-languages '((plantuml . t)))
+
+  (defun hex-encode (str)
+    (string-join (mapcar (lambda (c) (format "%02x" c)) str)))
+
+  (defun plantuml-server-encode-url (string)
+    "Encode the string STRING into a URL suitable for PlantUML server interactions."
+    (let* ((encoded-string (hex-encode string)))
+      (concat plantuml-server-url "/" plantuml-output-type "/~h" encoded-string)))
+#+end_src
+
+*** Eglot
+#+NAME: Development Eglot
+#+begin_src nix :noweb yes
+  eglot = {
+    enable = true;
+    ghook = ["('(html-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook) 'eglot-ensure)"];
+    gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
+    generalTwo.local-leader.eglot-mode-map = {
+      "f" = "'eglot-format-buffer";
+      "a" = "'eglot-code-actions";
+    };
+    config = ''
+      <<Development Eglot Config>>
+    '';
+  } ;
+
+  eldoc-box = {
+    enable = true;
+    ghook = [
+      "('(eglot-managed-mode-hook emacs-lisp-mode-hook) 'eldoc-box-hover-at-point-mode)"
+      "('org-mode-hook 'eldoc-box-hover-mode)"
+    ];
+  };
+
+  flymake = {
+    enable = true;
+    defer = true;
+    config = ''(evil-ex-define-cmd "trouble" 'flymake-show-buffer-diagnostics)'';
+  };
+
+  eglot-tempel = {
+    enable = true;
+    after = ["eglot"];
+    config = ''(eglot-tempel-mode)'';
+  };
+
+  # breadcrumb = {
+  #   enable = true;
+  #   ghook = ["('(bibtex-mode-hook nxml-mode-hook nix-mode-hook racket-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook ess-r-mode-hook html-ts-mode-hook css-ts-mode-hook emacs-lisp-mode-hook) 'breadcrumb-local-mode)"];
+  # };
+#+end_src
+
+#+NAME: Development Eglot Config
+#+begin_src emacs-lisp
+  (dolist (server (list '((nxml-mode) . ("lemminx"))
+  		      '((html-ts-mode) . ("vscode-html-language-server" "--stdio"))
+  		      '((sql-mode) . ("sqls"))))
+    (add-to-list 'eglot-server-programs server))
+  (defun my/eglot-capf ()
+    (setq-local completion-at-point-functions
+                (list (cape-capf-super
+                       #'tempel-complete
+                       #'eglot-completion-at-point
+                       #'cape-file)
+                      #'cape-dabbrev)))
+  (general-add-advice 'evil-collection-eglot-setup
+    :after '(lambda ()
+               (general-def 'normal eglot-mode-map "K" 'evil-substitute)))
+#+end_src
+
+**** Package Definitiions
+#+begin_src nix :tangle emacs/emacs-packages/eglot-booster.nix
+  { inputs, trivialBuild, eglot, emacs-lsp-booster, jsonrpc } :
+
+  trivialBuild rec {
+    pname = "eglot-booster";
+    version = "current";
+    src = inputs.eglot-booster;
+
+    propagatedUserEnvPkgs = [
+      eglot
+      emacs-lsp-booster
+      jsonrpc
+    ];
+
+    buildInputs = propagatedUserEnvPkgs;
+  }
+
+#+end_src
+
+#+begin_src nix :tangle emacs/emacs-packages/eglot-x.nix
+  { inputs, trivialBuild, eglot  } :
+
+  trivialBuild rec {
+    pname = "eglot-booster";
+    version = "current";
+    src = inputs.eglot-booster;
+
+    propagatedUserEnvPkgs = [
+      eglot
+    ];
+
+    buildInputs = propagatedUserEnvPkgs;
+  }
+#+end_src
+
+*** Dape
+#+NAME: Development Dape
+#+begin_src nix
+  dape = {
+    enable = true;
+    after = ["eglot"];
+    gfhook = ["('dape-on-stopped-hooks (list 'dape-info 'dape-repl))"];
+    custom = {
+      dape-window-arrangement = "gud";
+      dape-key-prefix = ''"\C-x\C-a"'';
+    };
+  };
+#+end_src
+
+*** Python
+Sets up emacs as a python IDE. (It can do anything pycharm can)
+pyenv allows us to use virtual environments.
+
+=bindings=
+,cp- open a python repl
+,cc- evaluate your code in the repl that you just opened up.
+#+NAME: Development Python
+#+begin_src nix
+  python-ts-mode = {
+    enable = true;
+    mode = [''"\\.py\\'"''];
+    custom = {
+      python-shell-interpreter = ''"ipython"'';
+    	python-shell-interpreter-args = ''"-i --simple-prompt"'';
+    };
+  };
+#+end_src
+
+*** Java
+#+NAME: Development Java
+#+begin_src nix
+  groovy-mode = {
+    enable = true;
+    mode = [''"\\.gradle\\'"''];
+  };
+#+end_src
+
+*** Nix
+#+NAME: Development Nix
+#+begin_src nix
+  nix-mode = {
+    enable = true;
+    mode = [''"\\.nix\\'"''];
+  };
+#+end_src
+
+*** Web Development
+#+NAME: Development Webdev
+#+begin_src nix
+  html-ts-mode = {
+    enable = true;
+    mode = [''"\\.[px]?html?\\'"''];
+  };
+
+  emmet-mode = {
+    enable = true;
+    ghook = ["('(js-ts-mode-hook sgml-mode-hook css-ts-mode-hook html-ts-mode-hook) 'emmet-mode)"];
+    custom.emmet-move-cursor-between-quotes = "t";
+  };
+
+  pug-mode = {
+    enable = true;
+    mode = [''"\\.pug\\'"''];
+  };
+#+end_src
+
+*** Racket
+#+NAME: Development Racket
+#+begin_src nix
+  racket-mode = {
+    enable = true;
+    mode = [''"\\.rkt\\'"''];
+    gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
+    init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
+    config = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
+    generalTwo.local-leader.racket-mode-map = {
+      "RET" = "'geiser-racket";
+      "." = "'racket-xp-describe";
+      "r" = "'racket-run";
+    };
+  };
+#+end_src
+
+*** R
+#+NAME: Development R
+#+begin_src nix
+  ess-r-mode = {
+    enable = true;
+    package = epkgs: epkgs.ess;
+    mode = [''"\\.R\\'"''];
+    custom.ess-ask-for-ess-directory = "nil";
+  };
+#+end_src
+
+*** Jupyter
+#+NAME: Development Jupyter
+#+begin_src nix
+  jupyter = {
+    enable = true;
+    command = ["jupyter-run-repl" "jupyter-connect-repl"];
+  };
+#+end_src
+
+*** Prolog
+#+NAME: Development Prolog
+#+begin_src nix
+  prolog-mode = {
+    enable = true;
+    mode = [''"\\.pl$"''];
+    generalTwo."local-leader".prolog-mode-map."r" = '''(run-prolog :which-key "run")'';
+  };
+#+end_src
+
+*** Zenscript
+#+NAME: Development Zenscript
+#+begin_src nix :noweb yes
+  zenscript-mode = {
+    enable = true;
+    mode = [''"\\.zs\\'"''];
+    # There's no way we're fixing the completion system, so we'll turn it off
+    config = ''
+      <<Emacs Zenscript Config>>
+    '';
+  };
+#+end_src
+
+#+NAME: Emacs Zenscript Config
+#+begin_src emacs-lisp
+  (defun zenscript-get-dumpzs (&optional prompt)
+    "Returns nothing, because I can't fix the dumpfile problem"
+    '(() . ()))
 #+end_src
 
 ** Emacs
@@ -2333,7 +2851,7 @@ https://gitlab.com/rycee/nur-expressions
 
     programs.emacs = {
       enable = true;
-      package = pkgs.emacs29-gtk3;
+      package = pkgs.emacs30-gtk3;
       extraPackages = epkgs: with epkgs; [ 
         on
         (callPackage ./emacs/emacs-packages/repeaters.nix {
@@ -4476,508 +4994,6 @@ I'm running dired with a couple of small packages that improve on it
   }
 #+end_src
 
-*** Development
-This was more directly stolen than the other parts
-I think most of it was from the github page for lsp mode, but it's been a while, & I don't remember much.
-#+begin_src nix :noweb yes :tangle emacs/development.nix
-  { inputs, pkgs, pkgs-stable, ... }:
-
-  {
-    home.packages = with pkgs; [
-      vscode-langservers-extracted
-      typescript-language-server
-      lemminx
-      marksman
-      nodePackages.bash-language-server
-      nixd
-      sqls
-    ];
-
-    programs.emacs.init.usePackage = {
-        <<Emacs Development Misc>>
-        
-        <<Emacs Development Direnv>>
-
-        <<Emacs Development Treesitter Setup>>
-
-        <<Emacs Development Treesitter Context>>
-        
-        <<Emacs Development Project>>
-
-        <<Emacs Development DevDocs>>
-
-        <<Emacs Development Plantuml>>
-
-        <<Emacs Development Eglot>>
-        
-        # <<Emacs Development Dape>>
-        
-        <<Emacs Development Python>>
-
-        <<Emacs Development Java>>
-        
-        <<Emacs Development Nix>>
-
-        # <<Emacs Development Webdev>>
-
-        # <<Emacs Development Racket>>
-
-        # <<Emacs Development R>>
-
-        <<Emacs Development Zenscript>>
-    };
-  }
-#+end_src
-
-**** Misc
-#+NAME: Emacs Development Misc
-#+begin_src nix
-  nxml = {
-    enable = true;
-    generalTwo.local-leader.nxml-mode-map = {
-      "a" = '''(eglot-code-actions :which-key "code actions")'';
-      "n" = '''(flymake-goto-next-error :which-key "next error")'';
-      "e" = '''(flymake-goto-prev-error :which-key "previous error")'';
-      "f" = '''(eglot-format :which-key "format")'';
-    };
-    deferIncrementally = true;
-  };
-
-  editorconfig = {
-    enable = true;
-    afterCall = ["on-first-file-hook"];
-    config = ''(editorconfig-mode)'';
-  };
-
-  rainbow-delimiters = {
-    enable = true;
-    ghook = ["('prog-mode-hook 'rainbow-delimiters-mode)"];
-  };
-#+end_src
-
-**** Treesitter
-https://github.com/jdtsmith/indent-bars
-
-***** Setup
-#+NAME: Emacs Development Treesitter Setup
-#+begin_src nix :noweb yes
-  treesit-auto = {
-    enable = true;
-    custom.treesit-auto-install = "'prompt";
-    deferIncrementally = ["treesitter"];
-    config = ''
-      <<Emacs Treesit Auto Config>>
-    '';
-    extraConfig = ''
-      :preface (defun mp-setup-install-grammars ()
-                 "Install Tree-sitter grammars if they are absent."
-                 (interactive)
-                 (dolist (grammar
-                          '(;(xml "https://github.com/ObserverOfTime/tree-sitter-xml")
-                            (toml "https://github.com/ikatyang/tree-sitter-toml")
-                            (elisp "https://github.com/Wilfred/tree-sitter-elisp")))
-                   (add-to-list 'treesit-language-source-alist grammar)
-                   ;; Only install `grammar' if we don't already have it
-                   ;; installed. However, if you want to *update* a grammar then
-                   ;; this obviously prevents that from happening.
-                   (unless (treesit-language-available-p (car grammar))
-                     (treesit-install-language-grammar (car grammar)))))
-    '';
-  };
-
-  tree-sitter = {
-    enable = true;
-    afterCall = ["on-first-file-hook"];
-    config = ''
-      <<Emacs Treesitter Config>>
-    '';
-  };
-
-  tree-sitter-langs = {
-    enable = true;
-    custom.tree-sitter-langs-grammar-dir = ''"~/.cache/emacs/tree-sitter"'';
-    afterCall = ["global-tree-sitter-mode-hook"];
-  };
-#+end_src
-
-#+NAME: Emacs Treesit Auto Config
-#+begin_src emacs-lisp
-  (mp-setup-install-grammars)
-  (global-treesit-auto-mode)
-#+end_src
-
-#+NAME: Emacs Treesitter Config
-#+begin_src emacs-lisp
-  (global-tree-sitter-mode)
-  (dolist (mode (list '(java-ts-mode . java)
-  		    '(html-ts-mode . html)
-  		    '(python-ts-mode . python)
-  		    '(js-ts-mode . javascript)
-  		    '(json-ts-mode . json)
-  		    '(gfm-mode . markdown)
-  		    '(css-ts-mode . css)
-  		    '(c-ts-mode . c)
-  		    '(racket-repl-mode . racket)
-  		    '(ess-r-mode . r)
-  		    '(inferior-ess-r-mode . r)
-  		    '(toml-ts-mode . toml)))
-    (add-to-list 'tree-sitter-major-mode-language-alist mode))
-#+end_src
-
-***** Context
-#+NAME: Emacs Development Treesitter Context
-#+begin_src nix
-  treesitter-context = {
-    enable = true;
-    package = epkgs: (epkgs.callPackage ./emacs-packages/treesitter-context.nix {
-      inherit inputs;
-      inherit (epkgs) trivialBuild posframe;
-    });
-    ghook = ["('(js-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-mode-hook json-ts-mode-hook) 'treesitter-context-mode)"];
-    custom.treesitter-context-frame-min-width = "30";
-  };
-
-  treesitter-context-fold = {
-    enable = true;
-    ghook = ["('treesitter-context-mode-hook 'treesitter-context-fold-mode)"];
-    generalTwo."'normal".treesitter-context-fold-mode-map = {
-      "zm" = "'treesitter-context-fold-hide";
-      "zo" = "'treesitter-context-fold-show";
-      "za" = "'treesitter-context-fold-toggle";
-    };
-  };
-
-  treesitter-context-focus = {
-    enable = true;
-    command = ["treesitter-context-focus-mode"];
-  };
-#+end_src
-
-****** Package Definitions
-#+begin_src nix :tangle emacs/emacs-packages/treesitter-context.nix
-  { inputs, trivialBuild, posframe } :
-
-  trivialBuild rec {
-    pname = "treesitter-context";
-    version = "current";
-    src = inputs.treesitter-context;
-
-    propagatedUserEnvPkgs = [
-      posframe
-    ];
-
-    buildInputs = propagatedUserEnvPkgs;
-  }
-
-#+end_src
-
-**** Project
-#+NAME: Emacs Development Project
-#+begin_src nix :noweb yes
-  magit = {
-    enable = true;
-    custom.magit-display-buffer-function = "#'magit-display-buffer-same-window-except-diff-v1";
-    config = ''
-      <<Emacs Magit Config>>
-    '';
-    generalOne.project-prefix-map = {
-      "v" = "'magit-status";
-      "c" = "'magit-commit";
-      "p" = "'magit-pull";
-      "P" = "'magit-push";
-      "b" = "'magit-branch";
-    };
-  };
-
-  project = {
-    enable = true;
-    generalOne."efs/leader-keys"."P" = "project-prefix-map";
-  };
-
-  projection-multi = {
-    enable = true;
-    generalOne.project-prefix-map."RET" = "'projection-multi-compile";
-    config = ''
-      <<Emacs Development Projection Config>>
-    '' ;
-  };
-
-  projection-multi-embark = {
-      enable = true;
-      after = ["embark" "projection-multi"];
-      config = ''(projection-multi-embark-setup-command-map)'';
-  };
-#+end_src
-
-#+NAME: Emacs Development Projection Config
-#+begin_src emacs-lisp
-  (require 'projection)
-  (global-projection-hook-mode)
-  (oset projection-project-type-maven build "mvn -B clean compile")
-#+end_src
-
-#+NAME: Emacs Magit Config
-#+begin_src emacs-lisp
-  (defun dired-git-add ()
-      (interactive)
-      (start-process "git" nil "git" "add" (dired-get-marked-files)))
-#+end_src
-
-**** DevDocs
-#+NAME: Emacs Development DevDocs
-#+begin_src nix
-  devdocs = {
-    enable = true;
-    generalOne."efs/leader-keys"."hO" = "'devdocs-lookup";
-  };
-#+end_src
-
-**** Plantuml
-#+NAME: Emacs Development Plantuml
-#+begin_src nix :noweb yes
-  plantuml-mode = {
-    enable = true;
-    mode = [''"\\.plantuml\\'"'' ''"\\.puml\\'"''];
-    custom = {
-      org-plantuml-exec-mode = "'plantuml";
-      # plantuml-default-exec-mode = "'executable";
-      # plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
-      org-plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
-    }; 
-    config = ''
-      <<Emacs Development Plantuml Config>>
-    '';
-  };
-#+end_src
-
-#+NAME: Emacs Development Plantuml Config
-#+begin_src emacs-lisp
-  (org-babel-do-load-languages 'org-babel-load-languages '((plantuml . t)))
-
-  (defun hex-encode (str)
-    (string-join (mapcar (lambda (c) (format "%02x" c)) str)))
-
-  (defun plantuml-server-encode-url (string)
-    "Encode the string STRING into a URL suitable for PlantUML server interactions."
-    (let* ((encoded-string (hex-encode string)))
-      (concat plantuml-server-url "/" plantuml-output-type "/~h" encoded-string)))
-#+end_src
-
-**** Eglot
-#+NAME: Emacs Development Eglot
-#+begin_src nix :noweb yes
-  eglot = {
-    enable = true;
-    ghook = ["('(html-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook) 'eglot-ensure)"];
-    gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
-    generalTwo.local-leader.eglot-mode-map = {
-      "f" = "'eglot-format-buffer";
-      "a" = "'eglot-code-actions";
-    };
-    config = ''
-      <<Emacs Eglot Config>>
-    '';
-  } ;
-
-  eldoc-box = {
-    enable = true;
-    ghook = [
-      "('(eglot-managed-mode-hook emacs-lisp-mode-hook) 'eldoc-box-hover-at-point-mode)"
-      "('org-mode-hook 'eldoc-box-hover-mode)"
-    ];
-  };
-
-  flymake = {
-    enable = true;
-    defer = true;
-    config = ''(evil-ex-define-cmd "trouble" 'flymake-show-buffer-diagnostics)'';
-  };
-
-  eglot-tempel = {
-    enable = true;
-    after = ["eglot"];
-    config = ''(eglot-tempel-mode)'';
-  };
-
-  # breadcrumb = {
-  #   enable = true;
-  #   ghook = ["('(bibtex-mode-hook nxml-mode-hook nix-mode-hook racket-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook ess-r-mode-hook html-ts-mode-hook css-ts-mode-hook emacs-lisp-mode-hook) 'breadcrumb-local-mode)"];
-  # };
-#+end_src
-
-#+NAME: Emacs Eglot Config
-#+begin_src emacs-lisp
-  (dolist (server (list '((nxml-mode) . ("lemminx"))
-  		      '((html-ts-mode) . ("vscode-html-language-server" "--stdio"))
-  		      '((sql-mode) . ("sqls"))))
-    (add-to-list 'eglot-server-programs server))
-  (defun my/eglot-capf ()
-    (setq-local completion-at-point-functions
-                (list (cape-capf-super
-                       #'tempel-complete
-                       #'eglot-completion-at-point
-                       #'cape-file)
-                      #'cape-dabbrev)))
-  (general-add-advice 'evil-collection-eglot-setup
-    :after '(lambda ()
-               (general-def 'normal eglot-mode-map "K" 'evil-substitute)))
-#+end_src
-
-***** Package Definitiions
-#+begin_src nix :tangle emacs/emacs-packages/eglot-booster.nix
-  { inputs, trivialBuild, eglot, emacs-lsp-booster, jsonrpc } :
-
-  trivialBuild rec {
-    pname = "eglot-booster";
-    version = "current";
-    src = inputs.eglot-booster;
-
-    propagatedUserEnvPkgs = [
-      eglot
-      emacs-lsp-booster
-      jsonrpc
-    ];
-
-    buildInputs = propagatedUserEnvPkgs;
-  }
-
-#+end_src
-
-#+begin_src nix :tangle emacs/emacs-packages/eglot-x.nix
-  { inputs, trivialBuild, eglot  } :
-
-  trivialBuild rec {
-    pname = "eglot-booster";
-    version = "current";
-    src = inputs.eglot-booster;
-
-    propagatedUserEnvPkgs = [
-      eglot
-    ];
-
-    buildInputs = propagatedUserEnvPkgs;
-  }
-#+end_src
-
-**** Dape
-#+NAME: Emacs Development Dape
-#+begin_src nix
-  dape = {
-    enable = true;
-    after = ["eglot"];
-    gfhook = ["('dape-on-stopped-hooks (list 'dape-info 'dape-repl))"];
-    custom = {
-      dape-window-arrangement = "gud";
-      dape-key-prefix = ''"\C-x\C-a"'';
-    };
-  };
-#+end_src
-
-**** Python
-Sets up emacs as a python IDE. (It can do anything pycharm can)
-pyenv allows us to use virtual environments.
-
-=bindings=
-,cp- open a python repl
-,cc- evaluate your code in the repl that you just opened up.
-#+NAME: Emacs Development Python
-#+begin_src nix
-  python-ts-mode = {
-    enable = true;
-    mode = [''"\\.py\\'"''];
-    custom = {
-      python-shell-interpreter = ''"ipython"'';
-    	python-shell-interpreter-args = ''"-i --simple-prompt"'';
-    };
-  };
-#+end_src
-
-**** Java
-#+NAME: Emacs Development Java
-#+begin_src nix
-  groovy-mode = {
-    enable = true;
-    mode = [''"\\.gradle\\'"''];
-  };
-#+end_src
-
-**** Nix
-#+NAME: Emacs Development Nix
-#+begin_src nix
-  nix-mode = {
-    enable = true;
-    mode = [''"\\.nix\\'"''];
-  };
-#+end_src
-
-**** Web Development
-#+NAME: Emacs Development Webdev
-#+begin_src nix
-  html-ts-mode = {
-    enable = true;
-    mode = [''"\\.[px]?html?\\'"''];
-  };
-
-  emmet-mode = {
-    enable = true;
-    ghook = ["('(js-ts-mode-hook sgml-mode-hook css-ts-mode-hook html-ts-mode-hook) 'emmet-mode)"];
-    custom.emmet-move-cursor-between-quotes = "t";
-  };
-
-  pug-mode = {
-    enable = true;
-    mode = [''"\\.pug\\'"''];
-  };
-#+end_src
-
-**** Racket
-#+NAME: Emacs Development Racket
-#+begin_src nix
-  racket-mode = {
-    enable = true;
-    mode = [''"\\.rkt\\'"''];
-    gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
-    init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
-    config = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
-    generalTwo.local-leader.racket-mode-map = {
-      "RET" = "'geiser-racket";
-      "." = "'racket-xp-describe";
-      "r" = "'racket-run";
-    };
-  };
-#+end_src
-
-**** R
-#+NAME: Emacs Development R
-#+begin_src nix
-  ess-r-mode = {
-    enable = true;
-    package = epkgs: epkgs.ess;
-    mode = [''"\\.R\\'"''];
-    custom.ess-ask-for-ess-directory = "nil";
-  };
-#+end_src
-
-**** Zenscript
-#+NAME: Emacs Development Zenscript
-#+begin_src nix :noweb yes
-  zenscript-mode = {
-    enable = true;
-    mode = [''"\\.zs\\'"''];
-    # There's no way we're fixing the completion system, so we'll turn it off
-    config = ''
-      <<Emacs Zenscript Config>>
-    '';
-  };
-#+end_src
-
-#+NAME: Emacs Zenscript Config
-#+begin_src emacs-lisp
-  (defun zenscript-get-dumpzs (&optional prompt)
-    "Returns nothing, because I can't fix the dumpfile problem"
-    '(() . ()))
-#+end_src
-
 *** Password Management
 #+begin_src nix :noweb yes :tangle emacs/passwords.nix
   { pkgs, ... }:
@@ -5248,10 +5264,10 @@ https://emacs.stackexchange.com/questions/20339/easiest-way-to-render-an-overlin
     ghook = ["('org-mode-hook 'org-auto-tangle-mode)"];
   };
 
-  org-auto-export-pandoc = {
-    enable = true;
-    ghook = ["('after-save-hook (lambda () (when (equal major-mode 'org-mode) (org-auto-export-pandoc))))"];
-  };
+   org-auto-export-pandoc = {
+     enable = true;
+     ghook = ["('after-save-hook (lambda () (when (equal major-mode 'org-mode) (org-auto-export-pandoc))))"];
+   };
 
   org-appear = {
     enable = true;
@@ -5286,7 +5302,7 @@ https://emacs.stackexchange.com/questions/20339/easiest-way-to-render-an-overlin
     gfhook = ["('dired-mode-hook 'denote-dired-mode-in-directories)"];
     custom = {
       denote-directory = ''(expand-file-name "~/doc/denote")'';
-      denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "databases" "scifi" "softwarerequirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics")'';
+      denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "databases" "scifi" "softwarerequirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics" "plp")'';
       denote-file-type = "nil";
       denote-dired-directories = "(list denote-directory)";
       
@@ -5605,7 +5621,7 @@ You can't get page numbers, though, which becomes unfortunate for doing citation
 Almost everything here was copied from David Wilson. Thank you, David, for practically writing my config for me.
 
 #+begin_src nix :noweb yes :tangle emacs/window-manager.nix
-  { inputs, pkgs, config, ... }:
+  { inputs, pkgs, pkgs-stable, config, ... }:
 
   {
     programs = {
@@ -5642,7 +5658,8 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
     custom = {
       tab-bar-format = "'(tab-bar-format-tabs-groups tab-bar-separator doom-nano-tabline tab-bar-format-align-right tab-bar-format-global)";
       tab-bar-close-button-show = "nil";
-      # tab-bar-auto-width = "nil";
+      tab-bar-select-restore-windows = "nil";
+      tab-bar-auto-width-max = "'((150) 20)";
     };
     extraConfig = ''
       :pretty-hydra
@@ -6050,7 +6067,7 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
                                       ;; Shell bindings
                                       ([?\s-s] . (lambda () (interactive) (shell-command "slock")))
                                       ([?\s-y] . (lambda () (interactive) (start-process-shell-command
-                                                                           "maim" nil  "${pkgs.maim}/bin/maim ~/pic/screenshot.png"))))'';
+                                                                           "maim" nil  "${pkgs-stable.maim}/bin/maim ~/pic/screenshot.png"))))'';
       
     };
     afterCall = ["on-init-ui-hook"];
@@ -6214,6 +6231,7 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
                                        "^\\*.*eshell\\*"
                                        "^\\*eat\\*"
                                        "^\\*Sage\\*"
+                                       "^\\*prolog\\*"
                                        flymake-diagnostics-buffer-mode
     			                             geiser-repl-mode
                                        dape-repl-mode
@@ -6294,14 +6312,15 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
 ** Multimedia
 This is where all the audio/video stuff goes
 #+begin_src nix :tangle multimedia.nix :noweb yes
-  { pkgs, config, inputs, ... }:
+  { pkgs, pkgs-stable, config, inputs, ... }:
 
   {
     home.packages = with pkgs; [
       yt-dlp
       (config.lib.nixGL.wrap obs-studio)
-      # (config.lib.nixGL.wrap kdenlive)
+      (config.lib.nixGL.wrap kdePackages.kdenlive)
       lmms
+      audacity
       mpc-cli
       (import ./scripts/doomer.nix { inherit pkgs; })
       (import ./scripts/masstube.nix { inherit pkgs; }) # Doesn't have its tor dependency declared.
@@ -6525,7 +6544,7 @@ Putting =:session= in an org block is necessary for evaluation
 
   {
     home.packages = with pkgs; [
-      pkgs-stable.python39Packages.adblock
+      python39Packages.adblock
       (config.lib.nixGL.wrap tor-browser)
     ];
 
@@ -6698,7 +6717,6 @@ https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance
                               "https://youtube.com/feeds/videos.xml?channel_id=UC6UBbvEA8uh6Ulc6ax1Zs0g"
                               "https://youtube.com/feeds/videos.xml?channel_id=UCNzZD3otfZVlIdvYYRRqNSw"
       		                    "https://youtube.com/feeds/videos.xml?channel_id=UC9OZkS1Mhl5UvKSiPrYqsxg"
-      		                    "https://youtube.com/feeds/videos.xml?channel_id=UCgVLFBokgO85hyVl7tIoJvw"
                               "https://notrelated.xyz/rss")
       '';
     generalOne."efs/leader-keys"."r" = '''((lambda () (interactive) (elfeed) (elfeed-update)) :which-key "rss")'';

@@ -1,11 +1,12 @@
-{ pkgs, config, inputs, ... }:
+{ pkgs, pkgs-stable, config, inputs, ... }:
 
 {
   home.packages = with pkgs; [
     yt-dlp
     (config.lib.nixGL.wrap obs-studio)
-    # (config.lib.nixGL.wrap kdenlive)
+    (config.lib.nixGL.wrap kdePackages.kdenlive)
     lmms
+    audacity
     mpc-cli
     (import ./scripts/doomer.nix { inherit pkgs; })
     (import ./scripts/masstube.nix { inherit pkgs; }) # Doesn't have its tor dependency declared.

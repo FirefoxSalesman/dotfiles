@@ -3,7 +3,10 @@
 {
   home.file.".config/X11/xinitrc".text = '' 
     #!/usr/bin/sh
-    xrandr --output eDP-1 --mode 2560x1600
+    xrandr --setprovideroutputsource modesetting NVIDIA-0
+    xrandr --auto
+    xrandr --dpi 96
+    # xrandr --output eDP-1 --mode 2560x1600
     ${pkgs.xwallpaper}/bin/xwallpaper --stretch ~/.config/home-manager/wallpaper.png 
     xrdb load ~/.cache/wal/colors.Xresources 
     

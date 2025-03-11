@@ -2,7 +2,7 @@
 
 {
   home.packages = with pkgs; [
-    pkgs-stable.python39Packages.adblock
+    python39Packages.adblock
     (config.lib.nixGL.wrap tor-browser)
   ];
 
@@ -113,7 +113,6 @@
                                 "https://youtube.com/feeds/videos.xml?channel_id=UC6UBbvEA8uh6Ulc6ax1Zs0g"
                                 "https://youtube.com/feeds/videos.xml?channel_id=UCNzZD3otfZVlIdvYYRRqNSw"
         		                    "https://youtube.com/feeds/videos.xml?channel_id=UC9OZkS1Mhl5UvKSiPrYqsxg"
-        		                    "https://youtube.com/feeds/videos.xml?channel_id=UCgVLFBokgO85hyVl7tIoJvw"
                                 "https://notrelated.xyz/rss")
         '';
       generalOne."efs/leader-keys"."r" = '''((lambda () (interactive) (elfeed) (elfeed-update)) :which-key "rss")'';
