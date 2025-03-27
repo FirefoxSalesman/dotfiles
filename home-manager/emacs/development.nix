@@ -2,6 +2,7 @@
 
 {
   home.packages = with pkgs; [
+    python313Packages.python-lsp-server
     vscode-langservers-extracted
     typescript-language-server
     lemminx
@@ -9,6 +10,7 @@
     nodePackages.bash-language-server
     nixd
     sqls
+    python313Packages.jupytext
   ];
 
   programs.emacs.init.usePackage = {
@@ -72,6 +74,7 @@
           		    '(js-ts-mode . javascript)
           		    '(json-ts-mode . json)
           		    '(gfm-mode . markdown)
+          		    '(rust-ts-mode . rust)
           		    '(css-ts-mode . css)
           		    '(c-ts-mode . c)
           		    '(racket-repl-mode . racket)
@@ -134,6 +137,7 @@
       project = {
         enable = true;
         generalOne."efs/leader-keys"."P" = "project-prefix-map";
+        custom.project-vc-extra-root-markers = '''(".envrc")'';
       };
       
       projection-multi = {
@@ -176,7 +180,7 @@
 
       eglot = {
         enable = true;
-        ghook = ["('(html-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook) 'eglot-ensure)"];
+        ghook = ["('(html-ts-mode-hook rust-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook) 'eglot-ensure)"];
         gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
         generalTwo.local-leader.eglot-mode-map = {
           "f" = "'eglot-format-buffer";
@@ -185,7 +189,9 @@
         config = ''
           (dolist (server (list '((nxml-mode) . ("lemminx"))
           		      '((html-ts-mode) . ("vscode-html-language-server" "--stdio"))
-          		      '((sql-mode) . ("sqls"))))
+          		      '((rust-ts-mode rust-mode) .
+          			("rust-analyzer" :initializationOptions (:check (:command "clippy")))))
+          		'((sql-mode) . ("sqls")))
             (add-to-list 'eglot-server-programs server))
           (defun my/eglot-capf ()
             (setq-local completion-at-point-functions
@@ -195,8 +201,8 @@
                                #'cape-file)
                               #'cape-dabbrev)))
           (general-add-advice 'evil-collection-eglot-setup
-            :after '(lambda ()
-                       (general-def 'normal eglot-mode-map "K" 'evil-substitute)))
+          		    :after '(lambda ()
+          			      (general-def 'normal eglot-mode-map "K" 'evil-substitute)))
         '';
       } ;
       
@@ -238,6 +244,7 @@
       python-ts-mode = {
         enable = true;
         mode = [''"\\.py\\'"''];
+        generalTwo."local-leader".python-mode-map."r" = "'python-shell-send-buffer";
         custom = {
           python-shell-interpreter = ''"ipython"'';
         	python-shell-interpreter-args = ''"-i --simple-prompt"'';
@@ -254,27 +261,27 @@
         mode = [''"\\.nix\\'"''];
       };
 
-      prolog-mode = {
-        enable = true;
-        mode = [''"\\.pl$"''];
-        generalTwo."local-leader".prolog-mode-map."r" = '''(run-prolog :which-key "run")'';
-      };
+      # prolog-mode = {
+      #   enable = true;
+      #   mode = [''"\\.pl$"''];
+      #   generalTwo."local-leader".prolog-mode-map."r" = '''(run-prolog :which-key "run")'';
+      # };
 
-      # html-ts-mode = {
-      #   enable = true;
-      #   mode = [''"\\.[px]?html?\\'"''];
-      # };
-      # 
-      # emmet-mode = {
-      #   enable = true;
-      #   ghook = ["('(js-ts-mode-hook sgml-mode-hook css-ts-mode-hook html-ts-mode-hook) 'emmet-mode)"];
-      #   custom.emmet-move-cursor-between-quotes = "t";
-      # };
-      # 
-      # pug-mode = {
-      #   enable = true;
-      #   mode = [''"\\.pug\\'"''];
-      # };
+      html-ts-mode = {
+        enable = true;
+        mode = [''"\\.[px]?html?\\'"''];
+      };
+      
+      emmet-mode = {
+        enable = true;
+        ghook = ["('(js-ts-mode-hook sgml-mode-hook css-ts-mode-hook html-ts-mode-hook) 'emmet-mode)"];
+        custom.emmet-move-cursor-between-quotes = "t";
+      };
+      
+      pug-mode = {
+        enable = true;
+        mode = [''"\\.pug\\'"''];
+      };
 
       # racket-mode = {
       #   enable = true;
@@ -296,9 +303,18 @@
       #   custom.ess-ask-for-ess-directory = "nil";
       # };
 
-      jupyter = {
+      code-cells = {
         enable = true;
-        command = ["jupyter-run-repl" "jupyter-connect-repl"];
+        demand = true;
+        generalTwo = {
+          "'normal".code-cells-mode-map = {
+            "M-e" = "'code-cells-forward-cell";
+            "M-o" = "'code-cells-backward-cell";
+          };
+          "local-leader".code-cells-mode-map = {
+            "e" = "'code-cells-eval";
+          };
+        };
       };
 
       zenscript-mode = {
@@ -310,6 +326,19 @@
             "Returns nothing, because I can't fix the dumpfile problem"
             '(() . ()))
         '';
+      };
+
+      # rust-ts-mode = {
+      #   enable = true;
+      #   mode = [''"\\.rs\\'"''];
+      # };
+      
+      rustic = {
+        enable = true;
+        custom = {
+          rust-mode-treesitter-derive = "t";
+          rustic-lsp-client = "'eglot";
+        };
       };
   };
 }

@@ -28,7 +28,7 @@
       ./gui.nix
       ./emacs.nix
       ./shells.nix
-      # ./sage.nix
+      ./sage.nix
       ./keyboard.nix
     ];
 

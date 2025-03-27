@@ -25,7 +25,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     
-    # Emacs packages
+    # packages
     gptel-quick = {
       url = "github:karthink/gptel-quick";
       flake = false;

@@ -55,7 +55,7 @@
     inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  # Emacs packages
+  # packages
   gptel-quick = {
     url = "github:karthink/gptel-quick";
     flake = false;
@@ -590,7 +590,7 @@ Stole it from Derek Taylor
         ./gui.nix
         ./emacs.nix
         ./shells.nix
-        # ./sage.nix
+        ./sage.nix
         ./keyboard.nix
       ];
 
@@ -1599,7 +1599,7 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
       # comms
       (config.lib.nixGL.wrap teams-for-linux)
       (config.lib.nixGL.wrap thunderbird)
-      (vesktop.override {withSystemVencord = true;})
+      (pkgs-stable.vesktop.override {withSystemVencord = true;})
       # things emacs appreciates
       xclip
       xsel
@@ -1654,6 +1654,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 
   {
     home.packages = with pkgs; [
+      python313Packages.python-lsp-server
       vscode-langservers-extracted
       typescript-language-server
       lemminx
@@ -1661,6 +1662,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
       nodePackages.bash-language-server
       nixd
       sqls
+      python313Packages.jupytext
     ];
 
     programs.emacs.init.usePackage = {
@@ -1686,9 +1688,9 @@ I think most of it was from the github page for lsp mode, but it's been a while,
         
         <<Development Nix>>
 
-        <<Development Prolog>>
+        # <<Development Prolog>>
 
-        # <<Development Webdev>>
+        <<Development Webdev>>
 
         # <<Development Racket>>
 
@@ -1697,6 +1699,8 @@ I think most of it was from the github page for lsp mode, but it's been a while,
         <<Development Jupyter>>
 
         <<Development Zenscript>>
+
+        <<Emacs Development Rust>>
     };
   }
 #+end_src
@@ -1787,6 +1791,7 @@ https://github.com/jdtsmith/indent-bars
   		    '(js-ts-mode . javascript)
   		    '(json-ts-mode . json)
   		    '(gfm-mode . markdown)
+  		    '(rust-ts-mode . rust)
   		    '(css-ts-mode . css)
   		    '(c-ts-mode . c)
   		    '(racket-repl-mode . racket)
@@ -1865,6 +1870,7 @@ https://github.com/jdtsmith/indent-bars
   project = {
     enable = true;
     generalOne."efs/leader-keys"."P" = "project-prefix-map";
+    custom.project-vc-extra-root-markers = '''(".envrc")'';
   };
 
   projection-multi = {
@@ -1932,7 +1938,7 @@ https://github.com/jdtsmith/indent-bars
 #+begin_src nix :noweb yes
   eglot = {
     enable = true;
-    ghook = ["('(html-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook) 'eglot-ensure)"];
+    ghook = ["('(html-ts-mode-hook rust-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook) 'eglot-ensure)"];
     gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
     generalTwo.local-leader.eglot-mode-map = {
       "f" = "'eglot-format-buffer";
@@ -1973,7 +1979,9 @@ https://github.com/jdtsmith/indent-bars
 #+begin_src emacs-lisp
   (dolist (server (list '((nxml-mode) . ("lemminx"))
   		      '((html-ts-mode) . ("vscode-html-language-server" "--stdio"))
-  		      '((sql-mode) . ("sqls"))))
+  		      '((rust-ts-mode rust-mode) .
+  			("rust-analyzer" :initializationOptions (:check (:command "clippy")))))
+  		'((sql-mode) . ("sqls")))
     (add-to-list 'eglot-server-programs server))
   (defun my/eglot-capf ()
     (setq-local completion-at-point-functions
@@ -1983,8 +1991,8 @@ https://github.com/jdtsmith/indent-bars
                        #'cape-file)
                       #'cape-dabbrev)))
   (general-add-advice 'evil-collection-eglot-setup
-    :after '(lambda ()
-               (general-def 'normal eglot-mode-map "K" 'evil-substitute)))
+  		    :after '(lambda ()
+  			      (general-def 'normal eglot-mode-map "K" 'evil-substitute)))
 #+end_src
 
 **** Package Definitiions
@@ -2049,6 +2057,7 @@ pyenv allows us to use virtual environments.
   python-ts-mode = {
     enable = true;
     mode = [''"\\.py\\'"''];
+    generalTwo."local-leader".python-mode-map."r" = "'python-shell-send-buffer";
     custom = {
       python-shell-interpreter = ''"ipython"'';
     	python-shell-interpreter-args = ''"-i --simple-prompt"'';
@@ -2125,9 +2134,18 @@ pyenv allows us to use virtual environments.
 *** Jupyter
 #+NAME: Development Jupyter
 #+begin_src nix
-  jupyter = {
+  code-cells = {
     enable = true;
-    command = ["jupyter-run-repl" "jupyter-connect-repl"];
+    demand = true;
+    generalTwo = {
+      "'normal".code-cells-mode-map = {
+        "M-e" = "'code-cells-forward-cell";
+        "M-o" = "'code-cells-backward-cell";
+      };
+      "local-leader".code-cells-mode-map = {
+        "e" = "'code-cells-eval";
+      };
+    };
   };
 #+end_src
 
@@ -2159,6 +2177,23 @@ pyenv allows us to use virtual environments.
   (defun zenscript-get-dumpzs (&optional prompt)
     "Returns nothing, because I can't fix the dumpfile problem"
     '(() . ()))
+#+end_src
+
+*** Rust
+#+NAME: Emacs Development Rust
+#+begin_src nix
+  # rust-ts-mode = {
+  #   enable = true;
+  #   mode = [''"\\.rs\\'"''];
+  # };
+
+  rustic = {
+    enable = true;
+    custom = {
+      rust-mode-treesitter-derive = "t";
+      rustic-lsp-client = "'eglot";
+    };
+  };
 #+end_src
 
 ** Emacs
@@ -2884,7 +2919,7 @@ https://gitlab.com/rycee/nur-expressions
 
           <<Emacs Ledger>>
 
-          # <<Emacs GPTel>>
+          <<Emacs GPTel>>
 
           <<Emacs Notifications>>
           
@@ -3008,6 +3043,7 @@ https://gitlab.com/rycee/nur-expressions
     :defer t)
 
   (use-package pretty-hydra
+    :demand t
     :custom
     (hydra-hint-display-type 'posframe)
     :config
@@ -3484,7 +3520,7 @@ M-SPC is our local leader, & it's used for keys specific to a given major mode
     "K" 'evil-substitute
     "l" 'evil-invert-char
     "L" 'evil-invert-case
-    "c" 'evil-visual-state
+    "c" 'evil-visual-char
     "C" 'evil-visual-line
     "C-c" 'evil-visual-block
     "v" 'evil-delete
@@ -3793,7 +3829,7 @@ Gives us an entire state where we can rapidly make specific edits to code.
       inherit inputs;
       inherit (epkgs) trivialBuild tsc tree-sitter evil evil-surround seq paredit;
     });
-    generalTwo."'normal"."(org-mode-map toml-ts-mode-map evil-markdown-mode-map racket-repl-mode-map racket-mode-map python-ts-mode-map java-ts-mode-map ess-r-mode-map groovy-mode-map c-ts-mode-map js-ts-mode-map json-ts-mode-map bibtex-mode-map nxml-mode-map css-ts-mode-map nix-mode-map makefile-mode-map sql-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
+    generalTwo."'normal"."(org-mode-map rust-ts-mode-map toml-ts-mode-map evil-markdown-mode-map racket-repl-mode-map racket-mode-map python-ts-mode-map java-ts-mode-map ess-r-mode-map groovy-mode-map c-ts-mode-map js-ts-mode-map json-ts-mode-map bibtex-mode-map nxml-mode-map css-ts-mode-map nix-mode-map makefile-mode-map sql-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
     init = ''
       <<Emacs Symex Init>>    
     '';
