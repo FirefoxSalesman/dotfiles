@@ -102,7 +102,7 @@
     };
     
     exwm-qutebrowser = {
-      url = "github:lrustand/qutebrowser.el";
+      url = "github:lrustand/qutebrowser.el/18f98f0";
       flake = false;
     };
   };

@@ -2,7 +2,7 @@
 
 {
   home.packages = with pkgs; [
-    python39Packages.adblock
+    pkgs-stable.python39Packages.adblock
     (config.lib.nixGL.wrap tor-browser)
   ];
 

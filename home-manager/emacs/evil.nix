@@ -27,8 +27,8 @@
         sentence-end-double-space = "nil";
       };
       generalOne."'insert" = {
-         "C-s" = "'insert-char";
-         "C-k" = "'kill-line";
+        "C-s" = "'insert-char";
+        "C-k" = "'kill-line";
       };
       config = ''
         ;; Initiate evil mode
@@ -194,7 +194,7 @@
           "b/" '(consult-keep-lines :which-key "delete non-matching lines"))
         
       '';
-    };
+    } ;
     
     evil-collection = {
       enable = true;

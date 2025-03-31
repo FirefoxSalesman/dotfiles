@@ -97,8 +97,12 @@
           inherit inputs;
           inherit (epkgs) trivialBuild posframe;
         });
-        ghook = ["('(js-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-mode-hook json-ts-mode-hook) 'treesitter-context-mode)"];
+        ghook = ["('(js-ts-mode-hook java-ts-mode-hook rustic-mode-hook c-ts-mode-hook python-mode-hook json-ts-mode-hook) 'treesitter-context-mode)"];
         custom.treesitter-context-frame-min-width = "30";
+        config = ''
+          (dolist (treesit-support '(treesitter-context--supported-mode treesitter-context--focus-supported-mode  treesitter-context--fold-supported-mode))
+                  (add-to-list treesit-support 'rustic-mode))
+        '';
       };
       
       treesitter-context-fold = {
@@ -137,7 +141,7 @@
       project = {
         enable = true;
         generalOne."efs/leader-keys"."P" = "project-prefix-map";
-        custom.project-vc-extra-root-markers = '''(".envrc")'';
+        custom.project-vc-extra-root-markers = '''("Cargo.toml")'';
       };
       
       projection-multi = {
@@ -185,6 +189,7 @@
         generalTwo.local-leader.eglot-mode-map = {
           "f" = "'eglot-format-buffer";
           "a" = "'eglot-code-actions";
+          "d" = "'eldoc-doc-buffer";
         };
         config = ''
           (dolist (server (list '((nxml-mode) . ("lemminx"))
@@ -231,15 +236,15 @@
       #   ghook = ["('(bibtex-mode-hook nxml-mode-hook nix-mode-hook racket-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook ess-r-mode-hook html-ts-mode-hook css-ts-mode-hook emacs-lisp-mode-hook) 'breadcrumb-local-mode)"];
       # };
       
-      # dape = {
-      #   enable = true;
-      #   after = ["eglot"];
-      #   gfhook = ["('dape-on-stopped-hooks (list 'dape-info 'dape-repl))"];
-      #   custom = {
-      #     dape-window-arrangement = "gud";
-      #     dape-key-prefix = ''"\C-x\C-a"'';
-      #   };
-      # };
+      dape = {
+        enable = true;
+        after = ["eglot"];
+        gfhook = ["('dape-on-stopped-hooks (list 'dape-info 'dape-repl))"];
+        custom = {
+          dape-window-arrangement = "gud";
+          dape-key-prefix = ''"\C-x\C-a"'';
+        };
+      };
       
       python-ts-mode = {
         enable = true;

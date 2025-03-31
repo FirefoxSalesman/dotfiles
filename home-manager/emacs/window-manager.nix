@@ -538,11 +538,12 @@
                                            "^\\*Sage\\*"
                                            "^\\*prolog\\*"
                                            flymake-diagnostics-buffer-mode
+                                           rustic-cargo-test-mode
+                                           rustic-cargo-run-mode
         			                             geiser-repl-mode
                                            dape-repl-mode
         			                             racket-repl-mode
                                            inferior-ess-r-mode
-                                           ;; sage-shell-mode
                                            cider-repl-mode)'';
         };
       };

@@ -132,7 +132,7 @@
   };
 
   exwm-qutebrowser = {
-    url = "github:lrustand/qutebrowser.el";
+    url = "github:lrustand/qutebrowser.el/18f98f0";
     flake = false;
   };
 #+end_src
@@ -1680,7 +1680,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 
         <<Development Eglot>>
         
-        # <<Development Dape>>
+        <<Development Dape>>
         
         <<Development Python>>
 
@@ -1810,8 +1810,12 @@ https://github.com/jdtsmith/indent-bars
       inherit inputs;
       inherit (epkgs) trivialBuild posframe;
     });
-    ghook = ["('(js-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-mode-hook json-ts-mode-hook) 'treesitter-context-mode)"];
+    ghook = ["('(js-ts-mode-hook java-ts-mode-hook rustic-mode-hook c-ts-mode-hook python-mode-hook json-ts-mode-hook) 'treesitter-context-mode)"];
     custom.treesitter-context-frame-min-width = "30";
+    config = ''
+      (dolist (treesit-support '(treesitter-context--supported-mode treesitter-context--focus-supported-mode  treesitter-context--fold-supported-mode))
+              (add-to-list treesit-support 'rustic-mode))
+    '';
   };
 
   treesitter-context-fold = {
@@ -1870,7 +1874,7 @@ https://github.com/jdtsmith/indent-bars
   project = {
     enable = true;
     generalOne."efs/leader-keys"."P" = "project-prefix-map";
-    custom.project-vc-extra-root-markers = '''(".envrc")'';
+    custom.project-vc-extra-root-markers = '''("Cargo.toml")'';
   };
 
   projection-multi = {
@@ -1943,6 +1947,7 @@ https://github.com/jdtsmith/indent-bars
     generalTwo.local-leader.eglot-mode-map = {
       "f" = "'eglot-format-buffer";
       "a" = "'eglot-code-actions";
+      "d" = "'eldoc-doc-buffer";
     };
     config = ''
       <<Development Eglot Config>>
@@ -3447,13 +3452,13 @@ M-SPC is our local leader, & it's used for keys specific to a given major mode
       sentence-end-double-space = "nil";
     };
     generalOne."'insert" = {
-       "C-s" = "'insert-char";
-       "C-k" = "'kill-line";
+      "C-s" = "'insert-char";
+      "C-k" = "'kill-line";
     };
     config = ''
       <<emacs-evil-config>>
     '';
-  };
+  } ;
 #+end_src
 
 #+NAME: emacs-evil-config
@@ -6269,11 +6274,12 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
                                        "^\\*Sage\\*"
                                        "^\\*prolog\\*"
                                        flymake-diagnostics-buffer-mode
+                                       rustic-cargo-test-mode
+                                       rustic-cargo-run-mode
     			                             geiser-repl-mode
                                        dape-repl-mode
     			                             racket-repl-mode
                                        inferior-ess-r-mode
-                                       ;; sage-shell-mode
                                        cider-repl-mode)'';
     };
   };
@@ -6580,7 +6586,7 @@ Putting =:session= in an org block is necessary for evaluation
 
   {
     home.packages = with pkgs; [
-      python39Packages.adblock
+      pkgs-stable.python39Packages.adblock
       (config.lib.nixGL.wrap tor-browser)
     ];
 
