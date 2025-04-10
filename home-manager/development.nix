@@ -93,15 +93,16 @@
 
       treesitter-context = {
         enable = true;
-        package = epkgs: (epkgs.callPackage ./emacs-packages/treesitter-context.nix {
+        package = epkgs: (epkgs.callPackage ./emacs/emacs-packages/treesitter-context.nix {
           inherit inputs;
           inherit (epkgs) trivialBuild posframe;
         });
-        ghook = ["('(js-ts-mode-hook java-ts-mode-hook rustic-mode-hook c-ts-mode-hook python-mode-hook json-ts-mode-hook) 'treesitter-context-mode)"];
+        ghook = ["('(js-ts-mode-hook haskell-mode java-ts-mode-hook rustic-mode-hook c-ts-mode-hook python-mode-hook json-ts-mode-hook) 'treesitter-context-mode)"];
         custom.treesitter-context-frame-min-width = "30";
         config = ''
           (dolist (treesit-support '(treesitter-context--supported-mode treesitter-context--focus-supported-mode  treesitter-context--fold-supported-mode))
-                  (add-to-list treesit-support 'rustic-mode))
+                  (add-to-list treesit-support 'rustic-mode)
+                  (add-to-list treesit-support 'haskell-mode))
         '';
       };
       
@@ -184,7 +185,7 @@
 
       eglot = {
         enable = true;
-        ghook = ["('(html-ts-mode-hook rust-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook) 'eglot-ensure)"];
+        ghook = ["('(html-ts-mode-hook haskell-mode-hook rust-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook) 'eglot-ensure)"];
         gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
         generalTwo.local-leader.eglot-mode-map = {
           "f" = "'eglot-format-buffer";
@@ -301,6 +302,11 @@
       #   };
       # };
 
+      haskell-mode = {
+        enable = true;
+        mode = [''"\\.hs\\'"''];
+      };
+
       # ess-r-mode = {
       #   enable = true;
       #   package = epkgs: epkgs.ess;
@@ -333,17 +339,17 @@
         '';
       };
 
-      # rust-ts-mode = {
+      # # rust-ts-mode = {
+      # #   enable = true;
+      # #   mode = [''"\\.rs\\'"''];
+      # # };
+      # 
+      # rustic = {
       #   enable = true;
-      #   mode = [''"\\.rs\\'"''];
+      #   custom = {
+      #     rust-mode-treesitter-derive = "t";
+      #     rustic-lsp-client = "'eglot";
+      #   };
       # };
-      
-      rustic = {
-        enable = true;
-        custom = {
-          rust-mode-treesitter-derive = "t";
-          rustic-lsp-client = "'eglot";
-        };
-      };
   };
 }

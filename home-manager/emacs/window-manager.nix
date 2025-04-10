@@ -446,9 +446,7 @@
             "kill the current buffer & its window"
             (interactive)
             (kill-current-buffer)
-            (unless (one-window-p)
-              (evil-window-delete)))
-          
+            (evil-window-delete))
         '';
         config = ''
           ;; Set the screen resolution (update this to be the correct resolution for your screen!)
@@ -458,37 +456,13 @@
           
           (repeaters-define-maps
            '(("delete-windows"
-              evil-delete-buffer-and-window "q")))
+              evil-delete-buffer-and-window "K"
+              evil-window-delete "k")))
           (repeaters-define-maps
            '(("input-keys"
               exwm-input-send-next-key "q")))
           (exwm-input-set-key (kbd "s-<return>") 'efs/make-eshell)
           (exwm-enable)
-          
-          ;; (defun exwm-workspace-attach-minibuffer ()
-          ;;   "Attach the minibuffer making it always visible."
-          ;;   (interactive)
-          ;;   (unless efs/vertico-active
-          ;;     (exwm--log)
-          ;;     (when (and (exwm-workspace--minibuffer-own-frame-p)
-          ;;                (not (exwm-workspace--minibuffer-attached-p)))
-          ;;       ;; Reset the frame size.
-          ;;       (set-frame-height exwm-workspace--minibuffer 1)
-          ;;       (redisplay)                       ;FIXME.
-          ;;       (setq exwm-workspace--attached-minibuffer-height
-          ;;             (frame-pixel-height exwm-workspace--minibuffer))
-          ;;       (exwm-workspace--show-minibuffer)
-          ;;       (let ((container (frame-parameter exwm-workspace--minibuffer
-          ;; 					'exwm-container)))
-          ;; 	(push (cons container
-          ;;                     (if (eq exwm-workspace-minibuffer-position 'top)
-          ;; 			(vector 0 0 exwm-workspace--attached-minibuffer-height 0)
-          ;;                       (vector 0 0 0 exwm-workspace--attached-minibuffer-height)))
-          ;;               exwm-workspace--id-struts-alist)
-          ;; 	(exwm-workspace--update-struts)
-          ;; 	(exwm-workspace--update-workareas)
-          ;; 	(dolist (f exwm-workspace--list)
-          ;;           (exwm-workspace--set-fullscreen f))))))
         '';
         after = ["repeaters"];
       };

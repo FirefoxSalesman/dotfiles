@@ -70,6 +70,11 @@
   };
 
   programs.emacs.init.usePackage = {
+    prettify-symbols = {
+      enable = true;
+      ghook = ["('prog-mode-hook 'prettify-symbols-mode)"];
+    };
+
     nerd-icons = {
       enable = true;
       command = [

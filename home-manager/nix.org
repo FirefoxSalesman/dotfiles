@@ -1,10 +1,6 @@
 #+title: Holscher's Home Manager Config
 #+startup: overview
 #+auto_tangle: t
-* Notes to my future self
-+ To get eduroam working, you need ppp & pptclient
-+ Don't let xorg use the nvidia card. It breaks everything
-
 * Flake
 #+begin_src nix :noweb yes :tangle flake.nix
   {
@@ -170,6 +166,10 @@
     stylix.homeManagerModules.stylix
   ];
 #+end_src
+
+* Notes to my future self
++ To get eduroam working, you need ppp & pptclient
++ Don't let xorg use the nvidia card. It breaks everything
 
 * Scripts
 ** Cast
@@ -587,9 +587,11 @@ Stole it from Derek Taylor
         ./multimedia.nix
         ./aesthetics.nix
         ./extra-packages.nix
+        ./development.nix
         ./gui.nix
         ./emacs.nix
         ./shells.nix
+        ./gptel.nix
         ./sage.nix
         ./keyboard.nix
       ];
@@ -1105,6 +1107,8 @@ Special note: The profile settings here take precedence over bash's, because I'm
     <<Aesthetics Picom>>
 
     programs.emacs.init.usePackage = {
+      <<Aesthetics Prettify Symbols>>
+
       <<Emacs Ricing Icons>>
       
       <<Emacs Ricing Dashboard>>
@@ -1229,6 +1233,15 @@ Use =M-x all-the-icons-install-fonts=
   nerd-icons-completion = {
     enable = true;
     ghook = ["('marginalia-mode-hook 'nerd-icons-completion-marginalia-setup)"];
+  };
+#+end_src
+
+*** Prettify Symbols
+#+NAME: Aesthetics Prettify Symbols
+#+begin_src nix
+  prettify-symbols = {
+    enable = true;
+    ghook = ["('prog-mode-hook 'prettify-symbols-mode)"];
   };
 #+end_src
 
@@ -1649,7 +1662,7 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
 ** Development
 This was more directly stolen than the other parts
 I think most of it was from the github page for lsp mode, but it's been a while, & I don't remember much.
-#+begin_src nix :noweb yes :tangle emacs/development.nix
+#+begin_src nix :noweb yes :tangle development.nix
   { inputs, pkgs, pkgs-stable, ... }:
 
   {
@@ -1694,13 +1707,15 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 
         # <<Development Racket>>
 
+        <<Development Haskell>>
+
         # <<Development R>>
 
         <<Development Jupyter>>
 
         <<Development Zenscript>>
 
-        <<Emacs Development Rust>>
+        # <<Emacs Development Rust>>
     };
   }
 #+end_src
@@ -1806,15 +1821,16 @@ https://github.com/jdtsmith/indent-bars
 #+begin_src nix
   treesitter-context = {
     enable = true;
-    package = epkgs: (epkgs.callPackage ./emacs-packages/treesitter-context.nix {
+    package = epkgs: (epkgs.callPackage ./emacs/emacs-packages/treesitter-context.nix {
       inherit inputs;
       inherit (epkgs) trivialBuild posframe;
     });
-    ghook = ["('(js-ts-mode-hook java-ts-mode-hook rustic-mode-hook c-ts-mode-hook python-mode-hook json-ts-mode-hook) 'treesitter-context-mode)"];
+    ghook = ["('(js-ts-mode-hook haskell-mode java-ts-mode-hook rustic-mode-hook c-ts-mode-hook python-mode-hook json-ts-mode-hook) 'treesitter-context-mode)"];
     custom.treesitter-context-frame-min-width = "30";
     config = ''
       (dolist (treesit-support '(treesitter-context--supported-mode treesitter-context--focus-supported-mode  treesitter-context--fold-supported-mode))
-              (add-to-list treesit-support 'rustic-mode))
+              (add-to-list treesit-support 'rustic-mode)
+              (add-to-list treesit-support 'haskell-mode))
     '';
   };
 
@@ -1942,7 +1958,7 @@ https://github.com/jdtsmith/indent-bars
 #+begin_src nix :noweb yes
   eglot = {
     enable = true;
-    ghook = ["('(html-ts-mode-hook rust-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook) 'eglot-ensure)"];
+    ghook = ["('(html-ts-mode-hook haskell-mode-hook rust-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook) 'eglot-ensure)"];
     gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
     generalTwo.local-leader.eglot-mode-map = {
       "f" = "'eglot-format-buffer";
@@ -2122,6 +2138,15 @@ pyenv allows us to use virtual environments.
       "." = "'racket-xp-describe";
       "r" = "'racket-run";
     };
+  };
+#+end_src
+
+*** Haskell
+#+NAME: Development Haskell
+#+begin_src nix
+  haskell-mode = {
+    enable = true;
+    mode = [''"\\.hs\\'"''];
   };
 #+end_src
 
@@ -2883,7 +2908,6 @@ https://gitlab.com/rycee/nur-expressions
       ./emacs/file-management.nix
       ./emacs/help-system.nix
       ./emacs/completion-system.nix
-      ./emacs/development.nix
       ./emacs/passwords.nix
       ./emacs/writing.nix
       ./emacs/window-manager.nix
@@ -2923,8 +2947,6 @@ https://gitlab.com/rycee/nur-expressions
           <<Emacs Wgrep>>
 
           <<Emacs Ledger>>
-
-          <<Emacs GPTel>>
 
           <<Emacs Notifications>>
           
@@ -3224,77 +3246,6 @@ Wgrep basically turns grep into sed.
     package = epkgs: epkgs.ledger-mode;
     mode = [''"\\.ledger\\'"''];
   };
-#+end_src
-
-**** GPT.el
-#+NAME: Emacs GPTel
-#+begin_src nix :noweb yes
-  gptel = {
-    enable = true;
-    defer = true;
-    command = ["start-ollama"];
-    generalOne."efs/leader-keys" = {
-      "g" = '''(:ignore t :which-key "gptel")'';
-      "gs" = '''(start-ollama :which-key "start")'';
-      "gp" = '''(gptel :which-key "prompt")'';
-    };
-    generalTwo."local-leader".gptel-mode-map = {
-      "d" = '''(gptel-send :which-key "send")'';
-      "m" = '''(gptel-menu :which-key "menu")'';
-    };
-    config = ''
-      <<Emacs Gpt4all Config>>
-    '';
-  };
-
-  gptel-quick = {
-    enable = true;
-    defer = true;
-    package = epkgs: (pkgs.callPackage ./emacs/emacs-packages/gptel-quick.nix {
-      inherit inputs;
-      inherit (epkgs) trivialBuild gptel;
-    });
-    generalOne = {
-      embark-general-map."?" = '''(gptel-quick :which-key "summarize")''; 
-      "efs/leader-keys"."gq" = '''(gptel-quick :which-key "summarize")'';
-    };
-  };
-#+end_src
-
-#+NAME: Emacs Gpt4all Config
-#+begin_src emacs-lisp
-  (gsetq gptel-backend (gptel-make-ollama "Ollama"
-  		       :stream t
-  		       :protocol "http"
-  		       :host "localhost:11434"
-  		       :models '(llama3.2:latest))
-         gptel-max-tokens 10000000
-         gptel-prompt-prefix-alist '((default . "You are a large language model and a helpful assistant. Respond concisely.")
-  				   (programming . "You are a large language model and a careful programmer. Provide code and only code as output without any additional text, prompt or note.")
-  				   (writing . "You are a large language model and a writing assistant. Respond concisely.")
-  				   (chat . "You are a large language model and a conversation partner. Respond concisely.")))
-
-  (defun start-ollama ()
-    (interactive)
-    (start-process-shell-command "start-ollama" nil "${(import ./scripts/start-ollama.nix { inherit pkgs config; })}/bin/start-ollama"))
-#+end_src
-
-***** Package Definitions
-#+begin_src nix :tangle emacs/emacs-packages/gptel-quick.nix
-  { inputs, trivialBuild, gptel } :
-
-  trivialBuild rec {
-    pname = "gptel-quick";
-    version = "current";
-    src = inputs.gptel-quick;
-
-    propagatedUserEnvPkgs = [
-      gptel
-    ];
-
-    buildInputs = propagatedUserEnvPkgs;
-  }
-
 #+end_src
 
 **** Notifications
@@ -3834,7 +3785,7 @@ Gives us an entire state where we can rapidly make specific edits to code.
       inherit inputs;
       inherit (epkgs) trivialBuild tsc tree-sitter evil evil-surround seq paredit;
     });
-    generalTwo."'normal"."(org-mode-map rust-ts-mode-map toml-ts-mode-map evil-markdown-mode-map racket-repl-mode-map racket-mode-map python-ts-mode-map java-ts-mode-map ess-r-mode-map groovy-mode-map c-ts-mode-map js-ts-mode-map json-ts-mode-map bibtex-mode-map nxml-mode-map css-ts-mode-map nix-mode-map makefile-mode-map sql-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
+    generalTwo."'normal"."(org-mode-map haskell-mode-map rust-ts-mode-map toml-ts-mode-map evil-markdown-mode-map racket-repl-mode-map racket-mode-map python-ts-mode-map java-ts-mode-map ess-r-mode-map groovy-mode-map c-ts-mode-map js-ts-mode-map json-ts-mode-map bibtex-mode-map nxml-mode-map css-ts-mode-map nix-mode-map makefile-mode-map sql-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
     init = ''
       <<Emacs Symex Init>>    
     '';
@@ -6183,9 +6134,7 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
     "kill the current buffer & its window"
     (interactive)
     (kill-current-buffer)
-    (unless (one-window-p)
-      (evil-window-delete)))
-
+    (evil-window-delete))
 #+end_src
 
 #+NAME: Emacs Exwm Config
@@ -6197,37 +6146,13 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
 
   (repeaters-define-maps
    '(("delete-windows"
-      evil-delete-buffer-and-window "q")))
+      evil-delete-buffer-and-window "K"
+      evil-window-delete "k")))
   (repeaters-define-maps
    '(("input-keys"
       exwm-input-send-next-key "q")))
   (exwm-input-set-key (kbd "s-<return>") 'efs/make-eshell)
   (exwm-enable)
-
-  ;; (defun exwm-workspace-attach-minibuffer ()
-  ;;   "Attach the minibuffer making it always visible."
-  ;;   (interactive)
-  ;;   (unless efs/vertico-active
-  ;;     (exwm--log)
-  ;;     (when (and (exwm-workspace--minibuffer-own-frame-p)
-  ;;                (not (exwm-workspace--minibuffer-attached-p)))
-  ;;       ;; Reset the frame size.
-  ;;       (set-frame-height exwm-workspace--minibuffer 1)
-  ;;       (redisplay)                       ;FIXME.
-  ;;       (setq exwm-workspace--attached-minibuffer-height
-  ;;             (frame-pixel-height exwm-workspace--minibuffer))
-  ;;       (exwm-workspace--show-minibuffer)
-  ;;       (let ((container (frame-parameter exwm-workspace--minibuffer
-  ;; 					'exwm-container)))
-  ;; 	(push (cons container
-  ;;                     (if (eq exwm-workspace-minibuffer-position 'top)
-  ;; 			(vector 0 0 exwm-workspace--attached-minibuffer-height 0)
-  ;;                       (vector 0 0 0 exwm-workspace--attached-minibuffer-height)))
-  ;;               exwm-workspace--id-struts-alist)
-  ;; 	(exwm-workspace--update-struts)
-  ;; 	(exwm-workspace--update-workareas)
-  ;; 	(dolist (f exwm-workspace--list)
-  ;;           (exwm-workspace--set-fullscreen f))))))
 #+end_src
 
 **** Package Definitions
@@ -6351,6 +6276,82 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
   };
 #+end_src
 
+** GPT.el
+#+begin_src nix :noweb yes :tangle gptel.nix
+  { config, pkgs, inputs, ... }:
+
+  {
+    programs.emacs.init.usePackage = {
+      gptel = {
+        enable = true;
+        defer = true;
+        command = ["start-ollama"];
+        generalOne."efs/leader-keys" = {
+          "g" = '''(:ignore t :which-key "gptel")'';
+          "gs" = '''(start-ollama :which-key "start")'';
+          "gp" = '''(gptel :which-key "prompt")'';
+        };
+        generalTwo."local-leader".gptel-mode-map = {
+          "d" = '''(gptel-send :which-key "send")'';
+          "m" = '''(gptel-menu :which-key "menu")'';
+        };
+        config = ''
+          <<Emacs Gpt4all Config>>
+        '';
+      };
+
+      gptel-quick = {
+        enable = true;
+        defer = true;
+        package = epkgs: (pkgs.callPackage ./emacs/emacs-packages/gptel-quick.nix {
+          inherit inputs;
+          inherit (epkgs) trivialBuild gptel;
+        });
+        generalOne = {
+          embark-general-map."?" = '''(gptel-quick :which-key "summarize")''; 
+          "efs/leader-keys"."gq" = '''(gptel-quick :which-key "summarize")'';
+        };
+      };
+    };
+  }
+#+end_src
+
+#+NAME: Emacs Gpt4all Config
+#+begin_src emacs-lisp
+  (gsetq gptel-backend (gptel-make-ollama "Ollama"
+  		       :stream t
+  		       :protocol "http"
+  		       :host "localhost:11434"
+  		       :models '(llama3.2:latest))
+         gptel-max-tokens 10000000
+         gptel-prompt-prefix-alist '((default . "You are a large language model and a helpful assistant. Respond concisely.")
+  				   (programming . "You are a large language model and a careful programmer. Provide code and only code as output without any additional text, prompt or note.")
+  				   (writing . "You are a large language model and a writing assistant. Respond concisely.")
+  				   (chat . "You are a large language model and a conversation partner. Respond concisely.")))
+
+  (defun start-ollama ()
+    (interactive)
+    (start-process-shell-command "start-ollama" nil "${(import ./scripts/start-ollama.nix { inherit pkgs config; })}/bin/start-ollama"))
+#+end_src
+
+*** Package Definitions
+#+begin_src nix :tangle emacs/emacs-packages/gptel-quick.nix
+  { inputs, trivialBuild, gptel } :
+
+  trivialBuild rec {
+    pname = "gptel-quick";
+    version = "current";
+    src = inputs.gptel-quick;
+
+    propagatedUserEnvPkgs = [
+      gptel
+    ];
+
+    buildInputs = propagatedUserEnvPkgs;
+  }
+
+#+end_src
+
 ** Multimedia
 This is where all the audio/video stuff goes
 #+begin_src nix :tangle multimedia.nix :noweb yes
@@ -6360,7 +6361,7 @@ This is where all the audio/video stuff goes
     home.packages = with pkgs; [
       yt-dlp
       (config.lib.nixGL.wrap obs-studio)
-      (config.lib.nixGL.wrap kdePackages.kdenlive)
+      # (config.lib.nixGL.wrap pkgs-stable.kdenlive)
       lmms
       audacity
       mpc-cli

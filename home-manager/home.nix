@@ -25,9 +25,11 @@
       ./multimedia.nix
       ./aesthetics.nix
       ./extra-packages.nix
+      ./development.nix
       ./gui.nix
       ./emacs.nix
       ./shells.nix
+      ./gptel.nix
       ./sage.nix
       ./keyboard.nix
     ];
