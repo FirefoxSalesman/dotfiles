@@ -6,6 +6,7 @@
       enable = true;
       defer = true;
       command = ["start-ollama"];
+      custom.gptel-default-mode = "'org-mode";
       generalOne."efs/leader-keys" = {
         "g" = '''(:ignore t :which-key "gptel")'';
         "gs" = '''(start-ollama :which-key "start")'';
@@ -25,7 +26,28 @@
                gptel-prompt-prefix-alist '((default . "You are a large language model and a helpful assistant. Respond concisely.")
         				   (programming . "You are a large language model and a careful programmer. Provide code and only code as output without any additional text, prompt or note.")
         				   (writing . "You are a large language model and a writing assistant. Respond concisely.")
-        				   (chat . "You are a large language model and a conversation partner. Respond concisely.")))
+        				   (chat . "You are a large language model and a conversation partner. Respond concisely."))
+               gptel-tools (list
+                (gptel-make-tool
+                 :name "create_file"                    ; javascript-style  snake_case name
+                 :function (lambda (path filename content)   ; the function that runs
+                             (let ((full-path (expand-file-name filename path)))
+                               (with-temp-buffer
+        			 (insert content)
+        			 (write-file full-path))
+                               (format "Created file %s in %s" filename path)))
+                 :description "Create a new file with the specified content"
+                 :args (list '(:name "path"             ; a list of argument specifications
+          	                         :type string
+          	                         :description "The directory where to create the file")
+                             '(:name "filename"
+          	                         :type string
+          	                         :description "The name of the file to create")
+                             '(:name "content"
+          	                         :type string
+          	                         :description "The content to write to the file"))
+                 :category "filesystem")                ; An arbitrary label for grouping
+                ))
         
         (defun start-ollama ()
           (interactive)

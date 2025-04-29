@@ -372,7 +372,7 @@
         inherit inputs;
         inherit (epkgs) trivialBuild tsc tree-sitter evil evil-surround seq paredit;
       });
-      generalTwo."'normal"."(org-mode-map haskell-mode-map rust-ts-mode-map toml-ts-mode-map evil-markdown-mode-map racket-repl-mode-map racket-mode-map python-ts-mode-map java-ts-mode-map ess-r-mode-map groovy-mode-map c-ts-mode-map js-ts-mode-map json-ts-mode-map bibtex-mode-map nxml-mode-map css-ts-mode-map nix-mode-map makefile-mode-map sql-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
+      generalTwo."'normal"."(org-mode-map haskell-mode-map rust-ts-mode-map toml-ts-mode-map evil-markdown-mode-map racket-repl-mode-map racket-mode-map python-ts-mode-map java-ts-mode-map ess-r-mode-map groovy-mode-map c-ts-mode-map js-ts-mode-map json-ts-mode-map bibtex-mode-map nxml-mode-map css-ts-mode-map nix-mode-map makefile-mode-map sql-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map clojure-mode-map)"."RET" = "'symex-mode-interface";
       init = ''
         (with-eval-after-load 'evil-easymotion
           (evilem-make-motion-plain evilem-symex-forward 'symex-traverse-forward :post-hook 'symex-select-nearest-in-line)

@@ -10,7 +10,8 @@
     # comms
     (config.lib.nixGL.wrap teams-for-linux)
     (config.lib.nixGL.wrap thunderbird)
-    (pkgs-stable.vesktop.override {withSystemVencord = true;})
+    # (pkgs-stable.vesktop.override {withSystemVencord = true;})
+    pkgs-stable.vesktop
     # things emacs appreciates
     xclip
     xsel

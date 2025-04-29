@@ -123,7 +123,7 @@
   programs.qutebrowser = {
     enable = true;
     enableDefaultBindings = true;
-    package = (config.lib.nixGL.wrap pkgs.qutebrowser);
+    package = (config.lib.nixGL.wrap pkgs-stable.qutebrowser);
   
     keyBindings = {
       normal = {

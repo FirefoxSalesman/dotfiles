@@ -936,7 +936,7 @@ Probably won't use this one interactively much, but it's my login shell, & my /b
       export XCOMPOSECACHE="$XDG_CACHE_HOME/x11/xcompose";
       export GOPATH="$XDG_DATA_HOME/go";
       export DOT_SAGE="$XDG_CONFIG_HOME/sage";
-      export XAUTHORITY="$XDG_RUNTIME_DIR/Xauthority";
+      # export XAUTHORITY="$XDG_RUNTIME_DIR/Xauthority";
       export CARGO_HOME="$XDG_DATA_HOME/cargo";
       export GNUPGHOME="$XDG_DATA_HOME/share/gnupg";
       export PASSWORD_STORE_DIR="$XDG_DATA_HOME/share/pass";
@@ -1160,7 +1160,7 @@ Pywal integration: https://github.com/danth/stylix/issues/99
     enable = true;
     polarity = "dark";
     targets = {
-      vencord.enable = false;
+      vencord.enable = true;
       vesktop.enable = true;
       emacs.enable = false;
     };
@@ -1612,7 +1612,8 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
       # comms
       (config.lib.nixGL.wrap teams-for-linux)
       (config.lib.nixGL.wrap thunderbird)
-      (pkgs-stable.vesktop.override {withSystemVencord = true;})
+      # (pkgs-stable.vesktop.override {withSystemVencord = true;})
+      pkgs-stable.vesktop
       # things emacs appreciates
       xclip
       xsel
@@ -1667,6 +1668,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 
   {
     home.packages = with pkgs; [
+      clojure-lsp
       python313Packages.python-lsp-server
       vscode-langservers-extracted
       typescript-language-server
@@ -1674,7 +1676,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
       marksman
       nodePackages.bash-language-server
       nixd
-      sqls
+      # sqls
       python313Packages.jupytext
     ];
 
@@ -1714,6 +1716,8 @@ I think most of it was from the github page for lsp mode, but it's been a while,
         <<Development Jupyter>>
 
         <<Development Zenscript>>
+
+        <<Development Clojure>>
 
         # <<Emacs Development Rust>>
     };
@@ -1958,7 +1962,7 @@ https://github.com/jdtsmith/indent-bars
 #+begin_src nix :noweb yes
   eglot = {
     enable = true;
-    ghook = ["('(html-ts-mode-hook haskell-mode-hook rust-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook) 'eglot-ensure)"];
+    ghook = ["('(html-ts-mode-hook haskell-mode-hook rust-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook clojure-mode-hook) 'eglot-ensure)"];
     gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
     generalTwo.local-leader.eglot-mode-map = {
       "f" = "'eglot-format-buffer";
@@ -2222,6 +2226,23 @@ pyenv allows us to use virtual environments.
     custom = {
       rust-mode-treesitter-derive = "t";
       rustic-lsp-client = "'eglot";
+    };
+  };
+#+end_src
+
+*** Clojure
+#+NAME: Development Clojure
+#+begin_src nix
+  clojure-mode = {
+    enable = true;
+    mode = [''"\\.clj\\'"''];
+  };
+
+  cider = {
+    enable = true;
+    ghook = ["('clojure-mode-hook 'cider-mode)"];
+    generalTwo.local-leader.cider-mode-map = {
+      "s" = '''(cider-jack-in :which-key "start cider")''; 
     };
   };
 #+end_src
@@ -3785,7 +3806,7 @@ Gives us an entire state where we can rapidly make specific edits to code.
       inherit inputs;
       inherit (epkgs) trivialBuild tsc tree-sitter evil evil-surround seq paredit;
     });
-    generalTwo."'normal"."(org-mode-map haskell-mode-map rust-ts-mode-map toml-ts-mode-map evil-markdown-mode-map racket-repl-mode-map racket-mode-map python-ts-mode-map java-ts-mode-map ess-r-mode-map groovy-mode-map c-ts-mode-map js-ts-mode-map json-ts-mode-map bibtex-mode-map nxml-mode-map css-ts-mode-map nix-mode-map makefile-mode-map sql-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
+    generalTwo."'normal"."(org-mode-map haskell-mode-map rust-ts-mode-map toml-ts-mode-map evil-markdown-mode-map racket-repl-mode-map racket-mode-map python-ts-mode-map java-ts-mode-map ess-r-mode-map groovy-mode-map c-ts-mode-map js-ts-mode-map json-ts-mode-map bibtex-mode-map nxml-mode-map css-ts-mode-map nix-mode-map makefile-mode-map sql-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map clojure-mode-map)"."RET" = "'symex-mode-interface";
     init = ''
       <<Emacs Symex Init>>    
     '';
@@ -6286,6 +6307,7 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
         enable = true;
         defer = true;
         command = ["start-ollama"];
+        custom.gptel-default-mode = "'org-mode";
         generalOne."efs/leader-keys" = {
           "g" = '''(:ignore t :which-key "gptel")'';
           "gs" = '''(start-ollama :which-key "start")'';
@@ -6327,7 +6349,28 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
          gptel-prompt-prefix-alist '((default . "You are a large language model and a helpful assistant. Respond concisely.")
   				   (programming . "You are a large language model and a careful programmer. Provide code and only code as output without any additional text, prompt or note.")
   				   (writing . "You are a large language model and a writing assistant. Respond concisely.")
-  				   (chat . "You are a large language model and a conversation partner. Respond concisely.")))
+  				   (chat . "You are a large language model and a conversation partner. Respond concisely."))
+         gptel-tools (list
+          (gptel-make-tool
+           :name "create_file"                    ; javascript-style  snake_case name
+           :function (lambda (path filename content)   ; the function that runs
+                       (let ((full-path (expand-file-name filename path)))
+                         (with-temp-buffer
+  			 (insert content)
+  			 (write-file full-path))
+                         (format "Created file %s in %s" filename path)))
+           :description "Create a new file with the specified content"
+           :args (list '(:name "path"             ; a list of argument specifications
+    	                         :type string
+    	                         :description "The directory where to create the file")
+                       '(:name "filename"
+    	                         :type string
+    	                         :description "The name of the file to create")
+                       '(:name "content"
+    	                         :type string
+    	                         :description "The content to write to the file"))
+           :category "filesystem")                ; An arbitrary label for grouping
+          ))
 
   (defun start-ollama ()
     (interactive)
@@ -6774,7 +6817,7 @@ https://greasyfork.org/en/scripts/374833-yt2invidio
   programs.qutebrowser = {
     enable = true;
     enableDefaultBindings = true;
-    package = (config.lib.nixGL.wrap pkgs.qutebrowser);
+    package = (config.lib.nixGL.wrap pkgs-stable.qutebrowser);
 
     <<Internet Qutebrowser Keybinds>>
 

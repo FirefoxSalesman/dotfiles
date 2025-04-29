@@ -2,6 +2,7 @@
 
 {
   home.packages = with pkgs; [
+    clojure-lsp
     python313Packages.python-lsp-server
     vscode-langservers-extracted
     typescript-language-server
@@ -9,7 +10,7 @@
     marksman
     nodePackages.bash-language-server
     nixd
-    sqls
+    # sqls
     python313Packages.jupytext
   ];
 
@@ -185,7 +186,7 @@
 
       eglot = {
         enable = true;
-        ghook = ["('(html-ts-mode-hook haskell-mode-hook rust-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook) 'eglot-ensure)"];
+        ghook = ["('(html-ts-mode-hook haskell-mode-hook rust-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook clojure-mode-hook) 'eglot-ensure)"];
         gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
         generalTwo.local-leader.eglot-mode-map = {
           "f" = "'eglot-format-buffer";
@@ -337,6 +338,19 @@
             "Returns nothing, because I can't fix the dumpfile problem"
             '(() . ()))
         '';
+      };
+
+      clojure-mode = {
+        enable = true;
+        mode = [''"\\.clj\\'"''];
+      };
+      
+      cider = {
+        enable = true;
+        ghook = ["('clojure-mode-hook 'cider-mode)"];
+        generalTwo.local-leader.cider-mode-map = {
+          "s" = '''(cider-jack-in :which-key "start cider")''; 
+        };
       };
 
       # # rust-ts-mode = {
