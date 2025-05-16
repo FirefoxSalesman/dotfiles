@@ -1674,7 +1674,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
       vscode-langservers-extracted
       typescript-language-server
       # lua-language-server
-      # lemminx
+      lemminx
       marksman
       nodePackages.bash-language-server
       nixd
@@ -1693,8 +1693,6 @@ I think most of it was from the github page for lsp mode, but it's been a while,
         
         <<Development Project>>
 
-        # <<Development Plantuml>>
-
         <<Development Eglot>>
         
         # <<Development Dape>>
@@ -1704,6 +1702,12 @@ I think most of it was from the github page for lsp mode, but it's been a while,
         <<Development Java>>
         
         <<Development Nix>>
+        
+        <<Development Json>>
+
+        <<Development Bash>>
+        
+        # <<Development C>>
 
         # <<Development Prolog>>
 
@@ -1722,6 +1726,8 @@ I think most of it was from the github page for lsp mode, but it's been a while,
         <<Development Clojure>>
         
         <<Development Erlang>>
+
+        # <<Development Plantuml>>
 
         # <<Development Scala>>
         
@@ -1973,7 +1979,7 @@ https://github.com/jdtsmith/indent-bars
 #+begin_src nix :noweb yes
   eglot = {
     enable = true;
-    ghook = ["('(html-ts-mode-hook erlang-ts-mode-hook scala-ts-mode-hook lua-ts-mode-hook haskell-mode-hook rust-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook clojure-mode-hook) 'eglot-ensure)"];
+    ghook = ["('(nxml-mode-hook erlang-ts-mode-hook LaTeX-mode-hook sql-mode-hook) 'eglot-ensure)"];
     gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
     generalTwo.local-leader.eglot-mode-map = {
       "f" = "'eglot-format-buffer";
@@ -2094,6 +2100,7 @@ pyenv allows us to use virtual environments.
 #+begin_src nix
   python-ts-mode = {
     enable = true;
+    eglot = true;
     mode = [''"\\.py\\'"''];
     generalTwo."local-leader".python-mode-map."r" = "'python-shell-send-buffer";
     custom = {
@@ -2106,6 +2113,12 @@ pyenv allows us to use virtual environments.
 *** Java
 #+NAME: Development Java
 #+begin_src nix
+  java-ts-mode = {
+    enable = true;
+    mode = [''"\\.java\\'"''];
+    eglot = true;
+  };
+
   groovy-mode = {
     enable = true;
     mode = [''"\\.gradle\\'"''];
@@ -2118,6 +2131,7 @@ pyenv allows us to use virtual environments.
   nix-mode = {
     enable = true;
     mode = [''"\\.nix\\'"''];
+    eglot = true;
   };
 #+end_src
 
@@ -2127,6 +2141,7 @@ pyenv allows us to use virtual environments.
   html-ts-mode = {
     enable = true;
     mode = [''"\\.[px]?html?\\'"''];
+    eglot = true;
   };
 
   emmet-mode = {
@@ -2139,6 +2154,18 @@ pyenv allows us to use virtual environments.
     enable = true;
     mode = [''"\\.pug\\'"''];
   };
+
+  css-ts-mode = {
+    enable = true;
+    mode = [''"\\.css\\'"''];
+    eglot = true;
+  };
+
+  js-ts-mode = {
+    enable = true;
+    mode = [''"\\.js\\'"''];
+    eglot = true;
+  };
 #+end_src
 
 *** Racket
@@ -2146,6 +2173,7 @@ pyenv allows us to use virtual environments.
 #+begin_src nix
   racket-mode = {
     enable = true;
+    eglot = true;
     mode = [''"\\.rkt\\'"''];
     gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
     init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
@@ -2164,6 +2192,37 @@ pyenv allows us to use virtual environments.
   haskell-mode = {
     enable = true;
     mode = [''"\\.hs\\'"''];
+    eglot = true;
+  };
+#+end_src
+
+*** Json
+#+NAME: Development Json
+#+begin_src nix
+  json-ts-mode = {
+    enable = true;
+    mode = [''"\\.json\\'"''];
+    eglot = true;
+  };
+#+end_src
+
+*** C
+#+NAME: Development C
+#+begin_src nix
+  c-ts-mode = {
+    enable = true;
+    mode = [''"\\.c\\'"''];
+    eglot = true;
+  };
+#+end_src
+
+*** Bash
+#+NAME: Development Bash
+#+begin_src nix
+  bash-ts-mode = {
+    enable = true;
+    mode = [''"\\.sh\\'"''];
+    eglot = true;
   };
 #+end_src
 
@@ -2174,6 +2233,7 @@ pyenv allows us to use virtual environments.
     enable = true;
     package = epkgs: epkgs.ess;
     mode = [''"\\.R\\'"''];
+    eglot = true;
     custom.ess-ask-for-ess-directory = "nil";
   };
 #+end_src
@@ -2229,10 +2289,11 @@ pyenv allows us to use virtual environments.
 *** Rust
 #+NAME: Emacs Development Rust
 #+begin_src nix
-  # rust-ts-mode = {
-  #   enable = true;
-  #   mode = [''"\\.rs\\'"''];
-  # };
+  rust-ts-mode = {
+    enable = true;
+    defer = true;
+    eglot = true;
+  };
 
   rustic = {
     enable = true;
@@ -2249,6 +2310,7 @@ pyenv allows us to use virtual environments.
   clojure-mode = {
     enable = true;
     mode = [''"\\.clj\\'"''];
+    eglot = true;
   };
 
   cider = {
@@ -2266,6 +2328,7 @@ pyenv allows us to use virtual environments.
   lua-ts-mode = {
     enable = true;
     mode = [''"\\.lua\\'"''];
+    eglot = true;
   };
 #+end_src
 
@@ -2275,6 +2338,7 @@ pyenv allows us to use virtual environments.
   scala-ts-mode = {
     enable = true;
     mode = [''"\\.scala\\'"''];
+    eglot = true;
   };
 #+end_src
 
@@ -2332,120 +2396,128 @@ https://gitlab.com/rycee/nur-expressions
 ***** Options
 #+NAME: Emacs Template Use Package Options
 #+begin_src nix :noweb yes
-    options = {
-      enable = mkEnableOption "Emacs package ${name}";
+  options = {
+    enable = mkEnableOption "Emacs package ${name}";
 
-      package = mkOption {
-        type = types.either (types.str // { description = "name of package"; })
-          packageFunctionType;
-        default = name;
-        description = ''
-          The package to use for this module. Either the package name
-          within the Emacs package set or a function taking the Emacs
-          package set and returning a package.
-        '';
-      };
-
-      <<Emacs Template Key Binding Options>>
-
-      <<Emacs Template Lazy Loading Options>>
-      
-      <<Emacs Template Hook Options>>
-
-      defines = mkOption {
-        type = types.listOf types.str;
-        default = [ ];
-        description = ''
-          The entries to use for <option>:defines</option>.
-        '';
-      };
-
-      demand = mkOption {
-        type = types.bool;
-        default = false;
-        description = ''
-          The <option>:demand</option> setting.
-        '';
-      };
-
-      diminish = mkOption {
-        type = types.listOf types.str;
-        default = [ ];
-        description = ''
-          The entries to use for <option>:diminish</option>.
-        '';
-      };
-
-      functions = mkOption {
-        type = types.listOf types.str;
-        default = [ ];
-        description = ''
-          The entries to use for <option>:functions</option>.
-        '';
-      };
-
-      custom = mkOption {
-        type = types.attrsOf types.str;
-        default = { };
-        example = {
-          "display-line-numbers-type" = "'relative";
-        };
-        description = ''
-          The entries to use for <option>:custom</option>.
-        '';
-      };
-
-      config = mkOption {
-        type = types.lines;
-        default = "";
-        description = ''
-          Code to place in the <option>:config</option> section.
-        '';
-      };
-
-      extraConfig = mkOption {
-        type = types.lines;
-        default = "";
-        description = ''
-          Additional lines to place in the use-package configuration.
-        '';
-      };
-
-      earlyInit = mkOption {
-        type = types.lines;
-        default = "";
-        description = ''
-          Lines to add to <option>programs.emacs.init.earlyInit</option> when
-          this package is enabled.
-          </para><para>
-          Note, the package is not automatically loaded so you will have to
-          <literal>require</literal> the necessary features yourself.
-        '';
-      };
-
-      init = mkOption {
-        type = types.lines;
-        default = "";
-        description = ''
-          The entries to use for <option>:init</option>.
-        '';
-      };
-
-      extraPackages = mkOption {
-        type = types.listOf types.package;
-        default = [ ];
-        description = ''
-          Extra packages to add to <option>home.packages</option>.
-        '';
-      };
-
-      assembly = mkOption {
-        type = types.lines;
-        readOnly = true;
-        internal = true;
-        description = "The final use-package code.";
-      };
+    package = mkOption {
+      type = types.either (types.str // { description = "name of package"; })
+        packageFunctionType;
+      default = name;
+      description = ''
+        The package to use for this module. Either the package name
+        within the Emacs package set or a function taking the Emacs
+        package set and returning a package.
+      '';
     };
+
+    <<Emacs Template Key Binding Options>>
+
+    <<Emacs Template Lazy Loading Options>>
+    
+    <<Emacs Template Hook Options>>
+
+    defines = mkOption {
+      type = types.listOf types.str;
+      default = [ ];
+      description = ''
+        The entries to use for <option>:defines</option>.
+      '';
+    };
+
+    eglot = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        Starts eglot upon loading the major mode
+      '';
+    };
+
+    demand = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        The <option>:demand</option> setting.
+      '';
+    };
+
+    diminish = mkOption {
+      type = types.listOf types.str;
+      default = [ ];
+      description = ''
+        The entries to use for <option>:diminish</option>.
+      '';
+    };
+
+    functions = mkOption {
+      type = types.listOf types.str;
+      default = [ ];
+      description = ''
+        The entries to use for <option>:functions</option>.
+      '';
+    };
+
+    custom = mkOption {
+      type = types.attrsOf types.str;
+      default = { };
+      example = {
+        "display-line-numbers-type" = "'relative";
+      };
+      description = ''
+        The entries to use for <option>:custom</option>.
+      '';
+    };
+
+    config = mkOption {
+      type = types.lines;
+      default = "";
+      description = ''
+        Code to place in the <option>:config</option> section.
+      '';
+    };
+
+    extraConfig = mkOption {
+      type = types.lines;
+      default = "";
+      description = ''
+        Additional lines to place in the use-package configuration.
+      '';
+    };
+
+    earlyInit = mkOption {
+      type = types.lines;
+      default = "";
+      description = ''
+        Lines to add to <option>programs.emacs.init.earlyInit</option> when
+        this package is enabled.
+        </para><para>
+        Note, the package is not automatically loaded so you will have to
+        <literal>require</literal> the necessary features yourself.
+      '';
+    };
+
+    init = mkOption {
+      type = types.lines;
+      default = "";
+      description = ''
+        The entries to use for <option>:init</option>.
+      '';
+    };
+
+    extraPackages = mkOption {
+      type = types.listOf types.package;
+      default = [ ];
+      description = ''
+        Extra packages to add to <option>home.packages</option>.
+      '';
+    };
+
+    assembly = mkOption {
+      type = types.lines;
+      readOnly = true;
+      internal = true;
+      description = "The final use-package code.";
+    };
+  };
 #+end_src
 
 ****** Key Binding Options
@@ -2654,6 +2726,8 @@ https://gitlab.com/rycee/nur-expressions
       mkHook = vs: optional (vs != [ ]) ":hook ${toString vs}";
       mkGhook = vs: optional (vs != [ ]) ":ghook ${toString vs}";
       mkGfhook = vs: optional (vs != [ ]) ":gfhook ${toString vs}";
+      # mkEglot = name: vs: optional vs '':hook (${name} . (lambda () (require 'eglot) (eglot-ensure)))'';
+      mkEglot = name: vs: optional vs [''(${name} . (lambda () (require 'eglot) (eglot-ensure)))''];
       mkDefer = v:
         if isBool v then
           optional v ":defer t"
@@ -2672,7 +2746,8 @@ https://gitlab.com/rycee/nur-expressions
                                 ++ mkDefer config.defer ++ mkDeferIncrementally config.deferIncrementally 
                                 ++ mkDefines config.defines
                                 ++ mkFunctions config.functions ++ mkDemand config.demand
-                                ++ mkDiminish config.diminish ++ mkHook config.hook ++ mkGhook config.ghook
+                                ++ mkDiminish config.diminish ++ mkHook (config.hook ++ mkEglot name config.eglot)
+                                ++ mkGhook config.ghook
                                 ++ mkGfhook config.gfhook ++ mkCustom config.custom
                                 ++ mkGeneralOne config.generalOne ++ mkGeneralTwo config.generalTwo ++ mkGeneral config.general
                                 ++ mkMode config.mode
@@ -5455,6 +5530,7 @@ No idea what the rest of this is for.
       "u" = '''(preview-clearout-at-point :which-key "unpreview")'';
     };
   };
+
   pdf-tools = {
     enable = true;
     defer = true;
@@ -5474,6 +5550,7 @@ No idea what the rest of this is for.
     init = ''(setq-default pdf-view-display-size 'fit-width)'';
     extraConfig = '':magic ("%PDF" . pdf-view-mode)'';
   };
+
   magic-latex-buffer = {
     enable = true;
     defer = true;
@@ -5491,6 +5568,12 @@ No idea what the rest of this is for.
       cdlatex-mode-map."TAB" = "'cdlatex-tab";
       org-cdlatex-mode-map."TAB" = "'cdlatex-tab";
     };
+  };
+
+  bibtex-mode = {
+    enable = true;
+    mode = [''"\\.bib\\'"''];
+    eglot = true;
   };
 #+end_src
 
@@ -5511,6 +5594,7 @@ No idea what the rest of this is for.
   markdown = {
     enable = true;
     defer = true;
+    eglot = true;
     generalOne.markdown-mode-map."C-c C-e" = "'markdown-do";
     gfhook = ["('markdown-mode-hook (list 'outline-minor-mode 'efs/markdown-font-setup))"];
     mode = [''("\\.md\\'" . gfm-mode)''];

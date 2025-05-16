@@ -187,6 +187,14 @@ let
         '';
       };
     
+      eglot = mkOption {
+        type = types.bool;
+        default = false;
+        description = ''
+          Starts eglot upon loading the major mode
+        '';
+      };
+    
       demand = mkOption {
         type = types.bool;
         default = false;
@@ -314,6 +322,8 @@ let
         mkHook = vs: optional (vs != [ ]) ":hook ${toString vs}";
         mkGhook = vs: optional (vs != [ ]) ":ghook ${toString vs}";
         mkGfhook = vs: optional (vs != [ ]) ":gfhook ${toString vs}";
+        # mkEglot = name: vs: optional vs '':hook (${name} . (lambda () (require 'eglot) (eglot-ensure)))'';
+        mkEglot = name: vs: optional vs [''(${name} . (lambda () (require 'eglot) (eglot-ensure)))''];
         mkDefer = v:
           if isBool v then
             optional v ":defer t"
@@ -332,7 +342,8 @@ let
                                   ++ mkDefer config.defer ++ mkDeferIncrementally config.deferIncrementally 
                                   ++ mkDefines config.defines
                                   ++ mkFunctions config.functions ++ mkDemand config.demand
-                                  ++ mkDiminish config.diminish ++ mkHook config.hook ++ mkGhook config.ghook
+                                  ++ mkDiminish config.diminish ++ mkHook (config.hook ++ mkEglot name config.eglot)
+                                  ++ mkGhook config.ghook
                                   ++ mkGfhook config.gfhook ++ mkCustom config.custom
                                   ++ mkGeneralOne config.generalOne ++ mkGeneralTwo config.generalTwo ++ mkGeneral config.general
                                   ++ mkMode config.mode

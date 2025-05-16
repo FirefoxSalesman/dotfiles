@@ -7,7 +7,7 @@
     vscode-langservers-extracted
     typescript-language-server
     # lua-language-server
-    # lemminx
+    lemminx
     marksman
     nodePackages.bash-language-server
     nixd
@@ -166,31 +166,9 @@
           config = ''(projection-multi-embark-setup-command-map)'';
       };
 
-      # plantuml-mode = {
-      #   enable = true;
-      #   mode = [''"\\.plantuml\\'"'' ''"\\.puml\\'"''];
-      #   custom = {
-      #     org-plantuml-exec-mode = "'plantuml";
-      #     # plantuml-default-exec-mode = "'executable";
-      #     # plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
-      #     org-plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
-      #   }; 
-      #   config = ''
-      #     (org-babel-do-load-languages 'org-babel-load-languages '((plantuml . t)))
-      #     
-      #     (defun hex-encode (str)
-      #       (string-join (mapcar (lambda (c) (format "%02x" c)) str)))
-      #     
-      #     (defun plantuml-server-encode-url (string)
-      #       "Encode the string STRING into a URL suitable for PlantUML server interactions."
-      #       (let* ((encoded-string (hex-encode string)))
-      #         (concat plantuml-server-url "/" plantuml-output-type "/~h" encoded-string)))
-      #   '';
-      # };
-
       eglot = {
         enable = true;
-        ghook = ["('(html-ts-mode-hook erlang-ts-mode-hook scala-ts-mode-hook lua-ts-mode-hook haskell-mode-hook rust-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook clojure-mode-hook) 'eglot-ensure)"];
+        ghook = ["('(nxml-mode-hook erlang-ts-mode-hook LaTeX-mode-hook sql-mode-hook) 'eglot-ensure)"];
         gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
         generalTwo.local-leader.eglot-mode-map = {
           "f" = "'eglot-format-buffer";
@@ -256,6 +234,7 @@
       
       python-ts-mode = {
         enable = true;
+        eglot = true;
         mode = [''"\\.py\\'"''];
         generalTwo."local-leader".python-mode-map."r" = "'python-shell-send-buffer";
         custom = {
@@ -264,6 +243,12 @@
         };
       };
 
+      java-ts-mode = {
+        enable = true;
+        mode = [''"\\.java\\'"''];
+        eglot = true;
+      };
+      
       groovy-mode = {
         enable = true;
         mode = [''"\\.gradle\\'"''];
@@ -272,7 +257,26 @@
       nix-mode = {
         enable = true;
         mode = [''"\\.nix\\'"''];
+        eglot = true;
       };
+      
+      json-ts-mode = {
+        enable = true;
+        mode = [''"\\.json\\'"''];
+        eglot = true;
+      };
+
+      bash-ts-mode = {
+        enable = true;
+        mode = [''"\\.sh\\'"''];
+        eglot = true;
+      };
+      
+      # c-ts-mode = {
+      #   enable = true;
+      #   mode = [''"\\.c\\'"''];
+      #   eglot = true;
+      # };
 
       # prolog-mode = {
       #   enable = true;
@@ -283,6 +287,7 @@
       html-ts-mode = {
         enable = true;
         mode = [''"\\.[px]?html?\\'"''];
+        eglot = true;
       };
       
       emmet-mode = {
@@ -295,9 +300,22 @@
         enable = true;
         mode = [''"\\.pug\\'"''];
       };
+      
+      css-ts-mode = {
+        enable = true;
+        mode = [''"\\.css\\'"''];
+        eglot = true;
+      };
+      
+      js-ts-mode = {
+        enable = true;
+        mode = [''"\\.js\\'"''];
+        eglot = true;
+      };
 
       # racket-mode = {
       #   enable = true;
+      #   eglot = true;
       #   mode = [''"\\.rkt\\'"''];
       #   gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
       #   init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
@@ -312,12 +330,14 @@
       # haskell-mode = {
       #   enable = true;
       #   mode = [''"\\.hs\\'"''];
+      #   eglot = true;
       # };
 
       # ess-r-mode = {
       #   enable = true;
       #   package = epkgs: epkgs.ess;
       #   mode = [''"\\.R\\'"''];
+      #   eglot = true;
       #   custom.ess-ask-for-ess-directory = "nil";
       # };
 
@@ -349,6 +369,7 @@
       clojure-mode = {
         enable = true;
         mode = [''"\\.clj\\'"''];
+        eglot = true;
       };
       
       cider = {
@@ -364,20 +385,45 @@
         mode = [''("\\.erl\\'" . erlang-ts-mode)''];
       };
 
+      # plantuml-mode = {
+      #   enable = true;
+      #   mode = [''"\\.plantuml\\'"'' ''"\\.puml\\'"''];
+      #   custom = {
+      #     org-plantuml-exec-mode = "'plantuml";
+      #     # plantuml-default-exec-mode = "'executable";
+      #     # plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
+      #     org-plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
+      #   }; 
+      #   config = ''
+      #     (org-babel-do-load-languages 'org-babel-load-languages '((plantuml . t)))
+      #     
+      #     (defun hex-encode (str)
+      #       (string-join (mapcar (lambda (c) (format "%02x" c)) str)))
+      #     
+      #     (defun plantuml-server-encode-url (string)
+      #       "Encode the string STRING into a URL suitable for PlantUML server interactions."
+      #       (let* ((encoded-string (hex-encode string)))
+      #         (concat plantuml-server-url "/" plantuml-output-type "/~h" encoded-string)))
+      #   '';
+      # };
+
       # scala-ts-mode = {
       #   enable = true;
       #   mode = [''"\\.scala\\'"''];
+      #   eglot = true;
       # };
       
       # lua-ts-mode = {
       #   enable = true;
       #   mode = [''"\\.lua\\'"''];
+      #   eglot = true;
       # };
 
-      # # rust-ts-mode = {
-      # #   enable = true;
-      # #   mode = [''"\\.rs\\'"''];
-      # # };
+      # rust-ts-mode = {
+      #   enable = true;
+      #   defer = true;
+      #   eglot = true;
+      # };
       # 
       # rustic = {
       #   enable = true;

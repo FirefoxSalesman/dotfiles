@@ -249,6 +249,7 @@
         "u" = '''(preview-clearout-at-point :which-key "unpreview")'';
       };
     };
+    
     pdf-tools = {
       enable = true;
       defer = true;
@@ -274,6 +275,7 @@
       init = ''(setq-default pdf-view-display-size 'fit-width)'';
       extraConfig = '':magic ("%PDF" . pdf-view-mode)'';
     };
+    
     magic-latex-buffer = {
       enable = true;
       defer = true;
@@ -293,9 +295,16 @@
       };
     };
     
+    bibtex-mode = {
+      enable = true;
+      mode = [''"\\.bib\\'"''];
+      eglot = true;
+    };
+    
     markdown = {
       enable = true;
       defer = true;
+      eglot = true;
       generalOne.markdown-mode-map."C-c C-e" = "'markdown-do";
       gfhook = ["('markdown-mode-hook (list 'outline-minor-mode 'efs/markdown-font-setup))"];
       mode = [''("\\.md\\'" . gfm-mode)''];
