@@ -301,6 +301,11 @@
       eglot = true;
     };
     
+    latex = {
+      enable = true;
+      mode = [''("\\.tex\\'" . LaTeX-mode)''];
+    };
+    
     markdown = {
       enable = true;
       defer = true;

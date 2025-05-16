@@ -25,6 +25,7 @@
           "f" = '''(eglot-format :which-key "format")'';
         };
         deferIncrementally = true;
+        eglot = true;
       };
       
       editorconfig = {
@@ -168,7 +169,7 @@
 
       eglot = {
         enable = true;
-        ghook = ["('(nxml-mode-hook erlang-ts-mode-hook LaTeX-mode-hook sql-mode-hook) 'eglot-ensure)"];
+        ghook = ["('LaTeX-mode-hook 'eglot-ensure)"];
         gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
         generalTwo.local-leader.eglot-mode-map = {
           "f" = "'eglot-format-buffer";
@@ -383,6 +384,7 @@
       erlang-ts = {
         enable = true;
         mode = [''("\\.erl\\'" . erlang-ts-mode)''];
+        eglot = true;
       };
 
       # plantuml-mode = {
@@ -431,6 +433,12 @@
       #     rust-mode-treesitter-derive = "t";
       #     rustic-lsp-client = "'eglot";
       #   };
+      # };
+      
+      # sql = {
+      #   enable = true;
+      #   mode = [''"\\.sql\\'"''];
+      #   eglot = true;
       # };
   };
 }

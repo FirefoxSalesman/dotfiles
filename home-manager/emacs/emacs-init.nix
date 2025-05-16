@@ -191,7 +191,8 @@ let
         type = types.bool;
         default = false;
         description = ''
-          Starts eglot upon loading the major mode
+          Starts eglot upon loading the major mode.
+          Works if the package name is of the form [name]-mode or [name]
         '';
       };
     
@@ -323,7 +324,7 @@ let
         mkGhook = vs: optional (vs != [ ]) ":ghook ${toString vs}";
         mkGfhook = vs: optional (vs != [ ]) ":gfhook ${toString vs}";
         # mkEglot = name: vs: optional vs '':hook (${name} . (lambda () (require 'eglot) (eglot-ensure)))'';
-        mkEglot = name: vs: optional vs [''(${name} . (lambda () (require 'eglot) (eglot-ensure)))''];
+        mkEglot = name: vs: optional vs [''(${if (match ".*-mode" name) != null then name else "${name}-mode"} . (lambda () (require 'eglot) (eglot-ensure)))''];
         mkDefer = v:
           if isBool v then
             optional v ":defer t"
