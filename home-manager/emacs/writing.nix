@@ -13,6 +13,7 @@
   programs.emacs.init.usePackage = {
     org = {
       enable = true;
+      symex = true;
       mode = [''("\\.org\\'" . org-mode)''];
       gfhook = ["('org-mode-hook '(efs/org-mode-setup my/org-capf))"];
       custom = {
@@ -299,6 +300,7 @@
       enable = true;
       mode = [''"\\.bib\\'"''];
       eglot = true;
+      symex = true;
     };
     
     latex = {

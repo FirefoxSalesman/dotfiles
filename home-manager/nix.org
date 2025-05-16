@@ -1753,6 +1753,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
     };
     deferIncrementally = true;
     eglot = true;
+    symex = true;
   };
 
   editorconfig = {
@@ -2104,6 +2105,7 @@ pyenv allows us to use virtual environments.
   python-ts-mode = {
     enable = true;
     eglot = true;
+    symex = true;
     mode = [''"\\.py\\'"''];
     generalTwo."local-leader".python-mode-map."r" = "'python-shell-send-buffer";
     custom = {
@@ -2120,10 +2122,12 @@ pyenv allows us to use virtual environments.
     enable = true;
     mode = [''"\\.java\\'"''];
     eglot = true;
+    symex = true;
   };
 
   groovy-mode = {
     enable = true;
+    symex = true;
     mode = [''"\\.gradle\\'"''];
   };
 #+end_src
@@ -2135,6 +2139,7 @@ pyenv allows us to use virtual environments.
     enable = true;
     mode = [''"\\.nix\\'"''];
     eglot = true;
+    symex = true;
   };
 #+end_src
 
@@ -2145,6 +2150,7 @@ pyenv allows us to use virtual environments.
     enable = true;
     mode = [''"\\.[px]?html?\\'"''];
     eglot = true;
+    symex = true;
   };
 
   emmet-mode = {
@@ -2162,12 +2168,14 @@ pyenv allows us to use virtual environments.
     enable = true;
     mode = [''"\\.css\\'"''];
     eglot = true;
+    symex = true;
   };
 
   js-ts-mode = {
     enable = true;
     mode = [''"\\.js\\'"''];
     eglot = true;
+    symex = true;
   };
 #+end_src
 
@@ -2177,6 +2185,7 @@ pyenv allows us to use virtual environments.
   racket-mode = {
     enable = true;
     eglot = true;
+    symex = true;
     mode = [''"\\.rkt\\'"''];
     gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
     init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
@@ -2196,6 +2205,7 @@ pyenv allows us to use virtual environments.
     enable = true;
     mode = [''"\\.hs\\'"''];
     eglot = true;
+    symex = true;
   };
 #+end_src
 
@@ -2206,6 +2216,7 @@ pyenv allows us to use virtual environments.
     enable = true;
     mode = [''"\\.json\\'"''];
     eglot = true;
+    symex = true;
   };
 #+end_src
 
@@ -2216,6 +2227,7 @@ pyenv allows us to use virtual environments.
     enable = true;
     mode = [''"\\.c\\'"''];
     eglot = true;
+    symex = true;
   };
 #+end_src
 
@@ -2237,6 +2249,7 @@ pyenv allows us to use virtual environments.
     package = epkgs: epkgs.ess;
     mode = [''"\\.R\\'"''];
     eglot = true;
+    symex = true;
     custom.ess-ask-for-ess-directory = "nil";
   };
 #+end_src
@@ -2296,6 +2309,7 @@ pyenv allows us to use virtual environments.
     enable = true;
     defer = true;
     eglot = true;
+    symex = true;
   };
 
   rustic = {
@@ -2314,6 +2328,7 @@ pyenv allows us to use virtual environments.
     enable = true;
     mode = [''"\\.clj\\'"''];
     eglot = true;
+    symex = true;
   };
 
   cider = {
@@ -2342,6 +2357,7 @@ pyenv allows us to use virtual environments.
     enable = true;
     mode = [''"\\.scala\\'"''];
     eglot = true;
+    symex = true;
   };
 #+end_src
 
@@ -2352,6 +2368,7 @@ pyenv allows us to use virtual environments.
     enable = true;
     mode = [''("\\.erl\\'" . erlang-ts-mode)''];
     eglot = true;
+    symex = true;
   };
 #+end_src
 
@@ -2362,6 +2379,7 @@ pyenv allows us to use virtual environments.
     enable = true;
     mode = [''"\\.sql\\'"''];
     eglot = true;
+    symex = true;
   };
 #+end_src
 
@@ -2443,7 +2461,14 @@ https://gitlab.com/rycee/nur-expressions
       default = false;
       description = ''
         Starts eglot upon loading the major mode.
-        Works if the package name is of the form [name]-mode or [name]
+      '';
+    };
+    
+    symex = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        If this is true, pressing enter in the package's mode map will start symex
       '';
     };
 
@@ -2743,6 +2768,7 @@ https://gitlab.com/rycee/nur-expressions
       transformName = name: let matches = p: n: match p n != null;
                             in if matches "tex-mode" name then "latex-mode" else if matches "latex" name then "LaTeX-mode" else if matches ".*-mode" name then name else "${name}-mode";
       mkEglot = name: vs: optional vs [''(${transformName name} . (lambda () (require 'eglot) (eglot-ensure)))''];
+      mkSymex = name: vs: optional vs '':general ('normal ${transformName name}-map "RET" '(lambda () (interactive) (require 'symex) (symex-mode-interface)))'';
       mkDefer = v:
         if isBool v then
           optional v ":defer t"
@@ -2764,8 +2790,7 @@ https://gitlab.com/rycee/nur-expressions
                                 ++ mkDiminish config.diminish ++ mkHook (config.hook ++ mkEglot name config.eglot)
                                 ++ mkGhook config.ghook
                                 ++ mkGfhook config.gfhook ++ mkCustom config.custom
-                                # ++ mkGeneralOne config.generalOne ++ mkGeneralTwo config.generalTwo ++ mkGeneral config.general
-                                ++ buildGeneral config.general config.generalOne config.generalTwo
+                                ++ buildGeneral config.general config.generalOne config.generalTwo ++ mkSymex name config.symex
                                 ++ mkMode config.mode
                                 ++ optionals (config.init != "") [ ":init" config.init ]
                                 ++ optionals (config.config != "") [ ":config" config.config ]
@@ -3937,7 +3962,7 @@ Gives us an entire state where we can rapidly make specific edits to code.
       inherit inputs;
       inherit (epkgs) trivialBuild tsc tree-sitter evil evil-surround seq paredit;
     });
-    generalTwo."'normal"."(org-mode-map erlang-ts-mode-map scala-ts-mode-map haskell-mode-map rust-ts-mode-map toml-ts-mode-map evil-markdown-mode-map racket-repl-mode-map racket-mode-map python-ts-mode-map java-ts-mode-map ess-r-mode-map groovy-mode-map c-ts-mode-map js-ts-mode-map json-ts-mode-map bibtex-mode-map nxml-mode-map css-ts-mode-map nix-mode-map makefile-mode-map sql-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map clojure-mode-map)"."RET" = "'symex-mode-interface";
+    generalTwo."'normal"."(toml-ts-mode-map racket-repl-mode-map makefile-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
     init = ''
       <<Emacs Symex Init>>    
     '';
@@ -4183,6 +4208,7 @@ By default, any key pressed while in god state is treated as if it was pressed w
     enable = true;
     defer = true;
     ghook = ["('markdown-mode-hook 'evil-markdown-mode)"];
+    symex = true;
     custom.evil-markdown-movement-bindings = ''
       '((up . "o")
         (down . "e")
@@ -5249,6 +5275,7 @@ How to add a latex package
 #+begin_src nix :noweb yes
   org = {
     enable = true;
+    symex = true;
     mode = [''("\\.org\\'" . org-mode)''];
     gfhook = ["('org-mode-hook '(efs/org-mode-setup my/org-capf))"];
     custom = {
@@ -5590,6 +5617,7 @@ No idea what the rest of this is for.
     enable = true;
     mode = [''"\\.bib\\'"''];
     eglot = true;
+    symex = true;
   };
 
   latex = {

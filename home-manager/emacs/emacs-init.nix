@@ -192,7 +192,14 @@ let
         default = false;
         description = ''
           Starts eglot upon loading the major mode.
-          Works if the package name is of the form [name]-mode or [name]
+        '';
+      };
+      
+      symex = mkOption {
+        type = types.bool;
+        default = false;
+        description = ''
+          If this is true, pressing enter in the package's mode map will start symex
         '';
       };
     
@@ -325,6 +332,7 @@ let
         transformName = name: let matches = p: n: match p n != null;
                               in if matches "tex-mode" name then "latex-mode" else if matches "latex" name then "LaTeX-mode" else if matches ".*-mode" name then name else "${name}-mode";
         mkEglot = name: vs: optional vs [''(${transformName name} . (lambda () (require 'eglot) (eglot-ensure)))''];
+        mkSymex = name: vs: optional vs '':general ('normal ${transformName name}-map "RET" '(lambda () (interactive) (require 'symex) (symex-mode-interface)))'';
         mkDefer = v:
           if isBool v then
             optional v ":defer t"
@@ -346,8 +354,7 @@ let
                                   ++ mkDiminish config.diminish ++ mkHook (config.hook ++ mkEglot name config.eglot)
                                   ++ mkGhook config.ghook
                                   ++ mkGfhook config.gfhook ++ mkCustom config.custom
-                                  # ++ mkGeneralOne config.generalOne ++ mkGeneralTwo config.generalTwo ++ mkGeneral config.general
-                                  ++ buildGeneral config.general config.generalOne config.generalTwo
+                                  ++ buildGeneral config.general config.generalOne config.generalTwo ++ mkSymex name config.symex
                                   ++ mkMode config.mode
                                   ++ optionals (config.init != "") [ ":init" config.init ]
                                   ++ optionals (config.config != "") [ ":config" config.config ]

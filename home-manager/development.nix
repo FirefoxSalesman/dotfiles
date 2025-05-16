@@ -26,6 +26,7 @@
         };
         deferIncrementally = true;
         eglot = true;
+        symex = true;
       };
       
       editorconfig = {
@@ -236,6 +237,7 @@
       python-ts-mode = {
         enable = true;
         eglot = true;
+        symex = true;
         mode = [''"\\.py\\'"''];
         generalTwo."local-leader".python-mode-map."r" = "'python-shell-send-buffer";
         custom = {
@@ -248,10 +250,12 @@
         enable = true;
         mode = [''"\\.java\\'"''];
         eglot = true;
+        symex = true;
       };
       
       groovy-mode = {
         enable = true;
+        symex = true;
         mode = [''"\\.gradle\\'"''];
       };
       
@@ -259,12 +263,14 @@
         enable = true;
         mode = [''"\\.nix\\'"''];
         eglot = true;
+        symex = true;
       };
       
       json-ts-mode = {
         enable = true;
         mode = [''"\\.json\\'"''];
         eglot = true;
+        symex = true;
       };
 
       bash-ts-mode = {
@@ -277,6 +283,7 @@
       #   enable = true;
       #   mode = [''"\\.c\\'"''];
       #   eglot = true;
+      #   symex = true;
       # };
 
       # prolog-mode = {
@@ -289,6 +296,7 @@
         enable = true;
         mode = [''"\\.[px]?html?\\'"''];
         eglot = true;
+        symex = true;
       };
       
       emmet-mode = {
@@ -306,17 +314,20 @@
         enable = true;
         mode = [''"\\.css\\'"''];
         eglot = true;
+        symex = true;
       };
       
       js-ts-mode = {
         enable = true;
         mode = [''"\\.js\\'"''];
         eglot = true;
+        symex = true;
       };
 
       # racket-mode = {
       #   enable = true;
       #   eglot = true;
+      #   symex = true;
       #   mode = [''"\\.rkt\\'"''];
       #   gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
       #   init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
@@ -332,6 +343,7 @@
       #   enable = true;
       #   mode = [''"\\.hs\\'"''];
       #   eglot = true;
+      #   symex = true;
       # };
 
       # ess-r-mode = {
@@ -339,6 +351,7 @@
       #   package = epkgs: epkgs.ess;
       #   mode = [''"\\.R\\'"''];
       #   eglot = true;
+      #   symex = true;
       #   custom.ess-ask-for-ess-directory = "nil";
       # };
 
@@ -371,6 +384,7 @@
         enable = true;
         mode = [''"\\.clj\\'"''];
         eglot = true;
+        symex = true;
       };
       
       cider = {
@@ -385,6 +399,7 @@
         enable = true;
         mode = [''("\\.erl\\'" . erlang-ts-mode)''];
         eglot = true;
+        symex = true;
       };
 
       # plantuml-mode = {
@@ -413,6 +428,7 @@
       #   enable = true;
       #   mode = [''"\\.scala\\'"''];
       #   eglot = true;
+      #   symex = true;
       # };
       
       # lua-ts-mode = {
@@ -425,6 +441,7 @@
       #   enable = true;
       #   defer = true;
       #   eglot = true;
+      #   symex = true;
       # };
       # 
       # rustic = {
@@ -439,6 +456,7 @@
       #   enable = true;
       #   mode = [''"\\.sql\\'"''];
       #   eglot = true;
+      #   symex = true;
       # };
   };
 }
