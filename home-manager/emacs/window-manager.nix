@@ -130,7 +130,7 @@
                        (name-match "Thunderbird" (rx bos "Thunderbird"))
                        (name-match "teams-for-linux" (rx bos "teams-for-linux"))
                        (mode-match "ement" (rx bos "ement-"))
-                       (name-match "Vesktop" (rx bos "Vesktop"))))
+                       (name-match "discord" (rx bos "discord"))))
             (group
              (group-or "Media"
                        (name-match "mpv" (rx bos "Mpv"))
@@ -144,11 +144,6 @@
             (group
              (group-or "Notes"
                        (dir "~/doc/denote/")))
-            ;; (group
-            ;;  (group-or "Writing"
-            ;;            (name-match "libreoffice" (rx bos "libreoffice"))
-            ;;            (mode-match "org-mode" (rx bos "org-"))
-            ;;            (mode-match "gfm-mode" (rx bos "gfm-"))))
             (group
              (group-or "AV"
                        (name-match "lmms" (rx bos "lmms"))

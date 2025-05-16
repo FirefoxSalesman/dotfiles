@@ -207,6 +207,8 @@
       command = ["consult-goto-line" "consult-keep-lines" "noct-consult-ripgrep-or-line"];
       general = {
         "C-x C-f" = "'consult-find";
+        # https://taonaw.com/2025/05/15/two-eamcs-tweaks-i-forgot.html
+        "C-c C-r" = "'consult-recent-file";
         "C-x b" = "'nil";
         "M-y" = "'nil";
         # C-c bindings (mode-specific-map)

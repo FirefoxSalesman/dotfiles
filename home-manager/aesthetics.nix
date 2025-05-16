@@ -5,7 +5,7 @@
     enable = true;
     polarity = "dark";
     targets = {
-      vencord.enable = true;
+      vencord.enable = false;
       vesktop.enable = true;
       emacs.enable = false;
     };

@@ -1160,7 +1160,7 @@ Pywal integration: https://github.com/danth/stylix/issues/99
     enable = true;
     polarity = "dark";
     targets = {
-      vencord.enable = true;
+      vencord.enable = false;
       vesktop.enable = true;
       emacs.enable = false;
     };
@@ -1606,6 +1606,7 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
     home.packages = with pkgs; [
       (config.lib.nixGL.wrap gimp)
       (config.lib.nixGL.wrap prismlauncher)
+      (config.lib.nixGL.wrap blockbench)
       wget
       zip
       zbar
@@ -1613,7 +1614,7 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
       (config.lib.nixGL.wrap teams-for-linux)
       (config.lib.nixGL.wrap thunderbird)
       # (pkgs-stable.vesktop.override {withSystemVencord = true;})
-      pkgs-stable.vesktop
+      discord
       # things emacs appreciates
       xclip
       xsel
@@ -1672,7 +1673,8 @@ I think most of it was from the github page for lsp mode, but it's been a while,
       python313Packages.python-lsp-server
       vscode-langservers-extracted
       typescript-language-server
-      lemminx
+      # lua-language-server
+      # lemminx
       marksman
       nodePackages.bash-language-server
       nixd
@@ -1695,7 +1697,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 
         <<Development Eglot>>
         
-        <<Development Dape>>
+        # <<Development Dape>>
         
         <<Development Python>>
 
@@ -1709,7 +1711,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 
         # <<Development Racket>>
 
-        <<Development Haskell>>
+        # <<Development Haskell>>
 
         # <<Development R>>
 
@@ -1718,6 +1720,12 @@ I think most of it was from the github page for lsp mode, but it's been a while,
         <<Development Zenscript>>
 
         <<Development Clojure>>
+        
+        <<Development Erlang>>
+
+        # <<Development Scala>>
+        
+        # <<Development Lua>>
 
         # <<Emacs Development Rust>>
     };
@@ -1806,7 +1814,9 @@ https://github.com/jdtsmith/indent-bars
   (global-tree-sitter-mode)
   (dolist (mode (list '(java-ts-mode . java)
   		    '(html-ts-mode . html)
+  		    '(lua-ts-mode . lua)
   		    '(python-ts-mode . python)
+  		    '(scala-ts-mode . scala)
   		    '(js-ts-mode . javascript)
   		    '(json-ts-mode . json)
   		    '(gfm-mode . markdown)
@@ -1816,6 +1826,7 @@ https://github.com/jdtsmith/indent-bars
   		    '(racket-repl-mode . racket)
   		    '(ess-r-mode . r)
   		    '(inferior-ess-r-mode . r)
+  		    '(erlang-ts-mode . erlang)
   		    '(toml-ts-mode . toml)))
     (add-to-list 'tree-sitter-major-mode-language-alist mode))
 #+end_src
@@ -1962,7 +1973,7 @@ https://github.com/jdtsmith/indent-bars
 #+begin_src nix :noweb yes
   eglot = {
     enable = true;
-    ghook = ["('(html-ts-mode-hook haskell-mode-hook rust-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook clojure-mode-hook) 'eglot-ensure)"];
+    ghook = ["('(html-ts-mode-hook erlang-ts-mode-hook scala-ts-mode-hook lua-ts-mode-hook haskell-mode-hook rust-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook clojure-mode-hook) 'eglot-ensure)"];
     gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
     generalTwo.local-leader.eglot-mode-map = {
       "f" = "'eglot-format-buffer";
@@ -2003,7 +2014,9 @@ https://github.com/jdtsmith/indent-bars
 #+NAME: Development Eglot Config
 #+begin_src emacs-lisp
   (dolist (server (list '((nxml-mode) . ("lemminx"))
+  		      '((scala-ts-mode) . ("metals"))
   		      '((html-ts-mode) . ("vscode-html-language-server" "--stdio"))
+  		      '((lua-ts-mode) . ("lua-language-server"))
   		      '((rust-ts-mode rust-mode) .
   			("rust-analyzer" :initializationOptions (:check (:command "clippy")))))
   		'((sql-mode) . ("sqls")))
@@ -2244,6 +2257,33 @@ pyenv allows us to use virtual environments.
     generalTwo.local-leader.cider-mode-map = {
       "s" = '''(cider-jack-in :which-key "start cider")''; 
     };
+  };
+#+end_src
+
+*** Lua
+#+NAME: Development Lua
+#+begin_src nix
+  lua-ts-mode = {
+    enable = true;
+    mode = [''"\\.lua\\'"''];
+  };
+#+end_src
+
+*** Scala
+#+NAME: Development Scala
+#+begin_src nix
+  scala-ts-mode = {
+    enable = true;
+    mode = [''"\\.scala\\'"''];
+  };
+#+end_src
+
+*** Erlang
+#+NAME: Development Erlang
+#+begin_src nix
+  erlang-ts = {
+    enable = true;
+    mode = [''("\\.erl\\'" . erlang-ts-mode)''];
   };
 #+end_src
 
@@ -3806,7 +3846,7 @@ Gives us an entire state where we can rapidly make specific edits to code.
       inherit inputs;
       inherit (epkgs) trivialBuild tsc tree-sitter evil evil-surround seq paredit;
     });
-    generalTwo."'normal"."(org-mode-map haskell-mode-map rust-ts-mode-map toml-ts-mode-map evil-markdown-mode-map racket-repl-mode-map racket-mode-map python-ts-mode-map java-ts-mode-map ess-r-mode-map groovy-mode-map c-ts-mode-map js-ts-mode-map json-ts-mode-map bibtex-mode-map nxml-mode-map css-ts-mode-map nix-mode-map makefile-mode-map sql-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map clojure-mode-map)"."RET" = "'symex-mode-interface";
+    generalTwo."'normal"."(org-mode-map erlang-ts-mode-map scala-ts-mode-map haskell-mode-map rust-ts-mode-map toml-ts-mode-map evil-markdown-mode-map racket-repl-mode-map racket-mode-map python-ts-mode-map java-ts-mode-map ess-r-mode-map groovy-mode-map c-ts-mode-map js-ts-mode-map json-ts-mode-map bibtex-mode-map nxml-mode-map css-ts-mode-map nix-mode-map makefile-mode-map sql-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map clojure-mode-map)"."RET" = "'symex-mode-interface";
     init = ''
       <<Emacs Symex Init>>    
     '';
@@ -4348,6 +4388,8 @@ Evil integration is from noctuid & minad
     command = ["consult-goto-line" "consult-keep-lines" "noct-consult-ripgrep-or-line"];
     general = {
       "C-x C-f" = "'consult-find";
+      # https://taonaw.com/2025/05/15/two-eamcs-tweaks-i-forgot.html
+      "C-c C-r" = "'consult-recent-file";
       "C-x b" = "'nil";
       "M-y" = "'nil";
       # C-c bindings (mode-specific-map)
@@ -5781,7 +5823,7 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
                (name-match "Thunderbird" (rx bos "Thunderbird"))
                (name-match "teams-for-linux" (rx bos "teams-for-linux"))
                (mode-match "ement" (rx bos "ement-"))
-               (name-match "Vesktop" (rx bos "Vesktop"))))
+               (name-match "discord" (rx bos "discord"))))
     (group
      (group-or "Media"
                (name-match "mpv" (rx bos "Mpv"))
@@ -5795,11 +5837,6 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
     (group
      (group-or "Notes"
                (dir "~/doc/denote/")))
-    ;; (group
-    ;;  (group-or "Writing"
-    ;;            (name-match "libreoffice" (rx bos "libreoffice"))
-    ;;            (mode-match "org-mode" (rx bos "org-"))
-    ;;            (mode-match "gfm-mode" (rx bos "gfm-"))))
     (group
      (group-or "AV"
                (name-match "lmms" (rx bos "lmms"))
@@ -6349,28 +6386,7 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
          gptel-prompt-prefix-alist '((default . "You are a large language model and a helpful assistant. Respond concisely.")
   				   (programming . "You are a large language model and a careful programmer. Provide code and only code as output without any additional text, prompt or note.")
   				   (writing . "You are a large language model and a writing assistant. Respond concisely.")
-  				   (chat . "You are a large language model and a conversation partner. Respond concisely."))
-         gptel-tools (list
-          (gptel-make-tool
-           :name "create_file"                    ; javascript-style  snake_case name
-           :function (lambda (path filename content)   ; the function that runs
-                       (let ((full-path (expand-file-name filename path)))
-                         (with-temp-buffer
-  			 (insert content)
-  			 (write-file full-path))
-                         (format "Created file %s in %s" filename path)))
-           :description "Create a new file with the specified content"
-           :args (list '(:name "path"             ; a list of argument specifications
-    	                         :type string
-    	                         :description "The directory where to create the file")
-                       '(:name "filename"
-    	                         :type string
-    	                         :description "The name of the file to create")
-                       '(:name "content"
-    	                         :type string
-    	                         :description "The content to write to the file"))
-           :category "filesystem")                ; An arbitrary label for grouping
-          ))
+  				   (chat . "You are a large language model and a conversation partner. Respond concisely.")))
 
   (defun start-ollama ()
     (interactive)

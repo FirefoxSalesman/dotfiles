@@ -6,7 +6,8 @@
     python313Packages.python-lsp-server
     vscode-langservers-extracted
     typescript-language-server
-    lemminx
+    # lua-language-server
+    # lemminx
     marksman
     nodePackages.bash-language-server
     nixd
@@ -71,7 +72,9 @@
           (global-tree-sitter-mode)
           (dolist (mode (list '(java-ts-mode . java)
           		    '(html-ts-mode . html)
+          		    '(lua-ts-mode . lua)
           		    '(python-ts-mode . python)
+          		    '(scala-ts-mode . scala)
           		    '(js-ts-mode . javascript)
           		    '(json-ts-mode . json)
           		    '(gfm-mode . markdown)
@@ -81,6 +84,7 @@
           		    '(racket-repl-mode . racket)
           		    '(ess-r-mode . r)
           		    '(inferior-ess-r-mode . r)
+          		    '(erlang-ts-mode . erlang)
           		    '(toml-ts-mode . toml)))
             (add-to-list 'tree-sitter-major-mode-language-alist mode))
         '';
@@ -186,7 +190,7 @@
 
       eglot = {
         enable = true;
-        ghook = ["('(html-ts-mode-hook haskell-mode-hook rust-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook clojure-mode-hook) 'eglot-ensure)"];
+        ghook = ["('(html-ts-mode-hook erlang-ts-mode-hook scala-ts-mode-hook lua-ts-mode-hook haskell-mode-hook rust-ts-mode-hook js-ts-mode-hook ess-r-mode-hook css-ts-mode-hook json-ts-mode-hook racket-mode-hook bibtex-mode-hook nxml-mode-hook nix-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook java-ts-mode-hook c-ts-mode-hook python-ts-mode-hook sql-mode-hook clojure-mode-hook) 'eglot-ensure)"];
         gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
         generalTwo.local-leader.eglot-mode-map = {
           "f" = "'eglot-format-buffer";
@@ -195,7 +199,9 @@
         };
         config = ''
           (dolist (server (list '((nxml-mode) . ("lemminx"))
+          		      '((scala-ts-mode) . ("metals"))
           		      '((html-ts-mode) . ("vscode-html-language-server" "--stdio"))
+          		      '((lua-ts-mode) . ("lua-language-server"))
           		      '((rust-ts-mode rust-mode) .
           			("rust-analyzer" :initializationOptions (:check (:command "clippy")))))
           		'((sql-mode) . ("sqls")))
@@ -238,15 +244,15 @@
       #   ghook = ["('(bibtex-mode-hook nxml-mode-hook nix-mode-hook racket-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook ess-r-mode-hook html-ts-mode-hook css-ts-mode-hook emacs-lisp-mode-hook) 'breadcrumb-local-mode)"];
       # };
       
-      dape = {
-        enable = true;
-        after = ["eglot"];
-        gfhook = ["('dape-on-stopped-hooks (list 'dape-info 'dape-repl))"];
-        custom = {
-          dape-window-arrangement = "gud";
-          dape-key-prefix = ''"\C-x\C-a"'';
-        };
-      };
+      # dape = {
+      #   enable = true;
+      #   after = ["eglot"];
+      #   gfhook = ["('dape-on-stopped-hooks (list 'dape-info 'dape-repl))"];
+      #   custom = {
+      #     dape-window-arrangement = "gud";
+      #     dape-key-prefix = ''"\C-x\C-a"'';
+      #   };
+      # };
       
       python-ts-mode = {
         enable = true;
@@ -303,10 +309,10 @@
       #   };
       # };
 
-      haskell-mode = {
-        enable = true;
-        mode = [''"\\.hs\\'"''];
-      };
+      # haskell-mode = {
+      #   enable = true;
+      #   mode = [''"\\.hs\\'"''];
+      # };
 
       # ess-r-mode = {
       #   enable = true;
@@ -352,6 +358,21 @@
           "s" = '''(cider-jack-in :which-key "start cider")''; 
         };
       };
+      
+      erlang-ts = {
+        enable = true;
+        mode = [''("\\.erl\\'" . erlang-ts-mode)''];
+      };
+
+      # scala-ts-mode = {
+      #   enable = true;
+      #   mode = [''"\\.scala\\'"''];
+      # };
+      
+      # lua-ts-mode = {
+      #   enable = true;
+      #   mode = [''"\\.lua\\'"''];
+      # };
 
       # # rust-ts-mode = {
       # #   enable = true;
