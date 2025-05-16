@@ -290,8 +290,8 @@ let
           optionals (bs != { }) ([ ":${cmd} (${prefix}" ]
                                  ++ mapAttrsToList (n: v: "  (${quoted n} . ${v})") bs ++ [ ")" ]);
         mkGeneralHelper = mode: map: bs:
-          optionals (bs != { }) ([ ":general (${mode} ${map}" ]
-                                 ++ mapAttrsToList (n: v: "  ${quoted n} ${v}") bs ++ [ ")" ]);
+          optionals (bs != { }) ([ "(${mode} ${map}" ]
+                                 ++ mapAttrsToList (n: v: "  ${quoted n} ${v}") bs ++ [")"]);
         mkGeneralLocalHelper = state: bs:
           let mkMap = n: v: mkGeneralHelper "${state}" "${n}" v;
           in flatten (mapAttrsToList mkMap bs);
@@ -306,15 +306,14 @@ let
         mkFunctions = vs: optional (vs != [ ]) ":functions (${toString vs})";
         mkBind = mkBindHelper "bind" "";
         mkGeneral = bs:
-          optionals (bs != { }) ([ ":general ("]
-                                 ++ mapAttrsToList (n: v: ''  "${n}" ${v}'') bs ++ [ ")" ]);
-    
+          optionals (bs != { }) (["("] ++ mapAttrsToList (n: v: ''  "${n}" ${v}'') bs ++ [")"]);
         mkGeneralOne = bs:
           let mkMap = n: v: mkGeneralHelper "${n}" "" v;
           in flatten (mapAttrsToList mkMap bs);
         mkGeneralTwo = bs:
           let mkMap = n: v: mkGeneralLocalHelper "${n}" v;
           in flatten (mapAttrsToList mkMap bs);
+        buildGeneral = zero: one: two: optionals (zero != {} || one != {} || two != {}) [":general"] ++ mkGeneral zero ++ mkGeneralOne one ++ mkGeneralTwo two;
         mkBindLocal = bs:
           let mkMap = n: v: mkBindHelper "bind" ":map ${n}" v;
           in flatten (mapAttrsToList mkMap bs);
@@ -323,8 +322,9 @@ let
         mkHook = vs: optional (vs != [ ]) ":hook ${toString vs}";
         mkGhook = vs: optional (vs != [ ]) ":ghook ${toString vs}";
         mkGfhook = vs: optional (vs != [ ]) ":gfhook ${toString vs}";
-        mkEglot = name: vs: let matches = p: n: match p n != null;
-                            in optional vs [''(${if matches "tex-mode" name then "latex-mode" else if matches "latex" name then "LaTeX-mode" else if matches ".*-mode" name then name else "${name}-mode"} . (lambda () (require 'eglot) (eglot-ensure)))''];
+        transformName = name: let matches = p: n: match p n != null;
+                              in if matches "tex-mode" name then "latex-mode" else if matches "latex" name then "LaTeX-mode" else if matches ".*-mode" name then name else "${name}-mode";
+        mkEglot = name: vs: optional vs [''(${transformName name} . (lambda () (require 'eglot) (eglot-ensure)))''];
         mkDefer = v:
           if isBool v then
             optional v ":defer t"
@@ -346,7 +346,8 @@ let
                                   ++ mkDiminish config.diminish ++ mkHook (config.hook ++ mkEglot name config.eglot)
                                   ++ mkGhook config.ghook
                                   ++ mkGfhook config.gfhook ++ mkCustom config.custom
-                                  ++ mkGeneralOne config.generalOne ++ mkGeneralTwo config.generalTwo ++ mkGeneral config.general
+                                  # ++ mkGeneralOne config.generalOne ++ mkGeneralTwo config.generalTwo ++ mkGeneral config.general
+                                  ++ buildGeneral config.general config.generalOne config.generalTwo
                                   ++ mkMode config.mode
                                   ++ optionals (config.init != "") [ ":init" config.init ]
                                   ++ optionals (config.config != "") [ ":config" config.config ]
