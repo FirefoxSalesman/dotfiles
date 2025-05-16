@@ -304,6 +304,7 @@
     latex = {
       enable = true;
       mode = [''("\\.tex\\'" . LaTeX-mode)''];
+      eglot = true;
     };
     
     markdown = {

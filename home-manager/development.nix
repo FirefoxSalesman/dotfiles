@@ -169,7 +169,7 @@
 
       eglot = {
         enable = true;
-        ghook = ["('LaTeX-mode-hook 'eglot-ensure)"];
+        # ghook = ["('LaTeX-mode-hook 'eglot-ensure)"];
         gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
         generalTwo.local-leader.eglot-mode-map = {
           "f" = "'eglot-format-buffer";

@@ -323,8 +323,8 @@ let
         mkHook = vs: optional (vs != [ ]) ":hook ${toString vs}";
         mkGhook = vs: optional (vs != [ ]) ":ghook ${toString vs}";
         mkGfhook = vs: optional (vs != [ ]) ":gfhook ${toString vs}";
-        # mkEglot = name: vs: optional vs '':hook (${name} . (lambda () (require 'eglot) (eglot-ensure)))'';
-        mkEglot = name: vs: optional vs [''(${if (match ".*-mode" name) != null then name else "${name}-mode"} . (lambda () (require 'eglot) (eglot-ensure)))''];
+        mkEglot = name: vs: let matches = p: n: match p n != null;
+                            in optional vs [''(${if matches "tex-mode" name then "latex-mode" else if matches "latex" name then "LaTeX-mode" else if matches ".*-mode" name then name else "${name}-mode"} . (lambda () (require 'eglot) (eglot-ensure)))''];
         mkDefer = v:
           if isBool v then
             optional v ":defer t"
