@@ -272,6 +272,12 @@
         eglot = true;
         symex = true;
       };
+      
+      toml-ts-mode = {
+        enable = true;
+        mode = [''"\\.toml\\'"''];
+        symex = true;
+      };
 
       bash-ts-mode = {
         enable = true;
@@ -458,5 +464,11 @@
       #   eglot = true;
       #   symex = true;
       # };
+
+      forth-mode = {
+        enable = true;
+        mode = [''"\\.fs\\'"''];
+        symex = true;
+      };
   };
 }

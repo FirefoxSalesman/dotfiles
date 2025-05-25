@@ -372,7 +372,7 @@
         inherit inputs;
         inherit (epkgs) trivialBuild tsc tree-sitter evil evil-surround seq paredit;
       });
-      generalTwo."'normal"."(toml-ts-mode-map racket-repl-mode-map makefile-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
+      generalTwo."'normal"."(racket-repl-mode-map makefile-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
       init = ''
         (with-eval-after-load 'evil-easymotion
           (evilem-make-motion-plain evilem-symex-forward 'symex-traverse-forward :post-hook 'symex-select-nearest-in-line)

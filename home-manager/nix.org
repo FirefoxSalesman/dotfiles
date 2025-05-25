@@ -1613,8 +1613,8 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
       # comms
       (config.lib.nixGL.wrap teams-for-linux)
       (config.lib.nixGL.wrap thunderbird)
-      # (pkgs-stable.vesktop.override {withSystemVencord = true;})
-      discord
+      (pkgs-stable.vesktop.override {withSystemVencord = true;})
+      # discord
       # things emacs appreciates
       xclip
       xsel
@@ -1704,6 +1704,8 @@ I think most of it was from the github page for lsp mode, but it's been a while,
         <<Development Nix>>
         
         <<Development Json>>
+        
+        <<Development Toml>>
 
         <<Development Bash>>
         
@@ -1736,6 +1738,8 @@ I think most of it was from the github page for lsp mode, but it's been a while,
         # <<Emacs Development Rust>>
         
         # <<Development Sql>>
+
+        <<Development Forth>>
     };
   }
 #+end_src
@@ -2220,6 +2224,16 @@ pyenv allows us to use virtual environments.
   };
 #+end_src
 
+*** Toml
+#+NAME: Development Toml
+#+begin_src nix
+  toml-ts-mode = {
+    enable = true;
+    mode = [''"\\.toml\\'"''];
+    symex = true;
+  };
+#+end_src
+
 *** C
 #+NAME: Development C
 #+begin_src nix
@@ -2379,6 +2393,16 @@ pyenv allows us to use virtual environments.
     enable = true;
     mode = [''"\\.sql\\'"''];
     eglot = true;
+    symex = true;
+  };
+#+end_src
+
+*** Forth
+#+NAME: Development Forth
+#+begin_src nix
+  forth-mode = {
+    enable = true;
+    mode = [''"\\.fs\\'"''];
     symex = true;
   };
 #+end_src
@@ -3962,7 +3986,7 @@ Gives us an entire state where we can rapidly make specific edits to code.
       inherit inputs;
       inherit (epkgs) trivialBuild tsc tree-sitter evil evil-surround seq paredit;
     });
-    generalTwo."'normal"."(toml-ts-mode-map racket-repl-mode-map makefile-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
+    generalTwo."'normal"."(racket-repl-mode-map makefile-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
     init = ''
       <<Emacs Symex Init>>    
     '';

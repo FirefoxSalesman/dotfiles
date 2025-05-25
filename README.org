@@ -47,4 +47,3 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] The python files from emacs-qutebrowser should be part of the emacs package & be provided by nix
 + [ ] Make the minibuffer dissapear
 + [ ] https://melpa.org/#/denote-project-notes
-+ [ ] Create variables in the nix template in order to automate adding symex support
