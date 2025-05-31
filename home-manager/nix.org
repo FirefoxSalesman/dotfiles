@@ -2407,6 +2407,168 @@ pyenv allows us to use virtual environments.
   };
 #+end_src
 
+** File Management
+I'm running dired with a couple of small packages that improve on it
+#+begin_src nix :noweb yes :tangle emacs/file-management.nix
+  { inputs, ... }:
+
+  {
+    xdg = {
+      mimeApps.defaultApplications."inode/directory" = ["emacs.desktop"];
+      desktopEntries.emacs = {
+        name = "Emacs";
+        genericName = "Text Editor";
+        categories = ["Development" "TextEditor"];
+        terminal = false;
+        icon = "emacs";
+        exec = "emacsclient -c -a emacs %u";
+        mimeType = ["inode/directory" "text/english" "text/plain" "text/x-makefile" "text/x-c++hdr" "text/x-c++src" "text/x-chdr" "text/x-csrc" "text/x-java" "text/x-moc" "text/x-pascal" "text/x-tcl"  "text/x-tex"  "application/x-shellscript"  "text/x-c" "text/x-c++" "x-scheme-handler/org-protocol"];
+      };
+    };
+    programs.emacs.init.usePackage = {
+      dired = {
+        enable = true;
+        gfhook = ["('dired-mode-hook (list 'dired-omit-mode 'hl-line-mode (lambda () (setq-local
+        visible-cursor nil))))"];
+        general = {
+          "C-x C-j" = "'dired-jump";
+          "C-x d" = "'consult-dir";
+        };
+        generalOne."efs/leader-keys"."d" = '''(dired :which-key "dired")'';
+        generalTwo."'normal".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
+        custom = {
+          dired-recursive-deletes = "'always";
+          dired-listing-switches = ''"-agho --group-directories-first"'';
+          # We're doing our best to get rid of that 1st extraneous line
+          dired-free-space = "nil";
+        };
+      };
+
+      openwith = {
+        enable = true;
+        defer = true;
+        ghook = ["('dired-mode-hook 'openwith-mode)"];
+        config = ''
+          <<Emacs Openwith Config>>
+        '';
+      };
+
+      dired-hide-dotfiles = {
+        enable = true;
+        defer = true;
+        ghook = ["('dired-mode-hook 'dired-hide-dotfiles-mode)"];
+        config = ''(general-def 'normal dired-mode-map "H" 'dired-hide-dotfiles-mode)'';
+      };
+
+      all-the-icons-dired = {
+        enable = true;
+        ghook = ["('dired-mode-hook 'all-the-icons-dired-mode)"];
+      };
+
+      dired-single = {
+        enable = true;
+        package = epkgs: (epkgs.callPackage ./emacs-packages/dired-single.nix {
+          inherit inputs;
+          inherit (epkgs) trivialBuild;
+        });
+        ghook = [''
+          ('dired-mode-hook (lambda () (general-def 'normal dired-mode-map
+               "B" 'evil-goto-line
+               "n" 'dired-single-prev
+               "i" 'dired-single-next)))
+        ''];
+      };
+
+      dired-ranger = {
+        enable = true;
+        ghook = [''
+          ('dired-mode-hook (lambda () (general-def 'normal dired-mode-map
+               "d" 'dired-ranger-copy
+               "O" 'dired-ranger-move
+               "G" 'dired-ranger-paste)))
+        ''];
+      };
+
+      diredfl = {
+        enable = true;
+        ghook = ["('dired-mode-hook 'diredfl-mode)"];
+      };
+
+      dired-posframe = {
+        enable = true;
+        generalTwo."'normal".dired-mode-map."M-t" = "'dired-posframe-mode";
+      };
+      
+      image = {
+        enable = true;
+        generalTwo."'normal".image-map = {
+          "E" = "'image-next-file";
+          "O" = "'image-previous-file";
+        };
+        custom.image-animate-loop = "t";
+      };
+
+      dired-narrow = {
+        enable = true;
+        generalTwo."'normal".dired-mode-map."N" = "'dired-narrow-fuzzy";
+      };
+    };
+  }
+#+end_src
+
+#+NAME: Emacs Openwith Config
+#+begin_src emacs-lisp
+  (gsetq openwith-associations
+       (list
+        (list (openwith-make-extension-regexp
+               '("ff"))
+              "lel"
+              '(file))
+        (list (openwith-make-extension-regexp
+               '("odt" "doc" "docx" "odp" "pptx" "xlsx"))
+              "libreoffice"
+              '(file))
+        (list (openwith-make-extension-regexp
+               '("mpg" "mpeg" "mp3" "mp4"
+                 "avi" "wmv" "wav" "mov" "flv"
+                 "ogm" "ogg" "mkv" "webm" "opus"
+                 "flac"))
+              "mpv"
+              '(file))))
+
+  (defun dired-do-async-delete (&optional arg)
+    "Delete all marked (or next ARG) files.
+  `dired-recursive-deletes' controls whether deletion of
+  non-empty directories is allowed."
+    ;; This is more consistent with the file marking feature than
+    ;; dired-do-flagged-delete.
+    (interactive "P")
+    (let (markers)
+      (dired-internal-do-deletions
+       (nreverse
+        ;; this may move point if ARG is an integer
+        (dired-map-over-marks (cons (dired-get-filename)
+                                    (let ((m (point-marker)))
+                                      (push m markers)
+                                      m))
+                              arg))
+       arg t)
+      (async-start (lambda ()
+  		   (dolist (m markers) (set-marker m nil)))
+  		 'ignore)))
+#+end_src
+
+**** Package Definition
+#+begin_src nix :tangle emacs/emacs-packages/dired-single.nix
+  { trivialBuild, inputs } :
+
+  trivialBuild rec {
+    pname = "dired-single";
+    version = "current";
+    src = inputs.dired-single;
+  }
+#+end_src
+
 ** Emacs
 *** Template
 This came from Robert Helgeson's nur expressions. I've tweaked it a little to add a few more options for things like general & removed the ability to natively compile init.el, because it was breaking stuff
@@ -2884,7 +3046,9 @@ https://gitlab.com/rycee/nur-expressions
   hasDoom = any (p: (p.deferIncrementally != [ ] && p.deferIncrementally != false) || p.afterCall != [ ] || cfg.largeFileHandling) (attrValues cfg.usePackage);
 
   # Whether the configuration makes any use of general keywords.
-  hasGeneral = any (p: p.ghook != [ ] || p.gfhook != [ ] || p.generalOne != { } || p.generalTwo != { } || p.general != { }) (attrValues cfg.usePackage);
+  hasGeneral = any (p: p.symex != false || p.ghook != [ ] || p.gfhook != [ ] || p.generalOne != { } || p.generalTwo != { } || p.general != { }) (attrValues cfg.usePackage);
+
+  hasSymex = any (p: p.symex != false) (attrValues cfg.usePackage);
 
   # Whether the configuration makes use of `:bind`.
   hasBind = any (p: p.bind != { } || p.bindLocal != { } || p.bindKeyMap != { })
@@ -3064,7 +3228,13 @@ https://gitlab.com/rycee/nur-expressions
           inherit inputs;
           inherit (epkgs) trivialBuild;
         })
-      ] ++ packages;
+      ] ++
+      optionals hasSymex [
+        (epkgs.callPackage ./emacs-packages/symex2.nix {
+          inherit inputs;
+          inherit (epkgs) trivialBuild tsc tree-sitter paredit evil evil-surround seq;
+        })
+      ] ++ packages ;
 
     # Collect the extra packages that should be included in the user profile.
     # These are typically tools called by Emacs packages.
@@ -5040,156 +5210,6 @@ Helpful gives more information, & which-key tells what keybinds you have availab
   }
 #+end_src
 
-*** File Management
-I'm running dired with a couple of small packages that improve on it
-#+begin_src nix :noweb yes :tangle emacs/file-management.nix
-  { inputs, ... }:
-
-  {
-    programs.emacs.init.usePackage = {
-      dired = {
-        enable = true;
-        gfhook = ["('dired-mode-hook (list 'dired-omit-mode 'hl-line-mode (lambda () (setq-local
-        visible-cursor nil))))"];
-        general = {
-          "C-x C-j" = "'dired-jump";
-          "C-x d" = "'consult-dir";
-        };
-        generalOne."efs/leader-keys"."d" = '''(dired :which-key "dired")'';
-        generalTwo."'normal".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
-        custom = {
-          dired-recursive-deletes = "'always";
-          dired-listing-switches = ''"-agho --group-directories-first"'';
-          # We're doing our best to get rid of that 1st extraneous line
-          dired-free-space = "nil";
-        };
-      };
-
-      openwith = {
-        enable = true;
-        defer = true;
-        ghook = ["('dired-mode-hook 'openwith-mode)"];
-        config = ''
-          <<Emacs Openwith Config>>
-        '';
-      };
-
-      dired-hide-dotfiles = {
-        enable = true;
-        defer = true;
-        ghook = ["('dired-mode-hook 'dired-hide-dotfiles-mode)"];
-        config = ''(general-def 'normal dired-mode-map "H" 'dired-hide-dotfiles-mode)'';
-      };
-
-      all-the-icons-dired = {
-        enable = true;
-        ghook = ["('dired-mode-hook 'all-the-icons-dired-mode)"];
-      };
-
-      dired-single = {
-        enable = true;
-        package = epkgs: (epkgs.callPackage ./emacs-packages/dired-single.nix {
-          inherit inputs;
-          inherit (epkgs) trivialBuild;
-        });
-        ghook = [''
-          ('dired-mode-hook (lambda () (general-def 'normal dired-mode-map
-               "B" 'evil-goto-line
-               "n" 'dired-single-prev
-               "i" 'dired-single-next)))
-        ''];
-      };
-
-      dired-ranger = {
-        enable = true;
-        ghook = [''
-          ('dired-mode-hook (lambda () (general-def 'normal dired-mode-map
-               "d" 'dired-ranger-copy
-               "O" 'dired-ranger-move
-               "G" 'dired-ranger-paste)))
-        ''];
-      };
-
-      diredfl = {
-        enable = true;
-        ghook = ["('dired-mode-hook 'diredfl-mode)"];
-      };
-
-      dired-posframe = {
-        enable = true;
-        generalTwo."'normal".dired-mode-map."M-t" = "'dired-posframe-mode";
-      };
-      
-      image = {
-        enable = true;
-        generalTwo."'normal".image-map = {
-          "E" = "'image-next-file";
-          "O" = "'image-previous-file";
-        };
-        custom.image-animate-loop = "t";
-      };
-
-      dired-narrow = {
-        enable = true;
-        generalTwo."'normal".dired-mode-map."N" = "'dired-narrow-fuzzy";
-      };
-    };
-  }
-#+end_src
-
-#+NAME: Emacs Openwith Config
-#+begin_src emacs-lisp
-  (gsetq openwith-associations
-       (list
-        (list (openwith-make-extension-regexp
-               '("ff"))
-              "lel"
-              '(file))
-        (list (openwith-make-extension-regexp
-               '("odt" "doc" "docx" "odp" "pptx" "xlsx"))
-              "libreoffice"
-              '(file))
-        (list (openwith-make-extension-regexp
-               '("mpg" "mpeg" "mp3" "mp4"
-                 "avi" "wmv" "wav" "mov" "flv"
-                 "ogm" "ogg" "mkv" "webm" "opus"
-                 "flac"))
-              "mpv"
-              '(file))))
-
-  (defun dired-do-async-delete (&optional arg)
-    "Delete all marked (or next ARG) files.
-  `dired-recursive-deletes' controls whether deletion of
-  non-empty directories is allowed."
-    ;; This is more consistent with the file marking feature than
-    ;; dired-do-flagged-delete.
-    (interactive "P")
-    (let (markers)
-      (dired-internal-do-deletions
-       (nreverse
-        ;; this may move point if ARG is an integer
-        (dired-map-over-marks (cons (dired-get-filename)
-                                    (let ((m (point-marker)))
-                                      (push m markers)
-                                      m))
-                              arg))
-       arg t)
-      (async-start (lambda ()
-  		   (dolist (m markers) (set-marker m nil)))
-  		 'ignore)))
-#+end_src
-
-**** Package Definition
-#+begin_src nix :tangle emacs/emacs-packages/dired-single.nix
-  { trivialBuild, inputs } :
-
-  trivialBuild rec {
-    pname = "dired-single";
-    version = "current";
-    src = inputs.dired-single;
-  }
-#+end_src
-
 *** Password Management
 #+begin_src nix :noweb yes :tangle emacs/passwords.nix
   { pkgs, ... }:
@@ -5981,7 +6001,7 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
                (name-match "Thunderbird" (rx bos "Thunderbird"))
                (name-match "teams-for-linux" (rx bos "teams-for-linux"))
                (mode-match "ement" (rx bos "ement-"))
-               (name-match "discord" (rx bos "discord"))))
+               (name-match "vesktop" (rx bos "vesktop"))))
     (group
      (group-or "Media"
                (name-match "mpv" (rx bos "Mpv"))

@@ -420,7 +420,9 @@ let
   hasDoom = any (p: (p.deferIncrementally != [ ] && p.deferIncrementally != false) || p.afterCall != [ ] || cfg.largeFileHandling) (attrValues cfg.usePackage);
   
   # Whether the configuration makes any use of general keywords.
-  hasGeneral = any (p: p.ghook != [ ] || p.gfhook != [ ] || p.generalOne != { } || p.generalTwo != { } || p.general != { }) (attrValues cfg.usePackage);
+  hasGeneral = any (p: p.symex != false || p.ghook != [ ] || p.gfhook != [ ] || p.generalOne != { } || p.generalTwo != { } || p.general != { }) (attrValues cfg.usePackage);
+  
+  hasSymex = any (p: p.symex != false) (attrValues cfg.usePackage);
   
   # Whether the configuration makes use of `:bind`.
   hasBind = any (p: p.bind != { } || p.bindLocal != { } || p.bindKeyMap != { })
@@ -586,7 +588,13 @@ in {
           inherit inputs;
           inherit (epkgs) trivialBuild;
         })
-      ] ++ packages;
+      ] ++
+      optionals hasSymex [
+        (epkgs.callPackage ./emacs-packages/symex2.nix {
+          inherit inputs;
+          inherit (epkgs) trivialBuild tsc tree-sitter paredit evil evil-surround seq;
+        })
+      ] ++ packages ;
   
     # Collect the extra packages that should be included in the user profile.
     # These are typically tools called by Emacs packages.

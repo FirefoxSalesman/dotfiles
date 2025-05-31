@@ -130,7 +130,7 @@
                        (name-match "Thunderbird" (rx bos "Thunderbird"))
                        (name-match "teams-for-linux" (rx bos "teams-for-linux"))
                        (mode-match "ement" (rx bos "ement-"))
-                       (name-match "discord" (rx bos "discord"))))
+                       (name-match "vesktop" (rx bos "vesktop"))))
             (group
              (group-or "Media"
                        (name-match "mpv" (rx bos "Mpv"))
