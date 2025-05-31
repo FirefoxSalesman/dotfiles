@@ -587,7 +587,8 @@ Stole it from Derek Taylor
         ./multimedia.nix
         ./aesthetics.nix
         ./extra-packages.nix
-        ./development.nix
+        # ./development.nix
+        ./development
         ./gui.nix
         ./emacs.nix
         ./shells.nix
@@ -1664,22 +1665,33 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
 ** Development
 This was more directly stolen than the other parts
 I think most of it was from the github page for lsp mode, but it's been a while, & I don't remember much.
-#+begin_src nix :noweb yes :tangle development.nix
+#+begin_src nix :noweb yes :tangle development/default.nix
   { inputs, pkgs, pkgs-stable, ... }:
 
   {
-    home.packages = with pkgs; [
-      clojure-lsp
-      python313Packages.python-lsp-server
-      vscode-langservers-extracted
-      typescript-language-server
-      # lua-language-server
-      lemminx
-      marksman
-      nodePackages.bash-language-server
-      nixd
-      # sqls
-      python313Packages.jupytext
+    imports = [
+      # ./clojure.nix
+      # ./python.nix
+      ./java.nix
+      ./nix.nix
+      # ./web-development.nix
+      ./json.nix
+      ./toml.nix
+      # ./racket.nix
+      # ./haskell.nix
+      # ./c.nix
+      ./bash.nix
+      # ./r.nix
+      # ./jupyter.nix
+      # ./prolog.nix
+      ./zenscript.nix
+      # ./rust.nix
+      # ./lua.nix
+      # ./plantuml.nix
+      # ./scala.nix
+      # ./erlang.nix
+      # ./sql.nix
+      # ./forth.nix
     ];
 
     programs.emacs.init.usePackage = {
@@ -1696,50 +1708,6 @@ I think most of it was from the github page for lsp mode, but it's been a while,
         <<Development Eglot>>
         
         # <<Development Dape>>
-        
-        <<Development Python>>
-
-        <<Development Java>>
-        
-        <<Development Nix>>
-        
-        <<Development Json>>
-        
-        <<Development Toml>>
-
-        <<Development Bash>>
-        
-        # <<Development C>>
-
-        # <<Development Prolog>>
-
-        <<Development Webdev>>
-
-        # <<Development Racket>>
-
-        # <<Development Haskell>>
-
-        # <<Development R>>
-
-        <<Development Jupyter>>
-
-        <<Development Zenscript>>
-
-        <<Development Clojure>>
-        
-        <<Development Erlang>>
-
-        # <<Development Plantuml>>
-
-        # <<Development Scala>>
-        
-        # <<Development Lua>>
-
-        # <<Emacs Development Rust>>
-        
-        # <<Development Sql>>
-
-        <<Development Forth>>
     };
   }
 #+end_src
@@ -1850,7 +1818,7 @@ https://github.com/jdtsmith/indent-bars
 #+begin_src nix
   treesitter-context = {
     enable = true;
-    package = epkgs: (epkgs.callPackage ./emacs/emacs-packages/treesitter-context.nix {
+    package = epkgs: (epkgs.callPackage ../emacs/emacs-packages/treesitter-context.nix {
       inherit inputs;
       inherit (epkgs) trivialBuild posframe;
     });
@@ -1949,37 +1917,6 @@ https://github.com/jdtsmith/indent-bars
   (defun dired-git-add ()
       (interactive)
       (start-process "git" nil "git" "add" (dired-get-marked-files)))
-#+end_src
-
-*** Plantuml
-#+NAME: Development Plantuml
-#+begin_src nix :noweb yes
-  plantuml-mode = {
-    enable = true;
-    mode = [''"\\.plantuml\\'"'' ''"\\.puml\\'"''];
-    custom = {
-      org-plantuml-exec-mode = "'plantuml";
-      # plantuml-default-exec-mode = "'executable";
-      # plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
-      org-plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
-    }; 
-    config = ''
-      <<Emacs Development Plantuml Config>>
-    '';
-  };
-#+end_src
-
-#+NAME: Emacs Development Plantuml Config
-#+begin_src emacs-lisp
-  (org-babel-do-load-languages 'org-babel-load-languages '((plantuml . t)))
-
-  (defun hex-encode (str)
-    (string-join (mapcar (lambda (c) (format "%02x" c)) str)))
-
-  (defun plantuml-server-encode-url (string)
-    "Encode the string STRING into a URL suitable for PlantUML server interactions."
-    (let* ((encoded-string (hex-encode string)))
-      (concat plantuml-server-url "/" plantuml-output-type "/~h" encoded-string)))
 #+end_src
 
 *** Eglot
@@ -2097,216 +2034,324 @@ https://github.com/jdtsmith/indent-bars
   };
 #+end_src
 
-*** Python
+*** Language support
+**** Python
 Sets up emacs as a python IDE. (It can do anything pycharm can)
 pyenv allows us to use virtual environments.
 
 =bindings=
 ,cp- open a python repl
 ,cc- evaluate your code in the repl that you just opened up.
-#+NAME: Development Python
-#+begin_src nix
-  python-ts-mode = {
-    enable = true;
-    eglot = true;
-    symex = true;
-    mode = [''"\\.py\\'"''];
-    generalTwo."local-leader".python-mode-map."r" = "'python-shell-send-buffer";
-    custom = {
-      python-shell-interpreter = ''"ipython"'';
-    	python-shell-interpreter-args = ''"-i --simple-prompt"'';
-    };
-  };
-#+end_src
+#+begin_src nix :tangle development/python.nix
+  { pkgs, ... }:
 
-*** Java
-#+NAME: Development Java
-#+begin_src nix
-  java-ts-mode = {
-    enable = true;
-    mode = [''"\\.java\\'"''];
-    eglot = true;
-    symex = true;
-  };
+  {
+    home.packages = with pkgs; [
+      python313Packages.python-lsp-server
+    ];
 
-  groovy-mode = {
-    enable = true;
-    symex = true;
-    mode = [''"\\.gradle\\'"''];
-  };
-#+end_src
-
-*** Nix
-#+NAME: Development Nix
-#+begin_src nix
-  nix-mode = {
-    enable = true;
-    mode = [''"\\.nix\\'"''];
-    eglot = true;
-    symex = true;
-  };
-#+end_src
-
-*** Web Development
-#+NAME: Development Webdev
-#+begin_src nix
-  html-ts-mode = {
-    enable = true;
-    mode = [''"\\.[px]?html?\\'"''];
-    eglot = true;
-    symex = true;
-  };
-
-  emmet-mode = {
-    enable = true;
-    ghook = ["('(js-ts-mode-hook sgml-mode-hook css-ts-mode-hook html-ts-mode-hook) 'emmet-mode)"];
-    custom.emmet-move-cursor-between-quotes = "t";
-  };
-
-  pug-mode = {
-    enable = true;
-    mode = [''"\\.pug\\'"''];
-  };
-
-  css-ts-mode = {
-    enable = true;
-    mode = [''"\\.css\\'"''];
-    eglot = true;
-    symex = true;
-  };
-
-  js-ts-mode = {
-    enable = true;
-    mode = [''"\\.js\\'"''];
-    eglot = true;
-    symex = true;
-  };
-#+end_src
-
-*** Racket
-#+NAME: Development Racket
-#+begin_src nix
-  racket-mode = {
-    enable = true;
-    eglot = true;
-    symex = true;
-    mode = [''"\\.rkt\\'"''];
-    gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
-    init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
-    config = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
-    generalTwo.local-leader.racket-mode-map = {
-      "RET" = "'geiser-racket";
-      "." = "'racket-xp-describe";
-      "r" = "'racket-run";
-    };
-  };
-#+end_src
-
-*** Haskell
-#+NAME: Development Haskell
-#+begin_src nix
-  haskell-mode = {
-    enable = true;
-    mode = [''"\\.hs\\'"''];
-    eglot = true;
-    symex = true;
-  };
-#+end_src
-
-*** Json
-#+NAME: Development Json
-#+begin_src nix
-  json-ts-mode = {
-    enable = true;
-    mode = [''"\\.json\\'"''];
-    eglot = true;
-    symex = true;
-  };
-#+end_src
-
-*** Toml
-#+NAME: Development Toml
-#+begin_src nix
-  toml-ts-mode = {
-    enable = true;
-    mode = [''"\\.toml\\'"''];
-    symex = true;
-  };
-#+end_src
-
-*** C
-#+NAME: Development C
-#+begin_src nix
-  c-ts-mode = {
-    enable = true;
-    mode = [''"\\.c\\'"''];
-    eglot = true;
-    symex = true;
-  };
-#+end_src
-
-*** Bash
-#+NAME: Development Bash
-#+begin_src nix
-  bash-ts-mode = {
-    enable = true;
-    mode = [''"\\.sh\\'"''];
-    eglot = true;
-  };
-#+end_src
-
-*** R
-#+NAME: Development R
-#+begin_src nix
-  ess-r-mode = {
-    enable = true;
-    package = epkgs: epkgs.ess;
-    mode = [''"\\.R\\'"''];
-    eglot = true;
-    symex = true;
-    custom.ess-ask-for-ess-directory = "nil";
-  };
-#+end_src
-
-*** Jupyter
-#+NAME: Development Jupyter
-#+begin_src nix
-  code-cells = {
-    enable = true;
-    demand = true;
-    generalTwo = {
-      "'normal".code-cells-mode-map = {
-        "M-e" = "'code-cells-forward-cell";
-        "M-o" = "'code-cells-backward-cell";
-      };
-      "local-leader".code-cells-mode-map = {
-        "e" = "'code-cells-eval";
+    programs.emacs.init.usePackage.python-ts-mode = {
+      enable = true;
+      eglot = true;
+      symex = true;
+      mode = [''"\\.py\\'"''];
+      generalTwo."local-leader".python-mode-map."r" = "'python-shell-send-buffer";
+      custom = {
+        python-shell-interpreter = ''"ipython"'';
+    	  python-shell-interpreter-args = ''"-i --simple-prompt"'';
       };
     };
-  };
+  }
 #+end_src
 
-*** Prolog
-#+NAME: Development Prolog
-#+begin_src nix
-  prolog-mode = {
-    enable = true;
-    mode = [''"\\.pl$"''];
-    generalTwo."local-leader".prolog-mode-map."r" = '''(run-prolog :which-key "run")'';
-  };
+**** Clojure
+#+begin_src nix :tangle development/clojure.nix
+  { pkgs, ... }:
+
+  {
+    imports = [
+      ./java.nix
+    ];
+
+    home.packages = with pkgs; [
+      clojure-lsp
+    ];
+    
+    programs.emacs.init.usePackage = {
+      clojure-mode = {
+        enable = true;
+        mode = [''"\\.clj\\'"''];
+        eglot = true;
+        symex = true;
+      };
+
+      cider = {
+        enable = true;
+        ghook = ["('clojure-mode-hook 'cider-mode)"];
+        generalTwo.local-leader.cider-mode-map = {
+          "s" = '''(cider-jack-in :which-key "start cider")''; 
+        };
+      };
+    };
+  }
 #+end_src
 
-*** Zenscript
-#+NAME: Development Zenscript
-#+begin_src nix :noweb yes
-  zenscript-mode = {
-    enable = true;
-    mode = [''"\\.zs\\'"''];
-    # There's no way we're fixing the completion system, so we'll turn it off
-    config = ''
-      <<Emacs Zenscript Config>>
-    '';
-  };
+**** Java
+#+begin_src nix :tangle development/java.nix
+  { pkgs, ... }:
+
+  {
+    programs.emacs.init.usePackage = {
+      java-ts-mode = {
+        enable = true;
+        mode = [''"\\.java\\'"''];
+        eglot = true;
+        symex = true;
+      };
+
+      groovy-mode = {
+        enable = true;
+        symex = true;
+        mode = [''"\\.gradle\\'"''];
+      };
+    };
+  }
+#+end_src
+
+**** Nix
+#+begin_src nix :tangle development/nix.nix
+  { pkgs, ... }:
+
+  {
+    home.packages = with pkgs; [
+      nixd
+    ];
+
+    programs.emacs.init.usePackage.nix-mode = {
+      enable = true;
+      mode = [''"\\.nix\\'"''];
+      eglot = true;
+      symex = true;
+    };
+  }
+#+end_src
+
+**** Web Development
+#+begin_src nix :tangle development/web-development.nix
+  { pkgs, ... }:
+
+  {
+    home.packages = with pkgs; [
+      vscode-langservers-extracted
+      typescript-language-server
+    ];
+
+    programs.emacs.init.usePackage = {
+      html-ts-mode = {
+        enable = true;
+        mode = [''"\\.[px]?html?\\'"''];
+        eglot = true;
+        symex = true;
+      };
+
+      emmet-mode = {
+        enable = true;
+        ghook = ["('(js-ts-mode-hook sgml-mode-hook css-ts-mode-hook html-ts-mode-hook) 'emmet-mode)"];
+        custom.emmet-move-cursor-between-quotes = "t";
+      };
+
+      pug-mode = {
+        enable = true;
+        mode = [''"\\.pug\\'"''];
+      };
+
+      css-ts-mode = {
+        enable = true;
+        mode = [''"\\.css\\'"''];
+        eglot = true;
+        symex = true;
+      };
+
+      js-ts-mode = {
+        enable = true;
+        mode = [''"\\.js\\'"''];
+        eglot = true;
+        symex = true;
+      };
+    };
+  }
+#+end_src
+
+**** Json
+#+begin_src nix :tangle development/json.nix
+  { pkgs, ... }:
+
+  {
+    home.packages = with pkgs; [
+      vscode-langservers-extracted
+    ];
+
+    programs.emacs.init.usePackage.json-ts-mode = {
+      enable = true;
+      mode = [''"\\.json\\'"''];
+      eglot = true;
+      symex = true;
+    };
+  }
+#+end_src
+
+**** Toml
+#+begin_src nix :tangle development/toml.nix
+  { pkgs, ... }:
+
+  {
+    programs.emacs.init.usePackage.toml-ts-mode = {
+      enable = true;
+      mode = [''"\\.toml\\'"''];
+      symex = true;
+    };
+  }
+#+end_src
+
+**** Racket
+#+begin_src nix :tangle development/racket.nix
+  { pkgs, ... }:
+
+  {
+    programs.emacs.init.usePackage.racket-mode = {
+      enable = true;
+      eglot = true;
+      symex = true;
+      mode = [''"\\.rkt\\'"''];
+      gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
+      init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
+      config = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
+      generalTwo.local-leader.racket-mode-map = {
+        "RET" = "'geiser-racket";
+        "." = "'racket-xp-describe";
+        "r" = "'racket-run";
+      };
+    };
+  }
+#+end_src
+
+**** Haskell
+#+begin_src nix :tangle development/haskell.nix
+  { pkgs, ... }:
+
+  {
+    programs.emacs.init.usePackage.haskell-mode = {
+      enable = true;
+      mode = [''"\\.hs\\'"''];
+      eglot = true;
+      symex = true;
+    };
+  }
+#+end_src
+
+**** C
+#+begin_src nix :tangle development/c.nix
+  { pkgs, ... }:
+
+  {
+    programs.emacs.init.usePackage.c-ts-mode = {
+      enable = true;
+      mode = [''"\\.c\\'"''];
+      eglot = true;
+      symex = true;
+    };
+  }
+#+end_src
+
+**** Bash
+#+begin_src nix :tangle development/bash.nix
+  { pkgs, ... }:
+
+  {
+    home.packages = with pkgs; [
+      nodePackages.bash-language-server
+    ];
+
+    programs.emacs.init.usePackage.bash-ts-mode = {
+      enable = true;
+      mode = [''"\\.sh\\'"''];
+      eglot = true;
+    };
+  }
+#+end_src
+
+**** R
+#+begin_src nix :tangle development/r.nix
+  { pkgs, ... }:
+
+  {
+    programs.emacs.init.usePackage.ess-r-mode = {
+      enable = true;
+      package = epkgs: epkgs.ess;
+      mode = [''"\\.R\\'"''];
+      eglot = true;
+      symex = true;
+      custom.ess-ask-for-ess-directory = "nil";
+    };
+  }
+#+end_src
+
+**** Jupyter
+#+begin_src nix :tangle development/jupyter.nix
+  { pkgs, ... }:
+
+  {
+    imports = [
+      ./python.nix
+    ];
+
+    home.packages = with pkgs; [
+      python313Packages.jupytext
+    ];
+
+    programs.emacs.init.usePackage.code-cells = {
+      enable = true;
+      demand = true;
+      generalTwo = {
+        "'normal".code-cells-mode-map = {
+          "M-e" = "'code-cells-forward-cell";
+          "M-o" = "'code-cells-backward-cell";
+        };
+        "local-leader".code-cells-mode-map = {
+          "e" = "'code-cells-eval";
+        };
+      };
+    };
+  }
+#+end_src
+
+**** Prolog
+#+begin_src nix :tangle development/prolog.nix
+  { pkgs, ... }:
+
+  {
+    programs.emacs.init.usePackage.prolog-mode = {
+      enable = true;
+      mode = [''"\\.pl$"''];
+      generalTwo."local-leader".prolog-mode-map."r" = '''(run-prolog :which-key "run")'';
+    };
+  }
+#+end_src
+
+**** Zenscript
+#+begin_src nix :noweb yes :tangle development/zenscript.nix
+  { pkgs, ... }:
+
+  {
+    programs.emacs.init.usePackage.zenscript-mode = {
+      enable = true;
+      mode = [''"\\.zs\\'"''];
+      # There's no way we're fixing the completion system, so we'll turn it off
+      config = ''
+        <<Emacs Zenscript Config>>
+      '';
+    };
+  }
 #+end_src
 
 #+NAME: Emacs Zenscript Config
@@ -2316,95 +2361,138 @@ pyenv allows us to use virtual environments.
     '(() . ()))
 #+end_src
 
-*** Rust
-#+NAME: Emacs Development Rust
-#+begin_src nix
-  rust-ts-mode = {
-    enable = true;
-    defer = true;
-    eglot = true;
-    symex = true;
-  };
+**** Rust
+#+begin_src nix :tangle development/rust.nix
+  { pkgs, ... }:
 
-  rustic = {
-    enable = true;
-    custom = {
-      rust-mode-treesitter-derive = "t";
-      rustic-lsp-client = "'eglot";
+  {
+    programs.emacs.init.usePackage = {
+      rust-ts-mode = {
+        enable = true;
+        defer = true;
+        eglot = true;
+        symex = true;
+      };
+
+      rustic = {
+        enable = true;
+        custom = {
+          rust-mode-treesitter-derive = "t";
+          rustic-lsp-client = "'eglot";
+        };
+      };
     };
-  };
+  }
 #+end_src
 
-*** Clojure
-#+NAME: Development Clojure
-#+begin_src nix
-  clojure-mode = {
-    enable = true;
-    mode = [''"\\.clj\\'"''];
-    eglot = true;
-    symex = true;
-  };
+**** Lua
+#+begin_src nix :tangle development/lua.nix
+  { pkgs, ... }:
 
-  cider = {
-    enable = true;
-    ghook = ["('clojure-mode-hook 'cider-mode)"];
-    generalTwo.local-leader.cider-mode-map = {
-      "s" = '''(cider-jack-in :which-key "start cider")''; 
+  {
+    home.packages = with pkgs; [
+      lua-language-server
+    ];
+
+    programs.emacs.init.usePackage.lua-ts-mode = {
+      enable = true;
+      mode = [''"\\.lua\\'"''];
+      eglot = true;
     };
-  };
+  }
 #+end_src
 
-*** Lua
-#+NAME: Development Lua
-#+begin_src nix
-  lua-ts-mode = {
-    enable = true;
-    mode = [''"\\.lua\\'"''];
-    eglot = true;
-  };
+**** Plantuml
+#+begin_src nix :noweb yes :tangle development/plantuml.nix
+  { pkgs, ... }:
+
+  {
+    programs.emacs.init.usePackage.plantuml-mode = {
+      enable = true;
+      mode = [''"\\.plantuml\\'"'' ''"\\.puml\\'"''];
+      custom = {
+        org-plantuml-exec-mode = "'plantuml";
+        # plantuml-default-exec-mode = "'executable";
+        # plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
+        org-plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
+      }; 
+      config = ''
+        <<Emacs Development Plantuml Config>>
+      '';
+    };
+  }
 #+end_src
 
-*** Scala
-#+NAME: Development Scala
-#+begin_src nix
-  scala-ts-mode = {
-    enable = true;
-    mode = [''"\\.scala\\'"''];
-    eglot = true;
-    symex = true;
-  };
+#+NAME: Emacs Development Plantuml Config
+#+begin_src emacs-lisp
+  (org-babel-do-load-languages 'org-babel-load-languages '((plantuml . t)))
+
+  (defun hex-encode (str)
+    (string-join (mapcar (lambda (c) (format "%02x" c)) str)))
+
+  (defun plantuml-server-encode-url (string)
+    "Encode the string STRING into a URL suitable for PlantUML server interactions."
+    (let* ((encoded-string (hex-encode string)))
+      (concat plantuml-server-url "/" plantuml-output-type "/~h" encoded-string)))
 #+end_src
 
-*** Erlang
-#+NAME: Development Erlang
-#+begin_src nix
-  erlang-ts = {
-    enable = true;
-    mode = [''("\\.erl\\'" . erlang-ts-mode)''];
-    eglot = true;
-    symex = true;
-  };
+**** Scala
+#+begin_src nix :tangle development/scala.nix
+  { pkgs, ... }:
+
+  {
+    programs.emacs.init.usePackage.scala-ts-mode = {
+      enable = true;
+      mode = [''"\\.scala\\'"''];
+      eglot = true;
+      symex = true;
+    };
+  }
 #+end_src
 
-*** Sql
-#+NAME: Development Sql
-#+begin_src nix
-  sql = {
-    enable = true;
-    mode = [''"\\.sql\\'"''];
-    eglot = true;
-    symex = true;
-  };
+**** Erlang
+#+begin_src nix :tangle development/erlang.nix
+  { pkgs, ... }:
+
+  {
+    programs.emacs.init.usePackage.erlang-ts = {
+      enable = true;
+      mode = [''("\\.erl\\'" . erlang-ts-mode)''];
+      eglot = true;
+      symex = true;
+    };
+  }
 #+end_src
 
-*** Forth
-#+NAME: Development Forth
-#+begin_src nix
-  forth-mode = {
-    enable = true;
-    mode = [''"\\.fs\\'"''];
-    symex = true;
-  };
+**** Sql
+#+begin_src nix :tangle development/sql.nix
+  { pkgs, ... }:
+
+  {
+    home.packages = with pkgs; [
+      sqls
+    ];
+
+    programs.emacs.init.usePackage.sql = {
+      enable = true;
+      mode = [''"\\.sql\\'"''];
+      eglot = true;
+      symex = true;
+    };
+  }
+#+end_src
+
+**** Forth
+#+begin_src nix :tangle development/forth.nix
+  { pkgs, ... }:
+
+  {
+    programs.emacs.init.usePackage.forth-mode = {
+      enable = true;
+      mode = [''"\\.fs\\'"''];
+      symex = true;
+    };
+  }
 #+end_src
 
 ** File Management
@@ -5284,6 +5372,8 @@ When you're prompted for your gpg password, the place for entry will be your mod
       pandoc
       texliveFull
       unzip #for nov
+      lemminx
+      marksman
     ];
 
     programs.emacs.init.usePackage = {

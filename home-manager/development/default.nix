@@ -1,18 +1,29 @@
 { inputs, pkgs, pkgs-stable, ... }:
 
 {
-  home.packages = with pkgs; [
-    clojure-lsp
-    python313Packages.python-lsp-server
-    vscode-langservers-extracted
-    typescript-language-server
-    # lua-language-server
-    lemminx
-    marksman
-    nodePackages.bash-language-server
-    nixd
-    # sqls
-    python313Packages.jupytext
+  imports = [
+    # ./clojure.nix
+    # ./python.nix
+    ./java.nix
+    ./nix.nix
+    # ./web-development.nix
+    ./json.nix
+    ./toml.nix
+    # ./racket.nix
+    # ./haskell.nix
+    # ./c.nix
+    ./bash.nix
+    # ./r.nix
+    # ./jupyter.nix
+    # ./prolog.nix
+    ./zenscript.nix
+    # ./rust.nix
+    # ./lua.nix
+    # ./plantuml.nix
+    # ./scala.nix
+    # ./erlang.nix
+    # ./sql.nix
+    # ./forth.nix
   ];
 
   programs.emacs.init.usePackage = {
@@ -100,7 +111,7 @@
 
       treesitter-context = {
         enable = true;
-        package = epkgs: (epkgs.callPackage ./emacs/emacs-packages/treesitter-context.nix {
+        package = epkgs: (epkgs.callPackage ../emacs/emacs-packages/treesitter-context.nix {
           inherit inputs;
           inherit (epkgs) trivialBuild posframe;
         });
@@ -233,242 +244,5 @@
       #     dape-key-prefix = ''"\C-x\C-a"'';
       #   };
       # };
-      
-      python-ts-mode = {
-        enable = true;
-        eglot = true;
-        symex = true;
-        mode = [''"\\.py\\'"''];
-        generalTwo."local-leader".python-mode-map."r" = "'python-shell-send-buffer";
-        custom = {
-          python-shell-interpreter = ''"ipython"'';
-        	python-shell-interpreter-args = ''"-i --simple-prompt"'';
-        };
-      };
-
-      java-ts-mode = {
-        enable = true;
-        mode = [''"\\.java\\'"''];
-        eglot = true;
-        symex = true;
-      };
-      
-      groovy-mode = {
-        enable = true;
-        symex = true;
-        mode = [''"\\.gradle\\'"''];
-      };
-      
-      nix-mode = {
-        enable = true;
-        mode = [''"\\.nix\\'"''];
-        eglot = true;
-        symex = true;
-      };
-      
-      json-ts-mode = {
-        enable = true;
-        mode = [''"\\.json\\'"''];
-        eglot = true;
-        symex = true;
-      };
-      
-      toml-ts-mode = {
-        enable = true;
-        mode = [''"\\.toml\\'"''];
-        symex = true;
-      };
-
-      bash-ts-mode = {
-        enable = true;
-        mode = [''"\\.sh\\'"''];
-        eglot = true;
-      };
-      
-      # c-ts-mode = {
-      #   enable = true;
-      #   mode = [''"\\.c\\'"''];
-      #   eglot = true;
-      #   symex = true;
-      # };
-
-      # prolog-mode = {
-      #   enable = true;
-      #   mode = [''"\\.pl$"''];
-      #   generalTwo."local-leader".prolog-mode-map."r" = '''(run-prolog :which-key "run")'';
-      # };
-
-      html-ts-mode = {
-        enable = true;
-        mode = [''"\\.[px]?html?\\'"''];
-        eglot = true;
-        symex = true;
-      };
-      
-      emmet-mode = {
-        enable = true;
-        ghook = ["('(js-ts-mode-hook sgml-mode-hook css-ts-mode-hook html-ts-mode-hook) 'emmet-mode)"];
-        custom.emmet-move-cursor-between-quotes = "t";
-      };
-      
-      pug-mode = {
-        enable = true;
-        mode = [''"\\.pug\\'"''];
-      };
-      
-      css-ts-mode = {
-        enable = true;
-        mode = [''"\\.css\\'"''];
-        eglot = true;
-        symex = true;
-      };
-      
-      js-ts-mode = {
-        enable = true;
-        mode = [''"\\.js\\'"''];
-        eglot = true;
-        symex = true;
-      };
-
-      # racket-mode = {
-      #   enable = true;
-      #   eglot = true;
-      #   symex = true;
-      #   mode = [''"\\.rkt\\'"''];
-      #   gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
-      #   init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
-      #   config = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
-      #   generalTwo.local-leader.racket-mode-map = {
-      #     "RET" = "'geiser-racket";
-      #     "." = "'racket-xp-describe";
-      #     "r" = "'racket-run";
-      #   };
-      # };
-
-      # haskell-mode = {
-      #   enable = true;
-      #   mode = [''"\\.hs\\'"''];
-      #   eglot = true;
-      #   symex = true;
-      # };
-
-      # ess-r-mode = {
-      #   enable = true;
-      #   package = epkgs: epkgs.ess;
-      #   mode = [''"\\.R\\'"''];
-      #   eglot = true;
-      #   symex = true;
-      #   custom.ess-ask-for-ess-directory = "nil";
-      # };
-
-      code-cells = {
-        enable = true;
-        demand = true;
-        generalTwo = {
-          "'normal".code-cells-mode-map = {
-            "M-e" = "'code-cells-forward-cell";
-            "M-o" = "'code-cells-backward-cell";
-          };
-          "local-leader".code-cells-mode-map = {
-            "e" = "'code-cells-eval";
-          };
-        };
-      };
-
-      zenscript-mode = {
-        enable = true;
-        mode = [''"\\.zs\\'"''];
-        # There's no way we're fixing the completion system, so we'll turn it off
-        config = ''
-          (defun zenscript-get-dumpzs (&optional prompt)
-            "Returns nothing, because I can't fix the dumpfile problem"
-            '(() . ()))
-        '';
-      };
-
-      clojure-mode = {
-        enable = true;
-        mode = [''"\\.clj\\'"''];
-        eglot = true;
-        symex = true;
-      };
-      
-      cider = {
-        enable = true;
-        ghook = ["('clojure-mode-hook 'cider-mode)"];
-        generalTwo.local-leader.cider-mode-map = {
-          "s" = '''(cider-jack-in :which-key "start cider")''; 
-        };
-      };
-      
-      erlang-ts = {
-        enable = true;
-        mode = [''("\\.erl\\'" . erlang-ts-mode)''];
-        eglot = true;
-        symex = true;
-      };
-
-      # plantuml-mode = {
-      #   enable = true;
-      #   mode = [''"\\.plantuml\\'"'' ''"\\.puml\\'"''];
-      #   custom = {
-      #     org-plantuml-exec-mode = "'plantuml";
-      #     # plantuml-default-exec-mode = "'executable";
-      #     # plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
-      #     org-plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
-      #   }; 
-      #   config = ''
-      #     (org-babel-do-load-languages 'org-babel-load-languages '((plantuml . t)))
-      #     
-      #     (defun hex-encode (str)
-      #       (string-join (mapcar (lambda (c) (format "%02x" c)) str)))
-      #     
-      #     (defun plantuml-server-encode-url (string)
-      #       "Encode the string STRING into a URL suitable for PlantUML server interactions."
-      #       (let* ((encoded-string (hex-encode string)))
-      #         (concat plantuml-server-url "/" plantuml-output-type "/~h" encoded-string)))
-      #   '';
-      # };
-
-      # scala-ts-mode = {
-      #   enable = true;
-      #   mode = [''"\\.scala\\'"''];
-      #   eglot = true;
-      #   symex = true;
-      # };
-      
-      # lua-ts-mode = {
-      #   enable = true;
-      #   mode = [''"\\.lua\\'"''];
-      #   eglot = true;
-      # };
-
-      # rust-ts-mode = {
-      #   enable = true;
-      #   defer = true;
-      #   eglot = true;
-      #   symex = true;
-      # };
-      # 
-      # rustic = {
-      #   enable = true;
-      #   custom = {
-      #     rust-mode-treesitter-derive = "t";
-      #     rustic-lsp-client = "'eglot";
-      #   };
-      # };
-      
-      # sql = {
-      #   enable = true;
-      #   mode = [''"\\.sql\\'"''];
-      #   eglot = true;
-      #   symex = true;
-      # };
-
-      forth-mode = {
-        enable = true;
-        mode = [''"\\.fs\\'"''];
-        symex = true;
-      };
   };
 }

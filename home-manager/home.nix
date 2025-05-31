@@ -25,7 +25,8 @@
       ./multimedia.nix
       ./aesthetics.nix
       ./extra-packages.nix
-      ./development.nix
+      # ./development.nix
+      ./development
       ./gui.nix
       ./emacs.nix
       ./shells.nix

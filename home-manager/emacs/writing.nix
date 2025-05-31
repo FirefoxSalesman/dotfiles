@@ -8,6 +8,8 @@
     pandoc
     texliveFull
     unzip #for nov
+    lemminx
+    marksman
   ];
 
   programs.emacs.init.usePackage = {
