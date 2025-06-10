@@ -157,6 +157,22 @@
         "type": "github"
       }
     },
+    "doom-utils_2": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1708378736,
+        "narHash": "sha256-q6geZYywWJbeKUMedqR6RoNCNljA5R2obIHKwcVmKlI=",
+        "owner": "firefoxsalesman",
+        "repo": "doom-utils",
+        "rev": "17498f8ad2f7961803b605508d095487fdde090a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "firefoxsalesman",
+        "repo": "doom-utils",
+        "type": "github"
+      }
+    },
     "eglot-booster": {
       "flake": false,
       "locked": {
@@ -202,6 +218,25 @@
       "original": {
         "owner": "oantolin",
         "repo": "embark",
+        "type": "github"
+      }
+    },
+    "emacs-init": {
+      "inputs": {
+        "doom-utils": "doom-utils_2",
+        "symex2": "symex2"
+      },
+      "locked": {
+        "lastModified": 1749556734,
+        "narHash": "sha256-cQx86joJ4O1C7yg43Z2l5L33xv5tYAXLdOPOh5k22zU=",
+        "owner": "firefoxsalesman",
+        "repo": "NixEmacs",
+        "rev": "2b10279f1e71cb80e31378557d07b3a73eab2e4b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "firefoxsalesman",
+        "repo": "NixEmacs",
         "type": "github"
       }
     },
@@ -713,6 +748,7 @@
         "eglot-booster": "eglot-booster",
         "eglot-x": "eglot-x",
         "emacs-embark": "emacs-embark",
+        "emacs-init": "emacs-init",
         "emacs-overlay": "emacs-overlay",
         "exwm-outer-gaps": "exwm-outer-gaps",
         "exwm-qutebrowser": "exwm-qutebrowser",
@@ -727,7 +763,7 @@
         "org-modern-indent": "org-modern-indent",
         "repeaters": "repeaters",
         "stylix": "stylix",
-        "symex2": "symex2",
+        "symex2": "symex2_2",
         "treesitter-context": "treesitter-context"
       }
     },
@@ -851,6 +887,23 @@
       }
     },
     "symex2": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1729278262,
+        "narHash": "sha256-kuYYCllNu23u61YksBpnZ9wg23VkT2u8Z4FY4Qcd428=",
+        "owner": "firefoxsalesman",
+        "repo": "symex.el",
+        "rev": "9bc19793a3d81e5027b8d40acbcb2e2ad26c220c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "firefoxsalesman",
+        "ref": "2.0-integration",
+        "repo": "symex.el",
+        "type": "github"
+      }
+    },
+    "symex2_2": {
       "flake": false,
       "locked": {
         "lastModified": 1729278262,

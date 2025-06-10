@@ -10,6 +10,8 @@
     
     apple-fonts.url = "github:Lyndeno/apple-fonts.nix";
     
+    emacs-init.url = "github:firefoxsalesman/NixEmacs";
+    
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -107,7 +109,7 @@
     };
   };
 
-  outputs = { self, home-manager, nixgl, nixpkgs, nixpkgs-stable, stylix, ... }@inputs:
+  outputs = { self, home-manager, nixgl, nixpkgs, nixpkgs-stable, stylix, emacs-init, ... }@inputs:
     let
       system = "x86_64-linux";
       
@@ -136,6 +138,7 @@
           modules = [
             ./home.nix
             stylix.homeModules.stylix
+            emacs-init.homeModules.emacs-init
           ];
         } ;
       };
