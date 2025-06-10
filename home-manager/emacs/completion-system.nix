@@ -1,11 +1,6 @@
 { inputs, pkgs, ... }:
 
 {
-  home.packages = with pkgs; [
-    fd
-    ripgrep
-  ];
-
   home.file.".config/emacs/templates.eld".text = ''
     nix-mode
     (upackage p "= {" n "  enable = true;" q "  }")
@@ -203,6 +198,10 @@
     consult = {
       enable = true;
       defer = true;
+      extraPackages = with pkgs; [
+        fd
+        ripgrep
+      ];
       ghook = ["('minibuffer-setup-hook 'consult-initial-narrow)"];
       command = ["consult-goto-line" "consult-keep-lines" "noct-consult-ripgrep-or-line"];
       general = {

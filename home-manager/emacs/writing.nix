@@ -5,11 +5,6 @@
     libreoffice-fresh
     hunspell
     hunspellDicts.en-us-large
-    pandoc
-    texliveFull
-    unzip #for nov
-    lemminx
-    marksman
   ];
 
   programs.emacs.init.usePackage = {
@@ -164,6 +159,7 @@
     
      org-auto-export-pandoc = {
        enable = true;
+       extraPackages = with pkgs; [pandoc];
        ghook = ["('after-save-hook (lambda () (when (equal major-mode 'org-mode) (org-auto-export-pandoc))))"];
      };
     
@@ -215,6 +211,7 @@
     tex = {
       enable = true;
       package = epkgs: epkgs.auctex;
+      extraPackages = with pkgs; [texliveFull];
       init = ''(setq-default TeX-master nil)'';
       gfhook = [
         ''
@@ -314,6 +311,7 @@
     markdown = {
       enable = true;
       defer = true;
+      extraPackages = with pkgs; [marksman];
       eglot = true;
       generalOne.markdown-mode-map."C-c C-e" = "'markdown-do";
       gfhook = ["('markdown-mode-hook (list 'outline-minor-mode 'efs/markdown-font-setup))"];
@@ -443,6 +441,7 @@
     nov = {
       enable = true;
       defer = true;
+      extraPackages = with pkgs; [unzip];
       mode = [''("\\.epub\\'" . nov-mode)''];
     };
   };

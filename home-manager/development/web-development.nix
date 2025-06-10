@@ -1,14 +1,10 @@
 { pkgs, ... }:
 
 {
-  home.packages = with pkgs; [
-    vscode-langservers-extracted
-    typescript-language-server
-  ];
-
   programs.emacs.init.usePackage = {
     html-ts-mode = {
       enable = true;
+      extraPackages = with pkgs; [vscode-langservers-extracted];
       mode = [''"\\.[px]?html?\\'"''];
       eglot = true;
       symex = true;
@@ -27,6 +23,7 @@
 
     css-ts-mode = {
       enable = true;
+      extraPackages = with pkgs; [vscode-langservers-extracted];
       mode = [''"\\.css\\'"''];
       eglot = true;
       symex = true;
@@ -34,6 +31,7 @@
 
     js-ts-mode = {
       enable = true;
+      extraPackages = [typescript-language-server];
       mode = [''"\\.js\\'"''];
       eglot = true;
       symex = true;

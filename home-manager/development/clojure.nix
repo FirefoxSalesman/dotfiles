@@ -5,13 +5,10 @@
     ./java.nix
   ];
 
-  home.packages = with pkgs; [
-    clojure-lsp
-  ];
-  
   programs.emacs.init.usePackage = {
     clojure-mode = {
       enable = true;
+      extraPackages = with pkgs; [clojure-lsp];
       mode = [''"\\.clj\\'"''];
       eglot = true;
       symex = true;

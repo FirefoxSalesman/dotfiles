@@ -457,7 +457,7 @@
            '(("input-keys"
               exwm-input-send-next-key "q")))
           (exwm-input-set-key (kbd "s-<return>") 'efs/make-eshell)
-          (exwm-enable)
+          (exwm-wm-mode)
         '';
         after = ["repeaters"];
       };

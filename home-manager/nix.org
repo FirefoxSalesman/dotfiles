@@ -1614,6 +1614,7 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
       (config.lib.nixGL.wrap blockbench)
       wget
       zip
+      unzip
       zbar
       # comms
       (config.lib.nixGL.wrap teams-for-linux)
@@ -1721,6 +1722,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 #+begin_src nix
   nxml = {
     enable = true;
+    extraPackages = with pkgs; [lemminx];
     generalTwo.local-leader.nxml-mode-map = {
       "a" = '''(eglot-code-actions :which-key "code actions")'';
       "n" = '''(flymake-goto-next-error :which-key "next error")'';
@@ -1929,7 +1931,6 @@ https://github.com/jdtsmith/indent-bars
 #+begin_src nix :noweb yes
   eglot = {
     enable = true;
-    # ghook = ["('LaTeX-mode-hook 'eglot-ensure)"];
     gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
     generalTwo.local-leader.eglot-mode-map = {
       "f" = "'eglot-format-buffer";
@@ -2051,15 +2052,12 @@ pyenv allows us to use virtual environments.
   { pkgs, ... }:
 
   {
-    home.packages = with pkgs; [
-      python313Packages.python-lsp-server
-    ];
-
     programs.emacs.init.usePackage.python-ts-mode = {
       enable = true;
       eglot = true;
       symex = true;
       mode = [''"\\.py\\'"''];
+      extraPackages = with pkgs; [ python313Packages.python-lsp-server ];
       generalTwo."local-leader".python-mode-map."r" = "'python-shell-send-buffer";
       custom = {
         python-shell-interpreter = ''"ipython"'';
@@ -2078,13 +2076,10 @@ pyenv allows us to use virtual environments.
       ./java.nix
     ];
 
-    home.packages = with pkgs; [
-      clojure-lsp
-    ];
-    
     programs.emacs.init.usePackage = {
       clojure-mode = {
         enable = true;
+        extraPackages = with pkgs; [clojure-lsp];
         mode = [''"\\.clj\\'"''];
         eglot = true;
         symex = true;
@@ -2128,13 +2123,10 @@ pyenv allows us to use virtual environments.
   { pkgs, ... }:
 
   {
-    home.packages = with pkgs; [
-      nixd
-    ];
-
     programs.emacs.init.usePackage.nix-mode = {
       enable = true;
       mode = [''"\\.nix\\'"''];
+      extraPackages = with pkgs; [nixd];
       eglot = true;
       symex = true;
     };
@@ -2146,14 +2138,10 @@ pyenv allows us to use virtual environments.
   { pkgs, ... }:
 
   {
-    home.packages = with pkgs; [
-      vscode-langservers-extracted
-      typescript-language-server
-    ];
-
     programs.emacs.init.usePackage = {
       html-ts-mode = {
         enable = true;
+        extraPackages = with pkgs; [vscode-langservers-extracted];
         mode = [''"\\.[px]?html?\\'"''];
         eglot = true;
         symex = true;
@@ -2172,6 +2160,7 @@ pyenv allows us to use virtual environments.
 
       css-ts-mode = {
         enable = true;
+        extraPackages = with pkgs; [vscode-langservers-extracted];
         mode = [''"\\.css\\'"''];
         eglot = true;
         symex = true;
@@ -2179,6 +2168,7 @@ pyenv allows us to use virtual environments.
 
       js-ts-mode = {
         enable = true;
+        extraPackages = [typescript-language-server];
         mode = [''"\\.js\\'"''];
         eglot = true;
         symex = true;
@@ -2192,13 +2182,10 @@ pyenv allows us to use virtual environments.
   { pkgs, ... }:
 
   {
-    home.packages = with pkgs; [
-      vscode-langservers-extracted
-    ];
-
     programs.emacs.init.usePackage = {
       json-ts-mode = {
         enable = true;
+        extraPackages = with pkgs; [vscode-langservers-extracted];
         mode = [''"\\.json\\'"''];
         eglot = true;
         symex = true;
@@ -2206,6 +2193,7 @@ pyenv allows us to use virtual environments.
 
       json5-ts-mode = {
         enable = true;
+        extraPackages = with pkgs; [vscode-langservers-extracted];
         mode = [''"\\.json5\\'"''];
         eglot = true;
         symex = true;
@@ -2282,12 +2270,9 @@ pyenv allows us to use virtual environments.
   { pkgs, ... }:
 
   {
-    home.packages = with pkgs; [
-      nodePackages.bash-language-server
-    ];
-
     programs.emacs.init.usePackage.bash-ts-mode = {
       enable = true;
+      extraPackages = with pkgs; [nodePackages.bash-language-server];
       mode = [''"\\.sh\\'"''];
       eglot = true;
     };
@@ -2319,13 +2304,10 @@ pyenv allows us to use virtual environments.
       ./python.nix
     ];
 
-    home.packages = with pkgs; [
-      python313Packages.jupytext
-    ];
-
     programs.emacs.init.usePackage.code-cells = {
       enable = true;
       demand = true;
+      extraPackages = with pkgs; [python313Packages.jupytext];
       generalTwo = {
         "'normal".code-cells-mode-map = {
           "M-e" = "'code-cells-forward-cell";
@@ -2404,12 +2386,9 @@ pyenv allows us to use virtual environments.
   { pkgs, ... }:
 
   {
-    home.packages = with pkgs; [
-      lua-language-server
-    ];
-
     programs.emacs.init.usePackage.lua-ts-mode = {
       enable = true;
+      extraPackages = with pkgs; [lua-language-server];
       mode = [''"\\.lua\\'"''];
       eglot = true;
     };
@@ -2483,12 +2462,9 @@ pyenv allows us to use virtual environments.
   { pkgs, ... }:
 
   {
-    home.packages = with pkgs; [
-      sqls
-    ];
-
     programs.emacs.init.usePackage.sql = {
       enable = true;
+      extraPackages = with pkgs; [sqls];
       mode = [''"\\.sql\\'"''];
       eglot = true;
       symex = true;
@@ -3885,11 +3861,6 @@ My completions system is based around vertico, because that's what all the cool 
   { inputs, pkgs, ... }:
 
   {
-    home.packages = with pkgs; [
-      fd
-      ripgrep
-    ];
-
     <<Emacs Templates File>>
 
     programs.emacs.init.usePackage = {
@@ -4101,6 +4072,10 @@ Evil integration is from noctuid & minad
   consult = {
     enable = true;
     defer = true;
+    extraPackages = with pkgs; [
+      fd
+      ripgrep
+    ];
     ghook = ["('minibuffer-setup-hook 'consult-initial-narrow)"];
     command = ["consult-goto-line" "consult-keep-lines" "noct-consult-ripgrep-or-line"];
     general = {
@@ -4687,11 +4662,6 @@ When you're prompted for your gpg password, the place for entry will be your mod
       libreoffice-fresh
       hunspell
       hunspellDicts.en-us-large
-      pandoc
-      texliveFull
-      unzip #for nov
-      lemminx
-      marksman
     ];
 
     programs.emacs.init.usePackage = {
@@ -4891,6 +4861,7 @@ https://emacs.stackexchange.com/questions/20339/easiest-way-to-render-an-overlin
 
    org-auto-export-pandoc = {
      enable = true;
+     extraPackages = with pkgs; [pandoc];
      ghook = ["('after-save-hook (lambda () (when (equal major-mode 'org-mode) (org-auto-export-pandoc))))"];
    };
 
@@ -4988,6 +4959,7 @@ No idea what the rest of this is for.
   tex = {
     enable = true;
     package = epkgs: epkgs.auctex;
+    extraPackages = with pkgs; [texliveFull];
     init = ''(setq-default TeX-master nil)'';
     gfhook = [
       ''
@@ -5096,6 +5068,7 @@ No idea what the rest of this is for.
   markdown = {
     enable = true;
     defer = true;
+    extraPackages = with pkgs; [marksman];
     eglot = true;
     generalOne.markdown-mode-map."C-c C-e" = "'markdown-do";
     gfhook = ["('markdown-mode-hook (list 'outline-minor-mode 'efs/markdown-font-setup))"];
@@ -5254,6 +5227,7 @@ You can't get page numbers, though, which becomes unfortunate for doing citation
   nov = {
     enable = true;
     defer = true;
+    extraPackages = with pkgs; [unzip];
     mode = [''("\\.epub\\'" . nov-mode)''];
   };
 #+end_src
@@ -5796,7 +5770,7 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
    '(("input-keys"
       exwm-input-send-next-key "q")))
   (exwm-input-set-key (kbd "s-<return>") 'efs/make-eshell)
-  (exwm-enable)
+  (exwm-wm-mode)
 #+end_src
 
 **** Package Definitions

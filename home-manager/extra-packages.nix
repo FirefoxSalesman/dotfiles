@@ -7,6 +7,7 @@
     (config.lib.nixGL.wrap blockbench)
     wget
     zip
+    unzip
     zbar
     # comms
     (config.lib.nixGL.wrap teams-for-linux)

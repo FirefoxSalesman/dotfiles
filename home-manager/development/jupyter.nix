@@ -5,13 +5,10 @@
     ./python.nix
   ];
 
-  home.packages = with pkgs; [
-    python313Packages.jupytext
-  ];
-
   programs.emacs.init.usePackage.code-cells = {
     enable = true;
     demand = true;
+    extraPackages = with pkgs; [python313Packages.jupytext];
     generalTwo = {
       "'normal".code-cells-mode-map = {
         "M-e" = "'code-cells-forward-cell";

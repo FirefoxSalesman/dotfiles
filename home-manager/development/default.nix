@@ -29,6 +29,7 @@
   programs.emacs.init.usePackage = {
       nxml = {
         enable = true;
+        extraPackages = with pkgs; [lemminx];
         generalTwo.local-leader.nxml-mode-map = {
           "a" = '''(eglot-code-actions :which-key "code actions")'';
           "n" = '''(flymake-goto-next-error :which-key "next error")'';
@@ -182,7 +183,6 @@
 
       eglot = {
         enable = true;
-        # ghook = ["('LaTeX-mode-hook 'eglot-ensure)"];
         gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
         generalTwo.local-leader.eglot-mode-map = {
           "f" = "'eglot-format-buffer";
