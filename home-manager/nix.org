@@ -2676,7 +2676,7 @@ This came from Robert Helgeson's nur expressions. I've tweaked it a little to ad
 https://gitlab.com/rycee/nur-expressions
 
 **** Setup
-#+begin_src nix :noweb yes :tangle emacs/emacs-init.nix
+#+begin_src nix :noweb yes :tangle modules/emacs-init.nix
   { config, lib, inputs, pkgs, ... }:
 
   with lib;
@@ -3373,7 +3373,7 @@ https://gitlab.com/rycee/nur-expressions
 
   {
     imports = [
-      ./emacs/emacs-init.nix
+      ./modules/emacs-init.nix
       ./emacs/early-init.nix
       ./emacs/evil.nix
       ./emacs/file-management.nix
@@ -3430,7 +3430,7 @@ https://gitlab.com/rycee/nur-expressions
 #+end_src
 
 ***** Package Definitions
-#+begin_src nix :tangle emacs/emacs-packages/doom-utils.nix
+#+begin_src nix :tangle modules/emacs-packages/doom-utils.nix
   { trivialBuild, inputs } :
 
   trivialBuild rec {

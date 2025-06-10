@@ -2,7 +2,7 @@
 
 {
   imports = [
-    ./emacs/emacs-init.nix
+    ./modules/emacs-init.nix
     ./emacs/early-init.nix
     ./emacs/evil.nix
     ./emacs/file-management.nix
