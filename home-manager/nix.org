@@ -2736,7 +2736,7 @@ I'm running dired with a couple of small packages that improve on it
 #+end_src
 
 ***** Package Definitions
-#+begin_src nix :tangle modules/emacs-packages/doom-utils.nix
+#+begin_src nix :tangle emacs/emacs-packages/doom-utils.nix
   { trivialBuild, inputs } :
 
   trivialBuild rec {
