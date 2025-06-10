@@ -163,7 +163,7 @@
   };
   modules = [
     ./home.nix
-    stylix.homeManagerModules.stylix
+    stylix.homeModules.stylix
   ];
 #+end_src
 
@@ -877,7 +877,8 @@ Eat lets us get away with using eshell all the time. It can be used to get into 
   				       ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
   				       ("l" "ls $*")
   				       ("halt" "doas shutdown -P now")
-  				       ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'"))
+  				       ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'")
+  				       ("trash" "rm -rf ~/.local/Trash"))
   	 eshell-history-size 0
            eshell-buffer-maximum-lines 100
            eshell-hist-ignoredups t
@@ -1760,6 +1761,7 @@ https://github.com/jdtsmith/indent-bars
                  (dolist (grammar
                           '(;(xml "https://github.com/ObserverOfTime/tree-sitter-xml")
                             (toml "https://github.com/ikatyang/tree-sitter-toml")
+                            (json5 "https://github.com/Joakker/tree-sitter-json5")
                             (elisp "https://github.com/Wilfred/tree-sitter-elisp")))
                    (add-to-list 'treesit-language-source-alist grammar)
                    ;; Only install `grammar' if we don't already have it
@@ -2191,11 +2193,20 @@ pyenv allows us to use virtual environments.
       vscode-langservers-extracted
     ];
 
-    programs.emacs.init.usePackage.json-ts-mode = {
-      enable = true;
-      mode = [''"\\.json\\'"''];
-      eglot = true;
-      symex = true;
+    programs.emacs.init.usePackage = {
+      json-ts-mode = {
+        enable = true;
+        mode = [''"\\.json\\'"''];
+        eglot = true;
+        symex = true;
+      };
+
+      json5-ts-mode = {
+        enable = true;
+        mode = [''"\\.json5\\'"''];
+        eglot = true;
+        symex = true;
+      };
     };
   }
 #+end_src
@@ -2589,6 +2600,7 @@ I'm running dired with a couple of small packages that improve on it
       
       image = {
         enable = true;
+        gfhook = ["('image-mode-hook 'image-transform-fit-to-window)"];
         generalTwo."'normal".image-map = {
           "E" = "'image-next-file";
           "O" = "'image-previous-file";

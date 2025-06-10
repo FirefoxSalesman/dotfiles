@@ -68,6 +68,7 @@
                      (dolist (grammar
                               '(;(xml "https://github.com/ObserverOfTime/tree-sitter-xml")
                                 (toml "https://github.com/ikatyang/tree-sitter-toml")
+                                (json5 "https://github.com/Joakker/tree-sitter-json5")
                                 (elisp "https://github.com/Wilfred/tree-sitter-elisp")))
                        (add-to-list 'treesit-language-source-alist grammar)
                        ;; Only install `grammar' if we don't already have it

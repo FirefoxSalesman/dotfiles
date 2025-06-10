@@ -135,7 +135,7 @@
           };
           modules = [
             ./home.nix
-            stylix.homeManagerModules.stylix
+            stylix.homeModules.stylix
           ];
         } ;
       };

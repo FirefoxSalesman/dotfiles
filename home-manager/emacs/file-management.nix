@@ -126,6 +126,7 @@
     
     image = {
       enable = true;
+      gfhook = ["('image-mode-hook 'image-transform-fit-to-window)"];
       generalTwo."'normal".image-map = {
         "E" = "'image-next-file";
         "O" = "'image-previous-file";
