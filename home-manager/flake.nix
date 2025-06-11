@@ -122,55 +122,55 @@
             emacsPackagesFor = emacs: (
               (prev.emacsPackagesFor emacs).overrideScope (
                 nfinal: nprev: {
-                  qutebrowser = (prev.emacsPackages.callPackage ./emacs/emacs-packages/qutebrowser.nix {
+                  qutebrowser = (prev.emacsPackages.callPackage ./packages/emacs/qutebrowser.nix {
                     inherit inputs;
                     inherit (prev.emacsPackages) trivialBuild dash consult exwm password-store evil;
                   });
-                  doom-nano-modeline = (prev.emacsPackages.callPackage ./emacs/emacs-packages/doom-nano-modeline.nix {
+                  doom-nano-modeline = (prev.emacsPackages.callPackage ./packages/emacs/doom-nano-modeline.nix {
                     inherit inputs;
                     inherit (prev.emacsPackages) trivialBuild doom-themes;
                   });
-                  treesitter-context = (prev.emacsPackages.callPackage ./emacs/emacs-packages/treesitter-context.nix {
+                  treesitter-context = (prev.emacsPackages.callPackage ./packages/emacs/treesitter-context.nix {
                     inherit inputs;
                     inherit (prev.emacsPackages) trivialBuild posframe;
                   });
-                  dired-single = (prev.emacsPackages.callPackage ./emacs/emacs-packages/dired-single.nix {
+                  dired-single = (prev.emacsPackages.callPackage ./packages/emacs/dired-single.nix {
                     inherit inputs;
                     inherit (prev.emacsPackages) trivialBuild;
                   });
-                  repeaters = (prev.emacsPackages.callPackage ./emacs/emacs-packages/repeaters.nix {
+                  repeaters = (prev.emacsPackages.callPackage ./packages/emacs/repeaters.nix {
                     inherit inputs;
                     inherit (prev.emacsPackages) trivialBuild;
                   });
-                  doom-utils = (prev.emacsPackages.callPackage ./emacs/emacs-packages/doom-utils.nix {
+                  doom-utils = (prev.emacsPackages.callPackage ./packages/emacs/doom-utils.nix {
                     inherit inputs;
                     inherit (prev.emacsPackages) trivialBuild;
                   });
-                  app-launcher = (prev.emacsPackages.callPackage ./emacs/emacs-packages/app-launcher.nix {
+                  app-launcher = (prev.emacsPackages.callPackage ./packages/emacs/app-launcher.nix {
                     inherit inputs;
                     inherit (prev.emacsPackages) trivialBuild;
                   });
-                  ezf = (prev.emacsPackages.callPackage ./emacs/emacs-packages/ezf.nix {
+                  ezf = (prev.emacsPackages.callPackage ./packages/emacs/ezf.nix {
                     inherit inputs;
                     inherit (prev.emacsPackages) trivialBuild;
                   });
-                  org-modern-indent = (prev.emacsPackages.callPackage ./emacs/emacs-packages/org-modern-indent.nix {
+                  org-modern-indent = (prev.emacsPackages.callPackage ./packages/emacs/org-modern-indent.nix {
                     inherit inputs;
                     inherit (prev.emacsPackages) trivialBuild compat;
                   });
-                  exwm-outer-gaps = (prev.emacsPackages.callPackage ./emacs/emacs-packages/exwm-outer-gaps.nix {
+                  exwm-outer-gaps = (prev.emacsPackages.callPackage ./packages/emacs/exwm-outer-gaps.nix {
                     inherit inputs;
                     inherit (prev.emacsPackages) trivialBuild exwm xelb;
                   });
-                  gptel-quick = (prev.emacsPackages.callPackage ./emacs/emacs-packages/gptel-quick.nix {
+                  gptel-quick = (prev.emacsPackages.callPackage ./packages/emacs/gptel-quick.nix {
                     inherit inputs;
                     inherit (prev.emacsPackages) trivialBuild gptel;
                   });
-                  mpc-wrapper = (prev.emacsPackages.callPackage ./emacs/emacs-packages/mpc-wrapper.nix {
+                  mpc-wrapper = (prev.emacsPackages.callPackage ./packages/emacs/mpc-wrapper.nix {
                     inherit inputs;
                     inherit (prev.emacsPackages) trivialBuild;
                   });
-                  symex = (prev.emacsPackages.callPackage ./emacs/emacs-packages/symex2.nix {
+                  symex = (prev.emacsPackages.callPackage ./packages/emacs/symex2.nix {
                     inherit inputs;
                     inherit (prev.emacsPackages) trivialBuild tsc tree-sitter evil evil-surround seq paredit;
                   });

@@ -150,55 +150,55 @@
         emacsPackagesFor = emacs: (
           (prev.emacsPackagesFor emacs).overrideScope (
             nfinal: nprev: {
-              qutebrowser = (prev.emacsPackages.callPackage ./emacs/emacs-packages/qutebrowser.nix {
+              qutebrowser = (prev.emacsPackages.callPackage ./packages/emacs/qutebrowser.nix {
                 inherit inputs;
                 inherit (prev.emacsPackages) trivialBuild dash consult exwm password-store evil;
               });
-              doom-nano-modeline = (prev.emacsPackages.callPackage ./emacs/emacs-packages/doom-nano-modeline.nix {
+              doom-nano-modeline = (prev.emacsPackages.callPackage ./packages/emacs/doom-nano-modeline.nix {
                 inherit inputs;
                 inherit (prev.emacsPackages) trivialBuild doom-themes;
               });
-              treesitter-context = (prev.emacsPackages.callPackage ./emacs/emacs-packages/treesitter-context.nix {
+              treesitter-context = (prev.emacsPackages.callPackage ./packages/emacs/treesitter-context.nix {
                 inherit inputs;
                 inherit (prev.emacsPackages) trivialBuild posframe;
               });
-              dired-single = (prev.emacsPackages.callPackage ./emacs/emacs-packages/dired-single.nix {
+              dired-single = (prev.emacsPackages.callPackage ./packages/emacs/dired-single.nix {
                 inherit inputs;
                 inherit (prev.emacsPackages) trivialBuild;
               });
-              repeaters = (prev.emacsPackages.callPackage ./emacs/emacs-packages/repeaters.nix {
+              repeaters = (prev.emacsPackages.callPackage ./packages/emacs/repeaters.nix {
                 inherit inputs;
                 inherit (prev.emacsPackages) trivialBuild;
               });
-              doom-utils = (prev.emacsPackages.callPackage ./emacs/emacs-packages/doom-utils.nix {
+              doom-utils = (prev.emacsPackages.callPackage ./packages/emacs/doom-utils.nix {
                 inherit inputs;
                 inherit (prev.emacsPackages) trivialBuild;
               });
-              app-launcher = (prev.emacsPackages.callPackage ./emacs/emacs-packages/app-launcher.nix {
+              app-launcher = (prev.emacsPackages.callPackage ./packages/emacs/app-launcher.nix {
                 inherit inputs;
                 inherit (prev.emacsPackages) trivialBuild;
               });
-              ezf = (prev.emacsPackages.callPackage ./emacs/emacs-packages/ezf.nix {
+              ezf = (prev.emacsPackages.callPackage ./packages/emacs/ezf.nix {
                 inherit inputs;
                 inherit (prev.emacsPackages) trivialBuild;
               });
-              org-modern-indent = (prev.emacsPackages.callPackage ./emacs/emacs-packages/org-modern-indent.nix {
+              org-modern-indent = (prev.emacsPackages.callPackage ./packages/emacs/org-modern-indent.nix {
                 inherit inputs;
                 inherit (prev.emacsPackages) trivialBuild compat;
               });
-              exwm-outer-gaps = (prev.emacsPackages.callPackage ./emacs/emacs-packages/exwm-outer-gaps.nix {
+              exwm-outer-gaps = (prev.emacsPackages.callPackage ./packages/emacs/exwm-outer-gaps.nix {
                 inherit inputs;
                 inherit (prev.emacsPackages) trivialBuild exwm xelb;
               });
-              gptel-quick = (prev.emacsPackages.callPackage ./emacs/emacs-packages/gptel-quick.nix {
+              gptel-quick = (prev.emacsPackages.callPackage ./packages/emacs/gptel-quick.nix {
                 inherit inputs;
                 inherit (prev.emacsPackages) trivialBuild gptel;
               });
-              mpc-wrapper = (prev.emacsPackages.callPackage ./emacs/emacs-packages/mpc-wrapper.nix {
+              mpc-wrapper = (prev.emacsPackages.callPackage ./packages/emacs/mpc-wrapper.nix {
                 inherit inputs;
                 inherit (prev.emacsPackages) trivialBuild;
               });
-              symex = (prev.emacsPackages.callPackage ./emacs/emacs-packages/symex2.nix {
+              symex = (prev.emacsPackages.callPackage ./packages/emacs/symex2.nix {
                 inherit inputs;
                 inherit (prev.emacsPackages) trivialBuild tsc tree-sitter evil evil-surround seq paredit;
               });
@@ -257,6 +257,248 @@
     stylix.homeModules.stylix
     emacs-init.homeModules.emacs-init
   ];
+#+end_src
+
+* Packages
+** Emacs
+*** Doom Nano Modeline
+#+begin_src nix :tangle packages/emacs/doom-nano-modeline.nix
+  { inputs, trivialBuild, doom-themes } :
+
+  trivialBuild rec {
+    pname = "doom-nano-modeline";
+    version = "current";
+    src = inputs.doom-nano-modeline;
+
+    propagatedUserEnvPkgs = [
+      doom-themes
+    ];
+
+    buildInputs = propagatedUserEnvPkgs;
+  }
+
+#+end_src
+
+*** Treesitter Context
+#+begin_src nix :tangle packages/emacs/treesitter-context.nix
+  { inputs, trivialBuild, posframe } :
+
+  trivialBuild rec {
+    pname = "treesitter-context";
+    version = "current";
+    src = inputs.treesitter-context;
+
+    propagatedUserEnvPkgs = [
+      posframe
+    ];
+
+    buildInputs = propagatedUserEnvPkgs;
+  }
+
+#+end_src
+
+*** Dired Single
+#+begin_src nix :tangle packages/emacs/dired-single.nix
+  { trivialBuild, inputs } :
+
+  trivialBuild rec {
+    pname = "dired-single";
+    version = "current";
+    src = inputs.dired-single;
+  }
+#+end_src
+*** Eglot Booster
+#+begin_src nix :tangle packages/emacs/eglot-booster.nix
+  { inputs, trivialBuild, eglot, emacs-lsp-booster, jsonrpc } :
+
+  trivialBuild rec {
+    pname = "eglot-booster";
+    version = "current";
+    src = inputs.eglot-booster;
+
+    propagatedUserEnvPkgs = [
+      eglot
+      emacs-lsp-booster
+      jsonrpc
+    ];
+
+    buildInputs = propagatedUserEnvPkgs;
+  }
+
+#+end_src
+
+*** Eglot X
+#+begin_src nix :tangle packages/emacs/eglot-x.nix
+  { inputs, trivialBuild, eglot  } :
+
+  trivialBuild rec {
+    pname = "eglot-booster";
+    version = "current";
+    src = inputs.eglot-booster;
+
+    propagatedUserEnvPkgs = [
+      eglot
+    ];
+
+    buildInputs = propagatedUserEnvPkgs;
+  }
+#+end_src
+
+*** Doom Utils
+#+begin_src nix :tangle packages/emacs/doom-utils.nix
+  { trivialBuild, inputs } :
+
+  trivialBuild rec {
+    pname = "doom-utils";
+    version = "current";
+    src = inputs.doom-utils;
+  }
+
+#+end_src
+
+*** Repeaters
+#+begin_src nix :tangle packages/emacs/repeaters.nix
+  { trivialBuild, inputs } :
+
+  trivialBuild rec {
+    pname = "repeaters";
+    version = "current";
+    src = inputs.repeaters;
+  }
+#+end_src
+
+*** Symex
+#+begin_src nix :tangle packages/emacs/symex2.nix
+  { inputs, trivialBuild, tsc, tree-sitter, paredit, evil, evil-surround, seq } :
+
+  trivialBuild rec {
+    pname = "symex2";
+    version = "current";
+    src = inputs.symex2;
+
+    propagatedUserEnvPkgs = [
+      tsc
+      tree-sitter
+      paredit
+      evil
+      evil-surround
+      seq
+    ];
+
+    buildInputs = propagatedUserEnvPkgs;
+  }
+
+#+end_src
+
+*** App Launcher
+#+begin_src nix :tangle packages/emacs/app-launcher.nix
+  { trivialBuild, inputs } :
+
+  trivialBuild rec {
+    pname = "app-launcher";
+    version = "current";
+    src = inputs.app-launcher;
+  }
+
+#+end_src
+
+*** Ezf
+#+begin_src nix :tangle packages/emacs/ezf.nix
+  { trivialBuild, inputs } :
+
+  trivialBuild rec {
+    pname = "ezf";
+    version = "current";
+    src = inputs.ezf;
+  }
+#+end_src
+
+*** Org Modern Indent
+#+begin_src nix :tangle packages/emacs/org-modern-indent.nix
+  { inputs, trivialBuild, compat } :
+
+  trivialBuild rec {
+    pname = "org-modern-indent";
+    version = "current";
+    src = inputs.org-modern-indent;
+
+    propagatedUserEnvPkgs = [
+      compat
+    ];
+
+    buildInputs = propagatedUserEnvPkgs;
+  }
+
+#+end_src
+
+*** EXWM Outer Gaps
+#+begin_src nix :tangle packages/emacs/exwm-outer-gaps.nix
+  { inputs, trivialBuild, xelb, exwm } :
+
+  trivialBuild rec {
+    pname = "exwm-outer-gaps";
+    version = "current";
+    src = inputs.exwm-outer-gaps;
+
+    propagatedUserEnvPkgs = [
+      xelb
+      exwm
+    ];
+
+    buildInputs = propagatedUserEnvPkgs;
+  }
+
+#+end_src
+
+*** GPT.el
+#+begin_src nix :tangle packages/emacs/gptel-quick.nix
+  { inputs, trivialBuild, gptel } :
+
+  trivialBuild rec {
+    pname = "gptel-quick";
+    version = "current";
+    src = inputs.gptel-quick;
+
+    propagatedUserEnvPkgs = [
+      gptel
+    ];
+
+    buildInputs = propagatedUserEnvPkgs;
+  }
+
+#+end_src
+
+*** MPC Wrapper
+#+begin_src nix :tangle packages/emacs/mpc-wrapper.nix
+  { trivialBuild, inputs } :
+
+  trivialBuild rec {
+    pname = "mpc-wrapper";
+    version = "current";
+    src = inputs.mpc-wrapper;
+  }
+#+end_src
+
+*** Qutebrowser
+#+begin_src nix :tangle packages/emacs/qutebrowser.nix
+  { trivialBuild, inputs, consult, exwm, password-store, dash, evil, doom-modeline } :
+
+  trivialBuild rec {
+    pname = "qutebrowser";
+    version = "current";
+    src = inputs.exwm-qutebrowser;
+
+    propagatedUserEnvPkgs = [
+      consult
+      exwm
+      password-store
+      dash
+      evil
+      doom-modeline
+    ];
+
+    buildInputs = propagatedUserEnvPkgs;
+  }
 #+end_src
 
 * Notes to my future self
@@ -1556,24 +1798,6 @@ This is just overriding a bunch of functions so that I can put all the info in t
       `((global menu-item ,(format-mode-line the-format) ignore))))
 #+end_src
 
-**** Package Definition
-#+begin_src nix :tangle emacs/emacs-packages/doom-nano-modeline.nix
-  { inputs, trivialBuild, doom-themes } :
-
-  trivialBuild rec {
-    pname = "doom-nano-modeline";
-    version = "current";
-    src = inputs.doom-nano-modeline;
-
-    propagatedUserEnvPkgs = [
-      doom-themes
-    ];
-
-    buildInputs = propagatedUserEnvPkgs;
-  }
-
-#+end_src
-
 *** Emacs Theme
 Makes emacs' theme mimic the wallpaper. A good pywal config will get most things to match.
 #+NAME: Emacs Ricing Theme
@@ -1935,24 +2159,6 @@ https://github.com/jdtsmith/indent-bars
   };
 #+end_src
 
-***** Package Definitions
-#+begin_src nix :tangle emacs/emacs-packages/treesitter-context.nix
-  { inputs, trivialBuild, posframe } :
-
-  trivialBuild rec {
-    pname = "treesitter-context";
-    version = "current";
-    src = inputs.treesitter-context;
-
-    propagatedUserEnvPkgs = [
-      posframe
-    ];
-
-    buildInputs = propagatedUserEnvPkgs;
-  }
-
-#+end_src
-
 *** Project
 #+NAME: Development Project
 #+begin_src nix :noweb yes
@@ -2069,42 +2275,6 @@ https://github.com/jdtsmith/indent-bars
   (general-add-advice 'evil-collection-eglot-setup
   		    :after '(lambda ()
   			      (general-def 'normal eglot-mode-map "K" 'evil-substitute)))
-#+end_src
-
-**** Package Definitiions
-#+begin_src nix :tangle emacs/emacs-packages/eglot-booster.nix
-  { inputs, trivialBuild, eglot, emacs-lsp-booster, jsonrpc } :
-
-  trivialBuild rec {
-    pname = "eglot-booster";
-    version = "current";
-    src = inputs.eglot-booster;
-
-    propagatedUserEnvPkgs = [
-      eglot
-      emacs-lsp-booster
-      jsonrpc
-    ];
-
-    buildInputs = propagatedUserEnvPkgs;
-  }
-
-#+end_src
-
-#+begin_src nix :tangle emacs/emacs-packages/eglot-x.nix
-  { inputs, trivialBuild, eglot  } :
-
-  trivialBuild rec {
-    pname = "eglot-booster";
-    version = "current";
-    src = inputs.eglot-booster;
-
-    propagatedUserEnvPkgs = [
-      eglot
-    ];
-
-    buildInputs = propagatedUserEnvPkgs;
-  }
 #+end_src
 
 *** Dape
@@ -2714,17 +2884,6 @@ I'm running dired with a couple of small packages that improve on it
   		 'ignore)))
 #+end_src
 
-**** Package Definition
-#+begin_src nix :tangle emacs/emacs-packages/dired-single.nix
-  { trivialBuild, inputs } :
-
-  trivialBuild rec {
-    pname = "dired-single";
-    version = "current";
-    src = inputs.dired-single;
-  }
-#+end_src
-
 ** Emacs
 *** Main
 **** Inputs & Imports
@@ -2782,39 +2941,6 @@ I'm running dired with a couple of small packages that improve on it
         <<Emacs Postlude>>
       };
     };
-  }
-#+end_src
-
-***** Package Definitions
-#+begin_src nix :tangle emacs/emacs-packages/doom-utils.nix
-  { trivialBuild, inputs } :
-
-  trivialBuild rec {
-    pname = "doom-utils";
-    version = "current";
-    src = inputs.doom-utils;
-  }
-
-#+end_src
-
-#+begin_src nix :tangle emacs/emacs-packages/on.nix
-  { trivialBuild, inputs } :
-
-  trivialBuild rec {
-    pname = "on";
-    version = "current";
-    src = inputs.on-el;
-  }
-
-#+end_src
-
-#+begin_src nix :tangle emacs/emacs-packages/repeaters.nix
-  { trivialBuild, inputs } :
-
-  trivialBuild rec {
-    pname = "repeaters";
-    version = "current";
-    src = inputs.repeaters;
   }
 #+end_src
 
@@ -3748,29 +3874,6 @@ Gives us an entire state where we can rapidly make specific edits to code.
 
 #+end_src
 
-***** Package Definitions
-#+begin_src nix :tangle emacs/emacs-packages/symex2.nix
-  { inputs, trivialBuild, tsc, tree-sitter, paredit, evil, evil-surround, seq } :
-
-  trivialBuild rec {
-    pname = "symex2";
-    version = "current";
-    src = inputs.symex2;
-
-    propagatedUserEnvPkgs = [
-      tsc
-      tree-sitter
-      paredit
-      evil
-      evil-surround
-      seq
-    ];
-
-    buildInputs = propagatedUserEnvPkgs;
-  }
-
-#+end_src
-
 **** God State
 God state lets you use emacs bindings faster, & without hanging on modifier keys.
 By default, any key pressed while in god state is treated as if it was pressed with control.
@@ -4430,18 +4533,6 @@ Ace-window & avy actions from karthink
   };
 #+end_src
 
-***** Package Definition
-#+begin_src nix :tangle emacs/emacs-packages/app-launcher.nix
-  { trivialBuild, inputs } :
-
-  trivialBuild rec {
-    pname = "app-launcher";
-    version = "current";
-    src = inputs.app-launcher;
-  }
-
-#+end_src
-
 **** Search
 #+NAME: Emacs Search
 #+begin_src nix :noweb yes
@@ -4578,17 +4669,6 @@ An alternative to fzf.
     enable = true;
     deferIncrementally = true;
   };
-#+end_src
-
-***** Package Definitions
-#+begin_src nix :tangle emacs/emacs-packages/ezf.nix
-  { trivialBuild, inputs } :
-
-  trivialBuild rec {
-    pname = "ezf";
-    version = "current";
-    src = inputs.ezf;
-  }
 #+end_src
 
 *** Help System
@@ -4899,24 +4979,6 @@ https://emacs.stackexchange.com/questions/20339/easiest-way-to-render-an-overlin
     enable = true;
     ghook = ["('org-mode-hook 'org-appear-mode)"];
   };
-#+end_src
-
-****** Package Definition
-#+begin_src nix :tangle emacs/emacs-packages/org-modern-indent.nix
-  { inputs, trivialBuild, compat } :
-
-  trivialBuild rec {
-    pname = "org-modern-indent";
-    version = "current";
-    src = inputs.org-modern-indent;
-
-    propagatedUserEnvPkgs = [
-      compat
-    ];
-
-    buildInputs = propagatedUserEnvPkgs;
-  }
-
 #+end_src
 
 ***** Denote
@@ -5798,25 +5860,6 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
   (exwm-wm-mode)
 #+end_src
 
-**** Package Definitions
-#+begin_src nix :tangle emacs/emacs-packages/exwm-outer-gaps.nix
-  { inputs, trivialBuild, xelb, exwm } :
-
-  trivialBuild rec {
-    pname = "exwm-outer-gaps";
-    version = "current";
-    src = inputs.exwm-outer-gaps;
-
-    propagatedUserEnvPkgs = [
-      xelb
-      exwm
-    ];
-
-    buildInputs = propagatedUserEnvPkgs;
-  }
-
-#+end_src
-
 *** Popper & Proced
 #+NAME: Emacs Window Management Popper & Proced
 #+begin_src nix :noweb yes
@@ -5974,24 +6017,6 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
     (start-process-shell-command "start-ollama" nil "${(import ./scripts/start-ollama.nix { inherit pkgs config; })}/bin/start-ollama"))
 #+end_src
 
-*** Package Definitions
-#+begin_src nix :tangle emacs/emacs-packages/gptel-quick.nix
-  { inputs, trivialBuild, gptel } :
-
-  trivialBuild rec {
-    pname = "gptel-quick";
-    version = "current";
-    src = inputs.gptel-quick;
-
-    propagatedUserEnvPkgs = [
-      gptel
-    ];
-
-    buildInputs = propagatedUserEnvPkgs;
-  }
-
-#+end_src
-
 ** Multimedia
 This is where all the audio/video stuff goes
 #+begin_src nix :tangle multimedia.nix :noweb yes
@@ -6066,17 +6091,6 @@ This is where all the audio/video stuff goes
 
 #+end_src
 
-
-**** Package Definitions
-#+begin_src nix :tangle emacs/emacs-packages/mpc-wrapper.nix
-  { trivialBuild, inputs } :
-
-  trivialBuild rec {
-    pname = "mpc-wrapper";
-    version = "current";
-    src = inputs.mpc-wrapper;
-  }
-#+end_src
 
 *** MPV
 The mpv package lets us start an mpv process & puppeteer it with emacs. I'm definitely not using it to its full potential.
@@ -6718,28 +6732,6 @@ This is a very ugly way of doing things
       (kill-buffer)
       (add-hook 'dired-mode-hook 'qute-dired-mode)
       (setq qute-dired-buffers (list (dired "~/")))))
-#+end_src
-
-***** Package Definition
-#+begin_src nix :tangle emacs/emacs-packages/qutebrowser.nix
-  { trivialBuild, inputs, consult, exwm, password-store, dash, evil, doom-modeline } :
-
-  trivialBuild rec {
-    pname = "qutebrowser";
-    version = "current";
-    src = inputs.exwm-qutebrowser;
-
-    propagatedUserEnvPkgs = [
-      consult
-      exwm
-      password-store
-      dash
-      evil
-      doom-modeline
-    ];
-
-    buildInputs = propagatedUserEnvPkgs;
-  }
 #+end_src
 
 ** Keyboard
