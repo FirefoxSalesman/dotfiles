@@ -239,18 +239,6 @@
         gfhook = ["('bufler-workspace-workspaces-as-tabs-mode-hook '(global-tab-line-mode burly-tabs-mode))"];
       };
 
-      ace-window = {
-        enable = true;
-        defer = true;
-        command = ["ace-window"];
-        general."C-x o" = "'ace-window";
-        config = ''(ace-window-posframe-mode)'';
-        custom = {
-          aw-scope = "'visible";
-          aw-keys = "'(?a ?r ?s ?t ?d ?h ?n ?e ?i ?c)";
-        };
-      };
-      
       elwm = {
         enable = true;
         defer = true;
@@ -382,7 +370,6 @@
                                           ;;Movement
                                           ([?\s-e] . elwm-next)
                                           ([?\s-o] . elwm-prev)
-                                          ([?\s-/] . ace-window)
           
                                           ;; Arrangement
                                           ([?\s-E] . elwm-rotate-window)

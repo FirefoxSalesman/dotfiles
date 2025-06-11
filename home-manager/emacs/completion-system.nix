@@ -357,17 +357,14 @@
       };
       generalOne = {
         embark-file-map = {
-          "o" = "(my/embark-ace-action find-file)";
           "2" = "(my/embark-split-action find-file split-window-below)";
           "3" = "(my/embark-split-action find-file split-window-right)";
         };
         embark-buffer-map = {
-          "o" = "(my/embark-ace-action switch-to-buffer)";
           "2" = "(my/embark-split-action switch-to-buffer split-window-below)";
           "3" = "(my/embark-split-action switch-to-buffer split-window-right)";
         };
         embark-bookmark-map = {
-          "o" = "(my/embark-ace-action bookmark-jump)";
           "2" = "(my/embark-split-action bookmark-jump split-window-below)";
           "3" = "(my/embark-split-action bookmark-jump split-window-right) ";
         };
@@ -414,16 +411,6 @@
         
         (advice-add #'embark-completing-read-prompter
                     :around #'embark-hide-which-key-indicator)
-        
-        (eval-when-compile
-          (defmacro my/embark-ace-action (fn)
-            `(defun ,(intern (concat "my/embark-ace-" (symbol-name fn))) ()
-               (interactive)
-               (with-demoted-errors "%s"
-                 (require 'ace-window)
-                 (let ((aw-dispatch-always t))
-                   (aw-switch-to-window (aw-select nil))
-                   (call-interactively (symbol-function ',fn)))))))
         
         (eval-when-compile
           (defmacro my/embark-split-action (fn split-type)

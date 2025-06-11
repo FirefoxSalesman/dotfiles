@@ -59,11 +59,6 @@
     flake = false;
   };
 
-  doom-utils = {
-    url = "github:firefoxsalesman/doom-utils";
-    flake = false;
-  };
-
   repeaters = {
     url = "github:mmarshall540/repeaters";
     flake = false;
@@ -91,11 +86,6 @@
 
   doom-nano-modeline = {
     url = "github:ronisbr/doom-nano-modeline";
-    flake = false;
-  };
-
-  symex2 = {
-    url = "github:firefoxsalesman/symex.el/2.0-integration";
     flake = false;
   };
 
@@ -145,115 +135,10 @@
     inherit system;
     config.allowUnfree = true;
     overlays = [
+      (final: prev: import ./overlay.nix final prev pkgs inputs)
+      inputs.emacs-init.overlay
       inputs.emacs-overlay.overlay
-      (final: prev: {
-        # shell scripts
-        ezf = (import ./scripts/ezf.nix { inherit pkgs; });
-        cast = (import ./scripts/cast.nix { inherit pkgs; });
-        doomer = (import ./scripts/doomer.nix { inherit pkgs; });
-        ffmpeg-bulk = (import ./scripts/ffmpeg-bulk.nix { inherit pkgs; });
-        masstube = (import ./scripts/masstube.nix { inherit pkgs; });
-        pkg = (import ./scripts/pkg.nix { inherit pkgs; });
-        udisksmenu = (import ./scripts/udisksmenu.nix { inherit pkgs; });
-        wiki = (import ./scripts/wiki.nix { inherit pkgs; });
-
-        # overrides
-        vesktop = (prev.vesktop.override {withSystemVencord = true;});
-        mpv = (prev.mpv.override {
-          scripts = with prev.mpvScripts; [
-            thumbnail
-            sponsorblock
-          ];
-        });
-
-        #emacs packages
-        emacsPackagesFor = emacs: (
-          (prev.emacsPackagesFor emacs).overrideScope (
-            nfinal: nprev: {
-              qutebrowser = (prev.emacsPackages.callPackage ./packages/emacs/qutebrowser.nix {
-                inherit inputs;
-                inherit (prev.emacsPackages) trivialBuild dash consult exwm password-store evil;
-              });
-              doom-nano-modeline = (prev.emacsPackages.callPackage ./packages/emacs/doom-nano-modeline.nix {
-                inherit inputs;
-                inherit (prev.emacsPackages) trivialBuild doom-themes;
-              });
-              treesitter-context = (prev.emacsPackages.callPackage ./packages/emacs/treesitter-context.nix {
-                inherit inputs;
-                inherit (prev.emacsPackages) trivialBuild posframe;
-              });
-              dired-single = (prev.emacsPackages.callPackage ./packages/emacs/dired-single.nix {
-                inherit inputs;
-                inherit (prev.emacsPackages) trivialBuild;
-              });
-              repeaters = (prev.emacsPackages.callPackage ./packages/emacs/repeaters.nix {
-                inherit inputs;
-                inherit (prev.emacsPackages) trivialBuild;
-              });
-              doom-utils = (prev.emacsPackages.callPackage ./packages/emacs/doom-utils.nix {
-                inherit inputs;
-                inherit (prev.emacsPackages) trivialBuild;
-              });
-              app-launcher = (prev.emacsPackages.callPackage ./packages/emacs/app-launcher.nix {
-                inherit inputs;
-                inherit (prev.emacsPackages) trivialBuild;
-              });
-              ezf = (prev.emacsPackages.callPackage ./packages/emacs/ezf.nix {
-                inherit inputs;
-                inherit (prev.emacsPackages) trivialBuild;
-              });
-              org-modern-indent = (prev.emacsPackages.callPackage ./packages/emacs/org-modern-indent.nix {
-                inherit inputs;
-                inherit (prev.emacsPackages) trivialBuild compat;
-              });
-              exwm-outer-gaps = (prev.emacsPackages.callPackage ./packages/emacs/exwm-outer-gaps.nix {
-                inherit inputs;
-                inherit (prev.emacsPackages) trivialBuild exwm xelb;
-              });
-              gptel-quick = (prev.emacsPackages.callPackage ./packages/emacs/gptel-quick.nix {
-                inherit inputs;
-                inherit (prev.emacsPackages) trivialBuild gptel;
-              });
-              mpc-wrapper = (prev.emacsPackages.callPackage ./packages/emacs/mpc-wrapper.nix {
-                inherit inputs;
-                inherit (prev.emacsPackages) trivialBuild;
-              });
-              symex = (prev.emacsPackages.callPackage ./packages/emacs/symex2.nix {
-                inherit inputs;
-                inherit (prev.emacsPackages) trivialBuild tsc tree-sitter evil evil-surround seq paredit;
-              });
-              embark = prev.emacsPackages.callPackage (
-                {
-                  org,
-                  consult,
-                  avy,
-                  compat,
-                  elpaBuild,
-                  fetchurl,
-                  lib,
-                }:
-                elpaBuild {
-                  pname = "embark";
-                  ename = "embark";
-                  version = "1.1";
-                  src = fetchurl {
-                    url = "https://elpa.gnu.org/packages/embark-1.1.tar";
-                    sha256 = "074ggh7dkr5jdkwcndl6znhkq48jmc62rp7mc6vjidr6yxf8d1rn";
-                  };
-                  packageRequires = [
-                    org
-                    consult
-                    avy
-                    compat
-                  ];
-                  meta = {
-                    homepage = "https://elpa.gnu.org/packages/embark.html";
-                    license = lib.licenses.free;
-                  };
-                }
-              ) { };
-            }));
-      })];
+    ];
   };
   pkgs-stable = import nixpkgs-stable {
     inherit system;
@@ -277,6 +162,110 @@
     stylix.homeModules.stylix
     emacs-init.homeModules.emacs-init
   ];
+#+end_src
+
+* Overlay
+#+begin_src nix :tangle overlay.nix
+  final: prev: pkgs: inputs: {
+    # shell scripts
+    ezf = (import ./scripts/ezf.nix { inherit pkgs; });
+    cast = (import ./scripts/cast.nix { inherit pkgs; });
+    doomer = (import ./scripts/doomer.nix { inherit pkgs; });
+    ffmpeg-bulk = (import ./scripts/ffmpeg-bulk.nix { inherit pkgs; });
+    masstube = (import ./scripts/masstube.nix { inherit pkgs; });
+    pkg = (import ./scripts/pkg.nix { inherit pkgs; });
+    udisksmenu = (import ./scripts/udisksmenu.nix { inherit pkgs; });
+    wiki = (import ./scripts/wiki.nix { inherit pkgs; });
+
+    # overrides
+    vesktop = (prev.vesktop.override {withSystemVencord = true;});
+    mpv = (prev.mpv.override {
+      scripts = with prev.mpvScripts; [
+        thumbnail
+        sponsorblock
+      ];
+    });
+
+    #emacs packages
+    emacsPackagesFor = emacs: (
+      (prev.emacsPackagesFor emacs).overrideScope (
+        nfinal: nprev: {
+          qutebrowser = (prev.emacsPackages.callPackage ./packages/emacs/qutebrowser.nix {
+            inherit inputs;
+            inherit (prev.emacsPackages) trivialBuild dash consult exwm password-store evil;
+          });
+          doom-nano-modeline = (prev.emacsPackages.callPackage ./packages/emacs/doom-nano-modeline.nix {
+            inherit inputs;
+            inherit (prev.emacsPackages) trivialBuild doom-themes;
+          });
+          treesitter-context = (prev.emacsPackages.callPackage ./packages/emacs/treesitter-context.nix {
+            inherit inputs;
+            inherit (prev.emacsPackages) trivialBuild posframe;
+          });
+          dired-single = (prev.emacsPackages.callPackage ./packages/emacs/dired-single.nix {
+            inherit inputs;
+            inherit (prev.emacsPackages) trivialBuild;
+          });
+          repeaters = (prev.emacsPackages.callPackage ./packages/emacs/repeaters.nix {
+            inherit inputs;
+            inherit (prev.emacsPackages) trivialBuild;
+          });
+          app-launcher = (prev.emacsPackages.callPackage ./packages/emacs/app-launcher.nix {
+            inherit inputs;
+            inherit (prev.emacsPackages) trivialBuild;
+          });
+          ezf = (prev.emacsPackages.callPackage ./packages/emacs/ezf.nix {
+            inherit inputs;
+            inherit (prev.emacsPackages) trivialBuild;
+          });
+          org-modern-indent = (prev.emacsPackages.callPackage ./packages/emacs/org-modern-indent.nix {
+            inherit inputs;
+            inherit (prev.emacsPackages) trivialBuild compat;
+          });
+          exwm-outer-gaps = (prev.emacsPackages.callPackage ./packages/emacs/exwm-outer-gaps.nix {
+            inherit inputs;
+            inherit (prev.emacsPackages) trivialBuild exwm xelb;
+          });
+          gptel-quick = (prev.emacsPackages.callPackage ./packages/emacs/gptel-quick.nix {
+            inherit inputs;
+            inherit (prev.emacsPackages) trivialBuild gptel;
+          });
+          mpc-wrapper = (prev.emacsPackages.callPackage ./packages/emacs/mpc-wrapper.nix {
+            inherit inputs;
+            inherit (prev.emacsPackages) trivialBuild;
+          });
+          embark = prev.emacsPackages.callPackage (
+            {
+              org,
+              consult,
+              avy,
+              compat,
+              elpaBuild,
+              fetchurl,
+              lib,
+            }:
+            elpaBuild {
+              pname = "embark";
+              ename = "embark";
+              version = "1.1";
+              src = fetchurl {
+                url = "https://elpa.gnu.org/packages/embark-1.1.tar";
+                sha256 = "074ggh7dkr5jdkwcndl6znhkq48jmc62rp7mc6vjidr6yxf8d1rn";
+              };
+              packageRequires = [
+                org
+                consult
+                avy
+                compat
+              ];
+              meta = {
+                homepage = "https://elpa.gnu.org/packages/embark.html";
+                license = lib.licenses.free;
+              };
+            }
+          ) { };
+        }));
+  }
 #+end_src
 
 * Packages
@@ -4415,7 +4404,7 @@ Embark lets you manipulate the content of vertico buffers.
 
 Credits:
 Which-key indicator from the embark wiki
-Ace-window & avy actions from karthink
+avy actions from karthink
 #+NAME: Emacs Embark
 #+begin_src nix :noweb yes
   embark = {
@@ -4438,17 +4427,14 @@ Ace-window & avy actions from karthink
     };
     generalOne = {
       embark-file-map = {
-        "o" = "(my/embark-ace-action find-file)";
         "2" = "(my/embark-split-action find-file split-window-below)";
         "3" = "(my/embark-split-action find-file split-window-right)";
       };
       embark-buffer-map = {
-        "o" = "(my/embark-ace-action switch-to-buffer)";
         "2" = "(my/embark-split-action switch-to-buffer split-window-below)";
         "3" = "(my/embark-split-action switch-to-buffer split-window-right)";
       };
       embark-bookmark-map = {
-        "o" = "(my/embark-ace-action bookmark-jump)";
         "2" = "(my/embark-split-action bookmark-jump split-window-below)";
         "3" = "(my/embark-split-action bookmark-jump split-window-right) ";
       };
@@ -4513,16 +4499,6 @@ Ace-window & avy actions from karthink
 
   (advice-add #'embark-completing-read-prompter
               :around #'embark-hide-which-key-indicator)
-
-  (eval-when-compile
-    (defmacro my/embark-ace-action (fn)
-      `(defun ,(intern (concat "my/embark-ace-" (symbol-name fn))) ()
-         (interactive)
-         (with-demoted-errors "%s"
-           (require 'ace-window)
-           (let ((aw-dispatch-always t))
-             (aw-switch-to-window (aw-select nil))
-             (call-interactively (symbol-function ',fn)))))))
 
   (eval-when-compile
     (defmacro my/embark-split-action (fn split-type)
@@ -5358,8 +5334,6 @@ Almost everything here was copied from David Wilson. Thank you, David, for pract
         
         <<Emacs Window Management Bufler>>
 
-        <<Emacs Window Management Ace Window>>
-        
         <<Emacs Window Management ELWM>>
 
         <<Emacs Window Management Golden Ratio>>
@@ -5586,22 +5560,6 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 
 #+end_src
 
-*** Ace Window
-#+NAME: Emacs Window Management Ace Window
-#+begin_src nix
-  ace-window = {
-    enable = true;
-    defer = true;
-    command = ["ace-window"];
-    general."C-x o" = "'ace-window";
-    config = ''(ace-window-posframe-mode)'';
-    custom = {
-      aw-scope = "'visible";
-      aw-keys = "'(?a ?r ?s ?t ?d ?h ?n ?e ?i ?c)";
-    };
-  };
-#+end_src
-
 *** ELWM
 #+NAME: Emacs Window Management ELWM
 #+begin_src nix :noweb yes
@@ -5770,7 +5728,6 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
                                       ;;Movement
                                       ([?\s-e] . elwm-next)
                                       ([?\s-o] . elwm-prev)
-                                      ([?\s-/] . ace-window)
       
                                       ;; Arrangement
                                       ([?\s-E] . elwm-rotate-window)

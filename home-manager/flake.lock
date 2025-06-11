@@ -157,22 +157,6 @@
         "type": "github"
       }
     },
-    "doom-utils_2": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1708378736,
-        "narHash": "sha256-q6geZYywWJbeKUMedqR6RoNCNljA5R2obIHKwcVmKlI=",
-        "owner": "firefoxsalesman",
-        "repo": "doom-utils",
-        "rev": "17498f8ad2f7961803b605508d095487fdde090a",
-        "type": "github"
-      },
-      "original": {
-        "owner": "firefoxsalesman",
-        "repo": "doom-utils",
-        "type": "github"
-      }
-    },
     "eglot-booster": {
       "flake": false,
       "locked": {
@@ -223,15 +207,15 @@
     },
     "emacs-init": {
       "inputs": {
-        "doom-utils": "doom-utils_2",
+        "doom-utils": "doom-utils",
         "symex2": "symex2"
       },
       "locked": {
-        "lastModified": 1749581950,
-        "narHash": "sha256-WPfe998Jv8s6k00J3Obh773gShC1UvZ9pA3CP0irywg=",
+        "lastModified": 1749660301,
+        "narHash": "sha256-udOZ1NADxQvGYqwwvAplDh+aPlIKpwrX6RHwKGcziZU=",
         "owner": "firefoxsalesman",
         "repo": "NixEmacs",
-        "rev": "e8784e7b6e37d6641d04558c822db66778015f06",
+        "rev": "8a05b1a8d89dbd0d1a648f3ce543a919d0237dc5",
         "type": "github"
       },
       "original": {
@@ -246,11 +230,11 @@
         "nixpkgs-stable": "nixpkgs-stable"
       },
       "locked": {
-        "lastModified": 1749576069,
-        "narHash": "sha256-zv7YIzNsA8XGqtlNDfGE6B4T/LDOXSjYBRHTZilLqEA=",
+        "lastModified": 1749659268,
+        "narHash": "sha256-O6Fd2V9ch3Al3CTiYvVBb2Z/lQVAkKMUpxRazWKCriQ=",
         "owner": "nix-community",
         "repo": "emacs-overlay",
-        "rev": "670cee9dc57b926a56657a95abe60915cca332c9",
+        "rev": "aad2bc03768dceb6e8d560dce5d8a98d91fcff41",
         "type": "github"
       },
       "original": {
@@ -479,11 +463,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1749526396,
-        "narHash": "sha256-UL9F76abAk87llXOrcQRjhd5OaOclUd6MIltsqcUZmo=",
+        "lastModified": 1749657191,
+        "narHash": "sha256-QLilaHuhGxiwhgceDWESj9gFcKIdEp7+9lRqNGpN8S4=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "427c96044f11a5da50faf6adaf38c9fa47e6d044",
+        "rev": "faeab32528a9360e9577ff4082de2d35c6bbe1ce",
         "type": "github"
       },
       "original": {
@@ -590,11 +574,11 @@
     },
     "nixpkgs-stable": {
       "locked": {
-        "lastModified": 1749173751,
-        "narHash": "sha256-ENY3y3v6S9ZmLDDLI3LUT8MXmfXg/fSt2eA4GCnMVCE=",
+        "lastModified": 1749488106,
+        "narHash": "sha256-b9GIWdF/8jKpCC5JIMgDLZgwe8cEbty2fyTyo1eDFfI=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "ed29f002b6d6e5e7e32590deb065c34a31dc3e91",
+        "rev": "8fe3e32e7f210522377c3bcff80931a3284ace6a",
         "type": "github"
       },
       "original": {
@@ -606,11 +590,11 @@
     },
     "nixpkgs-stable_2": {
       "locked": {
-        "lastModified": 1749173751,
-        "narHash": "sha256-ENY3y3v6S9ZmLDDLI3LUT8MXmfXg/fSt2eA4GCnMVCE=",
+        "lastModified": 1749488106,
+        "narHash": "sha256-b9GIWdF/8jKpCC5JIMgDLZgwe8cEbty2fyTyo1eDFfI=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "ed29f002b6d6e5e7e32590deb065c34a31dc3e91",
+        "rev": "8fe3e32e7f210522377c3bcff80931a3284ace6a",
         "type": "github"
       },
       "original": {
@@ -744,7 +728,6 @@
         "apple-fonts": "apple-fonts",
         "dired-single": "dired-single",
         "doom-nano-modeline": "doom-nano-modeline",
-        "doom-utils": "doom-utils",
         "eglot-booster": "eglot-booster",
         "eglot-x": "eglot-x",
         "emacs-embark": "emacs-embark",
@@ -763,7 +746,6 @@
         "org-modern-indent": "org-modern-indent",
         "repeaters": "repeaters",
         "stylix": "stylix",
-        "symex2": "symex2_2",
         "treesitter-context": "treesitter-context"
       }
     },
@@ -887,23 +869,6 @@
       }
     },
     "symex2": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1729278262,
-        "narHash": "sha256-kuYYCllNu23u61YksBpnZ9wg23VkT2u8Z4FY4Qcd428=",
-        "owner": "firefoxsalesman",
-        "repo": "symex.el",
-        "rev": "9bc19793a3d81e5027b8d40acbcb2e2ad26c220c",
-        "type": "github"
-      },
-      "original": {
-        "owner": "firefoxsalesman",
-        "ref": "2.0-integration",
-        "repo": "symex.el",
-        "type": "github"
-      }
-    },
-    "symex2_2": {
       "flake": false,
       "locked": {
         "lastModified": 1729278262,
