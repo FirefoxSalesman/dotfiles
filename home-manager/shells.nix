@@ -30,7 +30,7 @@
     bash = {
       enable = true;
       initExtra = ''${pkgs.pfetch}/bin/pfetch'';
-      shellAliases.z = "cd ./$(ls -d */ .*/ | ezf)";
+      shellAliases.z = "cd ./$(ls -d */ .*/ | ${pkgs.ezf}/bin/ezf)";
     };
 
     starship = {
@@ -61,7 +61,7 @@
         ${pkgs.pfetch}/bin/pfetch
         . ~/.cache/wal/colors.sh
       '';
-      shellAliases.z = "cd ./$(ls -d */ .*/ | ezf)";
+      shellAliases.z = "cd ./$(ls -d */ .*/ | ${pkgs.ezf}/bin/ezf)";
       profileExtra = ''
         export LEIN_HOME="$XDG_DATA_HOME/lein";
         export NPM_CONFIG_USERCONFIG="$XDG_CONFIG_HOME/npm/npmrc";

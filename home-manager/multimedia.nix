@@ -8,9 +8,9 @@
     lmms
     audacity
     mpc-cli
-    (import ./scripts/doomer.nix { inherit pkgs; })
-    (import ./scripts/masstube.nix { inherit pkgs; }) # Doesn't have its tor dependency declared.
-    (import ./scripts/cast.nix { inherit pkgs; })
+    doomer
+    masstube
+    cast
   ];
 
   services.mpd = {

@@ -46,7 +46,7 @@
           "h" '(:ignore t :which-key "help")
           "h." '(display-local-help :which-key "display local help")
           "h4" '(info-other-window :which-key "info other window")
-          "hA" '((lambda () (interactive) (async-shell-command "${(import ./scripts/wiki.nix { inherit pkgs; })}/bin/wiki")) :which-key "arch wiki")
+          "hA" '((lambda () (interactive) (async-shell-command "${pkgs.wiki}/bin/wiki")) :which-key "arch wiki")
           "hC" '(describe-coding-system :which-key "describe coding system")
           "hD" '(view-emacs-debugging :which-key "emacs debugging")
           "hE" '(view-external-packages :which-key "external packages")
@@ -86,7 +86,7 @@
           ;;Mouse
           "l" '(compile :which-key "compile")
           ;; Mount/unmount drive
-          "u" '((lambda () (interactive) (start-process-shell-command "udisksmenu" nil "${(import ./scripts/udisksmenu.nix { inherit pkgs; })}/bin/udisksmenu")) :which-key "mount/unmount drive"))
+          "u" '((lambda () (interactive) (start-process-shell-command "udisksmenu" nil "${pkgs.udisksmenu}/bin/udisksmenu")) :which-key "mount/unmount drive"))
         
         (general-unbind "C-h")
         

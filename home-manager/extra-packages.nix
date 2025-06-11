@@ -19,7 +19,7 @@
     xsel
     xdotool
     # scripts
-    (import ./scripts/ezf.nix { inherit pkgs; })
-    (import ./scripts/pkg.nix { inherit pkgs; })
+    ezf
+    pkg
   ];
 }

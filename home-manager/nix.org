@@ -147,6 +147,14 @@
     overlays = [
       inputs.emacs-overlay.overlay
       (final: prev: {
+        ezf = (import ./scripts/ezf.nix { inherit pkgs; });
+        cast = (import ./scripts/cast.nix { inherit pkgs; });
+        doomer = (import ./scripts/doomer.nix { inherit pkgs; });
+        ffmpeg-bulk = (import ./scripts/ffmpeg-bulk.nix { inherit pkgs; });
+        masstube = (import ./scripts/masstube.nix { inherit pkgs; });
+        pkg = (import ./scripts/pkg.nix { inherit pkgs; });
+        udisksmenu = (import ./scripts/udisksmenu.nix { inherit pkgs; });
+        wiki = (import ./scripts/wiki.nix { inherit pkgs; });
         emacsPackagesFor = emacs: (
           (prev.emacsPackagesFor emacs).overrideScope (
             nfinal: nprev: {
@@ -519,14 +527,14 @@ For moving massive quantities of Jordan Peterson's podcast into my mp3 player
     set -e
 
     #Set Input & Output Filetypes
-    in=$(${pkgs.coreutils}/bin/printf 'm4a\nopus\nmp4\nmkv\nwebm' | ezf)
-    out=$(${pkgs.coreutils}/bin/printf 'mp3\nflac\nwav\nogg' | ezf)
+    in=$(${pkgs.coreutils}/bin/printf 'm4a\nopus\nmp4\nmkv\nwebm' | ${pkgs.ezf}/bin/ezf)
+    out=$(${pkgs.coreutils}/bin/printf 'mp3\nflac\nwav\nogg' | ${pkgs.ezf}/bin/ezf)
 
     #Choose device to transfer to
-    device=$(${pkgs.coreutils}/bin/ls /run/media/$USER | ezf)
+    device=$(${pkgs.coreutils}/bin/ls /run/media/$USER | ${pkgs.ezf}/bin/ezf)
 
     #Convert files
-    ${(import ./ffmpeg-bulk.nix { inherit pkgs; })}/bin/ffmpeg-bulk *.$in -t $out
+    ${pkgs.ffmpeg-bulk}/bin/ffmpeg-bulk *.$in -t $out
     ${pkgs.coreutils}/bin/rm *.$in
 
     #Remove metadata so the glowies don't see it.
@@ -820,7 +828,7 @@ Dev templates: https://github.com/the-nix-way/dev-templates
     }
 
     getTemplates() {
-      ${pkgs.coreutils}/bin/printf "bun\nc-cpp\nclojure\ncsharp\ncue\ndhall\nelixir\nelm\nempty\ngleam\ngo\nhashi\nhaskell\nhaxe\njava\njupyter\nkotlin\nlatex\nnickel\nnim\nnix\nnode\nocaml\nopa\nphp\nplatformio\nprotobuf\npulumi\npurescript\npython\nr\nruby\nrust\nrust-toolchain\nscala\nshell\nswi-prolog\nswift\nvlang\nzig" | ezf
+      ${pkgs.coreutils}/bin/printf "bun\nc-cpp\nclojure\ncsharp\ncue\ndhall\nelixir\nelm\nempty\ngleam\ngo\nhashi\nhaskell\nhaxe\njava\njupyter\nkotlin\nlatex\nnickel\nnim\nnix\nnode\nocaml\nopa\nphp\nplatformio\nprotobuf\npulumi\npurescript\npython\nr\nruby\nrust\nrust-toolchain\nscala\nshell\nswi-prolog\nswift\nvlang\nzig" | ${pkgs.ezf}
     }
 
     template() {
@@ -859,8 +867,8 @@ Dev templates: https://github.com/the-nix-way/dev-templates
   { pkgs }:
 
   pkgs.writeShellScriptBin "udisksmenu" ''
-  action=$(${pkgs.coreutils}/bin/printf 'mount\nunmount' | ${(import ./ezf.nix { inherit pkgs; })}/bin/ezf)
-  disk=$(${pkgs.coreutils}/bin/ls /dev | ${pkgs.ripgrep}/bin/rg sd[a-z] | ${(import ./ezf.nix { inherit pkgs; })}/bin/ezf)
+  action=$(${pkgs.coreutils}/bin/printf 'mount\nunmount' | ${pkgs.ezf}/bin/ezf)
+  disk=$(${pkgs.coreutils}/bin/ls /dev | ${pkgs.ripgrep}/bin/rg sd[a-z] | ${pkgs.ezf}/bin/ezf)
 
   ${pkgs.udisks}/bin/udisksctl $action -b /dev/$disk
   ''
@@ -880,7 +888,7 @@ Stole it from Derek Taylor
   dir="/usr/share/doc/arch-wiki/html/en/"
   doc="$(${pkgs.findutils}/bin/find $dir -iname "*.html" | \
          ${pkgs.coreutils}/bin/cut -d '/' -f8- | \
-  ${(import ./ezf.nix { inherit pkgs; })}/bin/ezf)"
+  ${pkgs.ezf}/bin/ezf)"
 
   if [ "''${dir}$doc" ]; then
       emacsclient -e "(eww-open-file \"''${dir}$doc\")"
@@ -1089,7 +1097,7 @@ It's mostly here for eshell to get completions from, but it's a usable shell
   bash = {
     enable = true;
     initExtra = ''${pkgs.pfetch}/bin/pfetch'';
-    shellAliases.z = "cd ./$(ls -d */ .*/ | ezf)";
+    shellAliases.z = "cd ./$(ls -d */ .*/ | ${pkgs.ezf}/bin/ezf)";
   };
 #+end_src
 
@@ -1265,7 +1273,7 @@ Probably won't use this one interactively much, but it's my login shell, & my /b
       ${pkgs.pfetch}/bin/pfetch
       . ~/.cache/wal/colors.sh
     '';
-    shellAliases.z = "cd ./$(ls -d */ .*/ | ezf)";
+    shellAliases.z = "cd ./$(ls -d */ .*/ | ${pkgs.ezf}/bin/ezf)";
     profileExtra = ''
       export LEIN_HOME="$XDG_DATA_HOME/lein";
       export NPM_CONFIG_USERCONFIG="$XDG_CONFIG_HOME/npm/npmrc";
@@ -1935,8 +1943,8 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
       xsel
       xdotool
       # scripts
-      (import ./scripts/ezf.nix { inherit pkgs; })
-      (import ./scripts/pkg.nix { inherit pkgs; })
+      ezf
+      pkg
     ];
   }
 #+end_src
@@ -2971,7 +2979,7 @@ I'm running dired with a couple of small packages that improve on it
     "h" '(:ignore t :which-key "help")
     "h." '(display-local-help :which-key "display local help")
     "h4" '(info-other-window :which-key "info other window")
-    "hA" '((lambda () (interactive) (async-shell-command "${(import ./scripts/wiki.nix { inherit pkgs; })}/bin/wiki")) :which-key "arch wiki")
+    "hA" '((lambda () (interactive) (async-shell-command "${pkgs.wiki}/bin/wiki")) :which-key "arch wiki")
     "hC" '(describe-coding-system :which-key "describe coding system")
     "hD" '(view-emacs-debugging :which-key "emacs debugging")
     "hE" '(view-external-packages :which-key "external packages")
@@ -3011,7 +3019,7 @@ I'm running dired with a couple of small packages that improve on it
     ;;Mouse
     "l" '(compile :which-key "compile")
     ;; Mount/unmount drive
-    "u" '((lambda () (interactive) (start-process-shell-command "udisksmenu" nil "${(import ./scripts/udisksmenu.nix { inherit pkgs; })}/bin/udisksmenu")) :which-key "mount/unmount drive"))
+    "u" '((lambda () (interactive) (start-process-shell-command "udisksmenu" nil "${pkgs.udisksmenu}/bin/udisksmenu")) :which-key "mount/unmount drive"))
 
   (general-unbind "C-h")
 
@@ -6030,9 +6038,9 @@ This is where all the audio/video stuff goes
       lmms
       audacity
       mpc-cli
-      (import ./scripts/doomer.nix { inherit pkgs; })
-      (import ./scripts/masstube.nix { inherit pkgs; }) # Doesn't have its tor dependency declared.
-      (import ./scripts/cast.nix { inherit pkgs; })
+      doomer
+      masstube
+      cast
     ];
 
     <<Mpd>>

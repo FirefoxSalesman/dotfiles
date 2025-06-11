@@ -119,6 +119,14 @@
         overlays = [
           inputs.emacs-overlay.overlay
           (final: prev: {
+            ezf = (import ./scripts/ezf.nix { inherit pkgs; });
+            cast = (import ./scripts/cast.nix { inherit pkgs; });
+            doomer = (import ./scripts/doomer.nix { inherit pkgs; });
+            ffmpeg-bulk = (import ./scripts/ffmpeg-bulk.nix { inherit pkgs; });
+            masstube = (import ./scripts/masstube.nix { inherit pkgs; });
+            pkg = (import ./scripts/pkg.nix { inherit pkgs; });
+            udisksmenu = (import ./scripts/udisksmenu.nix { inherit pkgs; });
+            wiki = (import ./scripts/wiki.nix { inherit pkgs; });
             emacsPackagesFor = emacs: (
               (prev.emacsPackagesFor emacs).overrideScope (
                 nfinal: nprev: {
