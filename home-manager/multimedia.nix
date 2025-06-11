@@ -65,12 +65,7 @@
   
   programs.mpv = {
     enable = true;
-    package = (config.lib.nixGL.wrap (pkgs.mpv.override {
-      scripts = with pkgs.mpvScripts; [
-        thumbnail
-        sponsorblock
-      ];
-    }));
+    package = (config.lib.nixGL.wrap pkgs.mpv);
     config = {
       fs = "no";
       hwdec = "auto";
