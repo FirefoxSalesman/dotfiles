@@ -37,10 +37,7 @@
     gptel-quick = {
       enable = true;
       defer = true;
-      package = epkgs: (pkgs.callPackage ./emacs/emacs-packages/gptel-quick.nix {
-        inherit inputs;
-        inherit (epkgs) trivialBuild gptel;
-      });
+      package = epkgs: epkgs.gptel-quick;
       generalOne = {
         embark-general-map."?" = '''(gptel-quick :which-key "summarize")''; 
         "efs/leader-keys"."gq" = '''(gptel-quick :which-key "summarize")'';

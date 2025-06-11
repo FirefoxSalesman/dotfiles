@@ -304,10 +304,7 @@
   programs.emacs.init.usePackage = {
     qutebrowser = {
       enable = true;
-      package = epkgs: (epkgs.callPackage ./emacs/emacs-packages/qutebrowser.nix {
-        inherit inputs;
-        inherit (epkgs) trivialBuild dash consult exwm password-store evil;
-      });
+      package = epkgs: epkgs.qutebrowser;
       ghook = [
         "('exwm-init-hook 'global-qutebrowser-exwm-mode)"
       ];
@@ -345,10 +342,7 @@
     };
     qutebrowser-evil = {
       enable = true;
-      package = epkgs: (epkgs.callPackage ./emacs/emacs-packages/qutebrowser.nix {
-        inherit inputs;
-        inherit (epkgs) trivialBuild dash consult exwm password-store evil;
-      });
+      package = epkgs: epkgs.qutebrowser;
       ghook = [
         "('global-qutebrowser-exwm-mode-hook 'qutebrowser-evil-state-mode)"
       ];

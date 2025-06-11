@@ -476,11 +476,7 @@
       
       exwm-outer-gaps = {
         enable = true;
-        package = epkgs: (epkgs.callPackage ./emacs-packages/exwm-outer-gaps.nix {
-          inherit inputs;
-          inherit (epkgs) trivialBuild exwm xelb;
-        });
-        demand = true;
+        package = epkgs: epkgs.exwm-outer-gaps;
         config = ''(exwm-outer-gaps-mode)'';
         after = ["exwm"];
       };

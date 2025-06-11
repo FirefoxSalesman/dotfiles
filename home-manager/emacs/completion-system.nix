@@ -339,10 +339,7 @@
 
     embark = {
       enable = true;
-      package = epkgs: (epkgs.callPackage ./emacs-packages/better-embark.nix {
-        inherit inputs;
-        inherit (epkgs) trivialBuild org compat consult avy;
-      });
+      package = epkgs: epkgs.embark;
       defer = true;
       command = ["embark-act"];
       general."M-a" = "'embark-dwim";
@@ -457,10 +454,7 @@
     app-launcher = {
       enable = true;
       defer = true;
-      package = epkgs: (epkgs.callPackage ./emacs-packages/app-launcher.nix {
-        inherit inputs;
-        inherit (epkgs) trivialBuild;
-      });
+      package = epkgs: epkgs.app-launcher;
       command = ["app-launcher-run-app"];
     };
 
@@ -516,10 +510,7 @@
 
     ezf = {
       enable = true;
-      package = epkgs: (epkgs.callPackage ./emacs-packages/ezf.nix {
-          inherit inputs;
-          inherit (epkgs) trivialBuild;
-      });
+      package = epkgs: epkgs.ezf;
       deferIncrementally = true;
     };
   };

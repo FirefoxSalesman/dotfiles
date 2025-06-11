@@ -29,10 +29,7 @@
   
   programs.emacs.init.usePackage.mpc-wrapper = {
     enable = true;
-    package = epkgs: (epkgs.callPackage ./emacs/emacs-packages/mpc-wrapper.nix {
-      inherit inputs;
-      inherit (epkgs) trivialBuild;
-    });    
+    package = epkgs: epkgs.mpc-wrapper;    
     generalOne."efs/leader-keys" = {
       "m" = '''(:ignore t :which-key "mpd")'';
       "mp" = '''(mpc-play :which-key "replay file")'';

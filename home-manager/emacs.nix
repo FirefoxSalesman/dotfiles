@@ -17,12 +17,9 @@
     package = pkgs.emacs30-gtk3;
     extraPackages = epkgs: with epkgs; [ 
       on
-      (callPackage ./emacs/emacs-packages/repeaters.nix {
-        inherit inputs;
-        inherit (epkgs) trivialBuild;
-      })
-      epkgs.hydra
-      epkgs.pretty-hydra
+      repeaters
+      hydra
+      pretty-hydra
     ] ;
     init = {
       enable = true;
@@ -192,10 +189,7 @@
 
         doom-escape = {
           enable = true;
-          package = epkgs: (epkgs.callPackage ./emacs/emacs-packages/doom-utils.nix {
-            inherit inputs;
-            inherit (epkgs) trivialBuild;
-          });
+          package = epkgs: epkgs.doom-utils;
           gfhook = ["('doom-escape-hook (list (lambda () (setq efs/vertico-active nil)) 'transient-quit-one))"];
           general."C-g" = "'doom/escape";
           config = ''

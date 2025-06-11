@@ -116,7 +116,96 @@
       pkgs = import nixpkgs {
         inherit system;
         config.allowUnfree = true;
-        overlays = [inputs.emacs-overlay.overlay];
+        overlays = [
+          inputs.emacs-overlay.overlay
+          (final: prev: {
+            emacsPackagesFor = emacs: (
+              (prev.emacsPackagesFor emacs).overrideScope (
+                nfinal: nprev: {
+                  qutebrowser = (prev.emacsPackages.callPackage ./emacs/emacs-packages/qutebrowser.nix {
+                    inherit inputs;
+                    inherit (prev.emacsPackages) trivialBuild dash consult exwm password-store evil;
+                  });
+                  doom-nano-modeline = (prev.emacsPackages.callPackage ./emacs/emacs-packages/doom-nano-modeline.nix {
+                    inherit inputs;
+                    inherit (prev.emacsPackages) trivialBuild doom-themes;
+                  });
+                  treesitter-context = (prev.emacsPackages.callPackage ./emacs/emacs-packages/treesitter-context.nix {
+                    inherit inputs;
+                    inherit (prev.emacsPackages) trivialBuild posframe;
+                  });
+                  dired-single = (prev.emacsPackages.callPackage ./emacs/emacs-packages/dired-single.nix {
+                    inherit inputs;
+                    inherit (prev.emacsPackages) trivialBuild;
+                  });
+                  repeaters = (prev.emacsPackages.callPackage ./emacs/emacs-packages/repeaters.nix {
+                    inherit inputs;
+                    inherit (prev.emacsPackages) trivialBuild;
+                  });
+                  doom-utils = (prev.emacsPackages.callPackage ./emacs/emacs-packages/doom-utils.nix {
+                    inherit inputs;
+                    inherit (prev.emacsPackages) trivialBuild;
+                  });
+                  app-launcher = (prev.emacsPackages.callPackage ./emacs/emacs-packages/app-launcher.nix {
+                    inherit inputs;
+                    inherit (prev.emacsPackages) trivialBuild;
+                  });
+                  ezf = (prev.emacsPackages.callPackage ./emacs/emacs-packages/ezf.nix {
+                    inherit inputs;
+                    inherit (prev.emacsPackages) trivialBuild;
+                  });
+                  org-modern-indent = (prev.emacsPackages.callPackage ./emacs/emacs-packages/org-modern-indent.nix {
+                    inherit inputs;
+                    inherit (prev.emacsPackages) trivialBuild compat;
+                  });
+                  exwm-outer-gaps = (prev.emacsPackages.callPackage ./emacs/emacs-packages/exwm-outer-gaps.nix {
+                    inherit inputs;
+                    inherit (prev.emacsPackages) trivialBuild exwm xelb;
+                  });
+                  gptel-quick = (prev.emacsPackages.callPackage ./emacs/emacs-packages/gptel-quick.nix {
+                    inherit inputs;
+                    inherit (prev.emacsPackages) trivialBuild gptel;
+                  });
+                  mpc-wrapper = (prev.emacsPackages.callPackage ./emacs/emacs-packages/mpc-wrapper.nix {
+                    inherit inputs;
+                    inherit (prev.emacsPackages) trivialBuild;
+                  });
+                  symex = (prev.emacsPackages.callPackage ./emacs/emacs-packages/symex2.nix {
+                    inherit inputs;
+                    inherit (prev.emacsPackages) trivialBuild tsc tree-sitter evil evil-surround seq paredit;
+                  });
+                  embark = prev.emacsPackages.callPackage (
+                    {
+                      org,
+                      consult,
+                      avy,
+                      compat,
+                      elpaBuild,
+                      fetchurl,
+                      lib,
+                    }:
+                    elpaBuild {
+                      pname = "embark";
+                      ename = "embark";
+                      version = "1.1";
+                      src = fetchurl {
+                        url = "https://elpa.gnu.org/packages/embark-1.1.tar";
+                        sha256 = "074ggh7dkr5jdkwcndl6znhkq48jmc62rp7mc6vjidr6yxf8d1rn";
+                      };
+                      packageRequires = [
+                        org
+                        consult
+                        avy
+                        compat
+                      ];
+                      meta = {
+                        homepage = "https://elpa.gnu.org/packages/embark.html";
+                        license = lib.licenses.free;
+                      };
+                    }
+                  ) { };
+                }));
+          })];
       };
       pkgs-stable = import nixpkgs-stable {
         inherit system;

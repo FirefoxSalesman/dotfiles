@@ -92,10 +92,7 @@
 
     dired-single = {
       enable = true;
-      package = epkgs: (epkgs.callPackage ./emacs-packages/dired-single.nix {
-        inherit inputs;
-        inherit (epkgs) trivialBuild;
-      });
+      package = epkgs: epkgs.dired-single;
       ghook = [''
         ('dired-mode-hook (lambda () (general-def 'normal dired-mode-map
              "B" 'evil-goto-line

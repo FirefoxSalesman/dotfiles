@@ -144,10 +144,7 @@
     
     org-modern-indent = {
       enable = true;
-      package = epkgs: (pkgs.callPackage ./emacs-packages/org-modern-indent.nix {
-        inherit inputs;
-        inherit (epkgs) trivialBuild compat;
-      });
+      package = epkgs: epkgs.org-modern-indent;
       afterCall = ["org-mode-hook"];
       config = ''(general-add-hook 'org-mode-hook 'org-modern-indent-mode 90)'';
     };
