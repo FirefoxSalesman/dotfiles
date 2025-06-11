@@ -304,7 +304,6 @@
   programs.emacs.init.usePackage = {
     qutebrowser = {
       enable = true;
-      package = epkgs: epkgs.qutebrowser;
       ghook = [
         "('exwm-init-hook 'global-qutebrowser-exwm-mode)"
       ];

@@ -29,7 +29,6 @@
   
   programs.emacs.init.usePackage.mpc-wrapper = {
     enable = true;
-    package = epkgs: epkgs.mpc-wrapper;    
     generalOne."efs/leader-keys" = {
       "m" = '''(:ignore t :which-key "mpd")'';
       "mp" = '''(mpc-play :which-key "replay file")'';

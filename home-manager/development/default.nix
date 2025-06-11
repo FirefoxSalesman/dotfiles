@@ -113,7 +113,6 @@
 
       treesitter-context = {
         enable = true;
-        package = epkgs: epkgs.treesitter-context;
         ghook = ["('(js-ts-mode-hook haskell-mode java-ts-mode-hook rustic-mode-hook c-ts-mode-hook python-mode-hook json-ts-mode-hook) 'treesitter-context-mode)"];
         custom.treesitter-context-frame-min-width = "30";
         config = ''

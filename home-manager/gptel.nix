@@ -37,7 +37,6 @@
     gptel-quick = {
       enable = true;
       defer = true;
-      package = epkgs: epkgs.gptel-quick;
       generalOne = {
         embark-general-map."?" = '''(gptel-quick :which-key "summarize")''; 
         "efs/leader-keys"."gq" = '''(gptel-quick :which-key "summarize")'';

@@ -125,7 +125,6 @@
     
     doom-nano-modeline = {
       enable = true;
-      package = epkgs: epkgs.doom-nano-modeline;
       afterCall = ["after-init-hook"];
       custom.mode-line-format = "nil";
       config = ''

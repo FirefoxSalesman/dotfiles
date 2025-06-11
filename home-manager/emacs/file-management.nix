@@ -92,7 +92,6 @@
 
     dired-single = {
       enable = true;
-      package = epkgs: epkgs.dired-single;
       ghook = [''
         ('dired-mode-hook (lambda () (general-def 'normal dired-mode-map
              "B" 'evil-goto-line

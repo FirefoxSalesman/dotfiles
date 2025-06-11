@@ -1381,7 +1381,6 @@ The powerline separators were borrowed from punchline, because I think they look
 #+begin_src nix :noweb yes
   doom-nano-modeline = {
     enable = true;
-    package = epkgs: epkgs.doom-nano-modeline;
     afterCall = ["after-init-hook"];
     custom.mode-line-format = "nil";
     config = ''
@@ -1911,7 +1910,6 @@ https://github.com/jdtsmith/indent-bars
 #+begin_src nix
   treesitter-context = {
     enable = true;
-    package = epkgs: epkgs.treesitter-context;
     ghook = ["('(js-ts-mode-hook haskell-mode java-ts-mode-hook rustic-mode-hook c-ts-mode-hook python-mode-hook json-ts-mode-hook) 'treesitter-context-mode)"];
     custom.treesitter-context-frame-min-width = "30";
     config = ''
@@ -2628,7 +2626,6 @@ I'm running dired with a couple of small packages that improve on it
 
       dired-single = {
         enable = true;
-        package = epkgs: epkgs.dired-single;
         ghook = [''
           ('dired-mode-hook (lambda () (general-def 'normal dired-mode-map
                "B" 'evil-goto-line
@@ -2754,7 +2751,7 @@ I'm running dired with a couple of small packages that improve on it
         repeaters
         hydra
         pretty-hydra
-      ] ;
+      ];
       init = {
         enable = true;
         packageQuickstart = false;
@@ -3608,7 +3605,6 @@ Gives us an entire state where we can rapidly make specific edits to code.
   symex = {
     enable = true;
     defer = true;
-    package = epkgs: epkgs.symex;
     generalTwo."'normal"."(racket-repl-mode-map makefile-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
     init = ''
       <<Emacs Symex Init>>    
@@ -4302,7 +4298,6 @@ Ace-window & avy actions from karthink
 #+begin_src nix :noweb yes
   embark = {
     enable = true;
-    package = epkgs: epkgs.embark;
     defer = true;
     command = ["embark-act"];
     general."M-a" = "'embark-dwim";
@@ -4431,7 +4426,6 @@ Ace-window & avy actions from karthink
   app-launcher = {
     enable = true;
     defer = true;
-    package = epkgs: epkgs.app-launcher;
     command = ["app-launcher-run-app"];
   };
 #+end_src
@@ -4582,7 +4576,6 @@ An alternative to fzf.
 #+begin_src nix
   ezf = {
     enable = true;
-    package = epkgs: epkgs.ezf;
     deferIncrementally = true;
   };
 #+end_src
@@ -4887,7 +4880,6 @@ https://emacs.stackexchange.com/questions/20339/easiest-way-to-render-an-overlin
 
   org-modern-indent = {
     enable = true;
-    package = epkgs: epkgs.org-modern-indent;
     afterCall = ["org-mode-hook"];
     config = ''(general-add-hook 'org-mode-hook 'org-modern-indent-mode 90)'';
   };
@@ -5742,7 +5734,6 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
 
   exwm-outer-gaps = {
     enable = true;
-    package = epkgs: epkgs.exwm-outer-gaps;
     config = ''(exwm-outer-gaps-mode)'';
     after = ["exwm"];
   };
@@ -5956,7 +5947,6 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
       gptel-quick = {
         enable = true;
         defer = true;
-        package = epkgs: epkgs.gptel-quick;
         generalOne = {
           embark-general-map."?" = '''(gptel-quick :which-key "summarize")''; 
           "efs/leader-keys"."gq" = '''(gptel-quick :which-key "summarize")'';
@@ -6049,7 +6039,6 @@ This is where all the audio/video stuff goes
 
   programs.emacs.init.usePackage.mpc-wrapper = {
     enable = true;
-    package = epkgs: epkgs.mpc-wrapper;    
     generalOne."efs/leader-keys" = {
       "m" = '''(:ignore t :which-key "mpd")'';
       "mp" = '''(mpc-play :which-key "replay file")'';
@@ -6681,7 +6670,6 @@ This is a very ugly way of doing things
   programs.emacs.init.usePackage = {
     qutebrowser = {
       enable = true;
-      package = epkgs: epkgs.qutebrowser;
       ghook = [
         "('exwm-init-hook 'global-qutebrowser-exwm-mode)"
       ];

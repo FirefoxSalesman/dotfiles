@@ -368,7 +368,6 @@
     symex = {
       enable = true;
       defer = true;
-      package = epkgs: epkgs.symex;
       generalTwo."'normal"."(racket-repl-mode-map makefile-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
       init = ''
         (with-eval-after-load 'evil-easymotion

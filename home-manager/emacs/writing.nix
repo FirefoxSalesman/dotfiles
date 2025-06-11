@@ -144,7 +144,6 @@
     
     org-modern-indent = {
       enable = true;
-      package = epkgs: epkgs.org-modern-indent;
       afterCall = ["org-mode-hook"];
       config = ''(general-add-hook 'org-mode-hook 'org-modern-indent-mode 90)'';
     };

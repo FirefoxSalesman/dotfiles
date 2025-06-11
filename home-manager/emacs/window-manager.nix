@@ -476,7 +476,6 @@
       
       exwm-outer-gaps = {
         enable = true;
-        package = epkgs: epkgs.exwm-outer-gaps;
         config = ''(exwm-outer-gaps-mode)'';
         after = ["exwm"];
       };

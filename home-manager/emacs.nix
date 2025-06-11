@@ -20,7 +20,7 @@
       repeaters
       hydra
       pretty-hydra
-    ] ;
+    ];
     init = {
       enable = true;
       packageQuickstart = false;
