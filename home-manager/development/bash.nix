@@ -1,10 +1,18 @@
-{ pkgs, ... }:
+{ pkgs, config, lib, ... }:
 
+let
+  ide = config.programs.emacs.init.ide;
+in
 {
-  programs.emacs.init.usePackage.bash-ts-mode = {
-    enable = true;
-    extraPackages = with pkgs; [nodePackages.bash-language-server];
-    mode = [''"\\.sh\\'"''];
-    eglot = true;
+  options.programs.emacs.init.ide.languages.bash.enable = lib.mkEnableOption "enables bash support";
+  
+  config = lib.mkIf ide.languages.bash.enable {
+    programs.emacs.init.usePackage.bash-ts-mode = {
+      enable = true;
+      extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [nodePackages.bash-language-server] else [];
+      mode = [''"\\.sh\\'"''];
+      eglot = ide.eglot;
+      lsp = ide.lsp;
+    };
   };
 }

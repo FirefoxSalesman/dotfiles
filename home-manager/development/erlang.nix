@@ -1,10 +1,19 @@
-{ pkgs, ... }:
+{ pkgs, config, lib, ... }:
 
+let
+  ide = config.programs.emacs.init.ide;
+in
 {
-  programs.emacs.init.usePackage.erlang-ts = {
-    enable = true;
-    mode = [''("\\.erl\\'" . erlang-ts-mode)''];
-    eglot = true;
-    symex = true;
+  options.programs.emacs.init.ide.languages.erlang.enable = lib.mkEnableOption "enables erlang support";
+
+  config = lib.mkIf ide.languages.erlang.enable {
+    programs.emacs.init.usePackage.erlang-ts = {
+      enable = true;
+      mode = [''("\\.erl\\'" . erlang-ts-mode)''];
+      extraPackages = if ide.eglot || ide.lsp then [pkgs.beamMinimal28Packages.erlang-ls] else [];
+      eglot = ide.eglot;
+      lsp = ide.lsp;
+      symex = ide.symex;
+    };
   };
 }

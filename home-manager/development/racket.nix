@@ -1,18 +1,20 @@
-{ pkgs, ... }:
+{ pkgs, lib, config, ... }:
 
+let
+  ide = config.programs.emacs.init.ide;
+in
 {
-  programs.emacs.init.usePackage.racket-mode = {
-    enable = true;
-    eglot = true;
-    symex = true;
-    mode = [''"\\.rkt\\'"''];
-    gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
-    init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
-    config = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
-    generalTwo.local-leader.racket-mode-map = {
-      "RET" = "'geiser-racket";
-      "." = "'racket-xp-describe";
-      "r" = "'racket-run";
+  options.programs.emacs.init.ide.languages.racket.enable = lib.mkEnableOption "enables racket support";
+
+  config = lib.mkIf ide.languages.racket.enable {
+    programs.emacs.init.usePackage.racket-mode = {
+      enable = true;
+      eglot = ide.eglot;
+      lsp = ide.lsp;
+      symex = ide.symex;
+      mode = [''"\\.rkt\\'"''];
+      init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
+      config = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
     };
   };
 }

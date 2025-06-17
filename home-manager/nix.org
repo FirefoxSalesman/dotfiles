@@ -353,18 +353,6 @@
   }
 #+end_src
 
-*** Doom Utils
-#+begin_src nix :tangle packages/emacs/doom-utils.nix
-  { trivialBuild, inputs } :
-
-  trivialBuild rec {
-    pname = "doom-utils";
-    version = "current";
-    src = inputs.doom-utils;
-  }
-
-#+end_src
-
 *** Repeaters
 #+begin_src nix :tangle packages/emacs/repeaters.nix
   { trivialBuild, inputs } :
@@ -374,29 +362,6 @@
     version = "current";
     src = inputs.repeaters;
   }
-#+end_src
-
-*** Symex
-#+begin_src nix :tangle packages/emacs/symex2.nix
-  { inputs, trivialBuild, tsc, tree-sitter, paredit, evil, evil-surround, seq } :
-
-  trivialBuild rec {
-    pname = "symex2";
-    version = "current";
-    src = inputs.symex2;
-
-    propagatedUserEnvPkgs = [
-      tsc
-      tree-sitter
-      paredit
-      evil
-      evil-surround
-      seq
-    ];
-
-    buildInputs = propagatedUserEnvPkgs;
-  }
-
 #+end_src
 
 *** App Launcher
@@ -930,8 +895,7 @@ Stole it from Derek Taylor
         ./multimedia.nix
         ./aesthetics.nix
         ./extra-packages.nix
-        # ./development.nix
-        ./development
+        ./development.nix
         ./gui.nix
         ./emacs.nix
         ./shells.nix
@@ -1987,36 +1951,30 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
 ** Development
 This was more directly stolen than the other parts
 I think most of it was from the github page for lsp mode, but it's been a while, & I don't remember much.
-#+begin_src nix :noweb yes :tangle development/default.nix
+#+begin_src nix :noweb yes :tangle development.nix
   { inputs, pkgs, pkgs-stable, ... }:
 
   {
-    imports = [
-      # ./clojure.nix
-      # ./python.nix
-      ./java.nix
-      ./nix.nix
-      # ./web-development.nix
-      ./json.nix
-      ./toml.nix
-      # ./racket.nix
-      # ./haskell.nix
-      # ./c.nix
-      ./bash.nix
-      # ./r.nix
-      # ./jupyter.nix
-      # ./prolog.nix
-      ./zenscript.nix
-      # ./rust.nix
-      # ./lua.nix
-      # ./plantuml.nix
-      # ./scala.nix
-      # ./erlang.nix
-      # ./sql.nix
-      # ./forth.nix
-    ];
+    imports = [./development];
 
-    programs.emacs.init.usePackage = {
+    programs.emacs.init = {
+      ide = {
+        symex = true;  
+        eglot = true;
+        languages = {
+          java = {
+            enable = true;
+            gradle = true;
+          };
+          nix.enable = true;
+          json.enable = true;
+          toml.enable = true;
+          bash.enable = true;
+          zenscript.enable = true;
+        };
+      };
+
+      usePackage = {
         <<Development Misc>>
         
         <<Development Direnv>>
@@ -2030,6 +1988,37 @@ I think most of it was from the github page for lsp mode, but it's been a while,
         <<Development Eglot>>
         
         # <<Development Dape>>
+
+        cider.generalTwo.local-leader.cider-mode-map."s" = '''(cider-jack-in :which-key "start cider")''; 
+
+        python-ts-mode = {
+          generalTwo."local-leader".python-mode-map."r" = "'python-shell-send-buffer";
+          custom = {
+            python-shell-interpreter = ''"ipython"'';
+    	      python-shell-interpreter-args = ''"-i --simple-prompt"'';
+          };
+        };
+        
+        code-cells.generalTwo = {
+          "'normal".code-cells-mode-map = {
+            "M-e" = "'code-cells-forward-cell";
+            "M-o" = "'code-cells-backward-cell";
+          };
+          "local-leader".code-cells-mode-map = {
+            "e" = "'code-cells-eval";
+          };
+        };
+
+        racket-mode = {
+          gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
+          generalTwo.local-leader.racket-mode-map = {
+            "." = "'racket-xp-describe";
+            "r" = "'racket-run";
+          };
+        };
+
+        prolog-mode.generalTwo."local-leader".prolog-mode-map."r" = '''(run-prolog :which-key "run")'';
+      };
     };
   }
 #+end_src
@@ -2267,7 +2256,6 @@ https://github.com/jdtsmith/indent-bars
 #+begin_src emacs-lisp
   (dolist (server (list '((nxml-mode) . ("lemminx"))
   		      '((scala-ts-mode) . ("metals"))
-  		      '((html-ts-mode) . ("vscode-html-language-server" "--stdio"))
   		      '((lua-ts-mode) . ("lua-language-server"))
   		      '((rust-ts-mode rust-mode) .
   			("rust-analyzer" :initializationOptions (:check (:command "clippy")))))
@@ -2300,6 +2288,45 @@ https://github.com/jdtsmith/indent-bars
 #+end_src
 
 *** Language support
+**** Default.nix
+#+begin_src nix :tangle development/default.nix
+  { pkgs, lib, ... }:
+
+  {
+    imports = [
+      ./clojure.nix
+      ./python.nix
+      ./java.nix
+      ./nix.nix
+      ./web-development.nix
+      ./json.nix
+      ./toml.nix
+      ./racket.nix
+      # ./haskell.nix
+      ./c.nix
+      ./bash.nix
+      ./r.nix
+      ./prolog.nix
+      ./zenscript.nix
+      # ./rust.nix
+      ./lua.nix
+      ./plantuml.nix
+      ./scala.nix
+      ./erlang.nix
+      ./sql.nix
+      ./forth.nix
+    ];
+
+    options = {
+      programs.emacs.init.ide = {
+        symex = lib.mkEnableOption "enables symex support in all languages that support it";
+        lsp = lib.mkEnableOption "enables lsp-mode support in all languages that support it";
+        eglot = lib.mkEnableOption "enables eglot support in all languages that support it";
+      };
+    };
+  }
+#+end_src
+
 **** Python
 Sets up emacs as a python IDE. (It can do anything pycharm can)
 pyenv allows us to use virtual environments.
@@ -2308,19 +2335,35 @@ pyenv allows us to use virtual environments.
 ,cp- open a python repl
 ,cc- evaluate your code in the repl that you just opened up.
 #+begin_src nix :tangle development/python.nix
-  { pkgs, ... }:
+  { pkgs, config, lib, ... }:
 
+  let
+    ide = config.programs.emacs.init.ide;
+  in
   {
-    programs.emacs.init.usePackage.python-ts-mode = {
-      enable = true;
-      eglot = true;
-      symex = true;
-      mode = [''"\\.py\\'"''];
-      extraPackages = with pkgs; [ python313Packages.python-lsp-server ];
-      generalTwo."local-leader".python-mode-map."r" = "'python-shell-send-buffer";
-      custom = {
-        python-shell-interpreter = ''"ipython"'';
-    	  python-shell-interpreter-args = ''"-i --simple-prompt"'';
+    options = {
+      programs.emacs.init.ide.languages.python = {
+        enable = lib.mkEnableOption "enables python support";
+        jupyter = lib.mkEnableOption "enables code-cells, a minor mode for editing jupyter files";
+      };
+    };
+
+    config = lib.mkIf ide.languages.python.enable {
+      programs.emacs.init.usePackage = {
+        python-ts-mode = {
+          enable = true;
+          eglot = ide.eglot;
+          symex = ide.symex;
+          lsp = ide.lsp;
+          mode = [''"\\.py\\'"''];
+          extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [ python313Packages.python-lsp-server ] else [];
+        };
+
+        code-cells = {
+          enable = ide.languages.python.jupyter;
+          demand = true;
+          extraPackages = with pkgs; [python313Packages.jupytext];
+        };
       };
     };
   }
@@ -2328,27 +2371,28 @@ pyenv allows us to use virtual environments.
 
 **** Clojure
 #+begin_src nix :tangle development/clojure.nix
-  { pkgs, ... }:
+  { pkgs, lib, config, ... }:
 
+  let
+    ide = config.programs.emacs.init.ide;
+  in
   {
-    imports = [
-      ./java.nix
-    ];
+    options.programs.emacs.init.ide.languages.clojure.enable = lib.mkEnableOption "enables clojure support";
 
-    programs.emacs.init.usePackage = {
-      clojure-mode = {
-        enable = true;
-        extraPackages = with pkgs; [clojure-lsp];
-        mode = [''"\\.clj\\'"''];
-        eglot = true;
-        symex = true;
-      };
+    config = lib.mkIf ide.languages.clojure.enable {
+      programs.emacs.init.usePackage = {
+        clojure-mode = {
+          enable = true;
+          extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [clojure-lsp] else [];
+          mode = [''"\\.clj\\'"''];
+          lsp = ide.lsp;
+          eglot = ide.eglot;
+          symex = ide.symex;
+        };
 
-      cider = {
-        enable = true;
-        ghook = ["('clojure-mode-hook 'cider-mode)"];
-        generalTwo.local-leader.cider-mode-map = {
-          "s" = '''(cider-jack-in :which-key "start cider")''; 
+        cider = {
+          enable = true;
+          hook = ["(clojure-mode . cider-mode)"];
         };
       };
     };
@@ -2357,21 +2401,35 @@ pyenv allows us to use virtual environments.
 
 **** Java
 #+begin_src nix :tangle development/java.nix
-  { pkgs, ... }:
+  { pkgs, config, lib, ... } :
 
+  let
+    ide = config.programs.emacs.init.ide;
+  in
   {
-    programs.emacs.init.usePackage = {
-      java-ts-mode = {
-        enable = true;
-        mode = [''"\\.java\\'"''];
-        eglot = true;
-        symex = true;
+    options = {
+      programs.emacs.init.ide.languages.java = {
+        enable = lib.mkEnableOption "enables java support";
+        gradle = lib.mkEnableOption "enables groovy-mode, a major mode for editing gradle files";
       };
+    };
 
-      groovy-mode = {
-        enable = true;
-        symex = true;
-        mode = [''"\\.gradle\\'"''];
+    config = lib.mkIf ide.languages.java.enable {
+      programs.emacs.init.usePackage = {
+        java-ts-mode = {
+          enable = true;
+          extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [jdt-language-server] else [];
+          mode = [''"\\.java\\'"''];
+          lsp = ide.lsp;
+          eglot = ide.eglot;
+          symex = ide.symex;
+        };
+
+        groovy-mode = {
+          enable = ide.languages.java.gradle;
+          symex = ide.symex;
+          mode = [''"\\.gradle\\'"''];
+        };
       };
     };
   }
@@ -2379,58 +2437,85 @@ pyenv allows us to use virtual environments.
 
 **** Nix
 #+begin_src nix :tangle development/nix.nix
-  { pkgs, ... }:
+  { pkgs, config, lib, ... } :
 
+  let
+    ide = config.programs.emacs.init.ide;
+  in
   {
-    programs.emacs.init.usePackage.nix-mode = {
-      enable = true;
-      mode = [''"\\.nix\\'"''];
-      extraPackages = with pkgs; [nixd];
-      eglot = true;
-      symex = true;
+    options.programs.emacs.init.ide.languages.nix.enable = lib.mkEnableOption "enables nix support (highly reccommended)";
+
+    config = lib.mkIf ide.languages.nix.enable {
+      programs.emacs.init.usePackage.nix-mode = {
+        enable = true;
+        mode = [''"\\.nix\\'"''];
+        extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [nixd] else [];
+        eglot = ide.eglot;
+        lsp = ide.lsp;
+        symex = ide.symex;
+      };
     };
   }
 #+end_src
 
 **** Web Development
 #+begin_src nix :tangle development/web-development.nix
-  { pkgs, ... }:
+  { pkgs, config, lib, ... }:
 
+  let
+    ide = config.programs.emacs.init.ide;
+  in
   {
-    programs.emacs.init.usePackage = {
-      html-ts-mode = {
-        enable = true;
-        extraPackages = with pkgs; [vscode-langservers-extracted];
-        mode = [''"\\.[px]?html?\\'"''];
-        eglot = true;
-        symex = true;
-      };
+    options.programs.emacs.init.ide.languages.web = {
+      enable = lib.mkEnableOption "enables html, css, & js support";
+      emmet = lib.mkEnableOption "enables emmet for html, js, & css";
+      pug = lib.mkEnableOption "enables pug support";
+    };
 
-      emmet-mode = {
-        enable = true;
-        ghook = ["('(js-ts-mode-hook sgml-mode-hook css-ts-mode-hook html-ts-mode-hook) 'emmet-mode)"];
-        custom.emmet-move-cursor-between-quotes = "t";
-      };
+    config = lib.mkIf ide.languages.web.enable {
+      programs.emacs.init.usePackage = {
+        html-ts-mode = {
+          enable = true;
+          extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [vscode-langservers-extracted] else [];
+          # many thanks to doom
+          mode = [''"\\.[px]?html?\\'"''];
+          config = ''
+            (with-eval-after-load 'eglot
+              (add-to-list 'eglot-server-programs '((html-ts-mode) . ("vscode-html-language-server" "--stdio"))))
+          '';
+          eglot = ide.eglot;
+          symex = ide.symex;
+          lsp = ide.lsp;
+        };
 
-      pug-mode = {
-        enable = true;
-        mode = [''"\\.pug\\'"''];
-      };
+        emmet-mode = {
+          enable = ide.web.emmet;
+          ghook = ["('(js-ts-mode-hook sgml-mode-hook css-ts-mode-hook html-ts-mode-hook) 'emmet-mode)"];
+          custom.emmet-move-cursor-between-quotes = "t";
+        };
 
-      css-ts-mode = {
-        enable = true;
-        extraPackages = with pkgs; [vscode-langservers-extracted];
-        mode = [''"\\.css\\'"''];
-        eglot = true;
-        symex = true;
-      };
+        pug-mode = {
+          enable = ide.web.pug;
+          mode = [''"\\.pug\\'"''];
+        };
 
-      js-ts-mode = {
-        enable = true;
-        extraPackages = [typescript-language-server];
-        mode = [''"\\.js\\'"''];
-        eglot = true;
-        symex = true;
+        css-ts-mode = {
+          enable = true;
+          extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [vscode-langservers-extracted] else [];
+          mode = [''"\\.css\\'"''];
+          eglot = ide.eglot;
+          symex = ide.symex;
+          lsp = ide.lsp;
+        };
+
+        js-ts-mode = {
+          enable = true;
+          extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [typescript-language-server] else [];
+          mode = [''"\\.js\\'"''];
+          eglot = ide.eglot;
+          symex = ide.symex;
+          lsp = ide.lsp;
+        };
       };
     };
   }
@@ -2438,24 +2523,37 @@ pyenv allows us to use virtual environments.
 
 **** Json
 #+begin_src nix :tangle development/json.nix
-  { pkgs, ... }:
+  { pkgs, config, lib, ... }:
 
+  let
+    ide = config.programs.emacs.init.ide;
+  in
   {
-    programs.emacs.init.usePackage = {
-      json-ts-mode = {
-        enable = true;
-        extraPackages = with pkgs; [vscode-langservers-extracted];
-        mode = [''"\\.json\\'"''];
-        eglot = true;
-        symex = true;
-      };
+    options.programs.emacs.init.ide.languages.json.enable = lib.mkEnableOption "enables json support";
 
-      json5-ts-mode = {
-        enable = true;
-        extraPackages = with pkgs; [vscode-langservers-extracted];
-        mode = [''"\\.json5\\'"''];
-        eglot = true;
-        symex = true;
+    config = lib.mkIf ide.languages.json.enable {
+      programs.emacs.init.usePackage = {
+        json-ts-mode = {
+          enable = true;
+          extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [vscode-langservers-extracted] else [];
+          mode = [''"\\.json\\'"''];
+          lsp = ide.lsp;
+          eglot = ide.eglot;
+          symex = ide.symex;
+        };
+
+        json5-ts-mode = {
+          enable = true;
+          extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [vscode-langservers-extracted] else [];
+          mode = [''"\\.json5\\'"''];
+          lsp = ide.lsp;
+          eglot = ide.eglot;
+          symex = ide.symex;
+          config = ''
+            (with-eval-after-load 'eglot
+              (add-to-list 'eglot-server-programs '((json5-ts-mode) . ("vscode-json-language-server" "--stdio"))))
+          '';
+        };
       };
     };
   }
@@ -2463,34 +2561,43 @@ pyenv allows us to use virtual environments.
 
 **** Toml
 #+begin_src nix :tangle development/toml.nix
-  { pkgs, ... }:
+  { pkgs, config, lib, ... }:
 
+  let
+    ide = config.programs.emacs.init.ide;
+  in
   {
-    programs.emacs.init.usePackage.toml-ts-mode = {
-      enable = true;
-      mode = [''"\\.toml\\'"''];
-      symex = true;
+    options.programs.emacs.init.ide.languages.toml.enable = lib.mkEnableOption "enables toml support";
+
+    config = lib.mkIf ide.languages.toml.enable {
+      programs.emacs.init.usePackage.toml-ts-mode = {
+        enable = true;
+        mode = [''"\\.toml\\'"''];
+        symex = ide.symex;
+      };
     };
   }
 #+end_src
 
 **** Racket
 #+begin_src nix :tangle development/racket.nix
-  { pkgs, ... }:
+  { pkgs, lib, config, ... }:
 
+  let
+    ide = config.programs.emacs.init.ide;
+  in
   {
-    programs.emacs.init.usePackage.racket-mode = {
-      enable = true;
-      eglot = true;
-      symex = true;
-      mode = [''"\\.rkt\\'"''];
-      gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
-      init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
-      config = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
-      generalTwo.local-leader.racket-mode-map = {
-        "RET" = "'geiser-racket";
-        "." = "'racket-xp-describe";
-        "r" = "'racket-run";
+    options.programs.emacs.init.ide.languages.racket.enable = lib.mkEnableOption "enables racket support";
+
+    config = lib.mkIf ide.languages.racket.enable {
+      programs.emacs.init.usePackage.racket-mode = {
+        enable = true;
+        eglot = ide.eglot;
+        lsp = ide.lsp;
+        symex = ide.symex;
+        mode = [''"\\.rkt\\'"''];
+        init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
+        config = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
       };
     };
   }
@@ -2512,69 +2619,77 @@ pyenv allows us to use virtual environments.
 
 **** C
 #+begin_src nix :tangle development/c.nix
-  { pkgs, ... }:
+  { pkgs, lib, config, ... }:
 
+  let
+    ide = config.programs.emacs.init.ide;
+  in
   {
-    programs.emacs.init.usePackage.c-ts-mode = {
-      enable = true;
-      mode = [''"\\.c\\'"''];
-      eglot = true;
-      symex = true;
+    options.programs.emacs.init.ide.languages.c = {
+      enable = lib.mkEnableOption "enables c/c++ support";
+      preferClangd = lib.mkEnableOption "uses clang instead of ccls";
     };
+
+    config = lib.mkIf ide.languages.c.enable {
+      programs.emacs.init.usePackage = {
+        c-ts-mode = {
+          enable = true;
+          extraPackages = if (ide.lsp || ide.eglot) then
+            if ide.languages.c.preferClangd then [pkgs.clang-tools] else [pkgs.ccls]
+                          else [];
+          mode = [''"\\.c\\'"''];
+          eglot = ide.eglot;
+          lsp = ide.lsp;
+          symex = ide.symex;
+        };
+
+        ccls.enable = ide.lsp;
+      };
+    } ;
   }
 #+end_src
 
 **** Bash
 #+begin_src nix :tangle development/bash.nix
-  { pkgs, ... }:
+  { pkgs, config, lib, ... }:
 
+  let
+    ide = config.programs.emacs.init.ide;
+  in
   {
-    programs.emacs.init.usePackage.bash-ts-mode = {
-      enable = true;
-      extraPackages = with pkgs; [nodePackages.bash-language-server];
-      mode = [''"\\.sh\\'"''];
-      eglot = true;
+    options.programs.emacs.init.ide.languages.bash.enable = lib.mkEnableOption "enables bash support";
+    
+    config = lib.mkIf ide.languages.bash.enable {
+      programs.emacs.init.usePackage.bash-ts-mode = {
+        enable = true;
+        extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [nodePackages.bash-language-server] else [];
+        mode = [''"\\.sh\\'"''];
+        eglot = ide.eglot;
+        lsp = ide.lsp;
+      };
     };
   }
 #+end_src
 
 **** R
 #+begin_src nix :tangle development/r.nix
-  { pkgs, ... }:
+  { pkgs, config, lib, ... }:
 
+  let
+    ide = config.programs.emacs.init.ide;
+  in
   {
-    programs.emacs.init.usePackage.ess-r-mode = {
-      enable = true;
-      package = epkgs: epkgs.ess;
-      mode = [''"\\.R\\'"''];
-      eglot = true;
-      symex = true;
-      custom.ess-ask-for-ess-directory = "nil";
-    };
-  }
-#+end_src
+    options.programs.emacs.init.ide.languages.r.enable = lib.mkEnableOption "enables r support";
 
-**** Jupyter
-#+begin_src nix :tangle development/jupyter.nix
-  { pkgs, ... }:
-
-  {
-    imports = [
-      ./python.nix
-    ];
-
-    programs.emacs.init.usePackage.code-cells = {
-      enable = true;
-      demand = true;
-      extraPackages = with pkgs; [python313Packages.jupytext];
-      generalTwo = {
-        "'normal".code-cells-mode-map = {
-          "M-e" = "'code-cells-forward-cell";
-          "M-o" = "'code-cells-backward-cell";
-        };
-        "local-leader".code-cells-mode-map = {
-          "e" = "'code-cells-eval";
-        };
+    config = lib.mkIf ide.languages.r.enable {
+      programs.emacs.init.usePackage.ess-r-mode = {
+        enable = true;
+        package = epkgs: epkgs.ess;
+        mode = [''"\\.R\\'"''];
+        eglot = ide.eglot;
+        lsp = ide.lsp;
+        symex = ide.symex;
+        custom.ess-ask-for-ess-directory = "nil";
       };
     };
   }
@@ -2582,38 +2697,46 @@ pyenv allows us to use virtual environments.
 
 **** Prolog
 #+begin_src nix :tangle development/prolog.nix
-  { pkgs, ... }:
+  { pkgs, lib, config, ... }:
 
+  let
+    ide = config.programs.emacs.init.ide;
+  in
   {
-    programs.emacs.init.usePackage.prolog-mode = {
-      enable = true;
-      mode = [''"\\.pl$"''];
-      generalTwo."local-leader".prolog-mode-map."r" = '''(run-prolog :which-key "run")'';
+    options.programs.emacs.init.ide.languages.prolog.enable = lib.mkEnableOption "enables prolog support";
+
+    config = lib.mkIf ide.languages.prolog.enable {
+      programs.emacs.init.usePackage.prolog-mode = {
+        enable = true;
+        mode = [''"\\.pl$"''];
+      };
     };
   }
 #+end_src
 
 **** Zenscript
-#+begin_src nix :noweb yes :tangle development/zenscript.nix
-  { pkgs, ... }:
+#+begin_src nix :tangle development/zenscript.nix
+  { pkgs, config, lib, ... }:
 
+  let
+    ide = config.programs.emacs.init.ide;
+  in
   {
-    programs.emacs.init.usePackage.zenscript-mode = {
-      enable = true;
-      mode = [''"\\.zs\\'"''];
-      # There's no way we're fixing the completion system, so we'll turn it off
-      config = ''
-        <<Emacs Zenscript Config>>
-      '';
+    options.programs.emacs.init.ide.languages.zenscript.enable = lib.mkEnableOption "enables zenscript support";
+
+    config = lib.mkIf ide.languages.zenscript.enable {
+      programs.emacs.init.usePackage.zenscript-mode = {
+        enable = true;
+        mode = [''"\\.zs\\'"''];
+        # There's no way we're fixing the completion system, so we'll turn it off
+        config = ''
+          (defun zenscript-get-dumpzs (&optional prompt)
+            "Returns nothing, because I can't fix the dumpfile problem"
+            '(() . ()))
+        '';
+      };
     };
   }
-#+end_src
-
-#+NAME: Emacs Zenscript Config
-#+begin_src emacs-lisp
-  (defun zenscript-get-dumpzs (&optional prompt)
-    "Returns nothing, because I can't fix the dumpfile problem"
-    '(() . ()))
 #+end_src
 
 **** Rust
@@ -2642,104 +2765,147 @@ pyenv allows us to use virtual environments.
 
 **** Lua
 #+begin_src nix :tangle development/lua.nix
-  { pkgs, ... }:
+  { pkgs, lib, config, ... }:
 
+  let
+    ide = config.programs.emacs.init.ide;
+  in
   {
-    programs.emacs.init.usePackage.lua-ts-mode = {
-      enable = true;
-      extraPackages = with pkgs; [lua-language-server];
-      mode = [''"\\.lua\\'"''];
-      eglot = true;
+    options.programs.emacs.init.ide.languages.lua.enable = lib.mkEnableOption "enables lua support";
+
+    config = lib.mkIf ide.languages.lua.enable {
+      programs.emacs.init.usePackage.lua-ts-mode = {
+        enable = true;
+        extraPackages = if (ide.eglot || ide.lsp) then [pkgs.lua-language-server] else [];
+        mode = [''"\\.lua\\'"''];
+        eglot = ide.eglot;
+        lsp = ide.lsp;
+      };
     };
   }
 #+end_src
 
 **** Plantuml
-#+begin_src nix :noweb yes :tangle development/plantuml.nix
-  { pkgs, ... }:
+#+begin_src nix :tangle development/plantuml.nix
+  { pkgs, config, lib, ... }:
 
+  let
+    ide = config.programs.emacs.init.ide;
+  in
   {
-    programs.emacs.init.usePackage.plantuml-mode = {
-      enable = true;
-      mode = [''"\\.plantuml\\'"'' ''"\\.puml\\'"''];
-      custom = {
-        org-plantuml-exec-mode = "'plantuml";
-        # plantuml-default-exec-mode = "'executable";
-        # plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
-        org-plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
-      }; 
-      config = ''
-        <<Emacs Development Plantuml Config>>
-      '';
-    };
+    options.programs.emacs.init.ide.languages.plantuml.enable = lib.mkEnableOption "enables plantuml support";
+
+    config = lib.mkIf ide.languages.plantuml.enable {
+      programs.emacs.init.usePackage.plantuml-mode = {
+        enable = true;
+        mode = [''"\\.plantuml\\'"'' ''"\\.puml\\'"''];
+        custom = {
+          org-plantuml-exec-mode = "'plantuml";
+          plantuml-default-exec-mode = "'executable";
+          plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
+          org-plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
+        }; 
+        config = ''
+          (org-babel-do-load-languages 'org-babel-load-languages '((plantuml . t)))
+
+          (defun hex-encode (str)
+            (string-join (mapcar (lambda (c) (format "%02x" c)) str)))
+
+          (defun plantuml-server-encode-url (string)
+            "Encode the string STRING into a URL suitable for PlantUML server interactions."
+            (let* ((encoded-string (hex-encode string)))
+              (concat plantuml-server-url "/" plantuml-output-type "/~h" encoded-string)))
+      '' ;
+      };
+    } ;
   }
-#+end_src
-
-#+NAME: Emacs Development Plantuml Config
-#+begin_src emacs-lisp
-  (org-babel-do-load-languages 'org-babel-load-languages '((plantuml . t)))
-
-  (defun hex-encode (str)
-    (string-join (mapcar (lambda (c) (format "%02x" c)) str)))
-
-  (defun plantuml-server-encode-url (string)
-    "Encode the string STRING into a URL suitable for PlantUML server interactions."
-    (let* ((encoded-string (hex-encode string)))
-      (concat plantuml-server-url "/" plantuml-output-type "/~h" encoded-string)))
 #+end_src
 
 **** Scala
 #+begin_src nix :tangle development/scala.nix
-  { pkgs, ... }:
+  { pkgs, lib, config, ... }:
 
+  let
+    ide = config.programs.emacs.init.ide;
+  in
   {
-    programs.emacs.init.usePackage.scala-ts-mode = {
-      enable = true;
-      mode = [''"\\.scala\\'"''];
-      eglot = true;
-      symex = true;
+    options.programs.emacs.init.ide.languages.scala.enable = lib.mkEnableOption "enables scala support";
+
+    config = lib.mkIf ide.languages.scala.enable {
+      programs.emacs.init.usePackage.scala-ts-mode = {
+        enable = true;
+        extraPackages = if (ide.lsp || ide.eglot) then [pkgs.metals] else [];
+        mode = [''"\\.scala\\'"''];
+        eglot = ide.eglot;
+        lsp = ide.lsp;
+        symex = ide.symex;
+      };
     };
   }
 #+end_src
 
 **** Erlang
 #+begin_src nix :tangle development/erlang.nix
-  { pkgs, ... }:
+  { pkgs, config, lib, ... }:
 
+  let
+    ide = config.programs.emacs.init.ide;
+  in
   {
-    programs.emacs.init.usePackage.erlang-ts = {
-      enable = true;
-      mode = [''("\\.erl\\'" . erlang-ts-mode)''];
-      eglot = true;
-      symex = true;
+    options.programs.emacs.init.ide.languages.erlang.enable = lib.mkEnableOption "enables erlang support";
+
+    config = lib.mkIf ide.languages.erlang.enable {
+      programs.emacs.init.usePackage.erlang-ts = {
+        enable = true;
+        mode = [''("\\.erl\\'" . erlang-ts-mode)''];
+        extraPackages = if ide.eglot || ide.lsp then [pkgs.beamMinimal28Packages.erlang-ls] else [];
+        eglot = ide.eglot;
+        lsp = ide.lsp;
+        symex = ide.symex;
+      };
     };
   }
 #+end_src
 
 **** Sql
 #+begin_src nix :tangle development/sql.nix
-  { pkgs, ... }:
+  { pkgs, lib, config, ... }:
 
+  let
+    ide = config.programs.emacs.init.ide;
+  in
   {
-    programs.emacs.init.usePackage.sql = {
-      enable = true;
-      extraPackages = with pkgs; [sqls];
-      mode = [''"\\.sql\\'"''];
-      eglot = true;
-      symex = true;
+    options.programs.emacs.init.ide.languages.sql.enable = lib.mkEnableOption "enables sql support";
+
+    config = lib.mkIf ide.languages.sql.enable {
+      programs.emacs.init.usePackage.sql = {
+        enable = true;
+        extraPackages = [pkgs.sqls];
+        mode = [''"\\.sql\\'"''];
+        eglot = ide.eglot;
+        lsp = ide.lsp;
+        symex = ide.symex;
+      };
     };
   }
 #+end_src
 
 **** Forth
 #+begin_src nix :tangle development/forth.nix
-  { pkgs, ... }:
+  { pkgs, lib, config, ... }:
 
+  let
+    ide = config.programs.emacs.init.ide;
+  in
   {
-    programs.emacs.init.usePackage.forth-mode = {
-      enable = true;
-      mode = [''"\\.fs\\'"''];
-      symex = true;
+    options.programs.emacs.init.ide.languages.forth.enable = lib.mkEnableOption "enables forth support";
+
+    config = lib.mkIf ide.languages.forth.enable {
+      programs.emacs.init.usePackage.forth-mode = {
+        enable = true;
+        mode = [''"\\.fs\\'"''];
+        symex = ide.symex;
+      };
     };
   }
 #+end_src
@@ -5762,12 +5928,6 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
     enable = true;
     defer = true;
     ghook = ["('exwm-init-hook 'exwm-mff-mode)"];
-  };
-
-  exwm-edit = {
-    enable = true;
-    generalTwo.local-leader.exwm-mode-map."c" = "'exwm-edit--compose";
-    after = ["exwm"];
   };
 
   exwm-outer-gaps = {

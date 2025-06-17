@@ -1,9 +1,15 @@
-{ pkgs, ... }:
+{ pkgs, lib, config, ... }:
 
+let
+  ide = config.programs.emacs.init.ide;
+in
 {
-  programs.emacs.init.usePackage.prolog-mode = {
-    enable = true;
-    mode = [''"\\.pl$"''];
-    generalTwo."local-leader".prolog-mode-map."r" = '''(run-prolog :which-key "run")'';
+  options.programs.emacs.init.ide.languages.prolog.enable = lib.mkEnableOption "enables prolog support";
+
+  config = lib.mkIf ide.languages.prolog.enable {
+    programs.emacs.init.usePackage.prolog-mode = {
+      enable = true;
+      mode = [''"\\.pl$"''];
+    };
   };
 }

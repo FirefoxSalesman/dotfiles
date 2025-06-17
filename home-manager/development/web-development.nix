@@ -1,40 +1,59 @@
-{ pkgs, ... }:
+{ pkgs, config, lib, ... }:
 
+let
+  ide = config.programs.emacs.init.ide;
+in
 {
-  programs.emacs.init.usePackage = {
-    html-ts-mode = {
-      enable = true;
-      extraPackages = with pkgs; [vscode-langservers-extracted];
-      mode = [''"\\.[px]?html?\\'"''];
-      eglot = true;
-      symex = true;
-    };
+  options.programs.emacs.init.ide.languages.web = {
+    enable = lib.mkEnableOption "enables html, css, & js support";
+    emmet = lib.mkEnableOption "enables emmet for html, js, & css";
+    pug = lib.mkEnableOption "enables pug support";
+  };
 
-    emmet-mode = {
-      enable = true;
-      ghook = ["('(js-ts-mode-hook sgml-mode-hook css-ts-mode-hook html-ts-mode-hook) 'emmet-mode)"];
-      custom.emmet-move-cursor-between-quotes = "t";
-    };
+  config = lib.mkIf ide.languages.web.enable {
+    programs.emacs.init.usePackage = {
+      html-ts-mode = {
+        enable = true;
+        extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [vscode-langservers-extracted] else [];
+        # many thanks to doom
+        mode = [''"\\.[px]?html?\\'"''];
+        config = ''
+          (with-eval-after-load 'eglot
+            (add-to-list 'eglot-server-programs '((html-ts-mode) . ("vscode-html-language-server" "--stdio"))))
+        '';
+        eglot = ide.eglot;
+        symex = ide.symex;
+        lsp = ide.lsp;
+      };
 
-    pug-mode = {
-      enable = true;
-      mode = [''"\\.pug\\'"''];
-    };
+      emmet-mode = {
+        enable = ide.web.emmet;
+        ghook = ["('(js-ts-mode-hook sgml-mode-hook css-ts-mode-hook html-ts-mode-hook) 'emmet-mode)"];
+        custom.emmet-move-cursor-between-quotes = "t";
+      };
 
-    css-ts-mode = {
-      enable = true;
-      extraPackages = with pkgs; [vscode-langservers-extracted];
-      mode = [''"\\.css\\'"''];
-      eglot = true;
-      symex = true;
-    };
+      pug-mode = {
+        enable = ide.web.pug;
+        mode = [''"\\.pug\\'"''];
+      };
 
-    js-ts-mode = {
-      enable = true;
-      extraPackages = [typescript-language-server];
-      mode = [''"\\.js\\'"''];
-      eglot = true;
-      symex = true;
+      css-ts-mode = {
+        enable = true;
+        extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [vscode-langservers-extracted] else [];
+        mode = [''"\\.css\\'"''];
+        eglot = ide.eglot;
+        symex = ide.symex;
+        lsp = ide.lsp;
+      };
+
+      js-ts-mode = {
+        enable = true;
+        extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [typescript-language-server] else [];
+        mode = [''"\\.js\\'"''];
+        eglot = ide.eglot;
+        symex = ide.symex;
+        lsp = ide.lsp;
+      };
     };
   };
 }

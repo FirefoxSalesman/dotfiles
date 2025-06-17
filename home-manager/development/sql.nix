@@ -1,11 +1,19 @@
-{ pkgs, ... }:
+{ pkgs, lib, config, ... }:
 
+let
+  ide = config.programs.emacs.init.ide;
+in
 {
-  programs.emacs.init.usePackage.sql = {
-    enable = true;
-    extraPackages = with pkgs; [sqls];
-    mode = [''"\\.sql\\'"''];
-    eglot = true;
-    symex = true;
+  options.programs.emacs.init.ide.languages.sql.enable = lib.mkEnableOption "enables sql support";
+
+  config = lib.mkIf ide.languages.sql.enable {
+    programs.emacs.init.usePackage.sql = {
+      enable = true;
+      extraPackages = [pkgs.sqls];
+      mode = [''"\\.sql\\'"''];
+      eglot = ide.eglot;
+      lsp = ide.lsp;
+      symex = ide.symex;
+    };
   };
 }

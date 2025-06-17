@@ -1,24 +1,25 @@
-{ pkgs, ... }:
+{ pkgs, lib, config, ... }:
 
+let
+  ide = config.programs.emacs.init.ide;
+in
 {
-  imports = [
-    ./java.nix
-  ];
+  options.programs.emacs.init.ide.languages.clojure.enable = lib.mkEnableOption "enables clojure support";
 
-  programs.emacs.init.usePackage = {
-    clojure-mode = {
-      enable = true;
-      extraPackages = with pkgs; [clojure-lsp];
-      mode = [''"\\.clj\\'"''];
-      eglot = true;
-      symex = true;
-    };
+  config = lib.mkIf ide.languages.clojure.enable {
+    programs.emacs.init.usePackage = {
+      clojure-mode = {
+        enable = true;
+        extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [clojure-lsp] else [];
+        mode = [''"\\.clj\\'"''];
+        lsp = ide.lsp;
+        eglot = ide.eglot;
+        symex = ide.symex;
+      };
 
-    cider = {
-      enable = true;
-      ghook = ["('clojure-mode-hook 'cider-mode)"];
-      generalTwo.local-leader.cider-mode-map = {
-        "s" = '''(cider-jack-in :which-key "start cider")''; 
+      cider = {
+        enable = true;
+        hook = ["(clojure-mode . cider-mode)"];
       };
     };
   };

@@ -455,12 +455,6 @@
         ghook = ["('exwm-init-hook 'exwm-mff-mode)"];
       };
       
-      exwm-edit = {
-        enable = true;
-        generalTwo.local-leader.exwm-mode-map."c" = "'exwm-edit--compose";
-        after = ["exwm"];
-      };
-      
       exwm-outer-gaps = {
         enable = true;
         config = ''(exwm-outer-gaps-mode)'';
