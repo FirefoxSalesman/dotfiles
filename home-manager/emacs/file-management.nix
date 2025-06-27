@@ -1,18 +1,6 @@
 { inputs, ... }:
 
 {
-  xdg = {
-    mimeApps.defaultApplications."inode/directory" = ["emacs.desktop"];
-    desktopEntries.emacs = {
-      name = "Emacs";
-      genericName = "Text Editor";
-      categories = ["Development" "TextEditor"];
-      terminal = false;
-      icon = "emacs";
-      exec = "emacsclient -c -a emacs %u";
-      mimeType = ["inode/directory" "text/english" "text/plain" "text/x-makefile" "text/x-c++hdr" "text/x-c++src" "text/x-chdr" "text/x-csrc" "text/x-java" "text/x-moc" "text/x-pascal" "text/x-tcl"  "text/x-tex"  "application/x-shellscript"  "text/x-c" "text/x-c++" "x-scheme-handler/org-protocol"];
-    };
-  };
   programs.emacs.init.usePackage = {
     dired = {
       enable = true;
@@ -30,6 +18,7 @@
         # We're doing our best to get rid of that 1st extraneous line
         dired-free-space = "nil";
       };
+      config = ''(with-eval-after-load 'dired-x (gsetq dired-omit-extensions (delete ".class" dired-omit-extensions)))'';
     };
 
     openwith = {

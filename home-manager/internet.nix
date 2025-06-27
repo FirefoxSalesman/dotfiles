@@ -112,7 +112,10 @@
                                 "https://youtube.com/feeds/videos.xml?channel_id=UC_GQ4mac4oN3wl1UdbFuTEA"
                                 "https://youtube.com/feeds/videos.xml?channel_id=UC6UBbvEA8uh6Ulc6ax1Zs0g"
                                 "https://youtube.com/feeds/videos.xml?channel_id=UCNzZD3otfZVlIdvYYRRqNSw"
-        		                    "https://youtube.com/feeds/videos.xml?channel_id=UC9OZkS1Mhl5UvKSiPrYqsxg"
+                                "https://youtube.com/feeds/videos.xml?channel_id=UCnnkTXnyn0uZzmArZO99Klg"
+                                "https://youtube.com/feeds/videos.xml?channel_id=UCq-VIBjS6Ia1r1IR_j-7NUw"
+                                "https://youtube.com/feeds/videos.xml?channel_id=UC0E_vIe1e1lVeojYOgVg_5Q"
+                                "https://youtube.com/feeds/videos.xml?channel_id=UCUQs6rEz6lRGHn6DWqss0hA"
                                 "https://notrelated.xyz/rss")
         '';
       generalOne."efs/leader-keys"."r" = '''((lambda () (interactive) (elfeed) (elfeed-update)) :which-key "rss")'';

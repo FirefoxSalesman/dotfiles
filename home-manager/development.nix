@@ -17,6 +17,16 @@
         toml.enable = true;
         bash.enable = true;
         zenscript.enable = true;
+        markdown = {
+          enable = true;
+          evil = true;
+        };
+        latex = {
+          enable = true;
+          magicLatexBuffer = true;
+          opinionatedChanges = true;
+          cdlatex = true;
+        };
       };
     };
 
@@ -82,6 +92,7 @@
           (dolist (mode (list '(java-ts-mode . java)
           		    '(html-ts-mode . html)
           		    '(lua-ts-mode . lua)
+          		    '(go-ts-mode . go)
           		    '(python-ts-mode . python)
           		    '(scala-ts-mode . scala)
           		    '(js-ts-mode . javascript)
@@ -174,6 +185,10 @@
       eglot = {
         enable = true;
         gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
+        custom = {
+          eglot-report-progress = "nil";
+          eglot-autoshutdown = "t";
+        };
         generalTwo.local-leader.eglot-mode-map = {
           "f" = "'eglot-format-buffer";
           "a" = "'eglot-code-actions";
@@ -262,6 +277,29 @@
           "r" = "'racket-run";
         };
       };
+
+      java-ts-mode.init = ''
+        (defun tkj/java-decompile-class ()
+          "Run the FernFlower decompiler on the current .class file using
+         fernflower, and opens the decompiled Java file."
+          (interactive)
+          (let* ((current-file (buffer-file-name))
+                 (output-dir (concat (file-name-directory current-file) "decompiled/"))
+                 (decompiled-file (concat output-dir (file-name-base current-file) ".java"))
+                 (command (format "fernflower %s %s"
+                                  (shell-quote-argument current-file)
+                                  (shell-quote-argument output-dir))))
+            (if (and current-file (string-equal (file-name-extension current-file) "class"))
+                (progn
+                  (unless (file-directory-p output-dir)
+                    (make-directory output-dir t))
+                  (message "Running FernFlower decompiler...")
+                  (shell-command command)
+                  (if (file-exists-p decompiled-file)
+                      (find-file decompiled-file)
+                    (message "Error: Decompiled file not found at %s" decompiled-file)))
+              (message "Error: This command can only be run on .class files"))))
+      '';
 
       prolog-mode.generalTwo."local-leader".prolog-mode-map."r" = '''(run-prolog :which-key "run")'';
     };

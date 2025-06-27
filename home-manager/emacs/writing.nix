@@ -204,46 +204,13 @@
       };
     };
     
-    tex = {
-      enable = true;
-      package = epkgs: epkgs.auctex;
-      extraPackages = with pkgs; [texliveFull];
-      init = ''(setq-default TeX-master nil)'';
-      gfhook = [
-        ''
-          ('LaTeX-mode-hook (list 'magic-latex-buffer
-                                         'visual-line-mode
-                                         'LaTeX-math-mode
-                                         'flyspell-mode))
-        ''
-        ''
-          ('reftex-load-hook (lambda ()
-                                (gsetq reftex-section-levels
-                                   (cons '("poemtitle" . -3) reftex-section-levels))))
-        ''
-      ];
-      custom = {
-        reftex-label-alist = '''(("\\poemtitle" ?P "poem:" "\\ref{%s}" nil ("poem" "poemtitle")))'';
-        reftex-format-cite-function = ''
-          '(lambda (key fmt)
-             (let ((cite (replace-regexp-in-string "%l" key fmt))
-                   (if ( or (= ?~ (string-to-char fmt))
-                         (member (preceding-char) '(?\ ?\t |/n ?~)))
-                       cite
-                     (concat "~" cite)))))
-        '';
-        TeX-auto-save = "t";
-        TeX-parse-self = "t";
-        reftex-plug-into-AUCTeX = "t";
-      };
-      generalTwo.local-leader.LaTeX-mode-map = {
-        "p" = '''(preview-at-point :which-key "preview")'';
-        "a" = '''(eglot-code-actions :which-key "code actions")'';
-        "n" = '''(flymake-goto-next-error :which-key "next error")'';
-        "e" = '''(flymake-goto-prev-error :which-key "previous error")'';
-        "f" = '''(eglot-format :which-key "format")'';
-        "u" = '''(preview-clearout-at-point :which-key "unpreview")'';
-      };
+    tex.generalTwo.local-leader.LaTeX-mode-map = {
+      "p" = '''(preview-at-point :which-key "preview")'';
+      "a" = '''(eglot-code-actions :which-key "code actions")'';
+      "n" = '''(flymake-goto-next-error :which-key "next error")'';
+      "e" = '''(flymake-goto-prev-error :which-key "previous error")'';
+      "f" = '''(eglot-format :which-key "format")'';
+      "u" = '''(preview-clearout-at-point :which-key "unpreview")'';
     };
     
     pdf-tools = {
@@ -272,46 +239,14 @@
       extraConfig = '':magic ("%PDF" . pdf-view-mode)'';
     };
     
-    magic-latex-buffer = {
-      enable = true;
-      defer = true;
-      afterCall = ["LaTeX-mode-hook"] ;
-    };
-    
-    cdlatex = {
-      enable = true;
-      defer = true;
-      ghook = [
-        "('LaTeX-mode-hook 'turn-on-cdlatex)"
-        "('org-mode-hook 'org-cdlatex-mode)"
-      ];
-      generalTwo."'insert" = {
-        cdlatex-mode-map."TAB" = "'cdlatex-tab";
-        org-cdlatex-mode-map."TAB" = "'cdlatex-tab";
-      };
-    };
-    
-    bibtex-mode = {
-      enable = true;
-      mode = [''"\\.bib\\'"''];
-      eglot = true;
-      symex = true;
-    };
-    
-    latex = {
-      enable = true;
-      mode = [''("\\.tex\\'" . LaTeX-mode)''];
-      eglot = true;
+    cdlatex.generalTwo."'insert" = {
+      cdlatex-mode-map."TAB" = "'cdlatex-tab";
+      org-cdlatex-mode-map."TAB" = "'cdlatex-tab";
     };
     
     markdown = {
-      enable = true;
-      defer = true;
-      extraPackages = with pkgs; [marksman];
-      eglot = true;
       generalOne.markdown-mode-map."C-c C-e" = "'markdown-do";
-      gfhook = ["('markdown-mode-hook (list 'outline-minor-mode 'efs/markdown-font-setup))"];
-      mode = [''("\\.md\\'" . gfm-mode)''];
+      gfhook = ["('markdown-mode-hook 'efs/markdown-font-setup)"];
       custom = {
         markdown-command = ''"multimarkdown"'';
         markdown-hide-markup = "t";

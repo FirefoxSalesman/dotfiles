@@ -1,10 +1,18 @@
-{ pkgs, ... }:
+{ pkgs, lib, config, ... }:
 
+let
+  ide = config.programs.emacs.init.ide;
+in
 {
-  programs.emacs.init.usePackage.haskell-mode = {
-    enable = true;
-    mode = [''"\\.hs\\'"''];
-    eglot = true;
-    symex = true;
+  options.programs.emacs.init.ide.languages.haskell.enable = lib.mkEnableOption "enables haskell support";
+  config = lib.mkIf ide.languages.haskell.enable {
+    programs.emacs.init.usePackage.haskell-mode = {
+      enable = true;
+      mode = [''"\\.hs\\'"''];
+      extraPackages = if (ide.lsp || ide.eglot) then [pkgs.haskell-language-server] else [];
+      eglot = ide.eglot;
+      lsp = ide.lsp;
+      symex = ide.symex;
+    };
   };
 }

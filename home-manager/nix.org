@@ -794,7 +794,7 @@ Dev templates: https://github.com/the-nix-way/dev-templates
     }
 
     getTemplates() {
-      ${pkgs.coreutils}/bin/printf "bun\nc-cpp\nclojure\ncsharp\ncue\ndhall\nelixir\nelm\nempty\ngleam\ngo\nhashi\nhaskell\nhaxe\njava\njupyter\nkotlin\nlatex\nnickel\nnim\nnix\nnode\nocaml\nopa\nphp\nplatformio\nprotobuf\npulumi\npurescript\npython\nr\nruby\nrust\nrust-toolchain\nscala\nshell\nswi-prolog\nswift\nvlang\nzig" | ${pkgs.ezf}
+      ${pkgs.coreutils}/bin/printf "bun\nc-cpp\nclojure\ncsharp\ncue\ndhall\nelixir\nelm\nempty\ngleam\ngo\nhashi\nhaskell\nhaxe\njava\njupyter\nkotlin\nlatex\nnickel\nnim\nnix\nnode\nocaml\nopa\nphp\nplatformio\nprotobuf\npulumi\npurescript\npython\nr\nruby\nrust\nrust-toolchain\nscala\nshell\nswi-prolog\nswift\nvlang\nzig" | ${pkgs.ezf}/bin/ezf
     }
 
     template() {
@@ -1894,6 +1894,7 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
       (config.lib.nixGL.wrap gimp)
       (config.lib.nixGL.wrap prismlauncher)
       (config.lib.nixGL.wrap blockbench)
+      (config.lib.nixGL.wrap wineWowPackages.stagingFull)
       wget
       zip
       unzip
@@ -1971,6 +1972,16 @@ I think most of it was from the github page for lsp mode, but it's been a while,
           toml.enable = true;
           bash.enable = true;
           zenscript.enable = true;
+          markdown = {
+            enable = true;
+            evil = true;
+          };
+          latex = {
+            enable = true;
+            magicLatexBuffer = true;
+            opinionatedChanges = true;
+            cdlatex = true;
+          };
         };
       };
 
@@ -2016,6 +2027,10 @@ I think most of it was from the github page for lsp mode, but it's been a while,
             "r" = "'racket-run";
           };
         };
+
+        java-ts-mode.init = ''
+          <<Java Config>>
+        '';
 
         prolog-mode.generalTwo."local-leader".prolog-mode-map."r" = '''(run-prolog :which-key "run")'';
       };
@@ -2110,6 +2125,7 @@ https://github.com/jdtsmith/indent-bars
   (dolist (mode (list '(java-ts-mode . java)
   		    '(html-ts-mode . html)
   		    '(lua-ts-mode . lua)
+  		    '(go-ts-mode . go)
   		    '(python-ts-mode . python)
   		    '(scala-ts-mode . scala)
   		    '(js-ts-mode . javascript)
@@ -2154,6 +2170,33 @@ https://github.com/jdtsmith/indent-bars
     enable = true;
     command = ["treesitter-context-focus-mode"];
   };
+#+end_src
+
+*** Java Decompiler
+Borrowed from here:
+https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
+#+NAME: Java Config
+#+begin_src emacs-lisp
+  (defun tkj/java-decompile-class ()
+    "Run the FernFlower decompiler on the current .class file using
+   fernflower, and opens the decompiled Java file."
+    (interactive)
+    (let* ((current-file (buffer-file-name))
+           (output-dir (concat (file-name-directory current-file) "decompiled/"))
+           (decompiled-file (concat output-dir (file-name-base current-file) ".java"))
+           (command (format "fernflower %s %s"
+                            (shell-quote-argument current-file)
+                            (shell-quote-argument output-dir))))
+      (if (and current-file (string-equal (file-name-extension current-file) "class"))
+          (progn
+            (unless (file-directory-p output-dir)
+              (make-directory output-dir t))
+            (message "Running FernFlower decompiler...")
+            (shell-command command)
+            (if (file-exists-p decompiled-file)
+                (find-file decompiled-file)
+              (message "Error: Decompiled file not found at %s" decompiled-file)))
+        (message "Error: This command can only be run on .class files"))))
 #+end_src
 
 *** Project
@@ -2216,6 +2259,10 @@ https://github.com/jdtsmith/indent-bars
   eglot = {
     enable = true;
     gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
+    custom = {
+      eglot-report-progress = "nil";
+      eglot-autoshutdown = "t";
+    };
     generalTwo.local-leader.eglot-mode-map = {
       "f" = "'eglot-format-buffer";
       "a" = "'eglot-code-actions";
@@ -2287,7 +2334,15 @@ https://github.com/jdtsmith/indent-bars
   };
 #+end_src
 
-*** Language support
+*** TODO Language support
+Languages we would like to support:
++ [ ] Ruby
++ [ ] Perl
++ [ ] C sharp
++ [ ] Latex
++ [ ] Common lisp
++ [ ] Scheme
+
 **** Default.nix
 #+begin_src nix :tangle development/default.nix
   { pkgs, lib, ... }:
@@ -2302,19 +2357,23 @@ https://github.com/jdtsmith/indent-bars
       ./json.nix
       ./toml.nix
       ./racket.nix
-      # ./haskell.nix
+      ./haskell.nix
       ./c.nix
       ./bash.nix
       ./r.nix
       ./prolog.nix
       ./zenscript.nix
-      # ./rust.nix
+      ./rust.nix
       ./lua.nix
       ./plantuml.nix
       ./scala.nix
       ./erlang.nix
       ./sql.nix
       ./forth.nix
+      ./go.nix
+      ./markdown.nix
+      ./zig.nix
+      ./latex.nix
     ];
 
     options = {
@@ -2605,14 +2664,22 @@ pyenv allows us to use virtual environments.
 
 **** Haskell
 #+begin_src nix :tangle development/haskell.nix
-  { pkgs, ... }:
+  { pkgs, lib, config, ... }:
 
+  let
+    ide = config.programs.emacs.init.ide;
+  in
   {
-    programs.emacs.init.usePackage.haskell-mode = {
-      enable = true;
-      mode = [''"\\.hs\\'"''];
-      eglot = true;
-      symex = true;
+    options.programs.emacs.init.ide.languages.haskell.enable = lib.mkEnableOption "enables haskell support";
+    config = lib.mkIf ide.languages.haskell.enable {
+      programs.emacs.init.usePackage.haskell-mode = {
+        enable = true;
+        mode = [''"\\.hs\\'"''];
+        extraPackages = if (ide.lsp || ide.eglot) then [pkgs.haskell-language-server] else [];
+        eglot = ide.eglot;
+        lsp = ide.lsp;
+        symex = ide.symex;
+      };
     };
   }
 #+end_src
@@ -2741,22 +2808,34 @@ pyenv allows us to use virtual environments.
 
 **** Rust
 #+begin_src nix :tangle development/rust.nix
-  { pkgs, ... }:
+  { pkgs, lib, config, ... }:
 
+  let
+    ide = config.programs.emacs.init.ide;
+  in
   {
-    programs.emacs.init.usePackage = {
-      rust-ts-mode = {
-        enable = true;
-        defer = true;
-        eglot = true;
-        symex = true;
-      };
+    options.programs.emacs.init.ide.languages.rust.enable = lib.mkEnableOption "enables rust support";
 
-      rustic = {
-        enable = true;
-        custom = {
-          rust-mode-treesitter-derive = "t";
-          rustic-lsp-client = "'eglot";
+    config = lib.mkIf ide.languages.rust.enable {
+      programs.emacs.init.usePackage = {
+        rust-ts-mode = {
+          enable = true;
+          defer = true;
+          extraPackages = if ide.lsp || ide.eglot then [pkgs.rust-analyzer] else [];
+          lsp = ide.lsp;
+          eglot = ide.eglot;
+          symex = ide.symex;
+        };
+
+        rustic = {
+          enable = true;
+          mode = [''("\\.rs$" . rustic-mode)''];
+          custom = {
+            rust-mode-treesitter-derive = "t";
+            rustic-lsp-client = if ide.eglot then "'eglot" else
+              if ide.lsp then "'lsp-mode" else
+                "nil";
+          };
         };
       };
     };
@@ -2910,24 +2989,169 @@ pyenv allows us to use virtual environments.
   }
 #+end_src
 
+**** Go
+#+begin_src nix :tangle development/go.nix
+  { pkgs, lib, config, ... }:
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.languages.go.enable = lib.mkEnableOption "enables go support";
+
+    config = lib.mkIf ide.languages.go.enable {
+      programs.emacs.init.usePackage.go-ts-mode = {
+        enable = true;
+        mode = [''"\\.go\\'"''];
+        symex = ide.symex;
+        lsp = ide.lsp;
+        eglot = ide.eglot;
+        extraPackages = if (ide.lsp || ide.eglot) then [pkgs.gopls pkgs.go] else [];
+      };
+    };
+  }
+#+end_src
+
+**** Markdown
+#+begin_src nix :tangle development/markdown.nix
+  { pkgs, lib, config, ... }:
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.languages.markdown = {
+      enable = lib.mkEnableOption "Enables markdown support";
+      evil = lib.mkEnableOption "Adds some evil keybinds. Symex support is behind this toggle";
+    };
+
+    config = lib.mkIf ide.languages.markdown.enable {
+      programs.emacs.init.usePackage = {
+        markdown = {
+          enable = true;
+          defer = true;
+          extraPackages = if (ide.eglot || ide.lsp) then [pkgs.marksman] else [];
+          eglot = ide.eglot;
+          lsp = ide.lsp;
+          mode = [''("\\.md\\'" . gfm-mode)''];
+        };
+        
+        evil-markdown = {
+          enable = ide.languages.markdown.evil;
+          defer = true;
+          symex = ide.symex;
+          hook = [
+            "(markdown-mode . evil-markdown-mode)"
+            "(markdown-mode . outline-minor-mode)"
+          ];
+        };
+      };
+    };
+  }
+#+end_src
+
+**** Zig
+#+begin_src nix :tangle development/zig.nix
+  { pkgs, lib, config, ... }:
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.languages.zig.enable = lib.mkEnableOption "enables zig support";
+
+    config = lib.mkIf ide.languages.zig.enable {
+      programs.emacs.init.usePackage.zig-mode = {
+        enable = true;
+        extraPackages = if (ide.eglot || ide.lsp) then [pkgs.zls pkgs.zig] else [];
+        mode = [''"\\.zig\\'"''];
+        symex = ide.symex;
+        lsp = ide.lsp;
+        eglot = ide.eglot;
+      };
+    };
+  }
+#+end_src
+
+**** LaTeX
+#+begin_src nix :tangle development/latex.nix
+  { pkgs, config, lib, ... } :
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.languages.latex = {
+      enable = lib.mkEnableOption "enables LaTeX support"; 
+      magicLatexBuffer = lib.mkEnableOption "use magic-latex-buffer to prettify";
+      opinionatedChanges = lib.mkEnableOption "use some opinionated changes that I stole from Emacs from Scratch";
+      cdlatex = lib.mkEnableOption "Enable cdlatex in latex and org modes";
+    };
+
+    config = lib.mkIf ide.languages.latex.enable {
+      # Infinitely many thanks to David Wilson for this one
+      programs.emacs.init.usePackage = {
+        tex = {
+          enable = ide.languages.latex.magicLatexBuffer;
+          package = epkgs: epkgs.auctex;
+          init = ''(setq-default TeX-master nil)'';
+          custom = {
+            reftex-label-alist = '''(("\\poemtitle" ?P "poem:" "\\ref{%s}" nil ("poem" "poemtitle")))'';
+            reftex-format-cite-function = ''
+              '(lambda (key fmt)
+                (let ((cite (replace-regexp-in-string "%l" key fmt))
+                     (if ( or (= ?~ (string-to-char fmt))
+                        (member (preceding-char) '(?\ ?\t |/n ?~)))
+                         cite
+                   (concat "~" cite)))))
+            '';
+            TeX-auto-save = "t";
+            TeX-parse-self = "t";
+            reftex-plug-into-AUCTeX = "t";
+          };
+        };
+
+        bibtex-mode = {
+          enable = true;
+          mode = [''"\\.bib\\'"''];
+          lsp = ide.lsp;
+          eglot = ide.eglot;
+          symex = ide.symex;
+        };
+
+        latex = {
+          enable = true;
+          package = epkgs: epkgs.auctex;
+          extraPackages = with pkgs; [texliveFull];
+          mode = [''("\\.tex\\'" . LaTeX-mode)''];
+          symex = ide.symex;
+          lsp = ide.lsp;
+          eglot = ide.eglot;
+        };
+        
+        magic-latex-buffer = {
+          enable = ide.languages.latex.magicLatexBuffer;
+          hook = ["(LaTeX-mode . magic-latex-buffer)"];
+        };
+
+        cdlatex = {
+          enable = ide.languages.latex.cdlatex;
+          hook = [
+            "('LaTeX-mode . turn-on-cdlatex)"
+            "('org-mode . org-cdlatex-mode)"
+          ];
+        };
+      };
+    };
+  }
+#+end_src
+
 ** File Management
 I'm running dired with a couple of small packages that improve on it
 #+begin_src nix :noweb yes :tangle emacs/file-management.nix
   { inputs, ... }:
 
   {
-    xdg = {
-      mimeApps.defaultApplications."inode/directory" = ["emacs.desktop"];
-      desktopEntries.emacs = {
-        name = "Emacs";
-        genericName = "Text Editor";
-        categories = ["Development" "TextEditor"];
-        terminal = false;
-        icon = "emacs";
-        exec = "emacsclient -c -a emacs %u";
-        mimeType = ["inode/directory" "text/english" "text/plain" "text/x-makefile" "text/x-c++hdr" "text/x-c++src" "text/x-chdr" "text/x-csrc" "text/x-java" "text/x-moc" "text/x-pascal" "text/x-tcl"  "text/x-tex"  "application/x-shellscript"  "text/x-c" "text/x-c++" "x-scheme-handler/org-protocol"];
-      };
-    };
     programs.emacs.init.usePackage = {
       dired = {
         enable = true;
@@ -2945,6 +3169,7 @@ I'm running dired with a couple of small packages that improve on it
           # We're doing our best to get rid of that 1st extraneous line
           dired-free-space = "nil";
         };
+        config = ''(with-eval-after-load 'dired-x (gsetq dired-omit-extensions (delete ".class" dired-omit-extensions)))'';
       };
 
       openwith = {
@@ -4125,10 +4350,6 @@ By default, any key pressed while in god state is treated as if it was pressed w
   };
 
   evil-markdown = {
-    enable = true;
-    defer = true;
-    ghook = ["('markdown-mode-hook 'evil-markdown-mode)"];
-    symex = true;
     custom.evil-markdown-movement-bindings = ''
       '((up . "o")
         (down . "e")
@@ -5209,46 +5430,13 @@ No idea what the rest of this is for.
 
 #+NAME: Emacs Latex
 #+begin_src nix :noweb yes
-  tex = {
-    enable = true;
-    package = epkgs: epkgs.auctex;
-    extraPackages = with pkgs; [texliveFull];
-    init = ''(setq-default TeX-master nil)'';
-    gfhook = [
-      ''
-        ('LaTeX-mode-hook (list 'magic-latex-buffer
-                                       'visual-line-mode
-                                       'LaTeX-math-mode
-                                       'flyspell-mode))
-      ''
-      ''
-        ('reftex-load-hook (lambda ()
-                              (gsetq reftex-section-levels
-                                 (cons '("poemtitle" . -3) reftex-section-levels))))
-      ''
-    ];
-    custom = {
-      reftex-label-alist = '''(("\\poemtitle" ?P "poem:" "\\ref{%s}" nil ("poem" "poemtitle")))'';
-      reftex-format-cite-function = ''
-        '(lambda (key fmt)
-           (let ((cite (replace-regexp-in-string "%l" key fmt))
-                 (if ( or (= ?~ (string-to-char fmt))
-                       (member (preceding-char) '(?\ ?\t |/n ?~)))
-                     cite
-                   (concat "~" cite)))))
-      '';
-      TeX-auto-save = "t";
-      TeX-parse-self = "t";
-      reftex-plug-into-AUCTeX = "t";
-    };
-    generalTwo.local-leader.LaTeX-mode-map = {
-      "p" = '''(preview-at-point :which-key "preview")'';
-      "a" = '''(eglot-code-actions :which-key "code actions")'';
-      "n" = '''(flymake-goto-next-error :which-key "next error")'';
-      "e" = '''(flymake-goto-prev-error :which-key "previous error")'';
-      "f" = '''(eglot-format :which-key "format")'';
-      "u" = '''(preview-clearout-at-point :which-key "unpreview")'';
-    };
+  tex.generalTwo.local-leader.LaTeX-mode-map = {
+    "p" = '''(preview-at-point :which-key "preview")'';
+    "a" = '''(eglot-code-actions :which-key "code actions")'';
+    "n" = '''(flymake-goto-next-error :which-key "next error")'';
+    "e" = '''(flymake-goto-prev-error :which-key "previous error")'';
+    "f" = '''(eglot-format :which-key "format")'';
+    "u" = '''(preview-clearout-at-point :which-key "unpreview")'';
   };
 
   pdf-tools = {
@@ -5271,36 +5459,9 @@ No idea what the rest of this is for.
     extraConfig = '':magic ("%PDF" . pdf-view-mode)'';
   };
 
-  magic-latex-buffer = {
-    enable = true;
-    defer = true;
-    afterCall = ["LaTeX-mode-hook"] ;
-  };
-
-  cdlatex = {
-    enable = true;
-    defer = true;
-    ghook = [
-      "('LaTeX-mode-hook 'turn-on-cdlatex)"
-      "('org-mode-hook 'org-cdlatex-mode)"
-    ];
-    generalTwo."'insert" = {
-      cdlatex-mode-map."TAB" = "'cdlatex-tab";
-      org-cdlatex-mode-map."TAB" = "'cdlatex-tab";
-    };
-  };
-
-  bibtex-mode = {
-    enable = true;
-    mode = [''"\\.bib\\'"''];
-    eglot = true;
-    symex = true;
-  };
-
-  latex = {
-    enable = true;
-    mode = [''("\\.tex\\'" . LaTeX-mode)''];
-    eglot = true;
+  cdlatex.generalTwo."'insert" = {
+    cdlatex-mode-map."TAB" = "'cdlatex-tab";
+    org-cdlatex-mode-map."TAB" = "'cdlatex-tab";
   };
 #+end_src
 
@@ -5319,13 +5480,8 @@ No idea what the rest of this is for.
 #+NAME: Emacs Markdown
 #+begin_src nix :noweb yes
   markdown = {
-    enable = true;
-    defer = true;
-    extraPackages = with pkgs; [marksman];
-    eglot = true;
     generalOne.markdown-mode-map."C-c C-e" = "'markdown-do";
-    gfhook = ["('markdown-mode-hook (list 'outline-minor-mode 'efs/markdown-font-setup))"];
-    mode = [''("\\.md\\'" . gfm-mode)''];
+    gfhook = ["('markdown-mode-hook 'efs/markdown-font-setup)"];
     custom = {
       markdown-command = ''"multimarkdown"'';
       markdown-hide-markup = "t";
@@ -6162,7 +6318,7 @@ This is where all the audio/video stuff goes
     home.packages = with pkgs; [
       yt-dlp
       (config.lib.nixGL.wrap obs-studio)
-      # (config.lib.nixGL.wrap pkgs-stable.kdenlive)
+      (config.lib.nixGL.wrap kdePackages.kdenlive)
       lmms
       audacity
       mpc-cli
@@ -6540,7 +6696,10 @@ https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance
                               "https://youtube.com/feeds/videos.xml?channel_id=UC_GQ4mac4oN3wl1UdbFuTEA"
                               "https://youtube.com/feeds/videos.xml?channel_id=UC6UBbvEA8uh6Ulc6ax1Zs0g"
                               "https://youtube.com/feeds/videos.xml?channel_id=UCNzZD3otfZVlIdvYYRRqNSw"
-      		                    "https://youtube.com/feeds/videos.xml?channel_id=UC9OZkS1Mhl5UvKSiPrYqsxg"
+                              "https://youtube.com/feeds/videos.xml?channel_id=UCnnkTXnyn0uZzmArZO99Klg"
+                              "https://youtube.com/feeds/videos.xml?channel_id=UCq-VIBjS6Ia1r1IR_j-7NUw"
+                              "https://youtube.com/feeds/videos.xml?channel_id=UC0E_vIe1e1lVeojYOgVg_5Q"
+                              "https://youtube.com/feeds/videos.xml?channel_id=UCUQs6rEz6lRGHn6DWqss0hA"
                               "https://notrelated.xyz/rss")
       '';
     generalOne."efs/leader-keys"."r" = '''((lambda () (interactive) (elfeed) (elfeed-update)) :which-key "rss")'';

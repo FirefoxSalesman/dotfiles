@@ -10,19 +10,23 @@
     ./json.nix
     ./toml.nix
     ./racket.nix
-    # ./haskell.nix
+    ./haskell.nix
     ./c.nix
     ./bash.nix
     ./r.nix
     ./prolog.nix
     ./zenscript.nix
-    # ./rust.nix
+    ./rust.nix
     ./lua.nix
     ./plantuml.nix
     ./scala.nix
     ./erlang.nix
     ./sql.nix
     ./forth.nix
+    ./go.nix
+    ./markdown.nix
+    ./zig.nix
+    ./latex.nix
   ];
 
   options = {

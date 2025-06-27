@@ -599,10 +599,6 @@
     };
     
     evil-markdown = {
-      enable = true;
-      defer = true;
-      ghook = ["('markdown-mode-hook 'evil-markdown-mode)"];
-      symex = true;
       custom.evil-markdown-movement-bindings = ''
         '((up . "o")
           (down . "e")
