@@ -9,11 +9,15 @@ in
   config = lib.mkIf ide.languages.sql.enable {
     programs.emacs.init.usePackage.sql = {
       enable = true;
-      extraPackages = [pkgs.sqls];
+      extraPackages = if ide.eglot.enable || ide.lsp.enable then [pkgs.sqls] else [];
       mode = [''"\\.sql\\'"''];
-      eglot = ide.eglot;
-      lsp = ide.lsp;
+      eglot = ide.eglot.enable;
+      lsp = ide.lsp.enable;
       symex = ide.symex;
+      config = ''
+        (with-eval-after-load 'eglot
+          (add-to-list 'eglot-server-programs '((sql-mode) . ("sqls"))))
+      '';
     };
   };
 }

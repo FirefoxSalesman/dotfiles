@@ -7,8 +7,8 @@ in
   options.programs.emacs.init.ide.languages.latex = {
     enable = lib.mkEnableOption "enables LaTeX support"; 
     magicLatexBuffer = lib.mkEnableOption "use magic-latex-buffer to prettify";
-    opinionatedChanges = lib.mkEnableOption "use some opinionated changes that I stole from Emacs from Scratch";
     cdlatex = lib.mkEnableOption "Enable cdlatex in latex and org modes";
+    preferTexlab = lib.mkEnableOption "Use texlab instead of digestif";
   };
 
   config = lib.mkIf ide.languages.latex.enable {
@@ -17,10 +17,10 @@ in
       tex = {
         enable = ide.languages.latex.magicLatexBuffer;
         package = epkgs: epkgs.auctex;
-        init = ''(setq-default TeX-master nil)'';
+        init = lib.mkDefault ''(setq-default TeX-master nil)'';
         custom = {
-          reftex-label-alist = '''(("\\poemtitle" ?P "poem:" "\\ref{%s}" nil ("poem" "poemtitle")))'';
-          reftex-format-cite-function = ''
+          reftex-label-alist = lib.mkDefault '''(("\\poemtitle" ?P "poem:" "\\ref{%s}" nil ("poem" "poemtitle")))'';
+          reftex-format-cite-function = lib.mkDefault ''
             '(lambda (key fmt)
               (let ((cite (replace-regexp-in-string "%l" key fmt))
                    (if ( or (= ?~ (string-to-char fmt))
@@ -28,28 +28,30 @@ in
                        cite
                  (concat "~" cite)))))
           '';
-          TeX-auto-save = "t";
-          TeX-parse-self = "t";
-          reftex-plug-into-AUCTeX = "t";
+          TeX-auto-save = lib.mkDefault "t";
+          TeX-parse-self = lib.mkDefault "t";
+          reftex-plug-into-AUCTeX = lib.mkDefault "t";
         };
       };
 
       bibtex-mode = {
         enable = true;
         mode = [''"\\.bib\\'"''];
-        lsp = ide.lsp;
-        eglot = ide.eglot;
+        lsp = ide.lsp.enable;
+        eglot = ide.eglot.enable;
         symex = ide.symex;
       };
 
       latex = {
         enable = true;
         package = epkgs: epkgs.auctex;
-        extraPackages = with pkgs; [texliveFull];
+        extraPackages = if ide.eglot.enable || ide.lsp.enable then
+          if ide.languages.latex.preferTexlab then [pkgs.texlab] else [pkgs.texlivePackages.digestif]
+                        else [];
         mode = [''("\\.tex\\'" . LaTeX-mode)''];
         symex = ide.symex;
-        lsp = ide.lsp;
-        eglot = ide.eglot;
+        lsp = ide.lsp.enable;
+        eglot = ide.eglot.enable;
       };
       
       magic-latex-buffer = {

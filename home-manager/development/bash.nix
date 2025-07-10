@@ -9,10 +9,10 @@ in
   config = lib.mkIf ide.languages.bash.enable {
     programs.emacs.init.usePackage.bash-ts-mode = {
       enable = true;
-      extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [nodePackages.bash-language-server] else [];
+      extraPackages = if ide.lsp.enable || ide.eglot.enable then with pkgs; [nodePackages.bash-language-server] else [];
       mode = [''"\\.sh\\'"''];
-      eglot = ide.eglot;
-      lsp = ide.lsp;
+      eglot = ide.eglot.enable;
+      lsp = ide.lsp.enable;
     };
   };
 }

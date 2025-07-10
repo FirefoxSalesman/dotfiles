@@ -13,6 +13,7 @@
       symex = true;
       mode = [''("\\.org\\'" . org-mode)''];
       gfhook = ["('org-mode-hook '(efs/org-mode-setup my/org-capf))"];
+      eglot = true;
       custom = {
         org-confirm-babel-evaluate = "nil";
         org-src-fontify-natively = "t";

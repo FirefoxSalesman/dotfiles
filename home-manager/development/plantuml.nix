@@ -11,10 +11,10 @@ in
       enable = true;
       mode = [''"\\.plantuml\\'"'' ''"\\.puml\\'"''];
       custom = {
-        org-plantuml-exec-mode = "'plantuml";
-        plantuml-default-exec-mode = "'executable";
-        plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
-        org-plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
+        org-plantuml-exec-mode = lib.mkDefault "'plantuml";
+        plantuml-default-exec-mode = lib.mkDefault "'executable";
+        plantuml-executable-path = lib.mkDefault ''"${pkgs.plantuml}/bin/plantuml"'';
+        org-plantuml-executable-path = lib.mkDefault ''"${pkgs.plantuml}/bin/plantuml"'';
       }; 
       config = ''
         (org-babel-do-load-languages 'org-babel-load-languages '((plantuml . t)))

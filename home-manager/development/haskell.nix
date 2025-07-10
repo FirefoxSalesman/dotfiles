@@ -9,9 +9,9 @@ in
     programs.emacs.init.usePackage.haskell-mode = {
       enable = true;
       mode = [''"\\.hs\\'"''];
-      extraPackages = if (ide.lsp || ide.eglot) then [pkgs.haskell-language-server] else [];
-      eglot = ide.eglot;
-      lsp = ide.lsp;
+      extraPackages = if ide.lsp.enable || ide.eglot.enable then [pkgs.haskell-language-server] else [];
+      eglot = ide.eglot.enable;
+      lsp = ide.lsp.enable;
       symex = ide.symex;
     };
   };

@@ -11,9 +11,9 @@ in
       rust-ts-mode = {
         enable = true;
         defer = true;
-        extraPackages = if ide.lsp || ide.eglot then [pkgs.rust-analyzer] else [];
-        lsp = ide.lsp;
-        eglot = ide.eglot;
+        extraPackages = if ide.lsp.enable || ide.eglot.enable then [pkgs.rust-analyzer] else [];
+        lsp = ide.lsp.enable;
+        eglot = ide.eglot.enable;
         symex = ide.symex;
       };
 
@@ -21,11 +21,15 @@ in
         enable = true;
         mode = [''("\\.rs$" . rustic-mode)''];
         custom = {
-          rust-mode-treesitter-derive = "t";
-          rustic-lsp-client = if ide.eglot then "'eglot" else
+          rust-mode-treesitter-derive = lib.mkDefault "t";
+          rustic-lsp-client = lib.mkDefault (if ide.eglot then "'eglot" else
             if ide.lsp then "'lsp-mode" else
-              "nil";
+              "nil");
         };
+        config = ''
+          (with-eval-after-load 'eglot
+            (add-to-list 'eglot-server-programs '((rust-ts-mode rust-mode) . ("rust-analyzer" :initializationOptions (:check (:command "clippy"))))))
+        '';
       };
     };
   };

@@ -13,16 +13,16 @@ in
     programs.emacs.init.usePackage = {
       c-ts-mode = {
         enable = true;
-        extraPackages = if (ide.lsp || ide.eglot) then
+        extraPackages = if ide.lsp.enable || ide.eglot.enable then
           if ide.languages.c.preferClangd then [pkgs.clang-tools] else [pkgs.ccls]
                         else [];
         mode = [''"\\.c\\'"''];
-        eglot = ide.eglot;
-        lsp = ide.lsp;
+        eglot = ide.eglot.enable;
+        lsp = ide.lsp.enable;
         symex = ide.symex;
       };
 
-      ccls.enable = ide.lsp;
+      ccls.enable = ide.lsp.enable;
     };
   } ;
 }

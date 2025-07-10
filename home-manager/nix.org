@@ -1961,7 +1961,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
     programs.emacs.init = {
       ide = {
         symex = true;  
-        eglot = true;
+        eglot.enable = true;
         languages = {
           java = {
             enable = true;
@@ -1979,7 +1979,6 @@ I think most of it was from the github page for lsp mode, but it's been a while,
           latex = {
             enable = true;
             magicLatexBuffer = true;
-            opinionatedChanges = true;
             cdlatex = true;
           };
         };
@@ -2033,7 +2032,19 @@ I think most of it was from the github page for lsp mode, but it's been a while,
         '';
 
         prolog-mode.generalTwo."local-leader".prolog-mode-map."r" = '''(run-prolog :which-key "run")'';
-      };
+        
+        json5-ts-mode = {
+          enable = true;
+          extraPackages = [pkgs.vscode-langservers-extracted];
+          mode = [''"\\.json5\\'"''];
+          eglot = true;
+          symex = true;
+          config = ''
+            (with-eval-after-load 'eglot
+              (add-to-list 'eglot-server-programs '((json5-ts-mode) . ("vscode-json-language-server" "--stdio"))))
+          '';
+        };
+      } ;
     };
   }
 #+end_src
@@ -2068,15 +2079,13 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 #+end_src
 
 *** Treesitter
-https://github.com/jdtsmith/indent-bars
-
 **** Setup
 #+NAME: Development Treesitter Setup
 #+begin_src nix :noweb yes
   treesit-auto = {
     enable = true;
     custom.treesit-auto-install = "'prompt";
-    deferIncrementally = ["treesitter"];
+    # deferIncrementally = true;
     config = ''
       <<Emacs Treesit Auto Config>>
     '';
@@ -2122,23 +2131,25 @@ https://github.com/jdtsmith/indent-bars
 #+NAME: Emacs Treesitter Config
 #+begin_src emacs-lisp
   (global-tree-sitter-mode)
-  (dolist (mode (list '(java-ts-mode . java)
-  		    '(html-ts-mode . html)
-  		    '(lua-ts-mode . lua)
-  		    '(go-ts-mode . go)
-  		    '(python-ts-mode . python)
-  		    '(scala-ts-mode . scala)
-  		    '(js-ts-mode . javascript)
-  		    '(json-ts-mode . json)
-  		    '(gfm-mode . markdown)
-  		    '(rust-ts-mode . rust)
-  		    '(css-ts-mode . css)
-  		    '(c-ts-mode . c)
-  		    '(racket-repl-mode . racket)
-  		    '(ess-r-mode . r)
-  		    '(inferior-ess-r-mode . r)
-  		    '(erlang-ts-mode . erlang)
-  		    '(toml-ts-mode . toml)))
+  (dolist (mode '((java-ts-mode . java)
+  		(html-ts-mode . html)
+  		(lua-ts-mode . lua)
+  		(go-ts-mode . go)
+  		(python-ts-mode . python)
+  		(scala-ts-mode . scala)
+  		(js-ts-mode . javascript)
+  		(json-ts-mode . json)
+  		(gfm-mode . markdown)
+  		(ruby-ts-mode . ruby)
+  		(csharp-ts-mode . c-sharp)
+  		(rust-ts-mode . rust)
+  		(css-ts-mode . css)
+  		(c-ts-mode . c)
+  		(racket-repl-mode . racket)
+  		(ess-r-mode . r)
+  		(inferior-ess-r-mode . r)
+  		(erlang-ts-mode . erlang)
+  		(toml-ts-mode . toml)))
     (add-to-list 'tree-sitter-major-mode-language-alist mode))
 #+end_src
 
@@ -2301,12 +2312,7 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 
 #+NAME: Development Eglot Config
 #+begin_src emacs-lisp
-  (dolist (server (list '((nxml-mode) . ("lemminx"))
-  		      '((scala-ts-mode) . ("metals"))
-  		      '((lua-ts-mode) . ("lua-language-server"))
-  		      '((rust-ts-mode rust-mode) .
-  			("rust-analyzer" :initializationOptions (:check (:command "clippy")))))
-  		'((sql-mode) . ("sqls")))
+  (dolist (server (list '((nxml-mode) . ("lemminx"))))
     (add-to-list 'eglot-server-programs server))
   (defun my/eglot-capf ()
     (setq-local completion-at-point-functions
@@ -2336,12 +2342,15 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 
 *** TODO Language support
 Languages we would like to support:
-+ [ ] Ruby
-+ [ ] Perl
-+ [ ] C sharp
-+ [ ] Latex
-+ [ ] Common lisp
-+ [ ] Scheme
++ [ ] Sass (maybe)
++ [ ] coffee script (maybe)
++ [ ] typescript
++ [ ] Svelte
++ [ ] hy
++ [ ] julia
++ [ ] fennel
+Other tasks:
++ [ ] Move treesitter stuff into its own file
 
 **** Default.nix
 #+begin_src nix :tangle development/default.nix
@@ -2349,14 +2358,12 @@ Languages we would like to support:
 
   {
     imports = [
-      ./clojure.nix
       ./python.nix
       ./java.nix
       ./nix.nix
       ./web-development.nix
       ./json.nix
       ./toml.nix
-      ./racket.nix
       ./haskell.nix
       ./c.nix
       ./bash.nix
@@ -2366,7 +2373,6 @@ Languages we would like to support:
       ./rust.nix
       ./lua.nix
       ./plantuml.nix
-      ./scala.nix
       ./erlang.nix
       ./sql.nix
       ./forth.nix
@@ -2374,13 +2380,17 @@ Languages we would like to support:
       ./markdown.nix
       ./zig.nix
       ./latex.nix
+      ./csharp.nix
+      ./ruby.nix
+      ./common-lisp.nix
+      ./scheme.nix
     ];
 
     options = {
       programs.emacs.init.ide = {
         symex = lib.mkEnableOption "enables symex support in all languages that support it";
-        lsp = lib.mkEnableOption "enables lsp-mode support in all languages that support it";
-        eglot = lib.mkEnableOption "enables eglot support in all languages that support it";
+        lsp.enable = lib.mkEnableOption "enables lsp-mode support in all languages that support it";
+        eglot.enable = lib.mkEnableOption "enables eglot support in all languages that support it";
       };
     };
   }
@@ -2398,12 +2408,18 @@ pyenv allows us to use virtual environments.
 
   let
     ide = config.programs.emacs.init.ide;
+    matches = p: n: lib.match p n != null;
   in
   {
     options = {
       programs.emacs.init.ide.languages.python = {
         enable = lib.mkEnableOption "enables python support";
         jupyter = lib.mkEnableOption "enables code-cells, a minor mode for editing jupyter files";
+        languageServer = lib.mkOption {
+          type = lib.types.str;
+          default = "basedpyright";
+          description = "the language server to use with python. Can be any of basedpyright, pylsp, pyright, or jedi";
+        };
       };
     };
 
@@ -2411,47 +2427,36 @@ pyenv allows us to use virtual environments.
       programs.emacs.init.usePackage = {
         python-ts-mode = {
           enable = true;
-          eglot = ide.eglot;
+          eglot = ide.eglot.enable;
           symex = ide.symex;
-          lsp = ide.lsp;
+          lsp = ide.lsp.enable;
           mode = [''"\\.py\\'"''];
-          extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [ python313Packages.python-lsp-server ] else [];
+          extraPackages = if ide.lsp.enable || ide.eglot.enable then
+            if (matches "basedpyright" ide.languages.python.languageServer) then with pkgs; [ basedpyright ruff ] else
+              if (matches "pylsp" ide.languages.python.languageServer) then [pkgs.python313Packages.python-lsp-server] else
+                if (matches "pyright" ide.languages.python.languageServer) then [pkgs.pyright] else
+                  if (matches "jedi" ide.languages.python.languageServer) then [pkgs.python313Packages.jedi-language-server] else []
+          else [];
+          config = "${if matches "basedpyright" ide.languages.python.languageServer then ''
+            (add-to-list 'eglot-server-programs '(python-ts-mode . ("basedpyright-langserver" "--stdio" 
+                                                                     :initializationOptions (:basedpyright (:plugins (
+                                                                     :ruff (:enabled t
+                                                                            :lineLength 88
+                                                                            :exclude ["E501"]  ; Disable line length warnings
+                                                                            :select ["E", "F", "I", "UP"])  ; Enable specific rule families
+                                                                     :pycodestyle (:enabled nil)  ; Disable other linters since we're using ruff
+                                                                     :pyflakes (:enabled nil)
+                                                                     :pylint (:enabled nil)
+                                                                     :rope_completion (:enabled t)
+                                                                     :autopep8 (:enabled nil)))))))
+          
+            '' else ""}";
         };
 
         code-cells = {
           enable = ide.languages.python.jupyter;
-          demand = true;
+          demand = lib.mkDefault true;
           extraPackages = with pkgs; [python313Packages.jupytext];
-        };
-      };
-    };
-  }
-#+end_src
-
-**** Clojure
-#+begin_src nix :tangle development/clojure.nix
-  { pkgs, lib, config, ... }:
-
-  let
-    ide = config.programs.emacs.init.ide;
-  in
-  {
-    options.programs.emacs.init.ide.languages.clojure.enable = lib.mkEnableOption "enables clojure support";
-
-    config = lib.mkIf ide.languages.clojure.enable {
-      programs.emacs.init.usePackage = {
-        clojure-mode = {
-          enable = true;
-          extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [clojure-lsp] else [];
-          mode = [''"\\.clj\\'"''];
-          lsp = ide.lsp;
-          eglot = ide.eglot;
-          symex = ide.symex;
-        };
-
-        cider = {
-          enable = true;
-          hook = ["(clojure-mode . cider-mode)"];
         };
       };
     };
@@ -2470,6 +2475,8 @@ pyenv allows us to use virtual environments.
       programs.emacs.init.ide.languages.java = {
         enable = lib.mkEnableOption "enables java support";
         gradle = lib.mkEnableOption "enables groovy-mode, a major mode for editing gradle files";
+        clojure = lib.mkEnableOption "enables clojure support";
+        scala = lib.mkEnableOption "Enables scala support. You will need to bring your own copy of sbt in order to use sbt-mode";
       };
     };
 
@@ -2477,17 +2484,49 @@ pyenv allows us to use virtual environments.
       programs.emacs.init.usePackage = {
         java-ts-mode = {
           enable = true;
-          extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [jdt-language-server] else [];
+          extraPackages = if ide.lsp.enable || ide.eglot.enable then with pkgs; [jdt-language-server] else [];
           mode = [''"\\.java\\'"''];
-          lsp = ide.lsp;
-          eglot = ide.eglot;
+          lsp = ide.lsp.enable;
+          eglot = ide.eglot.enable;
           symex = ide.symex;
         };
 
         groovy-mode = {
           enable = ide.languages.java.gradle;
           symex = ide.symex;
-          mode = [''"\\.gradle\\'"''];
+          mode = lib.mkDefault [''"\\.gradle\\'"''];
+        };
+        
+        clojure-mode = {
+          enable = ide.languages.java.clojure;
+          extraPackages = if ide.lsp.enable || ide.eglot.enable then with pkgs; [clojure-lsp] else [];
+          mode = [''"\\.clj\\'"''];
+          lsp = ide.lsp.enable;
+          eglot = ide.eglot.enable;
+          symex = ide.symex;
+        };
+
+        cider = {
+          enable = ide.languages.java.clojure;
+          hook = ["(clojure-mode . cider-mode)"];
+        };
+        
+        scala-ts-mode = {
+          enable = ide.languages.java.scala;
+          extraPackages = if ide.lsp.enable || ide.eglot.enable then [pkgs.metals] else [];
+          mode = [''"\\.scala\\'"''];
+          eglot = ide.eglot.enable;
+          lsp = ide.lsp.enable;
+          symex = ide.symex;
+          config = ''
+            (with-eval-after-load 'eglot
+              (add-to-list 'eglot-server-programs '((scala-ts-mode) . ("metals"))))
+          '';
+        };
+
+        sbt-mode = {
+          enable = ide.languages.java.scala;
+          after = ["scala-ts-mode"];
         };
       };
     };
@@ -2505,13 +2544,21 @@ pyenv allows us to use virtual environments.
     options.programs.emacs.init.ide.languages.nix.enable = lib.mkEnableOption "enables nix support (highly reccommended)";
 
     config = lib.mkIf ide.languages.nix.enable {
-      programs.emacs.init.usePackage.nix-mode = {
-        enable = true;
-        mode = [''"\\.nix\\'"''];
-        extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [nixd] else [];
-        eglot = ide.eglot;
-        lsp = ide.lsp;
-        symex = ide.symex;
+      programs.emacs.init.usePackage = {
+        nix-mode = {
+          enable = true;
+          mode = [''"\\.nix\\'"''];
+          extraPackages = if ide.lsp.enable || ide.eglot.enable then with pkgs; [nixd nixfmt] else [];
+          eglot = ide.eglot.enable;
+          lsp = ide.lsp.enable;
+          symex = ide.symex;
+        };
+
+        json-ts-mode = {
+          enable = true;
+          # stolen from doom
+          mode = [''"/flake\\.lock\\'"''];
+        };
       };
     };
   }
@@ -2535,22 +2582,27 @@ pyenv allows us to use virtual environments.
       programs.emacs.init.usePackage = {
         html-ts-mode = {
           enable = true;
-          extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [vscode-langservers-extracted] else [];
+          extraPackages = if ide.lsp.enable || ide.eglot.enable then with pkgs; [vscode-langservers-extracted] else [];
           # many thanks to doom
           mode = [''"\\.[px]?html?\\'"''];
           config = ''
             (with-eval-after-load 'eglot
               (add-to-list 'eglot-server-programs '((html-ts-mode) . ("vscode-html-language-server" "--stdio"))))
           '';
-          eglot = ide.eglot;
+          eglot = ide.eglot.enable;
           symex = ide.symex;
-          lsp = ide.lsp;
+          lsp = ide.lsp.enable;
         };
 
         emmet-mode = {
           enable = ide.web.emmet;
-          ghook = ["('(js-ts-mode-hook sgml-mode-hook css-ts-mode-hook html-ts-mode-hook) 'emmet-mode)"];
-          custom.emmet-move-cursor-between-quotes = "t";
+          hook = [
+            "(js-ts-mode . emmet-mode)"
+            "(sgml-mode . emmet-mode)"
+            "(css-ts-mode . emmet-mode)"
+            "(html-ts-mode . emmet-mode)"
+          ];
+          custom.emmet-move-cursor-between-quotes = lib.mkDefault "t";
         };
 
         pug-mode = {
@@ -2560,20 +2612,20 @@ pyenv allows us to use virtual environments.
 
         css-ts-mode = {
           enable = true;
-          extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [vscode-langservers-extracted] else [];
+          extraPackages = if ide.lsp.enable || ide.eglot.enable then with pkgs; [vscode-langservers-extracted] else [];
           mode = [''"\\.css\\'"''];
-          eglot = ide.eglot;
+          eglot = ide.eglot.enable;
           symex = ide.symex;
-          lsp = ide.lsp;
+          lsp = ide.lsp.enable;
         };
 
         js-ts-mode = {
           enable = true;
-          extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [typescript-language-server] else [];
+          extraPackages = if ide.lsp.enable || ide.eglot.enable then with pkgs; [typescript-language-server] else [];
           mode = [''"\\.js\\'"''];
-          eglot = ide.eglot;
+          eglot = ide.eglot.enable;
           symex = ide.symex;
-          lsp = ide.lsp;
+          lsp = ide.lsp.enable;
         };
       };
     };
@@ -2594,24 +2646,11 @@ pyenv allows us to use virtual environments.
       programs.emacs.init.usePackage = {
         json-ts-mode = {
           enable = true;
-          extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [vscode-langservers-extracted] else [];
+          extraPackages = if ide.lsp.enable || ide.eglot.enable then with pkgs; [vscode-langservers-extracted] else [];
           mode = [''"\\.json\\'"''];
-          lsp = ide.lsp;
-          eglot = ide.eglot;
+          lsp = ide.lsp.enable;
+          eglot = ide.eglot.enable;
           symex = ide.symex;
-        };
-
-        json5-ts-mode = {
-          enable = true;
-          extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [vscode-langservers-extracted] else [];
-          mode = [''"\\.json5\\'"''];
-          lsp = ide.lsp;
-          eglot = ide.eglot;
-          symex = ide.symex;
-          config = ''
-            (with-eval-after-load 'eglot
-              (add-to-list 'eglot-server-programs '((json5-ts-mode) . ("vscode-json-language-server" "--stdio"))))
-          '';
         };
       };
     };
@@ -2638,30 +2677,6 @@ pyenv allows us to use virtual environments.
   }
 #+end_src
 
-**** Racket
-#+begin_src nix :tangle development/racket.nix
-  { pkgs, lib, config, ... }:
-
-  let
-    ide = config.programs.emacs.init.ide;
-  in
-  {
-    options.programs.emacs.init.ide.languages.racket.enable = lib.mkEnableOption "enables racket support";
-
-    config = lib.mkIf ide.languages.racket.enable {
-      programs.emacs.init.usePackage.racket-mode = {
-        enable = true;
-        eglot = ide.eglot;
-        lsp = ide.lsp;
-        symex = ide.symex;
-        mode = [''"\\.rkt\\'"''];
-        init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
-        config = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
-      };
-    };
-  }
-#+end_src
-
 **** Haskell
 #+begin_src nix :tangle development/haskell.nix
   { pkgs, lib, config, ... }:
@@ -2675,9 +2690,9 @@ pyenv allows us to use virtual environments.
       programs.emacs.init.usePackage.haskell-mode = {
         enable = true;
         mode = [''"\\.hs\\'"''];
-        extraPackages = if (ide.lsp || ide.eglot) then [pkgs.haskell-language-server] else [];
-        eglot = ide.eglot;
-        lsp = ide.lsp;
+        extraPackages = if ide.lsp.enable || ide.eglot.enable then [pkgs.haskell-language-server] else [];
+        eglot = ide.eglot.enable;
+        lsp = ide.lsp.enable;
         symex = ide.symex;
       };
     };
@@ -2701,16 +2716,16 @@ pyenv allows us to use virtual environments.
       programs.emacs.init.usePackage = {
         c-ts-mode = {
           enable = true;
-          extraPackages = if (ide.lsp || ide.eglot) then
+          extraPackages = if ide.lsp.enable || ide.eglot.enable then
             if ide.languages.c.preferClangd then [pkgs.clang-tools] else [pkgs.ccls]
                           else [];
           mode = [''"\\.c\\'"''];
-          eglot = ide.eglot;
-          lsp = ide.lsp;
+          eglot = ide.eglot.enable;
+          lsp = ide.lsp.enable;
           symex = ide.symex;
         };
 
-        ccls.enable = ide.lsp;
+        ccls.enable = ide.lsp.enable;
       };
     } ;
   }
@@ -2729,10 +2744,10 @@ pyenv allows us to use virtual environments.
     config = lib.mkIf ide.languages.bash.enable {
       programs.emacs.init.usePackage.bash-ts-mode = {
         enable = true;
-        extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [nodePackages.bash-language-server] else [];
+        extraPackages = if ide.lsp.enable || ide.eglot.enable then with pkgs; [nodePackages.bash-language-server] else [];
         mode = [''"\\.sh\\'"''];
-        eglot = ide.eglot;
-        lsp = ide.lsp;
+        eglot = ide.eglot.enable;
+        lsp = ide.lsp.enable;
       };
     };
   }
@@ -2752,11 +2767,12 @@ pyenv allows us to use virtual environments.
       programs.emacs.init.usePackage.ess-r-mode = {
         enable = true;
         package = epkgs: epkgs.ess;
+        extraPackages = if ide.eglot.enable || ide.lsp.enable then [pkgs.rPackages.languageserver] else [];
         mode = [''"\\.R\\'"''];
-        eglot = ide.eglot;
-        lsp = ide.lsp;
+        eglot = ide.eglot.enable;
+        lsp = ide.lsp.enable;
         symex = ide.symex;
-        custom.ess-ask-for-ess-directory = "nil";
+        custom.ess-ask-for-ess-directory = lib.mkDefault "nil";
       };
     };
   }
@@ -2821,9 +2837,9 @@ pyenv allows us to use virtual environments.
         rust-ts-mode = {
           enable = true;
           defer = true;
-          extraPackages = if ide.lsp || ide.eglot then [pkgs.rust-analyzer] else [];
-          lsp = ide.lsp;
-          eglot = ide.eglot;
+          extraPackages = if ide.lsp.enable || ide.eglot.enable then [pkgs.rust-analyzer] else [];
+          lsp = ide.lsp.enable;
+          eglot = ide.eglot.enable;
           symex = ide.symex;
         };
 
@@ -2831,11 +2847,15 @@ pyenv allows us to use virtual environments.
           enable = true;
           mode = [''("\\.rs$" . rustic-mode)''];
           custom = {
-            rust-mode-treesitter-derive = "t";
-            rustic-lsp-client = if ide.eglot then "'eglot" else
+            rust-mode-treesitter-derive = lib.mkDefault "t";
+            rustic-lsp-client = lib.mkDefault (if ide.eglot then "'eglot" else
               if ide.lsp then "'lsp-mode" else
-                "nil";
+                "nil");
           };
+          config = ''
+            (with-eval-after-load 'eglot
+              (add-to-list 'eglot-server-programs '((rust-ts-mode rust-mode) . ("rust-analyzer" :initializationOptions (:check (:command "clippy"))))))
+          '';
         };
       };
     };
@@ -2855,10 +2875,14 @@ pyenv allows us to use virtual environments.
     config = lib.mkIf ide.languages.lua.enable {
       programs.emacs.init.usePackage.lua-ts-mode = {
         enable = true;
-        extraPackages = if (ide.eglot || ide.lsp) then [pkgs.lua-language-server] else [];
+        extraPackages = if ide.eglot.enable || ide.lsp.enable then [pkgs.lua-language-server] else [];
         mode = [''"\\.lua\\'"''];
-        eglot = ide.eglot;
-        lsp = ide.lsp;
+        eglot = ide.eglot.enable;
+        lsp = ide.lsp.enable;
+        config = ''
+            (with-eval-after-load 'eglot
+              (add-to-list 'eglot-server-programs '((lua-ts-mode) . ("lua-language-server"))))
+          '';
       };
     };
   }
@@ -2879,10 +2903,10 @@ pyenv allows us to use virtual environments.
         enable = true;
         mode = [''"\\.plantuml\\'"'' ''"\\.puml\\'"''];
         custom = {
-          org-plantuml-exec-mode = "'plantuml";
-          plantuml-default-exec-mode = "'executable";
-          plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
-          org-plantuml-executable-path = ''"${pkgs.plantuml}/bin/plantuml"'';
+          org-plantuml-exec-mode = lib.mkDefault "'plantuml";
+          plantuml-default-exec-mode = lib.mkDefault "'executable";
+          plantuml-executable-path = lib.mkDefault ''"${pkgs.plantuml}/bin/plantuml"'';
+          org-plantuml-executable-path = lib.mkDefault ''"${pkgs.plantuml}/bin/plantuml"'';
         }; 
         config = ''
           (org-babel-do-load-languages 'org-babel-load-languages '((plantuml . t)))
@@ -2900,29 +2924,6 @@ pyenv allows us to use virtual environments.
   }
 #+end_src
 
-**** Scala
-#+begin_src nix :tangle development/scala.nix
-  { pkgs, lib, config, ... }:
-
-  let
-    ide = config.programs.emacs.init.ide;
-  in
-  {
-    options.programs.emacs.init.ide.languages.scala.enable = lib.mkEnableOption "enables scala support";
-
-    config = lib.mkIf ide.languages.scala.enable {
-      programs.emacs.init.usePackage.scala-ts-mode = {
-        enable = true;
-        extraPackages = if (ide.lsp || ide.eglot) then [pkgs.metals] else [];
-        mode = [''"\\.scala\\'"''];
-        eglot = ide.eglot;
-        lsp = ide.lsp;
-        symex = ide.symex;
-      };
-    };
-  }
-#+end_src
-
 **** Erlang
 #+begin_src nix :tangle development/erlang.nix
   { pkgs, config, lib, ... }:
@@ -2937,9 +2938,9 @@ pyenv allows us to use virtual environments.
       programs.emacs.init.usePackage.erlang-ts = {
         enable = true;
         mode = [''("\\.erl\\'" . erlang-ts-mode)''];
-        extraPackages = if ide.eglot || ide.lsp then [pkgs.beamMinimal28Packages.erlang-ls] else [];
-        eglot = ide.eglot;
-        lsp = ide.lsp;
+        extraPackages = if ide.eglot.enable || ide.lsp.enable then [pkgs.beamMinimal28Packages.erlang-ls] else [];
+        eglot = ide.eglot.enable;
+        lsp = ide.lsp.enable;
         symex = ide.symex;
       };
     };
@@ -2959,11 +2960,15 @@ pyenv allows us to use virtual environments.
     config = lib.mkIf ide.languages.sql.enable {
       programs.emacs.init.usePackage.sql = {
         enable = true;
-        extraPackages = [pkgs.sqls];
+        extraPackages = if ide.eglot.enable || ide.lsp.enable then [pkgs.sqls] else [];
         mode = [''"\\.sql\\'"''];
-        eglot = ide.eglot;
-        lsp = ide.lsp;
+        eglot = ide.eglot.enable;
+        lsp = ide.lsp.enable;
         symex = ide.symex;
+        config = ''
+          (with-eval-after-load 'eglot
+            (add-to-list 'eglot-server-programs '((sql-mode) . ("sqls"))))
+        '';
       };
     };
   }
@@ -3004,9 +3009,9 @@ pyenv allows us to use virtual environments.
         enable = true;
         mode = [''"\\.go\\'"''];
         symex = ide.symex;
-        lsp = ide.lsp;
-        eglot = ide.eglot;
-        extraPackages = if (ide.lsp || ide.eglot) then [pkgs.gopls pkgs.go] else [];
+        lsp = ide.lsp.enable;
+        eglot = ide.eglot.enable;
+        extraPackages = if ide.lsp.enable || ide.eglot.enable then [pkgs.gopls pkgs.go] else [];
       };
     };
   }
@@ -3030,9 +3035,9 @@ pyenv allows us to use virtual environments.
         markdown = {
           enable = true;
           defer = true;
-          extraPackages = if (ide.eglot || ide.lsp) then [pkgs.marksman] else [];
-          eglot = ide.eglot;
-          lsp = ide.lsp;
+          extraPackages = if ide.eglot.enable || ide.lsp.enable then [pkgs.marksman] else [];
+          eglot = ide.eglot.enable;
+          lsp = ide.lsp.enable;
           mode = [''("\\.md\\'" . gfm-mode)''];
         };
         
@@ -3063,11 +3068,11 @@ pyenv allows us to use virtual environments.
     config = lib.mkIf ide.languages.zig.enable {
       programs.emacs.init.usePackage.zig-mode = {
         enable = true;
-        extraPackages = if (ide.eglot || ide.lsp) then [pkgs.zls pkgs.zig] else [];
+        extraPackages = if ide.eglot.enable || ide.lsp.enable then [pkgs.zls pkgs.zig] else [];
         mode = [''"\\.zig\\'"''];
         symex = ide.symex;
-        lsp = ide.lsp;
-        eglot = ide.eglot;
+        lsp = ide.lsp.enable;
+        eglot = ide.eglot.enable;
       };
     };
   }
@@ -3075,7 +3080,7 @@ pyenv allows us to use virtual environments.
 
 **** LaTeX
 #+begin_src nix :tangle development/latex.nix
-  { pkgs, config, lib, ... } :
+   { pkgs, config, lib, ... } :
 
   let
     ide = config.programs.emacs.init.ide;
@@ -3084,8 +3089,8 @@ pyenv allows us to use virtual environments.
     options.programs.emacs.init.ide.languages.latex = {
       enable = lib.mkEnableOption "enables LaTeX support"; 
       magicLatexBuffer = lib.mkEnableOption "use magic-latex-buffer to prettify";
-      opinionatedChanges = lib.mkEnableOption "use some opinionated changes that I stole from Emacs from Scratch";
       cdlatex = lib.mkEnableOption "Enable cdlatex in latex and org modes";
+      preferTexlab = lib.mkEnableOption "Use texlab instead of digestif";
     };
 
     config = lib.mkIf ide.languages.latex.enable {
@@ -3094,10 +3099,10 @@ pyenv allows us to use virtual environments.
         tex = {
           enable = ide.languages.latex.magicLatexBuffer;
           package = epkgs: epkgs.auctex;
-          init = ''(setq-default TeX-master nil)'';
+          init = lib.mkDefault ''(setq-default TeX-master nil)'';
           custom = {
-            reftex-label-alist = '''(("\\poemtitle" ?P "poem:" "\\ref{%s}" nil ("poem" "poemtitle")))'';
-            reftex-format-cite-function = ''
+            reftex-label-alist = lib.mkDefault '''(("\\poemtitle" ?P "poem:" "\\ref{%s}" nil ("poem" "poemtitle")))'';
+            reftex-format-cite-function = lib.mkDefault ''
               '(lambda (key fmt)
                 (let ((cite (replace-regexp-in-string "%l" key fmt))
                      (if ( or (= ?~ (string-to-char fmt))
@@ -3105,28 +3110,30 @@ pyenv allows us to use virtual environments.
                          cite
                    (concat "~" cite)))))
             '';
-            TeX-auto-save = "t";
-            TeX-parse-self = "t";
-            reftex-plug-into-AUCTeX = "t";
+            TeX-auto-save = lib.mkDefault "t";
+            TeX-parse-self = lib.mkDefault "t";
+            reftex-plug-into-AUCTeX = lib.mkDefault "t";
           };
         };
 
         bibtex-mode = {
           enable = true;
           mode = [''"\\.bib\\'"''];
-          lsp = ide.lsp;
-          eglot = ide.eglot;
+          lsp = ide.lsp.enable;
+          eglot = ide.eglot.enable;
           symex = ide.symex;
         };
 
         latex = {
           enable = true;
           package = epkgs: epkgs.auctex;
-          extraPackages = with pkgs; [texliveFull];
+          extraPackages = if ide.eglot.enable || ide.lsp.enable then
+            if ide.languages.latex.preferTexlab then [pkgs.texlab] else [pkgs.texlivePackages.digestif]
+                          else [];
           mode = [''("\\.tex\\'" . LaTeX-mode)''];
           symex = ide.symex;
-          lsp = ide.lsp;
-          eglot = ide.eglot;
+          lsp = ide.lsp.enable;
+          eglot = ide.eglot.enable;
         };
         
         magic-latex-buffer = {
@@ -3140,6 +3147,212 @@ pyenv allows us to use virtual environments.
             "('LaTeX-mode . turn-on-cdlatex)"
             "('org-mode . org-cdlatex-mode)"
           ];
+        };
+      };
+    };
+  }
+#+end_src
+
+**** C Sharp
+#+begin_src nix :tangle development/csharp.nix
+  { pkgs, lib, config, ... }:
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.languages.csharp.enable = lib.mkEnableOption "Enables csharp support. You will be forced to use csharp-ls, because I can't find omnisharp in nixpkgs";
+
+    config = lib.mkIf ide.languages.csharp.enable {
+      programs.emacs.init.usePackage.csharp-ts-mode = {
+        enable = true;
+        mode = [''"\\.cs\\'"''];
+        extraPackages = if ide.lsp.enable || ide.eglot.enable then [pkgs.csharp-ls] else [];
+        eglot = ide.eglot.enable;
+        lsp = ide.lsp.enable;
+        symex = ide.symex;
+      };
+    };
+  }
+#+end_src
+
+**** Ruby
+#+begin_src nix :tangle development/ruby.nix
+  { pkgs, lib, config, ... }:
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.languages.ruby.enable = lib.mkEnableOption "Enables ruby support";
+    
+    # most of what you see here has been stolen from doom emacs
+    config = lib.mkIf ide.languages.ruby.enable {
+      programs.emacs.init.usePackage = {
+        ruby-ts-mode = {
+          enable = true;
+          mode = [''"\\.\\(?:a?rb\\|aslsx\\)\\'"'' ''"/\\(?:Brew\\|Fast\\)file\\'"''];
+          extraPackages = if ide.eglot.enable || ide.lsp.enable then [pkgs.rubyPackages.solargraph] else [];
+          eglot = ide.eglot.enable;
+          lsp = ide.lsp.enable;
+          symex = ide.symex;
+          custom.ruby-insert-encoding-magic-comment = lib.mkDefault "nil";
+        };
+
+        yard-mode = {
+          enable = true;
+          hook = ["(ruby-ts-mode . yard-mode)"];
+        };
+      };
+    };
+  }
+#+end_src
+
+**** Common Lisp
+#+begin_src nix :tangle development/common-lisp.nix
+  { pkgs, lib, config, ... }:
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.languages.common-lisp.enable = lib.mkEnableOption "enables common lisp support, stolen from Doom Emacs";
+
+    config = lib.mkIf ide.languages.common-lisp.enable {
+      programs.emacs.init.usePackage = {
+        sly = {
+          enable = true;
+          hook = ["(lisp-mode-local-vars . sly-editing-mode)"];
+          custom = {
+            inferior-lisp-program = lib.mkDefault ''"${pkgs.sbcl}/bin/sbcl"'';
+            sly-kill-without-query-p = lib.mkDefault "t";
+          };
+        };
+
+        sly-repl-ansi-color = {
+          enable = true;
+          defer = true;
+          init = "(add-to-list 'sly-contribs 'sly-repl-ansi-color)";
+        };
+
+        sly-stepper = {
+          enable = true;
+          defer = true;
+          init = "(add-to-list 'sly-contribs 'sly-stepper)";
+        };
+      };
+    };
+  }
+#+end_src
+
+**** Scheme
+#+begin_src nix :tangle development/scheme.nix
+  { pkgs, lib, config, ... }:
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.languages.scheme = {
+      enable = lib.mkEnableOption "Enables scheme support, stolen from doom emacs. You will need to install your own scheme interpreter";
+      chez = lib.mkEnableOption "Installs geiser-chez";
+      chicken = lib.mkEnableOption "Installs geiser-chicken";
+      gambit = lib.mkEnableOption "Installs geiser-gambit";
+      gauche = lib.mkEnableOption "Installs geiser-gauche";
+      guile = lib.mkEnableOption "Installs geiser-guile";
+      kawa = lib.mkEnableOption "Installs geiser-kawa. Because I couldn't find a copy of kawa in the nix repos, you'll have to install it yourself.";
+      mit = lib.mkEnableOption "Installs geiser-mit";
+      racket = lib.mkEnableOption "Enables racket support. You will need to install the language server yourself";
+      stklos = lib.mkEnableOption "Installs geiser-stklos. Because I couldn't find a copy of kawa in the nix repos, you'll have to install it yourself.";
+    };
+
+    config = lib.mkIf ide.languages.scheme.enable {
+      programs.emacs.init.usePackage = {
+        scheme = {
+          enable = true;
+          mode = [''"\\.scm\\'"''];
+          symex = ide.symex;
+        };
+
+        geiser = {
+          enable = true;
+          defer = true;
+          hook = ["(scheme-mode . geiser-mode)"];
+          custom = {
+            geiser-autodoc-identifier-format = lib.mkDefault ''"%s → %s"'';
+            geiser-repl-per-project-p = lib.mkDefault "t";
+            geiser-repl-query-on-kill = lib.mkDefault "t";
+          };
+        };
+
+        macrostep-geiser = {
+          enable = true;
+          hook = [
+            "(geiser-mode . macrostep-geiser-setup)"
+            "(geiser-repl-mode . macrostep-geiser-setup)"
+          ];
+        };
+
+        geiser-chez = {
+          enable = ide.languages.scheme.chez;
+          after = ["geiser"];
+          custom.geiser-chez-binary = lib.mkDefault ''"${pkgs.chez}/bin/scheme"'';
+        };
+
+        geiser-chicken = {
+          enable = ide.languages.scheme.chicken;
+          after = ["geiser"];
+          custom.geiser-chicken-binary = lib.mkDefault ''"${pkgs.chicken}/bin/csi"'';
+        };
+
+        geiser-gambit = {
+          enable = ide.languages.scheme.gambit;
+          after = ["geiser"];
+          custom.geiser-gambit-binary = lib.mkDefault ''"${pkgs.gambit}/bin/gsi"'';
+        };
+
+        geiser-gauche = {
+          enable = ide.languages.scheme.gauche;
+          after = ["geiser"];
+          custom.geiser-gauche-binary = lib.mkDefault ''"${pkgs.gauche}/bin/gosh"'';
+        };
+        
+        geiser-guile = {
+          enable = ide.languages.scheme.guile;
+          after = ["geiser"];
+          custom.geiser-guile-binary = lib.mkDefault ''"${pkgs.guile}/bin/guile"'';
+        };
+
+        geiser-kawa = {
+          enable = ide.languages.scheme.kawa;
+          after = ["geiser"];
+        };
+
+        geiser-mit = {
+          enable = ide.languages.scheme.mit;
+          after = ["geiser"];
+          custom.geiser-mit-binary = lib.mkDefault ''"${pkgs.mitscheme}/bin/mit-scheme"'';
+        };
+
+        racket-mode = {
+          enable = ide.languages.scheme.racket;
+          eglot = ide.eglot.enable;
+          lsp = ide.lsp.enable;
+          symex = ide.symex;
+          mode = [''"\\.rkt\\'"''];
+          init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
+          config = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
+        };
+
+        geiser-racket = {
+          enable = ide.languages.scheme.racket;
+          after = ["geiser"];
+          custom.geiser-racket-binary = lib.mkDefault ''"${pkgs.racket}/bin/racket"'';
+        };
+
+        geiser-stklos = {
+          enable = ide.languages.scheme.stklos;
+          after = ["geiser"];
         };
       };
     };
@@ -5196,6 +5409,7 @@ How to add a latex package
     symex = true;
     mode = [''("\\.org\\'" . org-mode)''];
     gfhook = ["('org-mode-hook '(efs/org-mode-setup my/org-capf))"];
+    eglot = true;
     custom = {
       org-confirm-babel-evaluate = "nil";
       org-src-fontify-natively = "t";
@@ -5674,7 +5888,14 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
 #+begin_src nix
   tab-bar = {
     enable = true;
-    config = ''(general-add-advice 'tab-new :after #'dashboard-open)'';
+    config = ''
+      (general-add-advice 'tab-new :after #'dashboard-open)
+      (defun efs/tab-bar-select ()
+         (interactive)
+         (setq tab-bar-tab-hints t)
+         (tab-bar-select-tab (string-to-number (read-string "Tab Number: ")))
+         (setq tab-bar-tab-hints nil))
+    '';
     ghook = ["('exwm-init-hook 'tab-bar-mode)"];
     general."s-u" = "'tab-bar-hydra/body";
     custom = {
@@ -5692,7 +5913,7 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
          ("v" #'tab-recent "recent")
          ("b" #'tab-bar-lost-commands-switch-to-first-tab "first")
          ("B" #'tab-bar-lost-commands-switch-to-last-tab "last")
-         ("/" #'tab-bar-select-tab-by-name "search" :color blue))
+         ("/" #'efs/tab-bar-select "search"))
         "Creation/Deletion"
         (("s" #'tab-new "new")
          ("k" #'tab-close "close")

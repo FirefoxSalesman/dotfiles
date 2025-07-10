@@ -52,7 +52,14 @@
     emacs.init.usePackage = {
       tab-bar = {
         enable = true;
-        config = ''(general-add-advice 'tab-new :after #'dashboard-open)'';
+        config = ''
+          (general-add-advice 'tab-new :after #'dashboard-open)
+          (defun efs/tab-bar-select ()
+             (interactive)
+             (setq tab-bar-tab-hints t)
+             (tab-bar-select-tab (string-to-number (read-string "Tab Number: ")))
+             (setq tab-bar-tab-hints nil))
+        '';
         ghook = ["('exwm-init-hook 'tab-bar-mode)"];
         general."s-u" = "'tab-bar-hydra/body";
         custom = {
@@ -70,7 +77,7 @@
              ("v" #'tab-recent "recent")
              ("b" #'tab-bar-lost-commands-switch-to-first-tab "first")
              ("B" #'tab-bar-lost-commands-switch-to-last-tab "last")
-             ("/" #'tab-bar-select-tab-by-name "search" :color blue))
+             ("/" #'efs/tab-bar-select "search"))
             "Creation/Deletion"
             (("s" #'tab-new "new")
              ("k" #'tab-close "close")

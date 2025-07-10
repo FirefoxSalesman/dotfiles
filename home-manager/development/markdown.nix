@@ -14,9 +14,9 @@ in
       markdown = {
         enable = true;
         defer = true;
-        extraPackages = if (ide.eglot || ide.lsp) then [pkgs.marksman] else [];
-        eglot = ide.eglot;
-        lsp = ide.lsp;
+        extraPackages = if ide.eglot.enable || ide.lsp.enable then [pkgs.marksman] else [];
+        eglot = ide.eglot.enable;
+        lsp = ide.lsp.enable;
         mode = [''("\\.md\\'" . gfm-mode)''];
       };
       

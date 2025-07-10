@@ -6,7 +6,7 @@
   programs.emacs.init = {
     ide = {
       symex = true;  
-      eglot = true;
+      eglot.enable = true;
       languages = {
         java = {
           enable = true;
@@ -24,7 +24,6 @@
         latex = {
           enable = true;
           magicLatexBuffer = true;
-          opinionatedChanges = true;
           cdlatex = true;
         };
       };
@@ -61,7 +60,7 @@
       treesit-auto = {
         enable = true;
         custom.treesit-auto-install = "'prompt";
-        deferIncrementally = ["treesitter"];
+        # deferIncrementally = true;
         config = ''
           (mp-setup-install-grammars)
           (global-treesit-auto-mode)
@@ -89,23 +88,25 @@
         afterCall = ["on-first-file-hook"];
         config = ''
           (global-tree-sitter-mode)
-          (dolist (mode (list '(java-ts-mode . java)
-          		    '(html-ts-mode . html)
-          		    '(lua-ts-mode . lua)
-          		    '(go-ts-mode . go)
-          		    '(python-ts-mode . python)
-          		    '(scala-ts-mode . scala)
-          		    '(js-ts-mode . javascript)
-          		    '(json-ts-mode . json)
-          		    '(gfm-mode . markdown)
-          		    '(rust-ts-mode . rust)
-          		    '(css-ts-mode . css)
-          		    '(c-ts-mode . c)
-          		    '(racket-repl-mode . racket)
-          		    '(ess-r-mode . r)
-          		    '(inferior-ess-r-mode . r)
-          		    '(erlang-ts-mode . erlang)
-          		    '(toml-ts-mode . toml)))
+          (dolist (mode '((java-ts-mode . java)
+          		(html-ts-mode . html)
+          		(lua-ts-mode . lua)
+          		(go-ts-mode . go)
+          		(python-ts-mode . python)
+          		(scala-ts-mode . scala)
+          		(js-ts-mode . javascript)
+          		(json-ts-mode . json)
+          		(gfm-mode . markdown)
+          		(ruby-ts-mode . ruby)
+          		(csharp-ts-mode . c-sharp)
+          		(rust-ts-mode . rust)
+          		(css-ts-mode . css)
+          		(c-ts-mode . c)
+          		(racket-repl-mode . racket)
+          		(ess-r-mode . r)
+          		(inferior-ess-r-mode . r)
+          		(erlang-ts-mode . erlang)
+          		(toml-ts-mode . toml)))
             (add-to-list 'tree-sitter-major-mode-language-alist mode))
         '';
       };
@@ -195,12 +196,7 @@
           "d" = "'eldoc-doc-buffer";
         };
         config = ''
-          (dolist (server (list '((nxml-mode) . ("lemminx"))
-          		      '((scala-ts-mode) . ("metals"))
-          		      '((lua-ts-mode) . ("lua-language-server"))
-          		      '((rust-ts-mode rust-mode) .
-          			("rust-analyzer" :initializationOptions (:check (:command "clippy")))))
-          		'((sql-mode) . ("sqls")))
+          (dolist (server (list '((nxml-mode) . ("lemminx"))))
             (add-to-list 'eglot-server-programs server))
           (defun my/eglot-capf ()
             (setq-local completion-at-point-functions
@@ -302,6 +298,18 @@
       '';
 
       prolog-mode.generalTwo."local-leader".prolog-mode-map."r" = '''(run-prolog :which-key "run")'';
-    };
+      
+      json5-ts-mode = {
+        enable = true;
+        extraPackages = [pkgs.vscode-langservers-extracted];
+        mode = [''"\\.json5\\'"''];
+        eglot = true;
+        symex = true;
+        config = ''
+          (with-eval-after-load 'eglot
+            (add-to-list 'eglot-server-programs '((json5-ts-mode) . ("vscode-json-language-server" "--stdio"))))
+        '';
+      };
+    } ;
   };
 }

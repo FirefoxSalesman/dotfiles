@@ -10,24 +10,11 @@ in
     programs.emacs.init.usePackage = {
       json-ts-mode = {
         enable = true;
-        extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [vscode-langservers-extracted] else [];
+        extraPackages = if ide.lsp.enable || ide.eglot.enable then with pkgs; [vscode-langservers-extracted] else [];
         mode = [''"\\.json\\'"''];
-        lsp = ide.lsp;
-        eglot = ide.eglot;
+        lsp = ide.lsp.enable;
+        eglot = ide.eglot.enable;
         symex = ide.symex;
-      };
-
-      json5-ts-mode = {
-        enable = true;
-        extraPackages = if (ide.lsp || ide.eglot) then with pkgs; [vscode-langservers-extracted] else [];
-        mode = [''"\\.json5\\'"''];
-        lsp = ide.lsp;
-        eglot = ide.eglot;
-        symex = ide.symex;
-        config = ''
-          (with-eval-after-load 'eglot
-            (add-to-list 'eglot-server-programs '((json5-ts-mode) . ("vscode-json-language-server" "--stdio"))))
-        '';
       };
     };
   };
