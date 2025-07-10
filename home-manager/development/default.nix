@@ -2,6 +2,8 @@
 
 {
   imports = [
+    ./treesitter.nix
+
     ./python.nix
     ./java.nix
     ./nix.nix
