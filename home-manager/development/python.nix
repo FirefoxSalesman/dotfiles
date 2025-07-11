@@ -5,15 +5,13 @@ let
   matches = p: n: lib.match p n != null;
 in
 {
-  options = {
-    programs.emacs.init.ide.languages.python = {
-      enable = lib.mkEnableOption "enables python support";
-      jupyter = lib.mkEnableOption "enables code-cells, a minor mode for editing jupyter files";
-      languageServer = lib.mkOption {
-        type = lib.types.str;
-        default = "basedpyright";
-        description = "the language server to use with python. Can be any of basedpyright, pylsp, pyright, or jedi";
-      };
+  options.programs.emacs.init.ide.languages.python = {
+    enable = lib.mkEnableOption "enables python support";
+    jupyter = lib.mkEnableOption "enables code-cells, a minor mode for editing jupyter files";
+    languageServer = lib.mkOption {
+      type = lib.types.str;
+      default = "basedpyright";
+      description = "the language server to use with python. Can be any of basedpyright, pylsp, pyright, or jedi";
     };
   };
 
@@ -30,7 +28,7 @@ in
             if (matches "pylsp" ide.languages.python.languageServer) then [pkgs.python313Packages.python-lsp-server] else
               if (matches "pyright" ide.languages.python.languageServer) then [pkgs.pyright] else
                 if (matches "jedi" ide.languages.python.languageServer) then [pkgs.python313Packages.jedi-language-server] else []
-        else [];
+                        else [];
         config = "${if matches "basedpyright" ide.languages.python.languageServer then ''
           (add-to-list 'eglot-server-programs '(python-ts-mode . ("basedpyright-langserver" "--stdio" 
                                                                    :initializationOptions (:basedpyright (:plugins (

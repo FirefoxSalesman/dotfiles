@@ -5,9 +5,18 @@
     ./treesitter.nix
 
     ./python.nix
+    ./hy.nix
     ./java.nix
+    ./gradle.nix
+    ./clojure.nix
+    ./scala.nix
+    ./kotlin.nix
     ./nix.nix
-    ./web-development.nix
+    ./html.nix
+    ./css.nix
+    ./javascript.nix
+    ./typescript.nix
+    ./pug.nix
     ./json.nix
     ./toml.nix
     ./haskell.nix
@@ -18,6 +27,7 @@
     ./zenscript.nix
     ./rust.nix
     ./lua.nix
+    ./fennel.nix
     ./plantuml.nix
     ./erlang.nix
     ./sql.nix
@@ -30,6 +40,8 @@
     ./ruby.nix
     ./common-lisp.nix
     ./scheme.nix
+    ./racket.nix
+    ./xml.nix
   ];
 
   options = {

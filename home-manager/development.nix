@@ -8,10 +8,8 @@
       symex = true;  
       eglot.enable = true;
       languages = {
-        java = {
-          enable = true;
-          gradle = true;
-        };
+        java.enable = true;
+        gradle.enable = true;
         nix.enable = true;
         json.enable = true;
         toml.enable = true;
@@ -26,24 +24,11 @@
           magicLatexBuffer = true;
           cdlatex = true;
         };
+        xml.enable = true;
       };
     };
 
     usePackage = {
-      nxml = {
-        enable = true;
-        extraPackages = with pkgs; [lemminx];
-        generalTwo.local-leader.nxml-mode-map = {
-          "a" = '''(eglot-code-actions :which-key "code actions")'';
-          "n" = '''(flymake-goto-next-error :which-key "next error")'';
-          "e" = '''(flymake-goto-prev-error :which-key "previous error")'';
-          "f" = '''(eglot-format :which-key "format")'';
-        };
-        deferIncrementally = true;
-        eglot = true;
-        symex = true;
-      };
-      
       editorconfig = {
         enable = true;
         afterCall = ["on-first-file-hook"];
@@ -136,8 +121,6 @@
           "d" = "'eldoc-doc-buffer";
         };
         config = ''
-          (dolist (server (list '((nxml-mode) . ("lemminx"))))
-            (add-to-list 'eglot-server-programs server))
           (defun my/eglot-capf ()
             (setq-local completion-at-point-functions
                         (list (cape-capf-super

@@ -13,7 +13,6 @@ in
     guile = lib.mkEnableOption "Installs geiser-guile";
     kawa = lib.mkEnableOption "Installs geiser-kawa. Because I couldn't find a copy of kawa in the nix repos, you'll have to install it yourself.";
     mit = lib.mkEnableOption "Installs geiser-mit";
-    racket = lib.mkEnableOption "Enables racket support. You will need to install the language server yourself";
     stklos = lib.mkEnableOption "Installs geiser-stklos. Because I couldn't find a copy of kawa in the nix repos, you'll have to install it yourself.";
   };
 
@@ -23,6 +22,8 @@ in
         enable = true;
         mode = [''"\\.scm\\'"''];
         symex = ide.symex;
+        init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
+        config = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
       };
 
       geiser = {
@@ -83,22 +84,6 @@ in
         enable = ide.languages.scheme.mit;
         after = ["geiser"];
         custom.geiser-mit-binary = lib.mkDefault ''"${pkgs.mitscheme}/bin/mit-scheme"'';
-      };
-
-      racket-mode = {
-        enable = ide.languages.scheme.racket;
-        eglot = ide.eglot.enable;
-        lsp = ide.lsp.enable;
-        symex = ide.symex;
-        mode = [''"\\.rkt\\'"''];
-        init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
-        config = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
-      };
-
-      geiser-racket = {
-        enable = ide.languages.scheme.racket;
-        after = ["geiser"];
-        custom.geiser-racket-binary = lib.mkDefault ''"${pkgs.racket}/bin/racket"'';
       };
 
       geiser-stklos = {

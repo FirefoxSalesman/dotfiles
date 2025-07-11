@@ -1963,10 +1963,8 @@ I think most of it was from the github page for lsp mode, but it's been a while,
         symex = true;  
         eglot.enable = true;
         languages = {
-          java = {
-            enable = true;
-            gradle = true;
-          };
+          java.enable = true;
+          gradle.enable = true;
           nix.enable = true;
           json.enable = true;
           toml.enable = true;
@@ -1981,6 +1979,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
             magicLatexBuffer = true;
             cdlatex = true;
           };
+          xml.enable = true;
         };
       };
 
@@ -2050,20 +2049,6 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 *** Misc
 #+NAME: Development Misc
 #+begin_src nix
-  nxml = {
-    enable = true;
-    extraPackages = with pkgs; [lemminx];
-    generalTwo.local-leader.nxml-mode-map = {
-      "a" = '''(eglot-code-actions :which-key "code actions")'';
-      "n" = '''(flymake-goto-next-error :which-key "next error")'';
-      "e" = '''(flymake-goto-prev-error :which-key "previous error")'';
-      "f" = '''(eglot-format :which-key "format")'';
-    };
-    deferIncrementally = true;
-    eglot = true;
-    symex = true;
-  };
-
   editorconfig = {
     enable = true;
     afterCall = ["on-first-file-hook"];
@@ -2236,8 +2221,6 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 
 #+NAME: Development Eglot Config
 #+begin_src emacs-lisp
-  (dolist (server (list '((nxml-mode) . ("lemminx"))))
-    (add-to-list 'eglot-server-programs server))
   (defun my/eglot-capf ()
     (setq-local completion-at-point-functions
                 (list (cape-capf-super
@@ -2266,15 +2249,9 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 
 *** TODO Language support
 Languages we would like to support:
-+ [ ] Sass (maybe)
-+ [ ] coffee script (maybe)
-+ [ ] typescript
-+ [ ] Svelte
-+ [ ] hy
-+ [ ] julia
-+ [ ] fennel
-Other tasks:
-+ [ ] Move treesitter stuff into its own file
++ [ ] xml
+Non-language activities:
++ [ ] Separate html & css support
 
 **** Default.nix
 #+begin_src nix :tangle development/default.nix
@@ -2285,9 +2262,18 @@ Other tasks:
       ./treesitter.nix
 
       ./python.nix
+      ./hy.nix
       ./java.nix
+      ./gradle.nix
+      ./clojure.nix
+      ./scala.nix
+      ./kotlin.nix
       ./nix.nix
-      ./web-development.nix
+      ./html.nix
+      ./css.nix
+      ./javascript.nix
+      ./typescript.nix
+      ./pug.nix
       ./json.nix
       ./toml.nix
       ./haskell.nix
@@ -2298,6 +2284,7 @@ Other tasks:
       ./zenscript.nix
       ./rust.nix
       ./lua.nix
+      ./fennel.nix
       ./plantuml.nix
       ./erlang.nix
       ./sql.nix
@@ -2310,6 +2297,8 @@ Other tasks:
       ./ruby.nix
       ./common-lisp.nix
       ./scheme.nix
+      ./racket.nix
+      ./xml.nix
     ];
 
     options = {
@@ -2324,22 +2313,28 @@ Other tasks:
 
 **** Treesitter
 #+begin_src nix :tangle development/treesitter.nix
-  { pkgs, ... }:
+  { pkgs, lib, config, ... } :
 
+  let
+    lang = config.programs.emacs.init.ide.languages;
+  in
   {
-    programs.emacs.init.usePackage = {
-      treesit-auto = {
-        enable = true;
-        custom.treesit-auto-install = "'prompt";
-        init = "(mp-setup-install-grammars)";
-        config = "(global-treesit-auto-mode)";
-        # stolen from mickey petersen
-        extraConfig = ''
+    config = lib.mkIf (lang.python.enable || lang.hy.enable || lang.java.enable || lang.gradle.enable || lang.clojure.enable || lang.scala.enable || lang.kotlin.enable || lang.nix.enable || lang.web.enable || lang.pug.enable || lang.javascript.enable || lang.typescript.enable || lang.json.enable || lang.toml.enable || lang.haskell.enable || lang.c.enable || lang.bash.enable || lang.r.enable || lang.prolog.enable || lang.zenscript.enable || lang.rust.enable || lang.lua.enable || lang.fennel.enable || lang.plantuml.enable || lang.erlang.enable || lang.sql.enable || lang.forth.enable || lang.go.enable || lang.markdown.enable || lang.zig.enable || lang.latex.enable || lang.csharp.enable || lang.ruby.enable || lang.common-lisp.enable || lang.scheme.enable || lang.racket.enable || lang.xml.enable) {
+      programs.emacs.init.usePackage = {
+        treesit-auto = {
+          enable = true;
+          custom.treesit-auto-install = "'prompt";
+          init = "(mp-setup-install-grammars)";
+          config = "(global-treesit-auto-mode)";
+          # stolen from mickey petersen
+          extraConfig = ''
           :preface (defun mp-setup-install-grammars ()
                   "Install Tree-sitter grammars if they are absent."
                   (interactive)
                   (dolist (grammar
                            '(;(xml "https://github.com/ObserverOfTime/tree-sitter-xml")
+                             (kotlin "https://github.com/fwcd/tree-sitter-kotlin")
+                             (haskell "https://github.com/tree-sitter/tree-sitter-haskell")
                              (toml "https://github.com/ikatyang/tree-sitter-toml")
                              (json5 "https://github.com/Joakker/tree-sitter-json5")
                              (elisp "https://github.com/Wilfred/tree-sitter-elisp")))
@@ -2350,20 +2345,23 @@ Other tasks:
                     (unless (treesit-language-available-p (car grammar))
                       (treesit-install-language-grammar (car grammar)))))
     '';
-      };
+        };
 
-      tree-sitter = {
-        enable = true;
-        afterCall = ["on-first-file-hook"];
-        config = ''
+        tree-sitter = {
+          enable = true;
+          afterCall = ["on-first-file-hook"];
+          config = ''
           (global-tree-sitter-mode)
           (dolist (mode '((java-ts-mode . java)
+            (kotlin-ts-mode . kotlin)
             (html-ts-mode . html)
   		      (lua-ts-mode . lua)
   		      (go-ts-mode . go)
   		      (python-ts-mode . python)
   		      (scala-ts-mode . scala)
   		      (js-ts-mode . javascript)
+  		      (typescript-ts-mode . typescript)
+  		      ;;(haskell-ts-mode . haskell)
   		      (json-ts-mode . json)
   		      (gfm-mode . markdown)
   		      (ruby-ts-mode . ruby)
@@ -2375,15 +2373,17 @@ Other tasks:
   		      (ess-r-mode . r)
   		      (inferior-ess-r-mode . r)
   		      (erlang-ts-mode . erlang)
-  		      (toml-ts-mode . toml)))
+            (toml-ts-mode . toml)
+  		      (julia-ts-mode . julia)))
           (add-to-list 'tree-sitter-major-mode-language-alist mode))
         '';
-      };
+        };
 
-      tree-sitter-langs = {
-        enable = true;
-        custom.tree-sitter-langs-grammar-dir = ''"~/.cache/emacs/tree-sitter"'';
-        afterCall = ["global-tree-sitter-mode-hook"];
+        tree-sitter-langs = {
+          enable = true;
+          custom.tree-sitter-langs-grammar-dir = ''"~/.cache/emacs/tree-sitter"'';
+          afterCall = ["global-tree-sitter-mode-hook"];
+        };
       };
     };
   }
@@ -2404,15 +2404,13 @@ pyenv allows us to use virtual environments.
     matches = p: n: lib.match p n != null;
   in
   {
-    options = {
-      programs.emacs.init.ide.languages.python = {
-        enable = lib.mkEnableOption "enables python support";
-        jupyter = lib.mkEnableOption "enables code-cells, a minor mode for editing jupyter files";
-        languageServer = lib.mkOption {
-          type = lib.types.str;
-          default = "basedpyright";
-          description = "the language server to use with python. Can be any of basedpyright, pylsp, pyright, or jedi";
-        };
+    options.programs.emacs.init.ide.languages.python = {
+      enable = lib.mkEnableOption "enables python support";
+      jupyter = lib.mkEnableOption "enables code-cells, a minor mode for editing jupyter files";
+      languageServer = lib.mkOption {
+        type = lib.types.str;
+        default = "basedpyright";
+        description = "the language server to use with python. Can be any of basedpyright, pylsp, pyright, or jedi";
       };
     };
 
@@ -2429,7 +2427,7 @@ pyenv allows us to use virtual environments.
               if (matches "pylsp" ide.languages.python.languageServer) then [pkgs.python313Packages.python-lsp-server] else
                 if (matches "pyright" ide.languages.python.languageServer) then [pkgs.pyright] else
                   if (matches "jedi" ide.languages.python.languageServer) then [pkgs.python313Packages.jedi-language-server] else []
-          else [];
+                          else [];
           config = "${if matches "basedpyright" ide.languages.python.languageServer then ''
             (add-to-list 'eglot-server-programs '(python-ts-mode . ("basedpyright-langserver" "--stdio" 
                                                                      :initializationOptions (:basedpyright (:plugins (
@@ -2456,6 +2454,28 @@ pyenv allows us to use virtual environments.
   }
 #+end_src
 
+**** Hy
+#+begin_src nix :tangle development/hy.nix
+  { pkgs, lib, config, ... }:
+  # This module is blatantly stolen from doom emacs
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.languages.hy.enable = lib.mkEnableOption "enables hy support";
+
+    config = lib.mkIf ide.languages.hy.enable {
+      programs.emacs.init.usePackage.hy-mode = {
+        enable = true;
+        mode = [''"\\.hy\\'"''];
+        symex = ide.symex;
+        extraConfig = '':interpreter "hy"'';
+      };
+    };
+  }
+#+end_src
+
 **** Java
 #+begin_src nix :tangle development/java.nix
   { pkgs, config, lib, ... } :
@@ -2464,34 +2484,55 @@ pyenv allows us to use virtual environments.
     ide = config.programs.emacs.init.ide;
   in
   {
-    options = {
-      programs.emacs.init.ide.languages.java = {
-        enable = lib.mkEnableOption "enables java support";
-        gradle = lib.mkEnableOption "enables groovy-mode, a major mode for editing gradle files";
-        clojure = lib.mkEnableOption "enables clojure support";
-        scala = lib.mkEnableOption "Enables scala support. You will need to bring your own copy of sbt in order to use sbt-mode";
-      };
-    };
+    options.programs.emacs.init.ide.languages.java.enable = lib.mkEnableOption "enables java support";
 
     config = lib.mkIf ide.languages.java.enable {
-      programs.emacs.init.usePackage = {
-        java-ts-mode = {
-          enable = true;
-          extraPackages = if ide.lsp.enable || ide.eglot.enable then with pkgs; [jdt-language-server] else [];
-          mode = [''"\\.java\\'"''];
-          lsp = ide.lsp.enable;
-          eglot = ide.eglot.enable;
-          symex = ide.symex;
-        };
+      programs.emacs.init.usePackage.java-ts-mode = {
+        enable = true;
+        extraPackages = if ide.lsp.enable || ide.eglot.enable then with pkgs; [jdt-language-server] else [];
+        mode = [''"\\.java\\'"''];
+        lsp = ide.lsp.enable;
+        eglot = ide.eglot.enable;
+        symex = ide.symex;
+      };
+    };
+  }
+#+end_src
 
-        groovy-mode = {
-          enable = ide.languages.java.gradle;
-          symex = ide.symex;
-          mode = lib.mkDefault [''"\\.gradle\\'"''];
-        };
-        
+**** Gradle
+#+begin_src nix :tangle development/gradle.nix
+  { pkgs, config, lib, ... } :
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.languages.gradle.enable = lib.mkEnableOption "enables groovy-mode, a major mode for editing gradle files";
+
+    config = lib.mkIf ide.languages.gradle.enable {
+      programs.emacs.init.usePackage.groovy-mode = {
+        enable = true;
+        symex = ide.symex;
+        mode = [''"\\.gradle\\'"''];
+      };
+    };
+  }
+#+end_src
+
+**** Clojure
+#+begin_src nix :tangle development/clojure.nix
+  { pkgs, config, lib, ... } :
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.languages.clojure.enable = lib.mkEnableOption "enables clojure support";
+
+    config = lib.mkIf ide.languages.clojure.enable {
+      programs.emacs.init.usePackage = {
         clojure-mode = {
-          enable = ide.languages.java.clojure;
+          enable = true;
           extraPackages = if ide.lsp.enable || ide.eglot.enable then with pkgs; [clojure-lsp] else [];
           mode = [''"\\.clj\\'"''];
           lsp = ide.lsp.enable;
@@ -2503,9 +2544,28 @@ pyenv allows us to use virtual environments.
           enable = ide.languages.java.clojure;
           hook = ["(clojure-mode . cider-mode)"];
         };
-        
+      };
+    };
+  }
+#+end_src
+
+**** Scala
+#+begin_src nix :tangle development/scala.nix
+  { pkgs, config, lib, ... } :
+  # This module is blatantly stolen from doom emacs
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options = {
+      programs.emacs.init.ide.languages.scala.enable = lib.mkEnableOption "Enables scala support. You will need to bring your own copy of sbt in order to use sbt-mode";
+    };
+
+    config = lib.mkIf ide.languages.scala.enable {
+      programs.emacs.init.usePackage = {
         scala-ts-mode = {
-          enable = ide.languages.java.scala;
+          enable = true;
           extraPackages = if ide.lsp.enable || ide.eglot.enable then [pkgs.metals] else [];
           mode = [''"\\.scala\\'"''];
           eglot = ide.eglot.enable;
@@ -2518,9 +2578,36 @@ pyenv allows us to use virtual environments.
         };
 
         sbt-mode = {
-          enable = ide.languages.java.scala;
+          enable = true;
           after = ["scala-ts-mode"];
         };
+      };
+    };
+  }
+#+end_src
+
+**** Kotlin
+#+begin_src nix :tangle development/kotlin.nix
+  { pkgs, config, lib, ... }:
+  # This module is blatantly stolen from doom emacs
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.languages.kotlin.enable = lib.mkEnableOption "enables kotlin support";
+
+    config = lib.mkIf ide.languages.kotlin.enable {
+      programs.emacs.init.usePackage.kotlin-ts-mode = {
+        enable = true;
+        mode = [''"\\.kt\\'"''];
+        extraPackages = if ide.eglot.enable || ide.lsp.enable then [pkgs.kotlin-language-server] else [];
+        symex = ide.symex;
+        eglot = ide.eglot.enable;
+        lsp = ide.lsp.enable;
+        # Kotlin's language server takes a very long time to initialize on a new project
+        # https://github.com/fwcd/kotlin-language-server/issues/510
+        custom.eglot-connect-timeout = lib.mkDefault "999999";
       };
     };
   }
@@ -2557,8 +2644,8 @@ pyenv allows us to use virtual environments.
   }
 #+end_src
 
-**** Web Development
-#+begin_src nix :tangle development/web-development.nix
+**** Html
+#+begin_src nix :tangle development/html.nix
   { pkgs, config, lib, ... }:
 
   let
@@ -2566,9 +2653,8 @@ pyenv allows us to use virtual environments.
   in
   {
     options.programs.emacs.init.ide.languages.web = {
-      enable = lib.mkEnableOption "enables html, css, & js support";
-      emmet = lib.mkEnableOption "enables emmet for html, js, & css";
-      pug = lib.mkEnableOption "enables pug support";
+      enable = lib.mkEnableOption "enables html support";
+      emmet = lib.mkEnableOption "enables emmet for html";
     };
 
     config = lib.mkIf ide.languages.web.enable {
@@ -2590,17 +2676,36 @@ pyenv allows us to use virtual environments.
         emmet-mode = {
           enable = ide.web.emmet;
           hook = [
-            "(js-ts-mode . emmet-mode)"
-            "(sgml-mode . emmet-mode)"
-            "(css-ts-mode . emmet-mode)"
             "(html-ts-mode . emmet-mode)"
           ];
           custom.emmet-move-cursor-between-quotes = lib.mkDefault "t";
         };
+      };
+    };
+  }
+#+end_src
 
-        pug-mode = {
-          enable = ide.web.pug;
-          mode = [''"\\.pug\\'"''];
+**** css
+#+begin_src nix :tangle development/css.nix
+  { pkgs, config, lib, ... }:
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.languages.css = {
+      enable = lib.mkEnableOption "enables css support";
+      emmet = lib.mkEnableOption "enables emmet for css";
+    };
+
+    config = lib.mkIf ide.languages.css.enable {
+      programs.emacs.init.usePackage = {
+        emmet-mode = {
+          enable = ide.web.emmet;
+          hook = [
+            "(css-ts-mode . emmet-mode)"
+          ];
+          custom.emmet-move-cursor-between-quotes = lib.mkDefault "t";
         };
 
         css-ts-mode = {
@@ -2611,15 +2716,71 @@ pyenv allows us to use virtual environments.
           symex = ide.symex;
           lsp = ide.lsp.enable;
         };
+      };
+    };
+  }
+#+end_src
 
-        js-ts-mode = {
-          enable = true;
-          extraPackages = if ide.lsp.enable || ide.eglot.enable then with pkgs; [typescript-language-server] else [];
-          mode = [''"\\.js\\'"''];
-          eglot = ide.eglot.enable;
-          symex = ide.symex;
-          lsp = ide.lsp.enable;
-        };
+**** Javascript
+#+begin_src nix :tangle development/javascript.nix
+  { pkgs, config, lib, ... }:
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.languages.javascript.enable = lib.mkEnableOption "enables javascript support";
+
+    config = lib.mkIf ide.languages.javascript.enable {
+      programs.emacs.init.usePackage.js-ts-mode = {
+        enable = true;
+        extraPackages = if ide.lsp.enable || ide.eglot.enable then with pkgs; [typescript-language-server] else [];
+        mode = [''"\\.js\\'"''];
+        eglot = ide.eglot.enable;
+        symex = ide.symex;
+        lsp = ide.lsp.enable;
+      };
+    };
+  }
+#+end_src
+
+**** Typescript
+#+begin_src nix :tangle development/typescript.nix
+  { pkgs, config, lib, ... }:
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.languages.typescript.enable = lib.mkEnableOption "enables typescript support";
+
+    config = lib.mkIf ide.languages.typescript.enable {
+      programs.emacs.init.usePackage.typescript-ts-mode = {
+        enable = true;
+        extraPackages = if ide.lsp.enable || ide.eglot.enable then with pkgs; [typescript-language-server] else [];
+        mode = [''"\\.ts\\'"''];
+        eglot = ide.eglot.enable;
+        symex = ide.symex;
+        lsp = ide.lsp.enable;
+      };
+    };
+  }
+#+end_src
+
+**** Pug
+#+begin_src nix :tangle development/pug.nix
+  { pkgs, config, lib, ... }:
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.languages.pug.enable = lib.mkEnableOption "enables pug support";
+
+    config = lib.mkIf ide.languages.pug.enable {
+      programs.emacs.init.usePackage.pug-mode = {
+        enable = ide.web.pug;
+        mode = [''"\\.pug\\'"''];
       };
     };
   }
@@ -2680,13 +2841,13 @@ pyenv allows us to use virtual environments.
   {
     options.programs.emacs.init.ide.languages.haskell.enable = lib.mkEnableOption "enables haskell support";
     config = lib.mkIf ide.languages.haskell.enable {
-      programs.emacs.init.usePackage.haskell-mode = {
+      programs.emacs.init.usePackage.haskell-ts-mode = {
         enable = true;
         mode = [''"\\.hs\\'"''];
         extraPackages = if ide.lsp.enable || ide.eglot.enable then [pkgs.haskell-language-server] else [];
         eglot = ide.eglot.enable;
         lsp = ide.lsp.enable;
-        symex = ide.symex;
+        # symex = ide.symex;
       };
     };
   }
@@ -2876,6 +3037,33 @@ pyenv allows us to use virtual environments.
             (with-eval-after-load 'eglot
               (add-to-list 'eglot-server-programs '((lua-ts-mode) . ("lua-language-server"))))
           '';
+      };
+    };
+  }
+#+end_src
+
+**** Fennel
+#+begin_src nix :tangle development/fennel.nix
+  { pkgs, config, lib, ... }:
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.languages.fennel.enable = lib.mkEnableOption "enables fennel support";
+
+    config = lib.mkIf ide.languages.fennel.enable {
+      programs.emacs.init.usePackage.fennel-mode = {
+        enable = true;
+        extraPackages = if ide.eglot.enable || ide.lsp.enable then [pkgs.fennel-ls] else [];
+        mode = [''"\\.fnl\\'"''];
+        symex = ide.symex;
+        eglot = ide.eglot.enable;
+        lsp = ide.lsp.enable;
+        config = ''
+          (with-eval-after-load 'eglot
+            (add-to-list 'eglot-server-programs '(fennel-mode . ("fennel-ls"))))
+        '';
       };
     };
   }
@@ -3255,7 +3443,6 @@ pyenv allows us to use virtual environments.
       guile = lib.mkEnableOption "Installs geiser-guile";
       kawa = lib.mkEnableOption "Installs geiser-kawa. Because I couldn't find a copy of kawa in the nix repos, you'll have to install it yourself.";
       mit = lib.mkEnableOption "Installs geiser-mit";
-      racket = lib.mkEnableOption "Enables racket support. You will need to install the language server yourself";
       stklos = lib.mkEnableOption "Installs geiser-stklos. Because I couldn't find a copy of kawa in the nix repos, you'll have to install it yourself.";
     };
 
@@ -3265,6 +3452,8 @@ pyenv allows us to use virtual environments.
           enable = true;
           mode = [''"\\.scm\\'"''];
           symex = ide.symex;
+          init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
+          config = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
         };
 
         geiser = {
@@ -3327,26 +3516,61 @@ pyenv allows us to use virtual environments.
           custom.geiser-mit-binary = lib.mkDefault ''"${pkgs.mitscheme}/bin/mit-scheme"'';
         };
 
-        racket-mode = {
-          enable = ide.languages.scheme.racket;
-          eglot = ide.eglot.enable;
-          lsp = ide.lsp.enable;
-          symex = ide.symex;
-          mode = [''"\\.rkt\\'"''];
-          init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
-          config = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
-        };
-
-        geiser-racket = {
-          enable = ide.languages.scheme.racket;
-          after = ["geiser"];
-          custom.geiser-racket-binary = lib.mkDefault ''"${pkgs.racket}/bin/racket"'';
-        };
-
         geiser-stklos = {
           enable = ide.languages.scheme.stklos;
           after = ["geiser"];
         };
+      };
+    };
+  }
+#+end_src
+
+**** Racket
+#+begin_src nix :tangle development/racket.nix
+  { pkgs, lib, config, ... }:
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.languages.racket.enable = lib.mkEnableOption "Enables racket support. You will need to install the language server yourself";
+
+    config = lib.mkIf ide.languages.racket.enable {
+      programs.emacs.init.usePackage.racket-mode = {
+        enable = ide.languages.scheme.racket;
+        eglot = ide.eglot.enable;
+        lsp = ide.lsp.enable;
+        symex = ide.symex;
+        mode = [''"\\.rkt\\'"''];
+        init = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
+        config = ''(setq auto-mode-alist (delete '("\\.rkt\\'" . scheme-mode) auto-mode-alist))'';
+      };
+    };
+  }
+#+end_src
+
+**** Xml
+#+begin_src nix :tangle development/xml.nix
+  { pkgs, config, lib, ... }:
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.languages.xml.enable = lib.mkEnableOption "Enables xml support.";
+
+    config = lib.mkIf ide.languages.xml.enable {
+      programs.emacs.init.usePackage.nxml = {
+        enable = true;
+        mode = [''("\\.xml\\'" . nxml-mode)''];
+        extraPackages = if ide.eglot.enable || ide.lsp.enable then [pkgs.lemminx] else [];
+        lsp = ide.lsp.enable;
+        eglot = ide.eglot.enable;
+        symex = ide.symex;
+        init = ''
+            (with-eval-after-load 'eglot
+              (add-to-list 'eglot-server-programs '((nxml-mode) . ("lemminx"))))
+          '';
       };
     };
   }
