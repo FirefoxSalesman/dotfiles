@@ -54,6 +54,10 @@ final: prev: pkgs: inputs: {
           inherit inputs;
           inherit (prev.emacsPackages) trivialBuild compat;
         });
+        org-novelist = (prev.emacsPackages.callPackage ./packages/emacs/org-novelist.nix {
+          inherit inputs;
+          inherit (prev.emacsPackages) trivialBuild org;
+        });
         exwm-outer-gaps = (prev.emacsPackages.callPackage ./packages/emacs/exwm-outer-gaps.nix {
           inherit inputs;
           inherit (prev.emacsPackages) trivialBuild exwm xelb;

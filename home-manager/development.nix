@@ -1,8 +1,6 @@
 { inputs, pkgs, pkgs-stable, ... }:
 
 {
-  imports = [./development];
-
   programs.emacs.init = {
     ide = {
       symex = true;  
@@ -15,15 +13,6 @@
         toml.enable = true;
         bash.enable = true;
         zenscript.enable = true;
-        markdown = {
-          enable = true;
-          evil = true;
-        };
-        latex = {
-          enable = true;
-          magicLatexBuffer = true;
-          cdlatex = true;
-        };
         xml.enable = true;
       };
     };
@@ -169,13 +158,11 @@
       #   };
       # };
 
-      cider.generalTwo.local-leader.cider-mode-map."s" = '''(cider-jack-in :which-key "start cider")''; 
-
       python-ts-mode = {
         generalTwo."local-leader".python-mode-map."r" = "'python-shell-send-buffer";
         custom = {
           python-shell-interpreter = ''"ipython"'';
-  	      python-shell-interpreter-args = ''"-i --simple-prompt"'';
+          python-shell-interpreter-args = ''"-i --simple-prompt"'';
         };
       };
       
@@ -188,6 +175,18 @@
           "e" = "'code-cells-eval";
         };
       };
+      
+      json5-ts-mode = {
+        enable = true;
+        extraPackages = [pkgs.vscode-langservers-extracted];
+        mode = [''"\\.json5\\'"''];
+        eglot = true;
+        symex = true;
+        config = ''
+          (with-eval-after-load 'eglot
+            (add-to-list 'eglot-server-programs '((json5-ts-mode) . ("vscode-json-language-server" "--stdio"))))
+        '';
+      };
 
       racket-mode = {
         gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
@@ -196,6 +195,8 @@
           "r" = "'racket-run";
         };
       };
+
+      cider.generalTwo.local-leader.cider-mode-map."s" = '''(cider-jack-in :which-key "start cider")''; 
 
       java-ts-mode.init = ''
         (defun tkj/java-decompile-class ()
@@ -221,18 +222,6 @@
       '';
 
       prolog-mode.generalTwo."local-leader".prolog-mode-map."r" = '''(run-prolog :which-key "run")'';
-      
-      json5-ts-mode = {
-        enable = true;
-        extraPackages = [pkgs.vscode-langservers-extracted];
-        mode = [''"\\.json5\\'"''];
-        eglot = true;
-        symex = true;
-        config = ''
-          (with-eval-after-load 'eglot
-            (add-to-list 'eglot-server-programs '((json5-ts-mode) . ("vscode-json-language-server" "--stdio"))))
-        '';
-      };
     } ;
   };
 }

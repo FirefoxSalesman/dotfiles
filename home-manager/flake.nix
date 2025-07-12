@@ -83,6 +83,11 @@
       flake = false;
     };
     
+    org-novelist = {
+      url = "github:sympodius/org-novelist";
+      flake = false;
+    };
+    
     mpc-wrapper = {
       url = "github:FirefoxSalesman/mpc-wrapper";
       flake = false;
@@ -126,13 +131,14 @@
             inherit self;
             inherit inputs;
             inherit system;
-            inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline symex2 treesitter-context gptel-quick eglot-x org-modern-indent mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
+            inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline symex2 treesitter-context gptel-quick eglot-x org-modern-indent org-novelist mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
             inherit pkgs-stable;
           };
           modules = [
             ./home.nix
             stylix.homeModules.stylix
             emacs-init.homeModules.emacs-init
+            emacs-init.homeModules.emacs-presets
           ];
         } ;
       };

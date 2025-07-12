@@ -5,7 +5,6 @@
     (config.lib.nixGL.wrap gimp)
     (config.lib.nixGL.wrap prismlauncher)
     (config.lib.nixGL.wrap blockbench)
-    (config.lib.nixGL.wrap wineWowPackages.stagingFull)
     wget
     zip
     unzip
