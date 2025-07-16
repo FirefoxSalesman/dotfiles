@@ -9,13 +9,15 @@
   programs.emacs.init = {
     ide = {
       symex = true;  
+      hoverDoc = true;
       eglot = {
         enable = true;
-        preset = {
-          enable = true;
-          hoverDoc = true;
-        };
+        preset.enable = true;
       };
+      # lsp-bridge = {
+      #   enable = true; 
+      #   preset = true;
+      # };
       languages = {
         bash.enable = true;
         gradle.enable = true;
@@ -30,7 +32,6 @@
           hoverDoc = true;
           flymake = true;
         };
-        purescript.enable = true;
       };
     };
 
@@ -46,8 +47,8 @@
         ghook = ["('prog-mode-hook 'rainbow-delimiters-mode)"];
       };
       
-      # lsp-mode.gfhook = ["('lsp-mode-hook (lambda () (company-mode -1)))"];
-      # lsp-java.custom.lsp-java-content-provider-preferred = ''"fernflower"'';
+      lsp-mode.gfhook = ["('lsp-mode-hook (lambda () (company-mode -1)))"];
+      lsp-java.custom.lsp-java-content-provider-preferred = ''"fernflower"'';
 
       
 

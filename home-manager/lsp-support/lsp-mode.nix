@@ -7,12 +7,11 @@ in
   options.programs.emacs.init.ide.lsp.preset = {
     enable = lib.mkEnableOption "Enable lsp-mode's preset configuration (borrowed from doom)";
     breadcrumb = lib.mkEnableOption "Enables the breadcrumb header";
-    ui = lib.mkEnableOption "Enables lsp-ui";
   };
 
   config = lib.mkIf ide.lsp.preset.enable {
     programs.emacs.init.usePackage = {
-      # We elect not to use lsp-booster since we are meant to be on emacs 30, & that causes funky things to happen to lsp-mode
+      # We elect not to use lsp-booster, because I have no idea how to compile lsp-mode with plists support
       lsp-mode = {
         enable = true;
         custom = {
@@ -23,7 +22,7 @@ in
         };
       };
 
-      lsp-ui = lib.mkIf ide.lsp.preset.ui {
+      lsp-ui = lib.mkIf ide.hoverDoc {
         enable = true;
         hook = ["(lsp-mode . lsp-ui-mode)"];
         custom = {

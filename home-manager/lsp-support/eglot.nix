@@ -6,7 +6,6 @@ in
 {
   options.programs.emacs.init.ide.eglot.preset = {
     enable = lib.mkEnableOption "Enable eglot's preset configuration";
-    hoverDoc = lib.mkEnableOption "Use eldoc-box to get documentation popups";
     breadcrumb = lib.mkEnableOption "Enables the breadcrumb header";
   };
 
@@ -36,7 +35,7 @@ in
       };
 
       eldoc-box = {
-        enable = ide.eglot.preset.hoverDoc;
+        enable = ide.hoverDoc;
         hook = ["(eglot-managed-mode . eldoc-box-hover-at-point-mode)"];
       };
 

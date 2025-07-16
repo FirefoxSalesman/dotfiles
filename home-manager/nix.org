@@ -2001,13 +2001,15 @@ I think most of it was from the github page for lsp mode, but it's been a while,
     programs.emacs.init = {
       ide = {
         symex = true;  
+        hoverDoc = true;
         eglot = {
           enable = true;
-          preset = {
-            enable = true;
-            hoverDoc = true;
-          };
+          preset.enable = true;
         };
+        # lsp-bridge = {
+        #   enable = true; 
+        #   preset = true;
+        # };
         languages = {
           bash.enable = true;
           gradle.enable = true;
@@ -2022,15 +2024,14 @@ I think most of it was from the github page for lsp mode, but it's been a while,
             hoverDoc = true;
             flymake = true;
           };
-          purescript.enable = true;
         };
       };
 
       usePackage = {
         <<Development Misc>>
         
-        # lsp-mode.gfhook = ["('lsp-mode-hook (lambda () (company-mode -1)))"];
-        # lsp-java.custom.lsp-java-content-provider-preferred = ''"fernflower"'';
+        lsp-mode.gfhook = ["('lsp-mode-hook (lambda () (company-mode -1)))"];
+        lsp-java.custom.lsp-java-content-provider-preferred = ''"fernflower"'';
 
         <<Development Direnv>>
 
@@ -2302,13 +2303,16 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 
 **** Default.nix
 #+begin_src nix :tangle lsp-support/default.nix
-  { ... }:
+  { lib, ... }:
 
   {
     imports = [
       ./eglot.nix
       ./lsp-mode.nix
+      ./lsp-bridge.nix
     ];
+
+    options.programs.emacs.init.ide.hoverDoc = lib.mkEnableOption "Enables hover documentation";
   }
 #+end_src
 
@@ -2322,7 +2326,6 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
   {
     options.programs.emacs.init.ide.eglot.preset = {
       enable = lib.mkEnableOption "Enable eglot's preset configuration";
-      hoverDoc = lib.mkEnableOption "Use eldoc-box to get documentation popups";
       breadcrumb = lib.mkEnableOption "Enables the breadcrumb header";
     };
 
@@ -2352,7 +2355,7 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
         };
 
         eldoc-box = {
-          enable = ide.eglot.preset.hoverDoc;
+          enable = ide.hoverDoc;
           hook = ["(eglot-managed-mode . eldoc-box-hover-at-point-mode)"];
         };
 
@@ -2376,12 +2379,11 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
     options.programs.emacs.init.ide.lsp.preset = {
       enable = lib.mkEnableOption "Enable lsp-mode's preset configuration (borrowed from doom)";
       breadcrumb = lib.mkEnableOption "Enables the breadcrumb header";
-      ui = lib.mkEnableOption "Enables lsp-ui";
     };
 
     config = lib.mkIf ide.lsp.preset.enable {
       programs.emacs.init.usePackage = {
-        # We elect not to use lsp-booster since we are meant to be on emacs 30, & that causes funky things to happen to lsp-mode
+        # We elect not to use lsp-booster, because I have no idea how to compile lsp-mode with plists support
         lsp-mode = {
           enable = true;
           custom = {
@@ -2392,7 +2394,7 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
           };
         };
 
-        lsp-ui = lib.mkIf ide.lsp.preset.ui {
+        lsp-ui = lib.mkIf ide.hoverDoc {
           enable = true;
           hook = ["(lsp-mode . lsp-ui-mode)"];
           custom = {
@@ -2402,6 +2404,30 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
             lsp-ui-sideline-ignore-duplicate = lib.mkDefault "t";
             lsp-ui-sideline-show-hover = lib.mkDefault "nil";
             lsp-ui-sideline-actions-icon = lib.mkDefault "lsp-ui-sideline-actions-icon-default";
+          };
+        };
+      };
+    };
+  }
+#+end_src
+
+**** lsp bridge
+#+begin_src nix :tangle lsp-support/lsp-bridge.nix
+  { pkgs, config, lib, ... }:
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.lsp-bridge.preset = lib.mkEnableOption "Enable lsp-bridge's preset configuration. (A total of 1 changed variable)";
+
+    config = lib.mkIf ide.lsp-bridge.preset {
+      programs.emacs.init.usePackage = {
+        lsp-bridge = {
+          enable = true;
+          custom = {
+            lsp-bridge-get-workspace-folder = lib.mkDefault "'project-root";
+            lsp-bridge-enable-org-babel = lib.mkDefault "t";
           };
         };
       };
@@ -2449,6 +2475,7 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
     };
   }
 #+end_src
+
 ** File Management
 I'm running dired with a couple of small packages that improve on it
 #+begin_src nix :noweb yes :tangle emacs/file-management.nix
