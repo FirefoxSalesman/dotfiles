@@ -1,4 +1,4 @@
-{ inputs, trivialBuild, eglot, emacs-lsp-booster, jsonrpc } :
+{ inputs, trivialBuild, eglot, jsonrpc }:
 
 trivialBuild rec {
   pname = "eglot-booster";
@@ -7,7 +7,6 @@ trivialBuild rec {
 
   propagatedUserEnvPkgs = [
     eglot
-    emacs-lsp-booster
     jsonrpc
   ];
 

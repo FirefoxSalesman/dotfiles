@@ -1,12 +1,14 @@
-{ inputs, trivialBuild, eglot  } :
+{ inputs, trivialBuild, eglot, project, xref }:
 
 trivialBuild rec {
-  pname = "eglot-booster";
+  pname = "eglot-x";
   version = "current";
-  src = inputs.eglot-booster;
+  src = inputs.eglot-x;
 
   propagatedUserEnvPkgs = [
     eglot
+    project
+    xref
   ];
 
   buildInputs = propagatedUserEnvPkgs;

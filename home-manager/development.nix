@@ -1,19 +1,36 @@
 { inputs, pkgs, pkgs-stable, ... }:
 
 {
+  imports = [
+    ./lsp-support
+    ./language-support
+  ];
+
   programs.emacs.init = {
     ide = {
       symex = true;  
-      eglot.enable = true;
+      eglot = {
+        enable = true;
+        preset = {
+          enable = true;
+          hoverDoc = true;
+        };
+      };
       languages = {
-        java.enable = true;
-        gradle.enable = true;
-        nix.enable = true;
-        json.enable = true;
-        toml.enable = true;
         bash.enable = true;
-        zenscript.enable = true;
+        gradle.enable = true;
+        java.enable = true;
+        json.enable = true;
+        nix.enable = true;
+        toml.enable = true;
         xml.enable = true;
+        zenscript.enable = true;
+        emacs-lisp = {
+          enable = true;
+          hoverDoc = true;
+          flymake = true;
+        };
+        purescript.enable = true;
       };
     };
 
@@ -29,6 +46,9 @@
         ghook = ["('prog-mode-hook 'rainbow-delimiters-mode)"];
       };
       
+      # lsp-mode.gfhook = ["('lsp-mode-hook (lambda () (company-mode -1)))"];
+      # lsp-java.custom.lsp-java-content-provider-preferred = ''"fernflower"'';
+
       
 
       treesitter-context = {
@@ -98,12 +118,7 @@
       };
 
       eglot = {
-        enable = true;
         gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
-        custom = {
-          eglot-report-progress = "nil";
-          eglot-autoshutdown = "t";
-        };
         generalTwo.local-leader.eglot-mode-map = {
           "f" = "'eglot-format-buffer";
           "a" = "'eglot-code-actions";
@@ -123,13 +138,7 @@
         '';
       } ;
       
-      eldoc-box = {
-        enable = true;
-        ghook = [
-          "('(eglot-managed-mode-hook emacs-lisp-mode-hook) 'eldoc-box-hover-at-point-mode)"
-          "('org-mode-hook 'eldoc-box-hover-mode)"
-        ];
-      };
+      eldoc-box.ghook = ["('org-mode-hook 'eldoc-box-hover-mode)"];
       
       flymake = {
         enable = true;
@@ -142,11 +151,6 @@
         after = ["eglot"];
         config = ''(eglot-tempel-mode)'';
       };
-      
-      # breadcrumb = {
-      #   enable = true;
-      #   ghook = ["('(bibtex-mode-hook nxml-mode-hook nix-mode-hook racket-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook ess-r-mode-hook html-ts-mode-hook css-ts-mode-hook emacs-lisp-mode-hook) 'breadcrumb-local-mode)"];
-      # };
       
       # dape = {
       #   enable = true;

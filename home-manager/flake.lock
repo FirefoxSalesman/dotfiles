@@ -211,11 +211,11 @@
         "symex2": "symex2"
       },
       "locked": {
-        "lastModified": 1752198164,
-        "narHash": "sha256-hsSYqHG8Sh5PWzIPSARLQyU7FEzaEEg6aKp55yD9zS4=",
+        "lastModified": 1752612076,
+        "narHash": "sha256-1p1AYWwBqDLrYgd9Ypv0eHTSXK4mBPHQ7xUd1vuBh38=",
         "owner": "firefoxsalesman",
         "repo": "NixEmacs",
-        "rev": "a26ea2e7c2a4bd8d0165af01c00761fa92b6c001",
+        "rev": "3d1222d368c8d7425504192d5cd646fe6d5fcfd3",
         "type": "github"
       },
       "original": {

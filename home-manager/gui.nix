@@ -14,6 +14,8 @@
         eval $(dbus-launch --exit-with-session --sh-syntax)
     fi
     
+    xmodmap ~/.Xmodmap
+    
     picom &
     
     if command -v dbus-update-activation-environment >/dev/null 2>&1; then

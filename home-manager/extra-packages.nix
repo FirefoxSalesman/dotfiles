@@ -2,7 +2,7 @@
 
 {
   home.packages = with pkgs; [
-    (config.lib.nixGL.wrap gimp)
+    (config.lib.nixGL.wrap pkgs-stable.gimp)
     (config.lib.nixGL.wrap prismlauncher)
     (config.lib.nixGL.wrap blockbench)
     wget

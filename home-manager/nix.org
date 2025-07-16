@@ -159,7 +159,7 @@
     inherit self;
     inherit inputs;
     inherit system;
-    inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline symex2 treesitter-context gptel-quick eglot-x org-modern-indent org-novelist mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
+    inherit (inputs)  apple-fonts doom-utils eglot-x eglot-booster repeaters ezf dired-single launcher doom-nano-modeline symex2 treesitter-context gptel-quick org-modern-indent org-novelist mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
     inherit pkgs-stable;
   };
   modules = [
@@ -203,6 +203,14 @@
           doom-nano-modeline = (prev.emacsPackages.callPackage ./packages/emacs/doom-nano-modeline.nix {
             inherit inputs;
             inherit (prev.emacsPackages) trivialBuild doom-themes;
+          });
+          eglot-x = (prev.emacsPackages.callPackage ./packages/emacs/eglot-x.nix {
+            inherit inputs;
+            inherit (prev.emacsPackages) trivialBuild eglot project xref;
+          });
+          eglot-booster = (prev.emacsPackages.callPackage ./packages/emacs/eglot-booster.nix {
+            inherit inputs;
+            inherit (prev.emacsPackages) trivialBuild eglot jsonrpc;
           });
           treesitter-context = (prev.emacsPackages.callPackage ./packages/emacs/treesitter-context.nix {
             inherit inputs;
@@ -328,7 +336,7 @@
 #+end_src
 *** Eglot Booster
 #+begin_src nix :tangle packages/emacs/eglot-booster.nix
-  { inputs, trivialBuild, eglot, emacs-lsp-booster, jsonrpc } :
+  { inputs, trivialBuild, eglot, jsonrpc }:
 
   trivialBuild rec {
     pname = "eglot-booster";
@@ -337,7 +345,6 @@
 
     propagatedUserEnvPkgs = [
       eglot
-      emacs-lsp-booster
       jsonrpc
     ];
 
@@ -348,15 +355,17 @@
 
 *** Eglot X
 #+begin_src nix :tangle packages/emacs/eglot-x.nix
-  { inputs, trivialBuild, eglot  } :
+  { inputs, trivialBuild, eglot, project, xref }:
 
   trivialBuild rec {
-    pname = "eglot-booster";
+    pname = "eglot-x";
     version = "current";
-    src = inputs.eglot-booster;
+    src = inputs.eglot-x;
 
     propagatedUserEnvPkgs = [
       eglot
+      project
+      xref
     ];
 
     buildInputs = propagatedUserEnvPkgs;
@@ -1918,7 +1927,7 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
 
   {
     home.packages = with pkgs; [
-      (config.lib.nixGL.wrap gimp)
+      (config.lib.nixGL.wrap pkgs-stable.gimp)
       (config.lib.nixGL.wrap prismlauncher)
       (config.lib.nixGL.wrap blockbench)
       wget
@@ -1955,6 +1964,8 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
       eval $(dbus-launch --exit-with-session --sh-syntax)
   fi
 
+  xmodmap ~/.Xmodmap
+
   picom &
 
   if command -v dbus-update-activation-environment >/dev/null 2>&1; then
@@ -1982,28 +1993,48 @@ I think most of it was from the github page for lsp mode, but it's been a while,
   { inputs, pkgs, pkgs-stable, ... }:
 
   {
+    imports = [
+      ./lsp-support
+      ./language-support
+    ];
+
     programs.emacs.init = {
       ide = {
         symex = true;  
-        eglot.enable = true;
+        eglot = {
+          enable = true;
+          preset = {
+            enable = true;
+            hoverDoc = true;
+          };
+        };
         languages = {
-          java.enable = true;
-          gradle.enable = true;
-          nix.enable = true;
-          json.enable = true;
-          toml.enable = true;
           bash.enable = true;
-          zenscript.enable = true;
+          gradle.enable = true;
+          java.enable = true;
+          json.enable = true;
+          nix.enable = true;
+          toml.enable = true;
           xml.enable = true;
+          zenscript.enable = true;
+          emacs-lisp = {
+            enable = true;
+            hoverDoc = true;
+            flymake = true;
+          };
+          purescript.enable = true;
         };
       };
 
       usePackage = {
         <<Development Misc>>
         
+        # lsp-mode.gfhook = ["('lsp-mode-hook (lambda () (company-mode -1)))"];
+        # lsp-java.custom.lsp-java-content-provider-preferred = ''"fernflower"'';
+
         <<Development Direnv>>
 
-        <<Development Treesitter Context>>
+        <<Development Treesitter>>
         
         <<Development Project>>
 
@@ -2045,8 +2076,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 #+end_src
 
 *** Treesitter
-**** Context
-#+NAME: Development Treesitter Context
+#+NAME: Development Treesitter
 #+begin_src nix
   treesitter-context = {
     enable = true;
@@ -2160,12 +2190,7 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 #+NAME: Development Eglot
 #+begin_src nix :noweb yes
   eglot = {
-    enable = true;
     gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
-    custom = {
-      eglot-report-progress = "nil";
-      eglot-autoshutdown = "t";
-    };
     generalTwo.local-leader.eglot-mode-map = {
       "f" = "'eglot-format-buffer";
       "a" = "'eglot-code-actions";
@@ -2176,13 +2201,7 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
     '';
   } ;
 
-  eldoc-box = {
-    enable = true;
-    ghook = [
-      "('(eglot-managed-mode-hook emacs-lisp-mode-hook) 'eldoc-box-hover-at-point-mode)"
-      "('org-mode-hook 'eldoc-box-hover-mode)"
-    ];
-  };
+  eldoc-box.ghook = ["('org-mode-hook 'eldoc-box-hover-mode)"];
 
   flymake = {
     enable = true;
@@ -2195,11 +2214,6 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
     after = ["eglot"];
     config = ''(eglot-tempel-mode)'';
   };
-
-  # breadcrumb = {
-  #   enable = true;
-  #   ghook = ["('(bibtex-mode-hook nxml-mode-hook nix-mode-hook racket-mode-hook markdown-mode-hook LaTeX-mode-hook bash-ts-mode-hook ess-r-mode-hook html-ts-mode-hook css-ts-mode-hook emacs-lisp-mode-hook) 'breadcrumb-local-mode)"];
-  # };
 #+end_src
 
 #+NAME: Development Eglot Config
@@ -2280,6 +2294,161 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
   };
 #+end_src
 
+*** TODO Lsp Client Support
++ [X] eglot
++ [ ] lsp-mode
++ [ ] lspce
++ [ ] lsp-bridge
+
+**** Default.nix
+#+begin_src nix :tangle lsp-support/default.nix
+  { ... }:
+
+  {
+    imports = [
+      ./eglot.nix
+      ./lsp-mode.nix
+    ];
+  }
+#+end_src
+
+**** Eglot
+#+begin_src nix :tangle lsp-support/eglot.nix
+  { pkgs, config, lib, ... }:
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.eglot.preset = {
+      enable = lib.mkEnableOption "Enable eglot's preset configuration";
+      hoverDoc = lib.mkEnableOption "Use eldoc-box to get documentation popups";
+      breadcrumb = lib.mkEnableOption "Enables the breadcrumb header";
+    };
+
+    config = lib.mkIf ide.eglot.preset.enable {
+      programs.emacs.init.usePackage = {
+        eglot = {
+          enable = true;
+          custom = {
+            eglot-report-progress = "nil";
+            eglot-autoshutdown = "t";
+            #borrowed from doom
+            eglot-sync-connect = "1";
+          };
+        };
+
+        eglot-booster = {
+          enable = true;
+          extraPackages = [pkgs.emacs-lsp-booster];
+          after = ["eglot"];
+          config = "(eglot-booster-mode)";
+        };
+
+        eglot-x = {
+          enable = true;
+          after = ["eglot"];
+          config = "(eglot-x-setup)";
+        };
+
+        eldoc-box = {
+          enable = ide.eglot.preset.hoverDoc;
+          hook = ["(eglot-managed-mode . eldoc-box-hover-at-point-mode)"];
+        };
+
+        breadcrumb = {
+          enable = ide.eglot.preset.breadcrumb;
+          hook = ["(eglot-managed-mode . breadcrumb-local-mode)"];
+        };
+      };
+    };
+  }
+#+end_src
+
+**** lsp mode
+#+begin_src nix :tangle lsp-support/lsp-mode.nix
+  { pkgs, config, lib, ... }:
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.lsp.preset = {
+      enable = lib.mkEnableOption "Enable lsp-mode's preset configuration (borrowed from doom)";
+      breadcrumb = lib.mkEnableOption "Enables the breadcrumb header";
+      ui = lib.mkEnableOption "Enables lsp-ui";
+    };
+
+    config = lib.mkIf ide.lsp.preset.enable {
+      programs.emacs.init.usePackage = {
+        # We elect not to use lsp-booster since we are meant to be on emacs 30, & that causes funky things to happen to lsp-mode
+        lsp-mode = {
+          enable = true;
+          custom = {
+            lsp-enable-folding = lib.mkDefault "nil";
+            lsp-enable-text-document-color = lib.mkDefault "nil";
+            lsp-enable-on-type-formatting = lib.mkDefault "nil";
+            lsp-headerline-breadcrumb-enable = lib.mkDefault (if ide.lsp.preset.breadcrumb then "t" else "nil");
+          };
+        };
+
+        lsp-ui = lib.mkIf ide.lsp.preset.ui {
+          enable = true;
+          hook = ["(lsp-mode . lsp-ui-mode)"];
+          custom = {
+            lsp-ui-doc-show-with-mouse = lib.mkDefault "nil";
+            lsp-ui-doc-position = lib.mkDefault "'at-point";
+            lsp-ui-doc-show-with-cursor = lib.mkDefault "t";
+            lsp-ui-sideline-ignore-duplicate = lib.mkDefault "t";
+            lsp-ui-sideline-show-hover = lib.mkDefault "nil";
+            lsp-ui-sideline-actions-icon = lib.mkDefault "lsp-ui-sideline-actions-icon-default";
+          };
+        };
+      };
+    };
+  }
+#+end_src
+
+*** TODO Language Support
+**** Default.nix
+#+begin_src nix :tangle language-support/default.nix
+  { pkgs, config, lib, ... }:
+
+  {
+    imports = [
+      ./purescript.nix
+    ];
+  }
+#+end_src
+
+**** Purescript
+#+begin_src nix :tangle language-support/purescript.nix
+  { pkgs, config, lib, ... }:
+
+  let
+    ide = config.programs.emacs.init.ide;
+  in
+  {
+    options.programs.emacs.init.ide.languages.purescript.enable = lib.mkEnableOption "Enables purescript support. Formatting is poorly tested at best";
+
+    config = lib.mkIf ide.languages.purescript.enable {
+      programs.emacs.init.usePackage.purescript-mode = {
+        enable = true;
+        # borrowed from doom
+        hook = ["(purescript-mode . purescript-indentation-mode)"];
+        extraPackages = if ide.eglot.enable || ide.lsp.enable then [pkgs.nodePackages.purescript-language-server] else [];
+        eglot = ide.eglot.enable;
+        lsp = ide.lsp.enable;
+        symex = ide.symex;
+        config = ''
+          (with-eval-after-load 'eglot
+            (add-to-list 'eglot-server-programs '((purescript-mode) . ("purescript-language-server" "--stdio"
+                                                                       :initializationOptions (:purescript (:formatter "purs-tidy"))))))
+        '';
+      };
+    };
+  }
+#+end_src
 ** File Management
 I'm running dired with a couple of small packages that improve on it
 #+begin_src nix :noweb yes :tangle emacs/file-management.nix
@@ -6215,93 +6384,104 @@ Canary is my layout of choice.
   { ... }:
 
   {
-    home.file.".config/kmonad/kmonad.kbd".text = ''
-    ;; ** For Linux **
-    (defcfg
-    input  (device-file "/dev/input/by-path/platform-i8042-serio-0-event-kbd") ;; Change this line for your device
-    output (uinput-sink "KMonad output")
+    home.file = {
+      ".config/kmonad/kmonad.kbd".text = ''
+        ;; ** For Linux **
+        (defcfg
+        input  (device-file "/dev/input/by-path/platform-i8042-serio-0-event-kbd") ;; Change this line for your device
+        output (uinput-sink "KMonad output")
 
-    fallthrough true)
+        fallthrough true)
 
-    (defsrc
-      esc     f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12            prnt    slck    pause
-      grv     1    2    3    4    5    6    7    8    9    0    -    =    bspc      ins     home    pgup
-      tab     q    w    e    r    t    y    u    i    o    p    [    ]    \         del     end     pgdn
-      caps    a    s    d    f    g    h    j    k    l    ;    '    ret
-      lsft    z    x    c    v    b    n    m    ,    .    /    rsft                         up
-      lctl    lmet lalt           spc            ralt    rctl                       left    down    right)
+        (defsrc
+          esc     f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12            prnt    slck    pause
+          grv     1    2    3    4    5    6    7    8    9    0    -    =    bspc      ins     home    pgup
+          tab     q    w    e    r    t    y    u    i    o    p    [    ]    \         del     end     pgdn
+          caps    a    s    d    f    g    h    j    k    l    ;    '    ret
+          lsft    z    x    c    v    b    n    m    ,    .    /    rsft                         up
+          lctl    lmet lalt           spc            ralt    rctl                       left    down    right)
 
-    (defalias
-      def  (tap-macro nlck (layer-switch canary)) ;; Bind 'def' to canary Layer
-      caps  (tap-macro nlck (layer-switch canary-shift)) ;; Bind 'def' to canary Layer
-      cesc (tap-hold 200 esc (layer-toggle extend))
-      sesc (tap-hold 200 S-esc (layer-toggle extend))
-      num (sticky-key 500 (layer-toggle num))
-      qwerty (tap-macro nlck (layer-switch qwerty)) ;; Bind 'def' to canary Layer
-      smet (sticky-key 500 lmet)
-      salt (sticky-key 500 lalt)
-      sshft (sticky-key 500 lshft)
-      spc (tap-hold 200 spc caps)
-      SPC (tap-hold 200 S-spc caps)
-      c (tap-hold 200 c lmet)
-      r (tap-hold 200 r lalt)
-      s (tap-hold 200 s lctl)
-      t (tap-hold 200 t (layer-toggle canary-shift))
-      a (tap-hold 200 a lmet)
-      i (tap-hold 200 i lalt)
-      e (tap-hold 200 e lctl)
-      n (tap-hold 200 n (layer-toggle canary-shift))
-      C (tap-hold 200 C lmet)
-      R (tap-hold 200 R lalt)
-      S (tap-hold 200 S lctl)
-      A (tap-hold 200 A lmet)
-      I (tap-hold 200 I lalt)
-      E (tap-hold 200 E lctl)
-      wlft C-left
-      wrht C-right
-      bhst A-left
-      fhst A-right)
-    (deflayer canary
-      esc     f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12            prnt    slck    pause
-      $       &    [    {    }    \(   =    *    \)   +    ]    !    `    bspc      ins     home    pgup
-      tab     w    l    y    p    k    z    x    o    u    ;    -    @    \         del     end     pgdn
-      @cesc   @c   @r   @s   @t   b    f    @n   @e   @i   @a   '    ret
-      shft   j    v    d    g    q    m    h    /    ,    .    @sshft                      up
-      caps   @smet @num           @spc             caps     rctl                    left    down    right)
+        (defalias
+          def  (tap-macro nlck (layer-switch canary)) ;; Bind 'def' to canary Layer
+          caps  (tap-macro nlck (layer-switch canary-shift)) ;; Bind 'def' to canary Layer
+          cesc (tap-hold 200 esc (layer-toggle extend))
+          sesc (tap-hold 200 S-esc (layer-toggle extend))
+          num (sticky-key 500 (layer-toggle num))
+          qwerty (tap-macro nlck (layer-switch qwerty)) ;; Bind 'def' to canary Layer
+          smet (sticky-key 500 lmet)
+          salt (sticky-key 500 lalt)
+          sshft (sticky-key 500 lshft)
+          spc (tap-hold 200 spc caps)
+          SPC (tap-hold 200 S-spc caps)
+          c (tap-hold 200 c lmet)
+          r (tap-hold 200 r lalt)
+          s (tap-hold 200 s lctl)
+          t (tap-hold 200 t (layer-toggle canary-shift))
+          a (tap-hold 200 a lmet)
+          i (tap-hold 200 i lalt)
+          e (tap-hold 200 e lctl)
+          n (tap-hold 200 n (layer-toggle canary-shift))
+          C (tap-hold 200 C lmet)
+          R (tap-hold 200 R lalt)
+          S (tap-hold 200 S lctl)
+          A (tap-hold 200 A lmet)
+          I (tap-hold 200 I lalt)
+          E (tap-hold 200 E lctl)
+          wlft C-left
+          wrht C-right
+          bhst A-left
+          fhst A-right)
+        (deflayer canary
+          esc     f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12            prnt    slck    pause
+          $       &    [    {    }    \(   =    *    \)   +    ]    !    `    bspc      ins     home    pgup
+          tab     w    l    y    p    k    z    x    o    u    ;    -    @    \         del     end     pgdn
+          @cesc   @c   @r   @s   @t   b    f    @n   @e   @i   @a   '    ret
+          shft   j    v    d    g    q    m    h    /    ,    .    @sshft                      up
+          caps   @smet @num           @spc             caps     rctl                    left    down    right)
 
-    (deflayer canary-shift
-      S-esc   S-f1 S-f2 S-f3 S-f4 S-f5 S-f6 S-f7 S-f8 S-f9 S-f10 S-f11 S-f12        S-prnt  S-slck  S-pause
-      ~       %    7    5    3    1    9    0    2    4    6    8    #  S-bspc      S-ins   S-home  S-pgup
-      S-tab   W    L    Y    P    K    Z    X    O    U    :    \_   ^    S-\        S-del   S-end   S-pgdn
-      @sesc   @C   @R   @S   T    B    F    N   @E   @I   @A    "    S-ret
-      @sshft   J    V    D    G    Q    M    H    ?    <    >    @sshft                     S-up
-      caps   @smet @def           @SPC             caps    rctl                   S-left S-down S-right)
+        (deflayer canary-shift
+          S-esc   S-f1 S-f2 S-f3 S-f4 S-f5 S-f6 S-f7 S-f8 S-f9 S-f10 S-f11 S-f12        S-prnt  S-slck  S-pause
+          ~       %    7    5    3    1    9    0    2    4    6    8    #  S-bspc      S-ins   S-home  S-pgup
+          S-tab   W    L    Y    P    K    Z    X    O    U    :    \_   ^    S-\        S-del   S-end   S-pgdn
+          @sesc   @C   @R   @S   T    B    F    N   @E   @I   @A    "    S-ret
+          @sshft   J    V    D    G    Q    M    H    ?    <    >    @sshft                     S-up
+          caps   @smet @def           @SPC             caps    rctl                   S-left S-down S-right)
 
-    (deflayer qwerty
-      esc     f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12            prnt    slck    pause
-      grv     1    2    3    4    5    6    7    8    9    0    -    =    bspc      ins     home    pgup
-      tab     q    w    e    r    t    y    u    i    o    p    [    ]    \         del     end     pgdn
-      caps    a    s    d    f    g    h    j    k    l    ;    '    ret
-      lsft    z    x    c    v    b    n    m    ,    .    /    rsft                         up
-      lctl    lmet lalt           spc            @def     rctl                     left    down    right)
+        (deflayer qwerty
+          esc     f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12            prnt    slck    pause
+          grv     1    2    3    4    5    6    7    8    9    0    -    =    bspc      ins     home    pgup
+          tab     q    w    e    r    t    y    u    i    o    p    [    ]    \         del     end     pgdn
+          caps    a    s    d    f    g    h    j    k    l    ;    '    ret
+          lsft    z    x    c    v    b    n    m    ,    .    /    rsft                         up
+          lctl    lmet lalt           spc            @def     rctl                     left    down    right)
 
-    (deflayer extend
-      _       _    _    _    _    _    _    _    _    _    _    _    _              _    _    _
-      _     f11    f7   f5   f3   f1   f9  f10   f2   f4   f6   f8  f12   _         _    _    _
-      _   @bhst @fhst  C-z  C-x   C-c  C-z @wlft up  @wrht  _    _    _    _         _    _    _
-      _   @smet @salt lctl @sshft del bspc left down right _    _    _
-      _         _    _  @caps    _    _    _    h    _    _    _    _                      _
-      _       _    _               ret              @qwerty        _                     _    _    _)
-
-    (deflayer num
-      _       _    _    _    _    _    _    _    _    _    _    _    _              _    _    _
-      _     f11    f7   f5   f3   f1   f9  f10   f2   f4   f6   f8  f12   _         _    _    _
-      _       \_    =    +    -    [    ]    7    8    9   &    ^    _    _         _    _    _
-      _   @smet @salt lctl @sshft  {    }    4    5    6   0    *    _
-      _        @    !    $     \(  ~  \)    1    2    3    #    _                      _
-      _       _    _               ret              _        _                     _    _    _)
+        (deflayer extend
+          _       _    _    _    _    _    _    _    _    _    _    _    _              _    _    _
+          _     f11    f7   f5   f3   f1   f9  f10   f2   f4   f6   f8  f12   _         _    _    _
+          _   @bhst @fhst  C-z  C-x   C-c  C-z @wlft up  @wrht  _    _    _    _         _    _    _
+          _   @smet @salt lctl @sshft del bspc left down right _    _    _
+          _         _    _  @caps    _    _    _    h    _    _    _    _                      _
+          _       _    _               ret              @qwerty        _                     _    _    _)
+      
+        (deflayer num
+          _       _    _    _    _    _    _    _    _    _    _    _    _              _    _    _
+          _     f11    f7   f5   f3   f1   f9  f10   f2   f4   f6   f8  f12   _         _    _    _
+          _       \_    =    +    -    [    ]    7    8    9   &    ^    _    _         _    _    _
+          _   @smet @salt lctl @sshft  {    }    4    5    6   0    *    _
+          _        @    !    $     \(  ~  \)    1    2    3    #    _                      _
+          _       _    _               ret              _        _                     _    _    _)
+      '';
         
-    '';
+      ".Xmodmap".text = ''
+        clear lock
+        clear mod3
+        clear mod4
+        keycode 66 = Hyper_R
+        keycode 105 = Caps_Lock
+        add mod3 = Hyper_L Hyper_R
+        add mod4 = Super_L Super_R
+      '';
+    };
   }
 #+end_src
 
