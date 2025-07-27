@@ -1,7 +1,5 @@
-{ pkgs, config, lib, ... }:
+{ ... }:
 
 {
-  imports = [
-    ./purescript.nix
-  ];
+  imports = [ ./org.nix ];
 }

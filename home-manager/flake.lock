@@ -160,11 +160,11 @@
     "eglot-booster": {
       "flake": false,
       "locked": {
-        "lastModified": 1745848117,
-        "narHash": "sha256-teAKWDDL7IrCBiZUVIVlB3W22G9H6IrWiRV/P62dFy0=",
+        "lastModified": 1752690112,
+        "narHash": "sha256-xUBQrQpw+JZxcqT1fy/8C2tjKwa7sLFHXamBm45Fa4Y=",
         "owner": "jdtsmith",
         "repo": "eglot-booster",
-        "rev": "1260d2f7dd18619b42359aa3e1ba6871aa52fd26",
+        "rev": "cab7803c4f0adc7fff9da6680f90110674bb7a22",
         "type": "github"
       },
       "original": {
@@ -208,14 +208,16 @@
     "emacs-init": {
       "inputs": {
         "doom-utils": "doom-utils",
+        "eglot-booster": "eglot-booster",
+        "eglot-x": "eglot-x",
         "symex2": "symex2"
       },
       "locked": {
-        "lastModified": 1752683829,
-        "narHash": "sha256-3iCzyeAIG9TiVzNYhCBdg5n5om1Krly5fUU4yBi/ZYo=",
+        "lastModified": 1752781887,
+        "narHash": "sha256-iC2In8fIiLfzuaiNgovdmZ2jrJ2zpa2eLLX1Iuc5zBo=",
         "owner": "firefoxsalesman",
         "repo": "NixEmacs",
-        "rev": "11a67a53f2f22d6e1706893af35159ef57d22024",
+        "rev": "552847d33672f969390e2c9bd8d3d7cbdfd750ab",
         "type": "github"
       },
       "original": {
@@ -662,8 +664,6 @@
         "apple-fonts": "apple-fonts",
         "dired-single": "dired-single",
         "doom-nano-modeline": "doom-nano-modeline",
-        "eglot-booster": "eglot-booster",
-        "eglot-x": "eglot-x",
         "emacs-embark": "emacs-embark",
         "emacs-init": "emacs-init",
         "emacs-overlay": "emacs-overlay",

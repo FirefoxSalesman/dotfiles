@@ -516,23 +516,12 @@
     };
     
     evil-org = {
-      enable = true;
-      defer = true;
-      ghook = ["('org-mode-hook 'evil-org-mode)"];
       custom.evil-org-movement-bindings = ''
         '((up . "o")
           (down . "e")
           (left . "n")
           (right . "i"))
       '';
-      generalTwo."'normal".org-mode-map = {
-        "]h" = '''(org-forward-heading-same-level :which-key "next heading")'';
-        "[h" = '''(org-backward-heading-same-level :which-key "prev heading")'';
-        "]c" = '''(org-babel-next-src-block :which-key "next src block")'';
-        "[c" = '''(org-babel-previous-src-block :which-key "prev src block")'';
-        "]l" = '''(org-next-link :which-key "next link")'';
-        "[l" = '''(org-previous-link :which-key "prev link")'';
-      };
       config = ''
         (evil-define-key 'operator 'evil-org-mode
           "i" 'evil-forward-char)
@@ -548,37 +537,10 @@
         (evil-define-key 'visual 'evil-org-mode
           "i" 'evil-forward-char
           "s" evil-inner-text-objects-map)
-        (evil-collection-unimpaired-defvar-keymap org-forward-heading-same-level-repeat-map
-          "h" #'org-forward-heading-same-level
-          "H" #'org-backward-heading-same-level)
-        (evil-collection-unimpaired-defvar-keymap org-backward-heading-same-level-repeat-map
-          "h" #'org-backward-heading-same-level
-          "H" #'org-forward-heading-same-level)
-        (evil-collection-unimpaired-defvar-keymap org-babel-next-src-block-repeat-map
-          "c" #'org-babel-next-src-block
-          "C" #'org-babel-previous-src-block)
-        (evil-collection-unimpaired-defvar-keymap org-babel-previous-src-block-repeat-map
-          "c" #'org-babel-previous-src-block
-          "C" #'org-babel-next-src-block)
-        (evil-collection-unimpaired-defvar-keymap org-next-link-repeat-map
-          "l" #'org-next-link
-          "L" #'org-previous-link)
-        (evil-collection-unimpaired-defvar-keymap org-previous-link-repeat-map
-          "l" #'org-previous-link
-          "L" #'org-next-link)
-        (dolist (cmd '(org-forward-heading-same-level
-                       org-backward-heading-same-level
-                       org-babel-next-src-block
-                       org-babel-previous-src-block
-                       org-next-link
-                       org-previous-link))
-          (put cmd 'repeat-map (intern (format "%s-repeat-map" cmd))))
       '';
     };
     
     evil-org-agenda = {
-      enable = true;
-      config = ''(evil-org-agenda-set-keys)'';
       generalTwo."'motion".evil-org-agenda-mode-map = {
         "e" = "'org-agenda-next-line";
         "o" = "'org-agenda-previous-line";
@@ -598,14 +560,12 @@
       generalOne."efs/leader-keys"."oa" = '''(org-agenda :which-key "agenda")'';
     };
     
-    evil-markdown = {
-      custom.evil-markdown-movement-bindings = ''
+    evil-markdown.custom.evil-markdown-movement-bindings = ''
         '((up . "o")
           (down . "e")
           (left . "n")
           (right . "i"))
-      '';
-    };
+    '';
     
     ewal-evil-cursors = {
       enable = true;

@@ -130,8 +130,7 @@
             (group
              (group-or "Browsers"
                        (name-match "Qutebrowser" (rx bos "Qutebrowser"))
-                       (mode-match "eww-mode" (rx bos "eww-"))
-                       (name-match "Tor Browser" (rx bos "Tor Browser"))))
+                       (mode-match "eww-mode" (rx bos "eww-"))))
             (group
              (group-or "Chat"
                        (name-match "Thunderbird" (rx bos "Thunderbird"))
@@ -393,8 +392,7 @@
           
                                           ;; Shell bindings
                                           ([?\s-s] . (lambda () (interactive) (shell-command "slock")))
-                                          ([?\s-y] . (lambda () (interactive) (start-process-shell-command
-                                                                               "maim" nil  "${pkgs-stable.maim}/bin/maim ~/pic/screenshot.png"))))'';
+                                          ([?\s-y] . (lambda () (interactive) (start-process-shell-command "maim" nil  "${pkgs-stable.maim}/bin/maim ~/pic/screenshot.png"))))'';
           
         };
         afterCall = ["on-init-ui-hook"];

@@ -1,10 +1,7 @@
-{ inputs, pkgs, pkgs-stable, ... }:
+{ inputs, pkgs, pkgs-stable, config, ... }:
 
 {
-  imports = [
-    ./lsp-support
-    ./language-support
-  ];
+  imports = [./language-support];
 
   programs.emacs.init = {
     ide = {
@@ -12,12 +9,8 @@
       hoverDoc = true;
       eglot = {
         enable = true;
-        preset.enable = true;
+        preset = true;
       };
-      # lsp-bridge = {
-      #   enable = true; 
-      #   preset = true;
-      # };
       languages = {
         bash.enable = true;
         gradle.enable = true;
@@ -29,8 +22,15 @@
         zenscript.enable = true;
         emacs-lisp = {
           enable = true;
-          hoverDoc = true;
           flymake = true;
+        };
+        org = {
+          enable = true;
+          aesthetics = {
+            enable = true;
+            headerFont = config.stylix.fonts.sansSerif.name;
+          };
+          evil = true;
         };
       };
     };
@@ -47,8 +47,8 @@
         ghook = ["('prog-mode-hook 'rainbow-delimiters-mode)"];
       };
       
-      lsp-mode.gfhook = ["('lsp-mode-hook (lambda () (company-mode -1)))"];
-      lsp-java.custom.lsp-java-content-provider-preferred = ''"fernflower"'';
+      # lsp-mode.gfhook = ["('lsp-mode-hook (lambda () (company-mode -1)))"];
+      # lsp-java.custom.lsp-java-content-provider-preferred = ''"fernflower"'';
 
       
 
@@ -138,8 +138,6 @@
           			      (general-def 'normal eglot-mode-map "K" 'evil-substitute)))
         '';
       } ;
-      
-      eldoc-box.ghook = ["('org-mode-hook 'eldoc-box-hover-mode)"];
       
       flymake = {
         enable = true;

@@ -3,7 +3,6 @@
 {
   home.packages = with pkgs; [
     pkgs-stable.python39Packages.adblock
-    (config.lib.nixGL.wrap tor-browser)
   ];
 
   programs.emacs.init.usePackage = {

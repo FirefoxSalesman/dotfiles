@@ -21,18 +21,10 @@
     };
     usePackage = {
       org = {
-        enable = true;
-        symex = true;
-        mode = [''("\\.org\\'" . org-mode)''];
-        gfhook = ["('org-mode-hook '(efs/org-mode-setup my/org-capf))"];
+        gfhook = ["('org-mode-hook '(ispell-minor-mode my/org-capf))"];
         custom = {
-          org-confirm-babel-evaluate = "nil";
-          org-src-fontify-natively = "t";
-          org-src-tab-acts-natively = "t";
-          org-ellipsis = ''" ▾"'';
-          org-log-done = "nil";
-          org-log-into-drawer = "t";
-          org-hide-emphasis-markers = "t";
+          org-export-with-toc = "nil";
+          org-export-with-section-numbers = "nil";
           org-agenda-files = '''("~/doc/tasks.org")'';
           org-capture-templates = '''(("t" "Task" entry
                                         (file "~/doc/tasks.org")
@@ -57,28 +49,6 @@
         };
       
         config = ''
-          (org-babel-do-load-languages
-           'org-babel-load-languages
-           '((emacs-lisp . t )
-             (python . t)
-             (R . t)))
-          (push '("conf-unix" . conf-unix) org-src-lang-modes)
-          
-          ;; This is needed as of Org 9.2
-          (require 'org-tempo)
-          
-          (dolist (mode (list '("sh" . "src shell")
-          		    '("sg" . "src sage")
-          		    '("el" . "src emacs-lisp")
-          		    '("cc" . "src C")
-          		    '("cs" . "src css")
-          		    '("hl" . "src html")
-          		    '("js" . "src javascript")
-          		    '("nx" . "src nix")
-          		    '("jv" . "src java")
-          		    '("py" . "src python")))
-            (add-to-list 'org-structure-template-alist mode))
-          
           (defun my/org-capf ()
             (setq-local completion-at-point-functions
                         (list (cape-capf-super
@@ -87,79 +57,9 @@
           		    #'pcomplete-completions-at-point
           		    #'cape-dabbrev
           		    #'cape-dict)))
-          
-          (add-to-list 'evil-fold-list
-          	     `((org-mode)
-          	       :open org-cycle
-          	       :open-all nil
-          	       :close org-cycle
-          	       :close-all nil
-          	       :toggle org-cycle
-          	       :delete nil
-          	       :open-rec nil))
         '';
-        init = ''
-          ;; (add-to-list 'org-emphasis-alist '("‾" (:overline t)))
-          
-          (defun efs/org-font-setup ()
-            ;; Replace list hyphen with dot
-            (font-lock-add-keywords 'org-mode
-                                    '(("^*\\([-]\\) "
-                                       (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
-          
-            ;;Set faces for heading levels
-            (dolist (face '((org-document-title . 1.4)
-                            (org-level-1 . 1.4)
-                            (org-level-2 . 1.3)
-                            (org-level-3 . 1.2)
-                            (org-level-4 . 1.1)
-                            (org-level-5 . 1.05)
-                            (org-level-6 . 1.05)
-                            (org-level-7 . 1.05)
-                            (org-level-8 . 1.05)))
-              (set-face-attribute (car face) nil :font "SF Pro" :weight 'regular :height (cdr face)))
-          
-            ;; Ensure that anything that should be fixed-pitch in Org files appears that way
-            (dolist (face (list 'org-block 'org-table 'org-formula 'org-checkbox 'line-number 'line-number-current-line))
-              (set-face-attribute face nil :inherit 'fixed-pitch))
-            (dolist (face (list 'org-code 'org-table 'org-verbatim))
-              (set-face-attribute face nil :inherit '(shadow fixed-pitch)))
-            (dolist (face (list 'org-special-keyword 'org-meta-line))
-              (set-face-attribute face nil :inherit '(font-lock-comment-face fixed-pitch))))
-          
-          (defun efs/org-mode-setup ()
-            (org-indent-mode)
-            (ispell-minor-mode)
-            (org-toggle-pretty-entities)
-            (variable-pitch-mode 1)
-            (visual-line-mode 1)
-            (efs/org-font-setup))
-          
-        '';
-        deferIncrementally = ["calendar" "find-func" "format-spec" "org-macs" "org-compat" "org-faces" "org-entities" "org-list" "org-pcomplete" "org-src" "org-footnote" "org-macro" "ob" "org" "org-agenda" "org-capture" "evil-org-agenda"];
       };
 
-      org-contrib = {
-        enable = true;
-        config = ''(ox-extras-activate '(ignore-headlines))'';
-        deferIncrementally = ["ox-extra"];
-      };
-      
-      org-modern = {
-        enable = true;
-        ghook = ["('org-mode-hook 'global-org-modern-mode)"];
-        custom = {
-          org-modern-star = "'replace";
-          org-modern-hide-stars = "'leading";
-        };
-      };
-      
-      org-modern-indent = {
-        enable = true;
-        afterCall = ["org-mode-hook"];
-        config = ''(general-add-hook 'org-mode-hook 'org-modern-indent-mode 90)'';
-      };
-      
       org-auto-tangle = {
         enable = true;
         ghook = ["('org-mode-hook 'org-auto-tangle-mode)"];
@@ -171,10 +71,6 @@
          ghook = ["('after-save-hook (lambda () (when (equal major-mode 'org-mode) (org-auto-export-pandoc))))"];
        };
       
-      org-appear = {
-        enable = true;
-        ghook = ["('org-mode-hook 'org-appear-mode)"];
-      };
       
       denote = {
         enable = true;

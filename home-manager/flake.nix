@@ -68,16 +68,6 @@
       flake = false;
     };
     
-    eglot-booster = {
-      url = "github:jdtsmith/eglot-booster";
-      flake = false;
-    };
-    
-    eglot-x = {
-      url = "github:nemethf/eglot-x";
-      flake = false;
-    };
-    
     org-modern-indent = {
       url = "github:alphapapa/org-modern-indent";
       flake = false;
@@ -131,7 +121,7 @@
             inherit self;
             inherit inputs;
             inherit system;
-            inherit (inputs)  apple-fonts doom-utils eglot-x eglot-booster repeaters ezf dired-single launcher doom-nano-modeline symex2 treesitter-context gptel-quick org-modern-indent org-novelist mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
+            inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline symex2 treesitter-context gptel-quick org-modern-indent org-novelist mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
             inherit pkgs-stable;
           };
           modules = [

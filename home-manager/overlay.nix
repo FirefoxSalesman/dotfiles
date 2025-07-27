@@ -30,14 +30,6 @@ final: prev: pkgs: inputs: {
           inherit inputs;
           inherit (prev.emacsPackages) trivialBuild doom-themes;
         });
-        eglot-x = (prev.emacsPackages.callPackage ./packages/emacs/eglot-x.nix {
-          inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild eglot project xref;
-        });
-        eglot-booster = (prev.emacsPackages.callPackage ./packages/emacs/eglot-booster.nix {
-          inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild eglot jsonrpc;
-        });
         treesitter-context = (prev.emacsPackages.callPackage ./packages/emacs/treesitter-context.nix {
           inherit inputs;
           inherit (prev.emacsPackages) trivialBuild posframe;

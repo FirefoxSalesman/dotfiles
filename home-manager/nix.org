@@ -94,16 +94,6 @@
     flake = false;
   };
 
-  eglot-booster = {
-    url = "github:jdtsmith/eglot-booster";
-    flake = false;
-  };
-
-  eglot-x = {
-    url = "github:nemethf/eglot-x";
-    flake = false;
-  };
-
   org-modern-indent = {
     url = "github:alphapapa/org-modern-indent";
     flake = false;
@@ -159,7 +149,7 @@
     inherit self;
     inherit inputs;
     inherit system;
-    inherit (inputs)  apple-fonts doom-utils eglot-x eglot-booster repeaters ezf dired-single launcher doom-nano-modeline symex2 treesitter-context gptel-quick org-modern-indent org-novelist mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
+    inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline symex2 treesitter-context gptel-quick org-modern-indent org-novelist mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
     inherit pkgs-stable;
   };
   modules = [
@@ -203,14 +193,6 @@
           doom-nano-modeline = (prev.emacsPackages.callPackage ./packages/emacs/doom-nano-modeline.nix {
             inherit inputs;
             inherit (prev.emacsPackages) trivialBuild doom-themes;
-          });
-          eglot-x = (prev.emacsPackages.callPackage ./packages/emacs/eglot-x.nix {
-            inherit inputs;
-            inherit (prev.emacsPackages) trivialBuild eglot project xref;
-          });
-          eglot-booster = (prev.emacsPackages.callPackage ./packages/emacs/eglot-booster.nix {
-            inherit inputs;
-            inherit (prev.emacsPackages) trivialBuild eglot jsonrpc;
           });
           treesitter-context = (prev.emacsPackages.callPackage ./packages/emacs/treesitter-context.nix {
             inherit inputs;
@@ -334,44 +316,6 @@
     src = inputs.dired-single;
   }
 #+end_src
-*** Eglot Booster
-#+begin_src nix :tangle packages/emacs/eglot-booster.nix
-  { inputs, trivialBuild, eglot, jsonrpc }:
-
-  trivialBuild rec {
-    pname = "eglot-booster";
-    version = "current";
-    src = inputs.eglot-booster;
-
-    propagatedUserEnvPkgs = [
-      eglot
-      jsonrpc
-    ];
-
-    buildInputs = propagatedUserEnvPkgs;
-  }
-
-#+end_src
-
-*** Eglot X
-#+begin_src nix :tangle packages/emacs/eglot-x.nix
-  { inputs, trivialBuild, eglot, project, xref }:
-
-  trivialBuild rec {
-    pname = "eglot-x";
-    version = "current";
-    src = inputs.eglot-x;
-
-    propagatedUserEnvPkgs = [
-      eglot
-      project
-      xref
-    ];
-
-    buildInputs = propagatedUserEnvPkgs;
-  }
-#+end_src
-
 *** Repeaters
 #+begin_src nix :tangle packages/emacs/repeaters.nix
   { trivialBuild, inputs } :
@@ -1989,14 +1933,12 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
 ** Development
 This was more directly stolen than the other parts
 I think most of it was from the github page for lsp mode, but it's been a while, & I don't remember much.
+https://github.com/emacs-lsp/lsp-java/blob/9230a0007c79a661028c142f35c7b8d1f9f55453/lsp-java.el
 #+begin_src nix :noweb yes :tangle development.nix
-  { inputs, pkgs, pkgs-stable, ... }:
+  { inputs, pkgs, pkgs-stable, config, ... }:
 
   {
-    imports = [
-      ./lsp-support
-      ./language-support
-    ];
+    imports = [./language-support];
 
     programs.emacs.init = {
       ide = {
@@ -2004,12 +1946,8 @@ I think most of it was from the github page for lsp mode, but it's been a while,
         hoverDoc = true;
         eglot = {
           enable = true;
-          preset.enable = true;
+          preset = true;
         };
-        # lsp-bridge = {
-        #   enable = true; 
-        #   preset = true;
-        # };
         languages = {
           bash.enable = true;
           gradle.enable = true;
@@ -2021,8 +1959,15 @@ I think most of it was from the github page for lsp mode, but it's been a while,
           zenscript.enable = true;
           emacs-lisp = {
             enable = true;
-            hoverDoc = true;
             flymake = true;
+          };
+          org = {
+            enable = true;
+            aesthetics = {
+              enable = true;
+              headerFont = config.stylix.fonts.sansSerif.name;
+            };
+            evil = true;
           };
         };
       };
@@ -2030,8 +1975,8 @@ I think most of it was from the github page for lsp mode, but it's been a while,
       usePackage = {
         <<Development Misc>>
         
-        lsp-mode.gfhook = ["('lsp-mode-hook (lambda () (company-mode -1)))"];
-        lsp-java.custom.lsp-java-content-provider-preferred = ''"fernflower"'';
+        # lsp-mode.gfhook = ["('lsp-mode-hook (lambda () (company-mode -1)))"];
+        # lsp-java.custom.lsp-java-content-provider-preferred = ''"fernflower"'';
 
         <<Development Direnv>>
 
@@ -2202,8 +2147,6 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
     '';
   } ;
 
-  eldoc-box.ghook = ["('org-mode-hook 'eldoc-box-hover-mode)"];
-
   flymake = {
     enable = true;
     defer = true;
@@ -2295,182 +2238,185 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
   };
 #+end_src
 
-*** TODO Lsp Client Support
-+ [X] eglot
-+ [ ] lsp-mode
-+ [ ] lspce
-+ [ ] lsp-bridge
-
-**** Default.nix
-#+begin_src nix :tangle lsp-support/default.nix
-  { lib, ... }:
-
-  {
-    imports = [
-      ./eglot.nix
-      ./lsp-mode.nix
-      ./lsp-bridge.nix
-    ];
-
-    options.programs.emacs.init.ide.hoverDoc = lib.mkEnableOption "Enables hover documentation";
-  }
-#+end_src
-
-**** Eglot
-#+begin_src nix :tangle lsp-support/eglot.nix
-  { pkgs, config, lib, ... }:
-
-  let
-    ide = config.programs.emacs.init.ide;
-  in
-  {
-    options.programs.emacs.init.ide.eglot.preset = {
-      enable = lib.mkEnableOption "Enable eglot's preset configuration";
-      breadcrumb = lib.mkEnableOption "Enables the breadcrumb header";
-    };
-
-    config = lib.mkIf ide.eglot.preset.enable {
-      programs.emacs.init.usePackage = {
-        eglot = {
-          enable = true;
-          custom = {
-            eglot-report-progress = "nil";
-            eglot-autoshutdown = "t";
-            #borrowed from doom
-            eglot-sync-connect = "1";
-          };
-        };
-
-        eglot-booster = {
-          enable = true;
-          extraPackages = [pkgs.emacs-lsp-booster];
-          after = ["eglot"];
-          config = "(eglot-booster-mode)";
-        };
-
-        eglot-x = {
-          enable = true;
-          after = ["eglot"];
-          config = "(eglot-x-setup)";
-        };
-
-        eldoc-box = {
-          enable = ide.hoverDoc;
-          hook = ["(eglot-managed-mode . eldoc-box-hover-at-point-mode)"];
-        };
-
-        breadcrumb = {
-          enable = ide.eglot.preset.breadcrumb;
-          hook = ["(eglot-managed-mode . breadcrumb-local-mode)"];
-        };
-      };
-    };
-  }
-#+end_src
-
-**** lsp mode
-#+begin_src nix :tangle lsp-support/lsp-mode.nix
-  { pkgs, config, lib, ... }:
-
-  let
-    ide = config.programs.emacs.init.ide;
-  in
-  {
-    options.programs.emacs.init.ide.lsp.preset = {
-      enable = lib.mkEnableOption "Enable lsp-mode's preset configuration (borrowed from doom)";
-      breadcrumb = lib.mkEnableOption "Enables the breadcrumb header";
-    };
-
-    config = lib.mkIf ide.lsp.preset.enable {
-      programs.emacs.init.usePackage = {
-        # We elect not to use lsp-booster, because I have no idea how to compile lsp-mode with plists support
-        lsp-mode = {
-          enable = true;
-          custom = {
-            lsp-enable-folding = lib.mkDefault "nil";
-            lsp-enable-text-document-color = lib.mkDefault "nil";
-            lsp-enable-on-type-formatting = lib.mkDefault "nil";
-            lsp-headerline-breadcrumb-enable = lib.mkDefault (if ide.lsp.preset.breadcrumb then "t" else "nil");
-          };
-        };
-
-        lsp-ui = lib.mkIf ide.hoverDoc {
-          enable = true;
-          hook = ["(lsp-mode . lsp-ui-mode)"];
-          custom = {
-            lsp-ui-doc-show-with-mouse = lib.mkDefault "nil";
-            lsp-ui-doc-position = lib.mkDefault "'at-point";
-            lsp-ui-doc-show-with-cursor = lib.mkDefault "t";
-            lsp-ui-sideline-ignore-duplicate = lib.mkDefault "t";
-            lsp-ui-sideline-show-hover = lib.mkDefault "nil";
-            lsp-ui-sideline-actions-icon = lib.mkDefault "lsp-ui-sideline-actions-icon-default";
-          };
-        };
-      };
-    };
-  }
-#+end_src
-
-**** lsp bridge
-#+begin_src nix :tangle lsp-support/lsp-bridge.nix
-  { pkgs, config, lib, ... }:
-
-  let
-    ide = config.programs.emacs.init.ide;
-  in
-  {
-    options.programs.emacs.init.ide.lsp-bridge.preset = lib.mkEnableOption "Enable lsp-bridge's preset configuration. (A total of 1 changed variable)";
-
-    config = lib.mkIf ide.lsp-bridge.preset {
-      programs.emacs.init.usePackage = {
-        lsp-bridge = {
-          enable = true;
-          custom = {
-            lsp-bridge-get-workspace-folder = lib.mkDefault "'project-root";
-            lsp-bridge-enable-org-babel = lib.mkDefault "t";
-          };
-        };
-      };
-    };
-  }
-#+end_src
-
-*** TODO Language Support
+*** Language Support
++ [ ] org
++ [ ] vimscript
++ [ ] julia
 **** Default.nix
 #+begin_src nix :tangle language-support/default.nix
-  { pkgs, config, lib, ... }:
+  { ... }:
 
   {
-    imports = [
-      ./purescript.nix
-    ];
+    imports = [ ./org.nix ];
   }
 #+end_src
-
-**** Purescript
-#+begin_src nix :tangle language-support/purescript.nix
+**** Org
+#+begin_src nix :tangle language-support/org.nix
   { pkgs, config, lib, ... }:
 
   let
     ide = config.programs.emacs.init.ide;
   in
   {
-    options.programs.emacs.init.ide.languages.purescript.enable = lib.mkEnableOption "Enables purescript support. Formatting is poorly tested at best";
+    options.programs.emacs.init.ide.languages.org = {
+      enable = lib.mkEnableOption "Enables support for org mode";
+      aesthetics = {
+        enable = lib.mkEnableOption "Enables org-modern & org-modern indent";
+        headerFont = lib.mkOption {
+          type = lib.types.str;
+          default = "Liberation Serif";
+          description = "The font to use for org headers. Defaults to Liberation Serif, since that's on most machines & I don't know what I'm doing";
+        };
+      };
+      evil = lib.mkEnableOption "Enables support for evil mode";
+    };
 
-    config = lib.mkIf ide.languages.purescript.enable {
-      programs.emacs.init.usePackage.purescript-mode = {
-        enable = true;
-        # borrowed from doom
-        hook = ["(purescript-mode . purescript-indentation-mode)"];
-        extraPackages = if ide.eglot.enable || ide.lsp.enable then [pkgs.nodePackages.purescript-language-server] else [];
-        eglot = ide.eglot.enable;
-        lsp = ide.lsp.enable;
-        symex = ide.symex;
-        config = ''
-          (with-eval-after-load 'eglot
-            (add-to-list 'eglot-server-programs '((purescript-mode) . ("purescript-language-server" "--stdio"
-                                                                       :initializationOptions (:purescript (:formatter "purs-tidy"))))))
+    config = lib.mkIf ide.languages.org.enable {
+      programs.emacs.init.usePackage = {
+        org = {
+          enable = true;
+          mode = [''("\\.org\\'" . org-mode)''];
+          deferIncrementally = ["calendar" "find-func" "format-spec" "org-macs" "org-compat" "org-faces" "org-entities" "org-list" "org-pcomplete" "org-src" "org-footnote" "org-macro" "ob" "org" "org-agenda" "org-capture"];
+          symex = ide.symex;
+          custom = {
+            org-confirm-babel-evaluate = lib.mkDefault "nil";
+            org-src-fontify-natively = lib.mkDefault "t";
+            org-src-tab-acts-natively = lib.mkDefault "t";
+            org-log-done = lib.mkDefault "nil";
+            org-log-into-drawer = lib.mkDefault "t";
+            org-hide-emphasis-markers = lib.mkIf ide.languages.org.aesthetics.enable (lib.mkDefault "t");
+            org-ellipsis = lib.mkIf ide.languages.org.aesthetics.enable (lib.mkDefault ''" ▾"'');
+          };
+          hook = ["(org-mode . org-indent-mode)"];
+          config = ''
+            (org-babel-do-load-languages
+              'org-babel-load-languages
+              '((emacs-lisp . t )
+                (python . t)
+                (R . t)))
+            (push '("conf-unix" . conf-unix) org-src-lang-modes)
         '';
+        };
+
+        org-appear = lib.mkIf ide.languages.org.aesthetics.enable {
+          enable = true;
+          hook = ["(org-mode . org-appear-mode)"];
+        };
+
+        org-contrib = lib.mkIf ide.hoverDoc {
+          enable = true;
+          config = ''(ox-extras-activate '(ignore-headlines))'';
+          deferIncrementally = ["ox-extra"];
+        };
+
+        org-modern = lib.mkIf ide.languages.org.aesthetics.enable {
+          enable = true;
+          hook = [
+            "(org-mode . org-modern-mode)"
+            "(org-mode . org-toggle-pretty-entities)"
+            "(org-mode . variable-pitch-mode)"
+            "(org-mode . visual-line-mode)"
+            "(org-mode . nix-emacs-org-font-setup)"
+          ];
+          custom = {
+            org-modern-star = "'replace";
+            org-modern-hide-stars = "'leading";
+          };
+          init = ''
+            (defun nix-emacs-org-font-setup ()
+              "Sets up org fonts. Originates from Emacs from Scratch."
+              ;;Set faces for heading levels
+              (dolist (face '((org-document-title . 1.4)
+                              (org-level-1 . 1.4)
+                              (org-level-2 . 1.3)
+                              (org-level-3 . 1.2)
+                              (org-level-4 . 1.1)
+                              (org-level-5 . 1.05)
+                              (org-level-6 . 1.05)
+                              (org-level-7 . 1.05)
+                              (org-level-8 . 1.05)))
+                      (set-face-attribute (car face) nil :font "${ide.languages.org.aesthetics.headerFont}" :weight 'regular :height (cdr face)))
+
+              ;; Ensure that anything that should be fixed-pitch in Org files appears that way
+              (dolist (face (list 'org-block 'org-table 'org-formula 'org-checkbox 'line-number 'line-number-current-line))
+                (set-face-attribute face nil :inherit 'fixed-pitch))
+              (dolist (face (list 'org-code 'org-table 'org-verbatim))
+                (set-face-attribute face nil :inherit '(shadow fixed-pitch)))
+              (dolist (face (list 'org-special-keyword 'org-meta-line))
+                (set-face-attribute face nil :inherit '(font-lock-comment-face fixed-pitch))))
+          '';
+        };
+
+        eldoc-box = lib.mkIf ide.hoverDoc {
+          enable = true;
+          hook = ["(org-mode . eldoc-box-hover-mode)"];
+        };
+
+        org-modern-indent = lib.mkIf ide.languages.org.aesthetics.enable {
+          enable = true;
+          afterCall = ["org-mode-hook"];
+          config = ''(add-hook 'org-mode-hook 'org-modern-indent-mode 90)'';
+        };
+
+        evil-org = lib.mkIf ide.languages.org.evil {
+          enable = true;
+          ghook = ["('org-mode-hook 'evil-org-mode)"];
+          # stolen from doom
+          generalTwo."'normal".org-mode-map = {
+            "]h" = '''(org-forward-heading-same-level :which-key "next heading")'';
+            "[h" = '''(org-backward-heading-same-level :which-key "prev heading")'';
+            "]c" = '''(org-babel-next-src-block :which-key "next src block")'';
+            "[c" = '''(org-babel-previous-src-block :which-key "prev src block")'';
+            "]l" = '''(org-next-link :which-key "next link")'';
+            "[l" = '''(org-previous-link :which-key "prev link")'';
+          };
+          init = ''
+            (add-to-list 'evil-fold-list
+  	                     `((org-mode)
+  	                       :open org-cycle
+  	                       :open-all nil
+  	                       :close org-cycle
+  	                       :close-all nil
+  	                       :toggle org-cycle
+  	                       :delete nil
+  	                       :open-rec nil))        
+          '';
+          config = ''
+            (with-eval-after-load 'evil-collection
+              (when (equal evil-collection-unimpaired-want-repeat-mode-integration t)
+                (evil-collection-unimpaired-defvar-keymap org-forward-heading-same-level-repeat-map
+                  "h" #'org-forward-heading-same-level
+                  "H" #'org-backward-heading-same-level)
+                (evil-collection-unimpaired-defvar-keymap org-backward-heading-same-level-repeat-map
+                  "h" #'org-backward-heading-same-level
+                  "H" #'org-forward-heading-same-level)
+                (evil-collection-unimpaired-defvar-keymap org-babel-next-src-block-repeat-map
+                  "c" #'org-babel-next-src-block
+                  "C" #'org-babel-previous-src-block)
+                (evil-collection-unimpaired-defvar-keymap org-babel-previous-src-block-repeat-map
+                  "c" #'org-babel-previous-src-block
+                  "C" #'org-babel-next-src-block)
+                (evil-collection-unimpaired-defvar-keymap org-next-link-repeat-map
+                  "l" #'org-next-link
+                  "L" #'org-previous-link)
+                (evil-collection-unimpaired-defvar-keymap org-previous-link-repeat-map
+                  "l" #'org-previous-link
+                  "L" #'org-next-link)
+                (dolist (cmd '(org-forward-heading-same-level
+                               org-backward-heading-same-level
+                               org-babel-next-src-block
+                               org-babel-previous-src-block
+                               org-next-link
+                               org-previous-link))
+                        (put cmd 'repeat-map (intern (format "%s-repeat-map" cmd))))))
+          '';
+        };
+
+        evil-org-agenda = lib.mkIf ide.languages.org.evil {
+          enable = true;
+          config = ''(evil-org-agenda-set-keys)'';
+          deferIncrementally = true;
+        };
       };
     };
   }
@@ -3635,31 +3581,18 @@ By default, any key pressed while in god state is treated as if it was pressed w
 #+NAME: Emacs Evil Compats
 #+begin_src nix :noweb yes
   evil-org = {
-    enable = true;
-    defer = true;
-    ghook = ["('org-mode-hook 'evil-org-mode)"];
     custom.evil-org-movement-bindings = ''
       '((up . "o")
         (down . "e")
         (left . "n")
         (right . "i"))
     '';
-    generalTwo."'normal".org-mode-map = {
-      "]h" = '''(org-forward-heading-same-level :which-key "next heading")'';
-      "[h" = '''(org-backward-heading-same-level :which-key "prev heading")'';
-      "]c" = '''(org-babel-next-src-block :which-key "next src block")'';
-      "[c" = '''(org-babel-previous-src-block :which-key "prev src block")'';
-      "]l" = '''(org-next-link :which-key "next link")'';
-      "[l" = '''(org-previous-link :which-key "prev link")'';
-    };
     config = ''
       <<Emacs Evil Org Config>>
     '';
   };
 
   evil-org-agenda = {
-    enable = true;
-    config = ''(evil-org-agenda-set-keys)'';
     generalTwo."'motion".evil-org-agenda-mode-map = {
       "e" = "'org-agenda-next-line";
       "o" = "'org-agenda-previous-line";
@@ -3679,14 +3612,12 @@ By default, any key pressed while in god state is treated as if it was pressed w
     generalOne."efs/leader-keys"."oa" = '''(org-agenda :which-key "agenda")'';
   };
 
-  evil-markdown = {
-    custom.evil-markdown-movement-bindings = ''
+  evil-markdown.custom.evil-markdown-movement-bindings = ''
       '((up . "o")
         (down . "e")
         (left . "n")
         (right . "i"))
-    '';
-  };
+  '';
 
   ewal-evil-cursors = {
     enable = true;
@@ -3711,31 +3642,6 @@ By default, any key pressed while in god state is treated as if it was pressed w
   (evil-define-key 'visual 'evil-org-mode
     "i" 'evil-forward-char
     "s" evil-inner-text-objects-map)
-  (evil-collection-unimpaired-defvar-keymap org-forward-heading-same-level-repeat-map
-    "h" #'org-forward-heading-same-level
-    "H" #'org-backward-heading-same-level)
-  (evil-collection-unimpaired-defvar-keymap org-backward-heading-same-level-repeat-map
-    "h" #'org-backward-heading-same-level
-    "H" #'org-forward-heading-same-level)
-  (evil-collection-unimpaired-defvar-keymap org-babel-next-src-block-repeat-map
-    "c" #'org-babel-next-src-block
-    "C" #'org-babel-previous-src-block)
-  (evil-collection-unimpaired-defvar-keymap org-babel-previous-src-block-repeat-map
-    "c" #'org-babel-previous-src-block
-    "C" #'org-babel-next-src-block)
-  (evil-collection-unimpaired-defvar-keymap org-next-link-repeat-map
-    "l" #'org-next-link
-    "L" #'org-previous-link)
-  (evil-collection-unimpaired-defvar-keymap org-previous-link-repeat-map
-    "l" #'org-previous-link
-    "L" #'org-next-link)
-  (dolist (cmd '(org-forward-heading-same-level
-                 org-backward-heading-same-level
-                 org-babel-next-src-block
-                 org-babel-previous-src-block
-                 org-next-link
-                 org-previous-link))
-    (put cmd 'repeat-map (intern (format "%s-repeat-map" cmd))))
 #+end_src
 
 **** Undo
@@ -4537,18 +4443,10 @@ How to add a latex package
 #+NAME: Emacs Org Main
 #+begin_src nix :noweb yes
   org = {
-    enable = true;
-    symex = true;
-    mode = [''("\\.org\\'" . org-mode)''];
-    gfhook = ["('org-mode-hook '(efs/org-mode-setup my/org-capf))"];
+    gfhook = ["('org-mode-hook '(ispell-minor-mode my/org-capf))"];
     custom = {
-      org-confirm-babel-evaluate = "nil";
-      org-src-fontify-natively = "t";
-      org-src-tab-acts-natively = "t";
-      org-ellipsis = ''" ▾"'';
-      org-log-done = "nil";
-      org-log-into-drawer = "t";
-      org-hide-emphasis-markers = "t";
+      org-export-with-toc = "nil";
+      org-export-with-section-numbers = "nil";
       org-agenda-files = '''("~/doc/tasks.org")'';
       org-capture-templates = '''(("t" "Task" entry
                                     (file "~/doc/tasks.org")
@@ -4575,37 +4473,11 @@ How to add a latex package
     config = ''
       <<Emacs Org Config>>
     '';
-    init = ''
-      <<Emacs Org Init>>
-    '';
-    deferIncrementally = ["calendar" "find-func" "format-spec" "org-macs" "org-compat" "org-faces" "org-entities" "org-list" "org-pcomplete" "org-src" "org-footnote" "org-macro" "ob" "org" "org-agenda" "org-capture" "evil-org-agenda"];
   };
 #+end_src
 
 #+NAME: Emacs Org Config
 #+begin_src emacs-lisp
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((emacs-lisp . t )
-     (python . t)
-     (R . t)))
-  (push '("conf-unix" . conf-unix) org-src-lang-modes)
-
-  ;; This is needed as of Org 9.2
-  (require 'org-tempo)
-
-  (dolist (mode (list '("sh" . "src shell")
-  		    '("sg" . "src sage")
-  		    '("el" . "src emacs-lisp")
-  		    '("cc" . "src C")
-  		    '("cs" . "src css")
-  		    '("hl" . "src html")
-  		    '("js" . "src javascript")
-  		    '("nx" . "src nix")
-  		    '("jv" . "src java")
-  		    '("py" . "src python")))
-    (add-to-list 'org-structure-template-alist mode))
-
   (defun my/org-capf ()
     (setq-local completion-at-point-functions
                 (list (cape-capf-super
@@ -4614,83 +4486,11 @@ How to add a latex package
   		    #'pcomplete-completions-at-point
   		    #'cape-dabbrev
   		    #'cape-dict)))
-
-  (add-to-list 'evil-fold-list
-  	     `((org-mode)
-  	       :open org-cycle
-  	       :open-all nil
-  	       :close org-cycle
-  	       :close-all nil
-  	       :toggle org-cycle
-  	       :delete nil
-  	       :open-rec nil))
-#+end_src
-
-https://emacs.stackexchange.com/questions/20339/easiest-way-to-render-an-overline-in-org-mode
-#+NAME: Emacs Org Init
-#+begin_src emacs-lisp
-  ;; (add-to-list 'org-emphasis-alist '("‾" (:overline t)))
-
-  (defun efs/org-font-setup ()
-    ;; Replace list hyphen with dot
-    (font-lock-add-keywords 'org-mode
-                            '(("^*\\([-]\\) "
-                               (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
-
-    ;;Set faces for heading levels
-    (dolist (face '((org-document-title . 1.4)
-                    (org-level-1 . 1.4)
-                    (org-level-2 . 1.3)
-                    (org-level-3 . 1.2)
-                    (org-level-4 . 1.1)
-                    (org-level-5 . 1.05)
-                    (org-level-6 . 1.05)
-                    (org-level-7 . 1.05)
-                    (org-level-8 . 1.05)))
-      (set-face-attribute (car face) nil :font "SF Pro" :weight 'regular :height (cdr face)))
-
-    ;; Ensure that anything that should be fixed-pitch in Org files appears that way
-    (dolist (face (list 'org-block 'org-table 'org-formula 'org-checkbox 'line-number 'line-number-current-line))
-      (set-face-attribute face nil :inherit 'fixed-pitch))
-    (dolist (face (list 'org-code 'org-table 'org-verbatim))
-      (set-face-attribute face nil :inherit '(shadow fixed-pitch)))
-    (dolist (face (list 'org-special-keyword 'org-meta-line))
-      (set-face-attribute face nil :inherit '(font-lock-comment-face fixed-pitch))))
-
-  (defun efs/org-mode-setup ()
-    (org-indent-mode)
-    (ispell-minor-mode)
-    (org-toggle-pretty-entities)
-    (variable-pitch-mode 1)
-    (visual-line-mode 1)
-    (efs/org-font-setup))
-
 #+end_src
 
 ***** Extensions
 #+NAME: Emacs Org Extensions
 #+begin_src nix :noweb yes
-  org-contrib = {
-    enable = true;
-    config = ''(ox-extras-activate '(ignore-headlines))'';
-    deferIncrementally = ["ox-extra"];
-  };
-
-  org-modern = {
-    enable = true;
-    ghook = ["('org-mode-hook 'global-org-modern-mode)"];
-    custom = {
-      org-modern-star = "'replace";
-      org-modern-hide-stars = "'leading";
-    };
-  };
-
-  org-modern-indent = {
-    enable = true;
-    afterCall = ["org-mode-hook"];
-    config = ''(general-add-hook 'org-mode-hook 'org-modern-indent-mode 90)'';
-  };
-
   org-auto-tangle = {
     enable = true;
     ghook = ["('org-mode-hook 'org-auto-tangle-mode)"];
@@ -4702,10 +4502,6 @@ https://emacs.stackexchange.com/questions/20339/easiest-way-to-render-an-overlin
      ghook = ["('after-save-hook (lambda () (when (equal major-mode 'org-mode) (org-auto-export-pandoc))))"];
    };
 
-  org-appear = {
-    enable = true;
-    ghook = ["('org-mode-hook 'org-appear-mode)"];
-  };
 #+end_src
 
 ***** Denote
@@ -5163,8 +4959,7 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
     (group
      (group-or "Browsers"
                (name-match "Qutebrowser" (rx bos "Qutebrowser"))
-               (mode-match "eww-mode" (rx bos "eww-"))
-               (name-match "Tor Browser" (rx bos "Tor Browser"))))
+               (mode-match "eww-mode" (rx bos "eww-"))))
     (group
      (group-or "Chat"
                (name-match "Thunderbird" (rx bos "Thunderbird"))
@@ -5446,8 +5241,7 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
       
                                       ;; Shell bindings
                                       ([?\s-s] . (lambda () (interactive) (shell-command "slock")))
-                                      ([?\s-y] . (lambda () (interactive) (start-process-shell-command
-                                                                           "maim" nil  "${pkgs-stable.maim}/bin/maim ~/pic/screenshot.png"))))'';
+                                      ([?\s-y] . (lambda () (interactive) (start-process-shell-command "maim" nil  "${pkgs-stable.maim}/bin/maim ~/pic/screenshot.png"))))'';
       
     };
     afterCall = ["on-init-ui-hook"];
@@ -5905,7 +5699,6 @@ Putting =:session= in an org block is necessary for evaluation
   {
     home.packages = with pkgs; [
       pkgs-stable.python39Packages.adblock
-      (config.lib.nixGL.wrap tor-browser)
     ];
 
     programs.emacs.init.usePackage = {
