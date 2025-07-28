@@ -1,7 +1,7 @@
-{ trivialBuild, inputs } :
+  { trivialBuild, inputs } :
 
-trivialBuild rec {
-  pname = "app-launcher";
-  version = "current";
-  src = inputs.app-launcher;
-}
+  trivialBuild rec {
+    pname = "app-launcher";
+    version = "current";
+    src = inputs.app-launcher;
+  }

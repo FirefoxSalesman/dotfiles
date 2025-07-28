@@ -1,5 +1,5 @@
-{ ... }:
+  { ... }:
 
-{
-  imports = [ ./org.nix ];
-}
+  {
+    imports = [ ./org.nix ];
+  }

@@ -1545,14 +1545,14 @@ Use =M-x all-the-icons-install-fonts=
     '' ;
     custom = {
       dashboard-banner-logo-title = ''"Emacs: The one true desktop environment"'';
-      dashboard-center-content = "t";
+      dashboard-center-content = true;
       dashboard-items = '''((recents   . 5)
                             (bookmarks . 5)
                             (projects  . 5)
                             (agenda    . 5))'';
       dashboard-icon-type = "'nerd-icons";
-      dashboard-set-heading-icons = "t";
-      dashboard-set-file-icons = "t";
+      dashboard-set-heading-icons = true;
+      dashboard-set-file-icons = true;
       dashboard-agenda-sort-strategy = "'(time-up)";
     };
   };
@@ -1577,7 +1577,7 @@ The powerline separators were borrowed from punchline, because I think they look
   doom-nano-modeline = {
     enable = true;
     afterCall = ["after-init-hook"];
-    custom.mode-line-format = "nil";
+    custom.mode-line-format = false;
     config = ''
       <<Emacs Doom Nano Modeline Config>>
     '';
@@ -1759,8 +1759,8 @@ Makes emacs' theme mimic the wallpaper. A good pywal config will get most things
     enable = true;
     demand = true;
     custom = {
-      ewal-use-built-in-always-p = "nil";
-      ewal-use-built-in-on-failure-p = "t";
+      ewal-use-built-in-always-p = false;
+      ewal-use-built-in-on-failure-p = true;
       ewal-built-in-palette = ''"sexy-material"'';
     };
   };
@@ -1772,8 +1772,8 @@ Makes emacs' theme mimic the wallpaper. A good pywal config will get most things
       <<Emacs Ewal Config>>
     '';
     custom = {
-      doom-themes-enable-bold = "t";
-      doom-themes-enable-italic = "t";
+      doom-themes-enable-bold = true;
+      doom-themes-enable-italic = true;
     };
   };
 #+end_src
@@ -1944,6 +1944,7 @@ https://github.com/emacs-lsp/lsp-java/blob/9230a0007c79a661028c142f35c7b8d1f9f55
       ide = {
         symex = true;  
         hoverDoc = true;
+        evil = true;
         eglot = {
           enable = true;
           preset = true;
@@ -1967,7 +1968,6 @@ https://github.com/emacs-lsp/lsp-java/blob/9230a0007c79a661028c142f35c7b8d1f9f55
               enable = true;
               headerFont = config.stylix.fonts.sansSerif.name;
             };
-            evil = true;
           };
         };
       };
@@ -2251,6 +2251,8 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
   }
 #+end_src
 **** Org
+Additions to make
++ [ ] Things relating to org capture (requires us to know how to use it first)
 #+begin_src nix :tangle language-support/org.nix
   { pkgs, config, lib, ... }:
 
@@ -2259,7 +2261,7 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
   in
   {
     options.programs.emacs.init.ide.languages.org = {
-      enable = lib.mkEnableOption "Enables support for org mode";
+      enable = lib.mkEnableOption "Enables support for org mode. Borrows a great deal from emacs from scratch & doom emacs";
       aesthetics = {
         enable = lib.mkEnableOption "Enables org-modern & org-modern indent";
         headerFont = lib.mkOption {
@@ -2268,7 +2270,6 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
           description = "The font to use for org headers. Defaults to Liberation Serif, since that's on most machines & I don't know what I'm doing";
         };
       };
-      evil = lib.mkEnableOption "Enables support for evil mode";
     };
 
     config = lib.mkIf ide.languages.org.enable {
@@ -2279,23 +2280,49 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
           deferIncrementally = ["calendar" "find-func" "format-spec" "org-macs" "org-compat" "org-faces" "org-entities" "org-list" "org-pcomplete" "org-src" "org-footnote" "org-macro" "ob" "org" "org-agenda" "org-capture"];
           symex = ide.symex;
           custom = {
-            org-confirm-babel-evaluate = lib.mkDefault "nil";
-            org-src-fontify-natively = lib.mkDefault "t";
-            org-src-tab-acts-natively = lib.mkDefault "t";
-            org-log-done = lib.mkDefault "nil";
-            org-log-into-drawer = lib.mkDefault "t";
-            org-hide-emphasis-markers = lib.mkIf ide.languages.org.aesthetics.enable (lib.mkDefault "t");
+            org-confirm-babel-evaluate = lib.mkDefault false;
+            org-src-fontify-natively = lib.mkDefault true;
+            org-src-tab-acts-natively = lib.mkDefault true;
+            org-log-done = lib.mkDefault false;
+            org-log-into-drawer = lib.mkDefault true;
+            org-hide-emphasis-markers = lib.mkIf ide.languages.org.aesthetics.enable (lib.mkDefault true);
             org-ellipsis = lib.mkIf ide.languages.org.aesthetics.enable (lib.mkDefault ''" ▾"'');
+
+            # Settings from doom
+            org-indirect-buffer-display = lib.mkDefault "'current-window";
+            org-enforce-todo-dependencies = lib.mkDefault true;
+            org-imenu-depth = lib.mkDefault "6";
+            org-tags-column = lib.mkDefault "0";
+            org-startup-folded  = lib.mkDefault false;
+            org-agenda-inhibit-startup = lib.mkDefault true;
+            org-agenda-window-setup = lib.mkDefault "'current-window";
+            org-agenda-skip-unavailable-files = lib.mkDefault true;
+            org-agenda-span = lib.mkDefault "10";
+            org-agenda-start-on-weekday = lib.mkDefault false;
+            org-agenda-start-day = lib.mkDefault ''"-3d"'';
+            org-refile-targets = lib.mkDefault ''
+              '((nil :maxlevel . 3)
+                (org-agenda-files :maxlevel . 3))
+            '';
+            org-refile-use-outline-path = lib.mkDefault "'file";
+            org-outline-path-complete-in-steps = lib.mkDefault false;
+            org-src-preserve-indentation = lib.mkDefault true;
+            org-link-elisp-confirm-function = lib.mkDefault false;
+            org-src-window-setup = lib.mkDefault "'other-window";
+            org-babel-lisp-eval-fn = lib.mkIf ide.languages.common-lisp.enable (lib.mkDefault "#'sly-eval");
+            org-modules = lib.mkDefault "'(ol-bibtex)";
           };
           hook = ["(org-mode . org-indent-mode)"];
           config = ''
             (org-babel-do-load-languages
-              'org-babel-load-languages
-              '((emacs-lisp . t )
-                (python . t)
-                (R . t)))
+            'org-babel-load-languages
+            '((emacs-lisp . t )
+              (python . t)
+              (R . t)))
             (push '("conf-unix" . conf-unix) org-src-lang-modes)
-        '';
+            ;; borrowed from doom
+            (plist-put org-format-latex-options :scale 1.5)
+          '';
         };
 
         org-appear = lib.mkIf ide.languages.org.aesthetics.enable {
@@ -2358,9 +2385,10 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
           config = ''(add-hook 'org-mode-hook 'org-modern-indent-mode 90)'';
         };
 
-        evil-org = lib.mkIf ide.languages.org.evil {
+        evil-org = lib.mkIf ide.evil {
           enable = true;
           ghook = ["('org-mode-hook 'evil-org-mode)"];
+          gfhook = ["('org-capture-mode-hook 'evil-insert-state)"];
           # stolen from doom
           generalTwo."'normal".org-mode-map = {
             "]h" = '''(org-forward-heading-same-level :which-key "next heading")'';
@@ -2412,7 +2440,7 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
           '';
         };
 
-        evil-org-agenda = lib.mkIf ide.languages.org.evil {
+        evil-org-agenda = lib.mkIf ide.evil {
           enable = true;
           config = ''(evil-org-agenda-set-keys)'';
           deferIncrementally = true;
@@ -2443,7 +2471,7 @@ I'm running dired with a couple of small packages that improve on it
           dired-recursive-deletes = "'always";
           dired-listing-switches = ''"-agho --group-directories-first"'';
           # We're doing our best to get rid of that 1st extraneous line
-          dired-free-space = "nil";
+          dired-free-space = false;
         };
         config = ''(with-eval-after-load 'dired-x (gsetq dired-omit-extensions (delete ".class" dired-omit-extensions)))'';
       };
@@ -2506,7 +2534,7 @@ I'm running dired with a couple of small packages that improve on it
           "E" = "'image-next-file";
           "O" = "'image-previous-file";
         };
-        custom.image-animate-loop = "t";
+        custom.image-animate-loop = true;
       };
 
       dired-narrow = {
@@ -2858,7 +2886,7 @@ Wgrep basically turns grep into sed.
 #+begin_src nix
   wgrep = {
     enable = true;
-    custom.wgrep-auto-save-buffer = "t";
+    custom.wgrep-auto-save-buffer = true;
     generalTwo."'normal".grep-mode-map."w" = "'wgrep-change-to-wgrep-mode";
   };
 #+end_src
@@ -3014,18 +3042,18 @@ M-SPC is our local leader, & it's used for keys specific to a given major mode
     };
     custom = {
       # Various settings to make it more like vim
-      evil-want-integration = "t";
-      evil-want-keybinding = "nil";
-      evil-want-minibuffer = "t";
-      evil-want-C-u-scroll = "t";
-      evil-want-C-w-delete = "t";
-      evil-want-C-u-delete = "t";
-      evil-want-C-h-delete = "t";
-      evil-want-C-i-jump = "t";
-      evil-move-cursor-back = "nil";
-      evil-move-beyond-eol = "t"; # Combined with move-cursor-back, it prevents the cursor from moving behind a "/" when selecting a directory in the minibuffer
-      evil-cross-lines = "t";
-      sentence-end-double-space = "nil";
+      evil-want-integration = true;
+      evil-want-keybinding = false;
+      evil-want-minibuffer = true;
+      evil-want-C-u-scroll = true;
+      evil-want-C-w-delete = true;
+      evil-want-C-u-delete = true;
+      evil-want-C-h-delete = true;
+      evil-want-C-i-jump = true;
+      evil-move-cursor-back = false;
+      evil-move-beyond-eol = true; # Combined with move-cursor-back, it prevents the cursor from moving behind a "/" when selecting a directory in the minibuffer
+      evil-cross-lines = true;
+      sentence-end-double-space = false;
     };
     generalOne."'insert" = {
       "C-s" = "'insert-char";
@@ -3034,7 +3062,7 @@ M-SPC is our local leader, & it's used for keys specific to a given major mode
     config = ''
       <<emacs-evil-config>>
     '';
-  } ;
+  };
 #+end_src
 
 #+NAME: emacs-evil-config
@@ -3211,7 +3239,7 @@ Repeat map idea: https://hungyi.net/posts/hydra-for-evil-mc/
 #+begin_src nix :noweb yes
   evil-collection = {
     enable = true;
-    custom.evil-collection-unimpaired-want-repeat-mode-integration = "t";
+    custom.evil-collection-unimpaired-want-repeat-mode-integration = true;
     config = ''
       <<Emacs Evil Collection Config>>
     '';
@@ -3701,7 +3729,7 @@ Vertico is basically dmenu for emacs. It lists out all the options in a command 
     defer = true;
     ghook = ["('on-first-input-hook 'vertico-mode)"];
     # Enable cycling for 'vertico-next & 'vertico-previous'.
-    custom.vertico-cycle = "t";
+    custom.vertico-cycle = true;
     # This is for exwm's minibuffer issue
     generalTwo."'normal".vertico-map = {
       "RET" = "'vertico-exit";
@@ -3737,10 +3765,10 @@ I took a lot of this from Gavin Freeborn's config
       "('on-first-buffer-hook 'global-corfu-mode)"
     ];
     custom = {
-      corfu-cycle = "t";
+      corfu-cycle = true;
       corfu-autodelay = "0";
       corfu-auto-prefix = "2";
-      corfu-auto = "t";
+      corfu-auto = true;
       corfu-on-exact-match = "'show";
     };
     general."M-/" = "'completion-at-point";
@@ -3821,9 +3849,9 @@ Prescient is a big-braned history package that orders completion options by rece
     defer = true;
     ghook = ["('minibuffer-mode-hook 'vertico-prescient-mode)"];
     custom = {
-      vertico-prescient-enable-filtering = "nil";
+      vertico-prescient-enable-filtering = false;
       vertico-prescient-completion-styles = "'(orderless prescient basic)";
-      vertico-prescient-enable-sorting = "t";
+      vertico-prescient-enable-sorting = true;
     };
   };
 
@@ -3845,7 +3873,7 @@ This config is stolen directly from David Wilson
     defer = true;
     custom = {
       completion-styles = "'(orderless prescient basic)";
-      completion-category-defaults = "nil";
+      completion-category-defaults = false;
       completion-category-overrides = "'((file (styles . (partial-completion))))";
     };
     afterCall = ["on-first-input-hook"];
@@ -4163,9 +4191,9 @@ avy actions from karthink
       <<Emacs Search Config>>
     '';
     custom = {
-      ace-isearch-on-evil-mode = "t";
+      ace-isearch-on-evil-mode = true;
       ace-isearch-input-length = "5";
-      ace-isearch-jump-based-on-one-char = "nil";
+      ace-isearch-jump-based-on-one-char = false;
       ace-isearch-function-from-isearch = "'ace-isearch-consult-ripgrep-or-line-from-isearch";
     };
   };
@@ -4398,10 +4426,7 @@ When you're prompted for your gpg password, the place for entry will be your mod
 
     programs.emacs.init = {
       ide.languages = {
-        markdown = {
-          enable = true;
-          evil = true;
-        };
+        markdown.enable = true;
         latex = {
           enable = true;
           magicLatexBuffer = true;
@@ -4445,8 +4470,8 @@ How to add a latex package
   org = {
     gfhook = ["('org-mode-hook '(ispell-minor-mode my/org-capf))"];
     custom = {
-      org-export-with-toc = "nil";
-      org-export-with-section-numbers = "nil";
+      org-export-with-toc = false;
+      org-export-with-section-numbers = false;
       org-agenda-files = '''("~/doc/tasks.org")'';
       org-capture-templates = '''(("t" "Task" entry
                                     (file "~/doc/tasks.org")
@@ -4514,7 +4539,7 @@ How to add a latex package
     custom = {
       denote-directory = ''(expand-file-name "~/doc/denote")'';
       denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "databases" "scifi" "softwarerequirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics" "plp")'';
-      denote-file-type = "nil";
+      denote-file-type = false;
       denote-dired-directories = "(list denote-directory)";
       
     };
@@ -4616,7 +4641,7 @@ No idea what the rest of this is for.
       # Makes PDFtools the default
       TeX-view-program-selection = '''((output-pdf "PDF Tools"))'';
       TeX-view-program-list = '''(("PDF Tools" TeX-pdf-tools-sync-view))'';
-      TeX-source-correlate-start-server = "t";
+      TeX-source-correlate-start-server = false;
     };
     config = ''
       <<Emacs Pdf Tools Config>>
@@ -4653,7 +4678,7 @@ No idea what the rest of this is for.
     gfhook = ["('markdown-mode-hook 'efs/markdown-font-setup)"];
     custom = {
       markdown-command = ''"multimarkdown"'';
-      markdown-hide-markup = "t";
+      markdown-hide-markup = true;
     };
     generalTwo = {
       "'normal".markdown-mode-map = {
@@ -4695,9 +4720,9 @@ I couldn't get olivetti to work.
     ghook = ["('(woman-mode-hook org-agenda-mode-hook org-mode-hook Info-mode-hook markdown-mode-hook) 'writeroom-mode)"];
     gfhook = ["('writeroom-mode-hook 'visual-line-mode)"];
     custom = {
-      writeroom-mode-line = "t";
-      writeroom-maximize-window = "nil";
-      writeroom-global-effects = "nil";
+      writeroom-mode-line = true;
+      writeroom-maximize-window = false;
+      writeroom-global-effects = false;
     };
     generalOne."efs/leader-keys"."w" = '''(writeroom-mode :which-key "writeroom")'';
   };
@@ -4855,8 +4880,8 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
     general."s-u" = "'tab-bar-hydra/body";
     custom = {
       tab-bar-format = "'(tab-bar-format-tabs-groups tab-bar-separator doom-nano-tabline tab-bar-format-align-right tab-bar-format-global)";
-      tab-bar-close-button-show = "nil";
-      tab-bar-select-restore-windows = "nil";
+      tab-bar-close-button-show = false;
+      tab-bar-select-restore-windows = false;
       tab-bar-auto-width-max = "'((150) 20)";
     };
     extraConfig = ''
@@ -5172,22 +5197,22 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
       "g" = '''(lambda () (interactive) (start-process-shell-command "warpd" nil "warpd --grid"))'';
     };
     custom = {
-      exwm-manage-force-tiling = "t";
+      exwm-manage-force-tiling = true;
       # Emacs everywhere
       exwm-input-simulation-keys = '''(([?\C-h] . [backspace]))'';
       exwm-workspace-number = "1";
       # Automatically move EXWM buffer to current workspace when selected
-      exwm-layout-show-all-buffers = "t";
+      exwm-layout-show-all-buffers = true;
       # Display all EXWM buffers in every workspace buffer list
-      exwm-workspace-show-all-buffers = "t";
+      exwm-workspace-show-all-buffers = true;
       # This will need to be updated to the name of a display!  You can find
       # the names of your displays by looking at arandr or the output of xrandr
       exwm-randr-workspace-monitor-plist = '''(1 "eDP-1-1") (2 "HDMI-0")'';
       # Automatically send the mouse cursor to the selected workspace's display
-      exwm-workspace-warp-cursor = "t";
+      exwm-workspace-warp-cursor = true;
       # Window focus should follow the mouse pointer
-      mouse-autoselect-window = "nil";
-      focus-follows-mouse = "nil";
+      mouse-autoselect-window = false;
+      focus-follows-mouse = false;
       # These keys should always pass through to Emacs
       exwm-input-prefix-keys = '''(?\M-`
                                    ?\C-^
@@ -5751,13 +5776,13 @@ It's a simple text based web browser. I use it for short web searches & for find
     enable = true;
     custom = {
       eww-search-prefix = ''"https://search.inetol.net/?q="'';
-      eww-header-line-format = "nil";
-      eww-desktop-remove-duplicates = "t";
+      eww-header-line-format = false;
+      eww-desktop-remove-duplicates = true;
       eww-download-directory = ''(expand-file-name "~/dwn")'';
       eww-history-limit = "10";
       # External Browser
       eww-use-external-browser-for-content-type = ''"\\`\\(video/\\|audio\\)"''; # On GNU/Linux check your mimeapps.list
-      eww-browse-url-new-windowis-tab = "nil";
+      eww-browse-url-new-windowis-tab = false;
       eww-form-checkbox-selected-symbol = ''"[X]"'';
       eww-form-checkbox-symbol = ''"[ ]"'';
       eww-auto-rename-buffer = "'title";

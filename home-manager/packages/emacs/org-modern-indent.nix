@@ -1,13 +1,13 @@
-{ inputs, trivialBuild, compat } :
+  { inputs, trivialBuild, compat } :
 
-trivialBuild rec {
-  pname = "org-modern-indent";
-  version = "current";
-  src = inputs.org-modern-indent;
+  trivialBuild rec {
+    pname = "org-modern-indent";
+    version = "current";
+    src = inputs.org-modern-indent;
 
-  propagatedUserEnvPkgs = [
-    compat
-  ];
+    propagatedUserEnvPkgs = [
+      compat
+    ];
 
-  buildInputs = propagatedUserEnvPkgs;
-}
+    buildInputs = propagatedUserEnvPkgs;
+  }

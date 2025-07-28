@@ -1,7 +1,7 @@
-{ trivialBuild, inputs } :
+  { trivialBuild, inputs } :
 
-trivialBuild rec {
-  pname = "mpc-wrapper";
-  version = "current";
-  src = inputs.mpc-wrapper;
-}
+  trivialBuild rec {
+    pname = "mpc-wrapper";
+    version = "current";
+    src = inputs.mpc-wrapper;
+  }
