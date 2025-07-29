@@ -85,6 +85,7 @@
       emacs.init.usePackage = {
             eshell = {
               enable = true;
+              babel = "eshell";
               after = ["evil-collection"];
               ghook = [
                 "('eshell-first-time-mode-hook 'efs/configure-eshell)"

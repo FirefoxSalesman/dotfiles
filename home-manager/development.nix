@@ -31,6 +31,7 @@
               enable = true;
               headerFont = config.stylix.fonts.sansSerif.name;
             };
+            captureTemplates.enable = true;
           };
         };
       };

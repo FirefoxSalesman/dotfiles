@@ -22,10 +22,8 @@
             custom = {
               org-export-with-toc = false;
               org-export-with-section-numbers = false;
-              org-agenda-files = '''("~/doc/tasks.org")'';
-              org-capture-templates = '''(("t" "Task" entry
-                                            (file "~/doc/tasks.org")
-                                            "* TODO %?\nDEADLINE: %^t"))'';
+              # org-agenda-files = '''("~/doc/tasks.org")'';
+              org-directory = ''"~/doc"'';
               org-emphasis-alist = '''(("*" bold)
                                          ("/" italic)
                                          ("=" org-verbatim verbatim)
