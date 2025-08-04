@@ -1,10 +1,17 @@
   { inputs, pkgs, pkgs-stable, config, ... }:
 
   {
-    imports = [./language-support];
+    imports = [
+      ./language-support
+      ./syntax-checkers
+    ];
 
     programs.emacs.init = {
       ide = {
+        flymake = {
+          enable = true;
+          preset = true;
+        };
         symex = true;  
         hoverDoc = true;
         evil = true;
@@ -33,6 +40,7 @@
             };
             captureTemplates.enable = true;
           };
+          python.enable = true;
         };
       };
 
@@ -180,18 +188,6 @@
             };
           };
         
-          json5-ts-mode = {
-            enable = true;
-            extraPackages = [pkgs.vscode-langservers-extracted];
-            mode = [''"\\.json5\\'"''];
-            eglot = true;
-            symex = true;
-            config = ''
-              (with-eval-after-load 'eglot
-                (add-to-list 'eglot-server-programs '((json5-ts-mode) . ("vscode-json-language-server" "--stdio"))))
-            '';
-          };
-
           racket-mode = {
             gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
             generalTwo.local-leader.racket-mode-map = {

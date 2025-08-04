@@ -210,14 +210,15 @@
         "doom-utils": "doom-utils",
         "eglot-booster": "eglot-booster",
         "eglot-x": "eglot-x",
-        "symex2": "symex2"
+        "symex2": "symex2",
+        "use-package-eglot": "use-package-eglot"
       },
       "locked": {
-        "lastModified": 1753749550,
-        "narHash": "sha256-VFkY2ApzkPdiRXx22x1MlaRN9Dj8alse6u4fBJzcB4A=",
+        "lastModified": 1753795962,
+        "narHash": "sha256-sfiwCchKU0AaNH7aImi6HZPT14a9DdpjRxivM32o0xg=",
         "owner": "firefoxsalesman",
         "repo": "NixEmacs",
-        "rev": "c65c033fa1e7ce2cac2ede1fe6ea9d07df7ef9e0",
+        "rev": "64092fe99a742b2200631a78b6126ad920a20818",
         "type": "github"
       },
       "original": {
@@ -942,6 +943,22 @@
         "owner": "zbelial",
         "repo": "treesitter-context.el",
         "type": "github"
+      }
+    },
+    "use-package-eglot": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1753643841,
+        "narHash": "sha256-6ybMqHT/qUM3MQY6PdVN054M49pgz2RiRp/U10OgnHM=",
+        "owner": "aidanhall",
+        "repo": "use-package-eglot",
+        "rev": "6aa3c0ee317ff025995ac6626de7be9302937c7f",
+        "type": "gitlab"
+      },
+      "original": {
+        "owner": "aidanhall",
+        "repo": "use-package-eglot",
+        "type": "gitlab"
       }
     }
   },
