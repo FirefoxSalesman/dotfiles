@@ -387,6 +387,7 @@
                                               ([?\s-J] . winner-redo)
                                               ([?\s-r] . exwm-reset)
                                               ([?\s-m] . toggle-single-window)
+                                              ([?\s-x] . toggle-follow-mode)
                                               ([?\s-k] . evil-window-delete)
                                               ([?\s-K] . evil-delete-buffer-and-window)
               
@@ -397,43 +398,51 @@
             };
             afterCall = ["on-init-ui-hook"];
             init = ''
-                (defun efs/exwm-init-hook ()
-                  ;; Make workspace 0 be the one where we land at startup
-                  (exwm-workspace-switch-create 0)
-                  
-                  ;; Show status in the mode line
-                  (start-process-shell-command "xbanish" nil "${pkgs.xbanish}/bin/xbanish"))
-                (defun efs/exwm-update-class ()
-                  (exwm-workspace-rename-buffer exwm-class-name))
+              (defun efs/exwm-init-hook ()
+                ;; Make workspace 0 be the one where we land at startup
+                (exwm-workspace-switch-create 0)
+                
+                ;; Show status in the mode line
+                (start-process-shell-command "xbanish" nil "${pkgs.xbanish}/bin/xbanish"))
+              (defun efs/exwm-update-class ()
+                (exwm-workspace-rename-buffer exwm-class-name))
               
-                (defun efs/exwm-update-title ()
-                  (pcase exwm-class-name
-                    ("qutebrowser" (exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title)))
-                    ("mpv" (exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title)))))
+              (defun efs/exwm-update-title ()
+                (pcase exwm-class-name
+                  ("qutebrowser" (exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title)))
+                  ("mpv" (exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title)))))
               
-                ;; From dmacs
-                (defvar single-window--last-configuration nil "Last window configuration before calling `delete-other-windows'.")
-                ;; From dmacs
-                (defun toggle-single-window ()
-                  "Un-maximize current window.
-                  If multiple windows are active, save window configuration and
-                  delete other windows.  If only one window is active and a window
-                  configuration was previously save, restore that configuration."
-                  (interactive)
-                  (if (= (count-windows) 1)
-                      (when single-window--last-configuration
-                        (set-window-configuration single-window--last-configuration)
-                	(when treesitter-context-mode (treesitter-context-focus-mode -1)))
-                    (setq single-window--last-configuration (current-window-configuration))
-                    (delete-other-windows)
-                    (when (and treesitter-context-mode)
-                      (treesitter-context-focus-mode 1))))
+              ;; From dmacs
+              (defvar single-window--last-configuration nil "Last window configuration before calling `delete-other-windows'.")
+              ;; From dmacs
+              (defun toggle-single-window ()
+                "Un-maximize current window.
+                If multiple windows are active, save window configuration and
+                delete other windows.  If only one window is active and a window
+                configuration was previously save, restore that configuration."
+                (interactive)
+                (if (= (count-windows) 1)
+                    (when single-window--last-configuration
+                      (set-window-configuration single-window--last-configuration)
+              	(when treesitter-context-mode (treesitter-context-focus-mode -1)))
+                  (setq single-window--last-configuration (current-window-configuration))
+                  (delete-other-windows)
+                  (when (and treesitter-context-mode)
+                    (treesitter-context-focus-mode 1))))
               
-                (defun evil-delete-buffer-and-window ()
-                  "kill the current buffer & its window"
-                  (interactive)
-                  (kill-current-buffer)
-                  (evil-window-delete))
+              (defun evil-delete-buffer-and-window ()
+                "kill the current buffer & its window"
+                (interactive)
+                (kill-current-buffer)
+                (evil-window-delete))
+              
+              (defun toggle-follow-mode ()
+                "If called while multiple windows are present, deactivates follow mode & kills all other windows.
+                 If called on only 1 window, activates follow mode & splits the window."
+                (interactive)
+                (if (= (count-windows) 1)
+                    (progn (follow-mode 1) (split-window-right))
+                  (progn (follow-mode -1) (delete-other-windows))))
             '';
             config = ''
                 ;; Set the screen resolution (update this to be the correct resolution for your screen!)

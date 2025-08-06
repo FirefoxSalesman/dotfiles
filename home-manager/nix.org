@@ -1978,7 +1978,7 @@ https://github.com/emacs-lsp/lsp-java/blob/9230a0007c79a661028c142f35c7b8d1f9f55
             };
             captureTemplates.enable = true;
           };
-          python.enable = true;
+          vimscript.enable = true;
         };
       };
 
@@ -2236,7 +2236,10 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
   { ... }:
 
   {
-    imports = [ ./org.nix ];
+    imports = [
+      ./org.nix
+      ./vimscript.nix
+    ];
   }
 #+end_src
 **** Org
@@ -2567,6 +2570,28 @@ in
 }
 #+end_src
 
+**** Vimscript
+#+begin_src nix :tangle language-support/vimscript.nix
+{ pkgs, config, lib, ... }:
+
+let
+  ide = config.programs.emacs.init.ide;
+in
+{
+  options.programs.emacs.init.ide.languages.vimscript.enable = lib.mkEnableOption "Enables support for vimscript, because why not?";
+
+  config.programs.emacs.init.usePackage.vimscript-ts-mode = lib.mkIf ide.languages.vimscript.enable {
+    enable = true;
+    mode = [''"\\.vim\\'"''];
+    extraPackages = lib.mkIf (ide.eglot.enable || ide.lsp.enable || ide.lspce.enable || ide.lsp-bridge.enable) [pkgs.vim-language-server];
+    eglot = lib.mkIf ide.eglot.enable ''("vim-language-server" "--stdio")'';
+    lsp = ide.lsp.enable;
+    lspce = ide.lspce.enable;
+    config = lib.mkIf ide.lspce.enable ''(with-eval-after-load 'lspce (add-to-list 'lspce-server-programs '("vimscript" "vim-language-server" "--stdio")))'' ;
+  };
+}
+#+end_src
+
 *** Syntax Checking
 **** Default.nix
 #+begin_src nix :tangle syntax-checkers/default.nix
@@ -2575,9 +2600,13 @@ in
 {
   imports = [
     ./flymake.nix
+    ./flycheck.nix
   ];
 
-  options.programs.emacs.init.ide.flymake.enable = lib.mkEnableOption "Enables flymake for any languages that benefit from it.";
+  options.programs.emacs.init.ide = {
+    flymake.enable = lib.mkEnableOption "Enables flymake for any languages that benefit from it.";
+    flycheck.enable = lib.mkEnableOption "Enables flycheck for any languages that benefit from it.";
+  };
 }
 #+end_src
 
@@ -2609,16 +2638,61 @@ in
         hook = ["(prolog-mode . flymake-mode)"];
       };
 
-      flymake-popon = {
+      flymake-popon = lib.mkIf (ide.hoverDoc && !ide.flycheck.preset) {
         enable = true;
         custom.flymake-popon-method = "'posframe";
         hook = ["(flymake-mode . flymake-popon-mode)"];
       };
 
+      flyover.hook = lib.mkIf ide.flycheck.preset ["(flymake-mode . flyover-mode)"];
+
       eglot.hook = lib.mkIf ide.eglot.preset [''(eglot-managed-mode . (lambda () (setq-local eldoc-documentation-functions '(eglot-signature-eldoc-function
                                                                                                                              eglot-hover-eldoc-function
                                                                                                                              t
                                                                                                                              eglot-x-hover-eldoc-function))))''];
+    };
+  };
+}
+#+end_src
+
+**** Flycheck
+#+begin_src nix :tangle syntax-checkers/flycheck.nix
+{ config, lib, ... }:
+
+let
+  ide = config.programs.emacs.init.ide;
+in
+{
+  options.programs.emacs.init.ide.flycheck.preset = lib.mkEnableOption "Enables flycheck's preset options (largely borrowed from doom)";
+
+  config = lib.mkIf ide.flycheck.preset {
+    programs.emacs = {
+      extraPackages = epkgs: [epkgs.on];
+      init.usePackage = {
+        flycheck = {
+          enable = true;
+          hook = ["(on-first-buffer . global-flycheck-mode)"];
+          extraConfig = '':preface (require 'on)'';
+          custom = {
+            flycheck-idle-change-delay = "1.0";
+            flycheck-buffer-switch-check-intermediate-buffers = true;
+            flycheck-display-errors-delay = "0.25";
+          };
+        };
+
+        flycheck-posframe = lib.mkIf ide.hoverDoc {
+          enable = true;
+          hook = ["(flycheck-mode . flycheck-posframe-mode)"];
+        };
+
+        flycheck-eglot = lib.mkIf ide.eglot.preset {
+          enable = true;
+          after = ["flycheck" "eglot"];
+          config = "(global-flycheck-eglot-mode)";
+        };
+
+        eglot.custom.eglot-stay-out-of = lib.mkIf ide.eglot.preset (lib.mkDefault "'(flymake)");
+      };
     };
   };
 }
@@ -5437,6 +5511,7 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
                                       ([?\s-J] . winner-redo)
                                       ([?\s-r] . exwm-reset)
                                       ([?\s-m] . toggle-single-window)
+                                      ([?\s-x] . toggle-follow-mode)
                                       ([?\s-k] . evil-window-delete)
                                       ([?\s-K] . evil-delete-buffer-and-window)
       
@@ -5470,43 +5545,51 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
 
 #+NAME: Emacs Exwm Init
 #+begin_src emacs-lisp
-  (defun efs/exwm-init-hook ()
-    ;; Make workspace 0 be the one where we land at startup
-    (exwm-workspace-switch-create 0)
-    
-    ;; Show status in the mode line
-    (start-process-shell-command "xbanish" nil "${pkgs.xbanish}/bin/xbanish"))
-  (defun efs/exwm-update-class ()
-    (exwm-workspace-rename-buffer exwm-class-name))
+(defun efs/exwm-init-hook ()
+  ;; Make workspace 0 be the one where we land at startup
+  (exwm-workspace-switch-create 0)
+  
+  ;; Show status in the mode line
+  (start-process-shell-command "xbanish" nil "${pkgs.xbanish}/bin/xbanish"))
+(defun efs/exwm-update-class ()
+  (exwm-workspace-rename-buffer exwm-class-name))
 
-  (defun efs/exwm-update-title ()
-    (pcase exwm-class-name
-      ("qutebrowser" (exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title)))
-      ("mpv" (exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title)))))
+(defun efs/exwm-update-title ()
+  (pcase exwm-class-name
+    ("qutebrowser" (exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title)))
+    ("mpv" (exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title)))))
 
-  ;; From dmacs
-  (defvar single-window--last-configuration nil "Last window configuration before calling `delete-other-windows'.")
-  ;; From dmacs
-  (defun toggle-single-window ()
-    "Un-maximize current window.
-    If multiple windows are active, save window configuration and
-    delete other windows.  If only one window is active and a window
-    configuration was previously save, restore that configuration."
-    (interactive)
-    (if (= (count-windows) 1)
-        (when single-window--last-configuration
-          (set-window-configuration single-window--last-configuration)
-  	(when treesitter-context-mode (treesitter-context-focus-mode -1)))
-      (setq single-window--last-configuration (current-window-configuration))
-      (delete-other-windows)
-      (when (and treesitter-context-mode)
-        (treesitter-context-focus-mode 1))))
+;; From dmacs
+(defvar single-window--last-configuration nil "Last window configuration before calling `delete-other-windows'.")
+;; From dmacs
+(defun toggle-single-window ()
+  "Un-maximize current window.
+  If multiple windows are active, save window configuration and
+  delete other windows.  If only one window is active and a window
+  configuration was previously save, restore that configuration."
+  (interactive)
+  (if (= (count-windows) 1)
+      (when single-window--last-configuration
+        (set-window-configuration single-window--last-configuration)
+	(when treesitter-context-mode (treesitter-context-focus-mode -1)))
+    (setq single-window--last-configuration (current-window-configuration))
+    (delete-other-windows)
+    (when (and treesitter-context-mode)
+      (treesitter-context-focus-mode 1))))
 
-  (defun evil-delete-buffer-and-window ()
-    "kill the current buffer & its window"
-    (interactive)
-    (kill-current-buffer)
-    (evil-window-delete))
+(defun evil-delete-buffer-and-window ()
+  "kill the current buffer & its window"
+  (interactive)
+  (kill-current-buffer)
+  (evil-window-delete))
+
+(defun toggle-follow-mode ()
+  "If called while multiple windows are present, deactivates follow mode & kills all other windows.
+   If called on only 1 window, activates follow mode & splits the window."
+  (interactive)
+  (if (= (count-windows) 1)
+      (progn (follow-mode 1) (split-window-right))
+    (progn (follow-mode -1) (delete-other-windows))))
 #+end_src
 
 #+NAME: Emacs Exwm Config

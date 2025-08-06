@@ -24,11 +24,13 @@ in
         hook = ["(prolog-mode . flymake-mode)"];
       };
 
-      flymake-popon = {
+      flymake-popon = lib.mkIf (ide.hoverDoc && !ide.flycheck.preset) {
         enable = true;
         custom.flymake-popon-method = "'posframe";
         hook = ["(flymake-mode . flymake-popon-mode)"];
       };
+
+      flyover.hook = lib.mkIf ide.flycheck.preset ["(flymake-mode . flyover-mode)"];
 
       eglot.hook = lib.mkIf ide.eglot.preset [''(eglot-managed-mode . (lambda () (setq-local eldoc-documentation-functions '(eglot-signature-eldoc-function
                                                                                                                              eglot-hover-eldoc-function

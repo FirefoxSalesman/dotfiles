@@ -40,7 +40,7 @@
             };
             captureTemplates.enable = true;
           };
-          python.enable = true;
+          vimscript.enable = true;
         };
       };
 

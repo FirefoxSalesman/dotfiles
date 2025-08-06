@@ -1,5 +1,8 @@
   { ... }:
 
   {
-    imports = [ ./org.nix ];
+    imports = [
+      ./org.nix
+      ./vimscript.nix
+    ];
   }
