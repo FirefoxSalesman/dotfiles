@@ -2,199 +2,202 @@
 
   {
     programs.emacs.init.usePackage = {
-        evil = {
-          enable = true;
-          demand = true;
-          gfhook = ["('doom-escape-hook 'evil-normal-state)"];
-          general."M-u" = "'universal-argument";
-          generalOne.universal-argument-map = {
-            "M-u" = "'universal-argument-more";
-            "C-u" = "'nil";
-          };
-          custom = {
-            # Various settings to make it more like vim
-            evil-want-integration = true;
-            evil-want-keybinding = false;
-            evil-want-minibuffer = true;
-            evil-want-C-u-scroll = true;
-            evil-want-C-w-delete = true;
-            evil-want-C-u-delete = true;
-            evil-want-C-h-delete = true;
-            evil-want-C-i-jump = true;
-            evil-move-cursor-back = false;
-            evil-move-beyond-eol = true; # Combined with move-cursor-back, it prevents the cursor from moving behind a "/" when selecting a directory in the minibuffer
-            evil-cross-lines = true;
-            sentence-end-double-space = false;
-          };
-          generalOne."'insert" = {
+      evil = {
+        enable = true;
+        demand = true;
+        gfhook = ["('doom-escape-hook 'evil-normal-state)"];
+        general."M-u" = "'universal-argument";
+        generalOne.universal-argument-map = {
+          "M-u" = "'universal-argument-more";
+          "C-u" = "'nil";
+        };
+        custom = {
+          # Various settings to make it more like vim
+          evil-want-integration = true;
+          evil-want-keybinding = false;
+          evil-want-minibuffer = true;
+          evil-want-C-u-scroll = true;
+          evil-want-C-w-delete = true;
+          evil-want-C-u-delete = true;
+          evil-want-C-h-delete = true;
+          evil-want-C-i-jump = true;
+          evil-move-cursor-back = false;
+          evil-move-beyond-eol = true; # Combined with move-cursor-back, it prevents the cursor from moving behind a "/" when selecting a directory in the minibuffer
+          evil-cross-lines = true;
+          sentence-end-double-space = false;
+        };
+        generalOne = {
+          "'insert" = {
             "C-s" = "'insert-char";
             "C-k" = "'kill-line";
           };
-          config = ''
-              ;; Initiate evil mode
-              (evil-mode)
-              (evil-ex-define-cmd "q" '(lambda () (interactive) (prescient--save) (save-buffers-kill-emacs)))
-              (evil-ex-define-cmd "Undotree" 'vundo)
-              (evil-ex-define-cmd "k[ill]" 'kill-current-buffer)
-              (gsetq evil-want-Y-yank-to-eol t)
-              (evil-set-undo-system 'undo-redo)
-            
-              (evil-set-initial-state 'messages-buffer-mode 'normal)
-              (evil-set-initial-state 'dashboard-mode 'normal)
-              (general-advice-add '(evil-scroll-down evil-scroll-up evil-scroll-page-up evil-scroll-page-down) :after #'(lambda (arg) (evil-window-middle)))
-            
-              (evil-add-command-properties #'flymake-goto-next-error :jump t)
-              (evil-add-command-properties #'flymake-goto-prev-error :jump t)
-              (evil-add-command-properties #'evil-scroll-up :jump t)
-              (evil-add-command-properties #'evil-scroll-down :jump t)
-              (evil-add-command-properties #'consult-grep :jump t)
-            
-              (evil-define-operator ergo-word-delete (beg end type register yank-handler)
-                "Delete word."
-                :motion evil-a-word
-                (evil-delete beg end type register yank-handler))
-            
-              (evil-define-operator ergo-word-change (beg end type register yank-handler)
-                "Delete word."
-                :motion evil-inner-word
-                (evil-change beg end type register yank-handler))
-            
-              (general-def 'normal
-                "i" 'evil-forward-char
-                "I" 'evil-window-top
-                "C-i" 'evil-goto-line
-                "n" 'evil-backward-char
-                "N" 'evil-window-bottom
-                "C-n" 'evil-goto-first-line
-                "E" 'evil-scroll-down
-                "o" 'evil-previous-visual-line
-                "O" 'evil-scroll-up
-                "x" 'evil-backward-WORD-begin
-                "X" 'evil-backward-word-begin
-                "C-x" 'evil-backward-WORD-end
-                "j" 'evil-undo
-                "J" 'evil-redo
-                "a" 'evil-ex
-                "r" 'evil-insert-line
-                "R" 'evil-open-above
-                "s" 'evil-append-line
-                "S" 'evil-open-below
-                "t" 'evil-insert
-                "T" 'evil-append
-                "C-t" 'evil-replace-state
-                "u" 'evil-forward-WORD-begin
-                "U" 'evil-forward-word-begin
-                "C-u" 'evil-forward-WORD-end
-                "-" 'evil-jump-backward
-                "_" 'evil-jump-forward
-                "m" 'evil-search-next
-                "M" 'evil-search-previous
-                "k" 'evil-delete-char
-                "K" 'evil-substitute
-                "l" 'evil-invert-char
-                "L" 'evil-invert-case
-                "c" 'evil-visual-char
-                "C" 'evil-visual-line
-                "C-c" 'evil-visual-block
-                "v" 'evil-delete
-                "V" 'evil-change
-                "C-v" 'evil-delete-line
-                "d" 'evil-yank
-                "D" 'evil-yank-line
-                "G" 'evil-paste-after
-                ";" 'evil-end-of-visual-line
-                ":" 'evil-end-of-line
-                "C-;" 'evil-end-of-line
-                "p" 'ergo-word-delete
-                "P" 'ergo-word-change
-                "C-p" 'ergo-word-change
-                "$" 'evil-execute-macro
-                "~" 'evil-record-macro
-                "C-z" 'evil-goto-last-change-reverse
-                "w" 'evil-repeat
-                "W" 'evil-ex-repeat
-                "C-w" 'evil-ex-repeat
-                "l" 'evil-shift-right-line
-                "L" 'evil-shift-left-line
-                "C-l" 'evil-shift-left-line
-                "y" 'evil-shift-right
-                "Y" 'evil-shift-left
-                "<escape>" 'doom/escape)
-                
-            
-              (general-def 'motion
-                "i" 'evil-forward-char
-                "I" 'evil-window-top
-                "C-i" 'evil-goto-line
-                "n" 'evil-backward-char
-                "N" 'evil-window-bottom
-                "C-n" 'evil-goto-first-line
-                "e" 'evil-next-visual-line
-                "C-e" 'evil-scroll-page-down
-                "o" 'evil-previous-visual-line
-                "C-o" 'evil-scroll-page-up
-                "a" 'evil-ex
-                "h" 'evil-set-marker
-                "m" 'evil-search-next
-                "M" 'evil-search-previous
-                "-" 'evil-jump-backward
-                "_" 'evil-jump-forward
-                "/" 'isearch-forward-regexp
-                "?" 'isearch-backward-regexp
-                "f" 'evil-first-non-blank-of-visual-line
-                "F" 'evil-beginning-of-visual-line
-                "C-f" 'evil-first-non-blank
-                "B" 'evil-goto-line)
-            
-              (general-swap-key nil '(motion normal visual)
-                "g" "b"
-                "z" "q"
-                "Z" "Q")
-            
-              (general-def
-                :keymaps 'override
-                :states '(normal visual)
-                "g" 'evil-paste-before
-                "z" 'evil-jump-item
-                "Z" 'evil-goto-last-change)
-            
-              (general-def
-                :keymaps 'override
-                :states '(operator visual)
-                "i" 'evil-forward-char
-                "s" evil-inner-text-objects-map
-                "t" evil-outer-text-objects-map)
-            
-              (general-def 'visual
-                "o" 'evil-previous-visual-line
-                "e" 'evil-next-visual-line
-                ;; "n" 'evil-backward-char
-                ;; "i" 'evil-forward-char
-                "U" 'evil-forward-word-begin
-                "u" 'evil-forward-WORD-begin
-                "X" 'evil-backward-word-begin
-                "x" 'evil-backward-WORD-begin
-                "v" 'evil-delete-char
-                "V" 'evil-substitute
-                "C-v" 'evil-substitute
-                "t" evil-outer-text-objects-map
-                "s" evil-inner-text-objects-map
-                "l" 'evil-invert-case
-                "y" 'evil-shift-right
-                "Y" 'evil-shift-left
-                "C-t" 'evil-replace
-                "R" 'evil-insert-line
-                "C-r" 'evil-append-line
-                "d" 'evil-yank-line
-                "D" 'evil-yank-line
-                "C-d" 'evil-yank-line
-                "G" 'evil-paste)
-            
-              (general-def 'normal "bl" '(consult-goto-line :which-key "go to line")
-                "b/" '(consult-keep-lines :which-key "delete non-matching lines"))
-            
-          '';
+          "'normal"."C-s" = "'evil-write";
         };
+        config = ''
+            ;; Initiate evil mode
+            (evil-mode)
+            (evil-ex-define-cmd "q" '(lambda () (interactive) (prescient--save) (save-buffers-kill-emacs)))
+            (evil-ex-define-cmd "Undotree" 'vundo)
+            (evil-ex-define-cmd "k[ill]" 'kill-current-buffer)
+            (evil-ex-define-cmd "trash" '(lambda () (interactive) (start-process-shell-command "rm" nil "rm -rf ~/.local/Trash")))
+            (gsetq evil-want-Y-yank-to-eol t)
+            (evil-set-undo-system 'undo-redo)
+            
+            (evil-set-initial-state 'messages-buffer-mode 'normal)
+            (evil-set-initial-state 'dashboard-mode 'normal)
+            (general-advice-add '(evil-scroll-down evil-scroll-up evil-scroll-page-up evil-scroll-page-down) :after #'(lambda (arg) (evil-window-middle)))
+            
+            (evil-add-command-properties #'flymake-goto-next-error :jump t)
+            (evil-add-command-properties #'flymake-goto-prev-error :jump t)
+            (evil-add-command-properties #'evil-scroll-up :jump t)
+            (evil-add-command-properties #'evil-scroll-down :jump t)
+            (evil-add-command-properties #'consult-grep :jump t)
+            
+            (evil-define-operator ergo-word-delete (beg end type register yank-handler)
+              "Delete word."
+              :motion evil-a-word
+              (evil-delete beg end type register yank-handler))
+            
+            (evil-define-operator ergo-word-change (beg end type register yank-handler)
+              "Delete word."
+              :motion evil-inner-word
+              (evil-change beg end type register yank-handler))
+            
+            (general-def 'normal
+              "i" 'evil-forward-char
+              "I" 'evil-window-top
+              "C-i" 'evil-goto-line
+              "n" 'evil-backward-char
+              "N" 'evil-window-bottom
+              "C-n" 'evil-goto-first-line
+              "E" 'evil-scroll-down
+              "o" 'evil-previous-visual-line
+              "O" 'evil-scroll-up
+              "x" 'evil-backward-WORD-begin
+              "X" 'evil-backward-word-begin
+              "C-x" 'evil-backward-WORD-end
+              "j" 'evil-undo
+              "J" 'evil-redo
+              "a" 'evil-ex
+              "r" 'evil-insert-line
+              "R" 'evil-open-above
+              "s" 'evil-append-line
+              "S" 'evil-open-below
+              "t" 'evil-insert
+              "T" 'evil-append
+              "C-t" 'evil-replace-state
+              "u" 'evil-forward-WORD-begin
+              "U" 'evil-forward-word-begin
+              "C-u" 'evil-forward-WORD-end
+              "-" 'evil-jump-backward
+              "_" 'evil-jump-forward
+              "m" 'evil-search-next
+              "M" 'evil-search-previous
+              "k" 'evil-delete-char
+              "K" 'evil-substitute
+              "l" 'evil-invert-char
+              "L" 'evil-invert-case
+              "c" 'evil-visual-char
+              "C" 'evil-visual-line
+              "C-c" 'evil-visual-block
+              "v" 'evil-delete
+              "V" 'evil-change
+              "C-v" 'evil-delete-line
+              "d" 'evil-yank
+              "D" 'evil-yank-line
+              "G" 'evil-paste-after
+              ";" 'evil-end-of-visual-line
+              ":" 'evil-end-of-line
+              "C-;" 'evil-end-of-line
+              "p" 'ergo-word-delete
+              "P" 'ergo-word-change
+              "C-p" 'ergo-word-change
+              "$" 'evil-execute-macro
+              "~" 'evil-record-macro
+              "C-z" 'evil-goto-last-change-reverse
+              "w" 'evil-repeat
+              "W" 'evil-ex-repeat
+              "C-w" 'evil-ex-repeat
+              "l" 'evil-shift-right-line
+              "L" 'evil-shift-left-line
+              "C-l" 'evil-shift-left-line
+              "y" 'evil-shift-right
+              "Y" 'evil-shift-left
+              "<escape>" 'doom/escape)
+              
+            
+            (general-def 'motion
+              "i" 'evil-forward-char
+              "I" 'evil-window-top
+              "C-i" 'evil-goto-line
+              "n" 'evil-backward-char
+              "N" 'evil-window-bottom
+              "C-n" 'evil-goto-first-line
+              "e" 'evil-next-visual-line
+              "C-e" 'evil-scroll-page-down
+              "o" 'evil-previous-visual-line
+              "C-o" 'evil-scroll-page-up
+              "a" 'evil-ex
+              "h" 'evil-set-marker
+              "m" 'evil-search-next
+              "M" 'evil-search-previous
+              "-" 'evil-jump-backward
+              "_" 'evil-jump-forward
+              "/" 'isearch-forward-regexp
+              "?" 'isearch-backward-regexp
+              "f" 'evil-first-non-blank-of-visual-line
+              "F" 'evil-beginning-of-visual-line
+              "C-f" 'evil-first-non-blank
+              "B" 'evil-goto-line)
+            
+            (general-swap-key nil '(motion normal visual)
+              "g" "b"
+              "z" "q"
+              "Z" "Q")
+            
+            (general-def
+              :keymaps 'override
+              :states '(normal visual)
+              "g" 'evil-paste-before
+              "z" 'evil-jump-item
+              "Z" 'evil-goto-last-change)
+            
+            (general-def
+              :keymaps 'override
+              :states '(operator visual)
+              "i" 'evil-forward-char
+              "s" evil-inner-text-objects-map
+              "t" evil-outer-text-objects-map)
+            
+            (general-def 'visual
+              "o" 'evil-previous-visual-line
+              "e" 'evil-next-visual-line
+              ;; "n" 'evil-backward-char
+              ;; "i" 'evil-forward-char
+              "U" 'evil-forward-word-begin
+              "u" 'evil-forward-WORD-begin
+              "X" 'evil-backward-word-begin
+              "x" 'evil-backward-WORD-begin
+              "v" 'evil-delete-char
+              "V" 'evil-substitute
+              "C-v" 'evil-substitute
+              "t" evil-outer-text-objects-map
+              "s" evil-inner-text-objects-map
+              "l" 'evil-invert-case
+              "y" 'evil-shift-right
+              "Y" 'evil-shift-left
+              "C-t" 'evil-replace
+              "R" 'evil-insert-line
+              "C-r" 'evil-append-line
+              "d" 'evil-yank-line
+              "D" 'evil-yank-line
+              "C-d" 'evil-yank-line
+              "G" 'evil-paste)
+            
+            (general-def 'normal "bl" '(consult-goto-line :which-key "go to line")
+              "b/" '(consult-keep-lines :which-key "delete non-matching lines"))
+          '';
+      };
       
         evil-collection = {
           enable = true;

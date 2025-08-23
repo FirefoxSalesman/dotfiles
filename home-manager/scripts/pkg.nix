@@ -20,6 +20,11 @@
       ${pkgs.coreutils}/bin/echo "install [packages]: install packages with yay"
       ${pkgs.coreutils}/bin/echo "optimize: clean up package cache"
       ${pkgs.coreutils}/bin/echo "update: update all packages"
+      ${pkgs.coreutils}/bin/echo "add: install a package"
+      ${pkgs.coreutils}/bin/echo "rm: uninstall a package"
+      ${pkgs.coreutils}/bin/echo "flake: perform a nix flake operation"
+      ${pkgs.coreutils}/bin/echo "template: set up a devshell template"
+      ${pkgs.coreutils}/bin/echo "tmp: temporarily install a package"
     }
 
     getTemplates() {
@@ -37,6 +42,7 @@
       add ) yay -S ''${@:2} ;;
       rm ) yay -Rs ''${@:2} ;;
       flake ) nix flake ''${@:2} ;;
+      tmp ) nix-shell -p ''${@:2};;
       template ) template;;
       help ) help ;;
     esac

@@ -29,11 +29,11 @@
         "sf-pro": "sf-pro"
       },
       "locked": {
-        "lastModified": 1748299691,
-        "narHash": "sha256-HMlx5HzeOOhpewq3y9UaSMP9AkhEo+AFJHZIWLQvJGw=",
+        "lastModified": 1752383772,
+        "narHash": "sha256-I5Y0gUJS85lGEuuKr+tKSRUpJWeKavE+WmiAHRcyBaU=",
         "owner": "Lyndeno",
         "repo": "apple-fonts.nix",
-        "rev": "ec51ae2e8ba89adbb5188c40aa262a7418c48b00",
+        "rev": "875c694d7f0ec2020d7511264907a1f0e3262931",
         "type": "github"
       },
       "original": {
@@ -79,11 +79,11 @@
     "base16-helix": {
       "flake": false,
       "locked": {
-        "lastModified": 1748408240,
-        "narHash": "sha256-9M2b1rMyMzJK0eusea0x3lyh3mu5nMeEDSc4RZkGm+g=",
+        "lastModified": 1752979451,
+        "narHash": "sha256-0CQM+FkYy0fOO/sMGhOoNL80ftsAzYCg9VhIrodqusM=",
         "owner": "tinted-theming",
         "repo": "base16-helix",
-        "rev": "6c711ab1a9db6f51e2f6887cc3345530b33e152e",
+        "rev": "27cf1e66e50abc622fb76a3019012dc07c678fac",
         "type": "github"
       },
       "original": {
@@ -192,11 +192,11 @@
     "emacs-embark": {
       "flake": false,
       "locked": {
-        "lastModified": 1751917650,
-        "narHash": "sha256-ZSP+0lvXHUr79nqx+Fx5cEDNNk6NDXoM+o4HyzODD8c=",
+        "lastModified": 1754425897,
+        "narHash": "sha256-pp3LpuCWBhZSjXRYbJ7wsOusFGacKsEBuXbnnjaMkZk=",
         "owner": "oantolin",
         "repo": "embark",
-        "rev": "89c7610fa7988b6c93029f87afa4ba6b7768bf81",
+        "rev": "4f3ac585cd87affc1d208ea6f0fbb9798b88c1bb",
         "type": "github"
       },
       "original": {
@@ -214,11 +214,11 @@
         "use-package-eglot": "use-package-eglot"
       },
       "locked": {
-        "lastModified": 1753795962,
-        "narHash": "sha256-sfiwCchKU0AaNH7aImi6HZPT14a9DdpjRxivM32o0xg=",
+        "lastModified": 1754999830,
+        "narHash": "sha256-BYGNuiAaPNgGSfvjtnV4PK6SDSb7Jvp3S3TUKm+m5wg=",
         "owner": "firefoxsalesman",
         "repo": "NixEmacs",
-        "rev": "64092fe99a742b2200631a78b6126ad920a20818",
+        "rev": "7d891ca0a8994aaf125b2e3da5340ecf06ae4196",
         "type": "github"
       },
       "original": {
@@ -233,11 +233,11 @@
         "nixpkgs-stable": "nixpkgs-stable"
       },
       "locked": {
-        "lastModified": 1752198082,
-        "narHash": "sha256-nCPTn+4jTDy4ODyDjzavdWLhXMoWlA+sEkCzwJ2V6q4=",
+        "lastModified": 1755882549,
+        "narHash": "sha256-BoiJ6CnM0feswbJ+32waU4aqAimmsrn4vLUx80KtLq8=",
         "owner": "nix-community",
         "repo": "emacs-overlay",
-        "rev": "fc31ccb4f9b115e9447e57dafb0cd356841f3f5f",
+        "rev": "016d29b671ddce7500e7b7d448259008fe9ad6c3",
         "type": "github"
       },
       "original": {
@@ -406,11 +406,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1752180332,
-        "narHash": "sha256-CCufHi/GclygJZbbsKyTvqylz5E3pH2oHFL9ycB8YMM=",
+        "lastModified": 1755810213,
+        "narHash": "sha256-QdenO8f0PTg+tC6HuSvngKcbRZA5oZKmjUT+MXKOLQg=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "3978bcd6961847385121db30c58dbd444d4a73df",
+        "rev": "6911d3e7f475f7b3558b4f5a6aba90fa86099baa",
         "type": "github"
       },
       "original": {
@@ -427,11 +427,11 @@
       },
       "locked": {
         "dir": "nix",
-        "lastModified": 1751487254,
-        "narHash": "sha256-VSipBrxqqIXfQNrFBDGfeLu02CxU8ZI8YrJu0jGMytM=",
+        "lastModified": 1755275124,
+        "narHash": "sha256-T4ARnfJAvAEeg3FPndNVqKbBAPP/eMWABC4OenF45WU=",
         "owner": "kmonad",
         "repo": "kmonad",
-        "rev": "f78b8fa9c82589abcc4964406d5e7bdf96860689",
+        "rev": "a38004ff4df4beda648ec5b1374173d3192d61ae",
         "type": "github"
       },
       "original": {
@@ -528,11 +528,11 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1751984180,
-        "narHash": "sha256-LwWRsENAZJKUdD3SpLluwDmdXY9F45ZEgCb0X+xgOL0=",
+        "lastModified": 1755615617,
+        "narHash": "sha256-HMwfAJBdrr8wXAkbGhtcby1zGFvs+StOp19xNsbqdOg=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "9807714d6944a957c2e036f84b0ff8caf9930bc0",
+        "rev": "20075955deac2583bb12f07151c2df830ef346b4",
         "type": "github"
       },
       "original": {
@@ -544,11 +544,11 @@
     },
     "nixpkgs_3": {
       "locked": {
-        "lastModified": 1751984180,
-        "narHash": "sha256-LwWRsENAZJKUdD3SpLluwDmdXY9F45ZEgCb0X+xgOL0=",
+        "lastModified": 1755615617,
+        "narHash": "sha256-HMwfAJBdrr8wXAkbGhtcby1zGFvs+StOp19xNsbqdOg=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "9807714d6944a957c2e036f84b0ff8caf9930bc0",
+        "rev": "20075955deac2583bb12f07151c2df830ef346b4",
         "type": "github"
       },
       "original": {
@@ -712,7 +712,7 @@
     "sf-compact": {
       "flake": false,
       "locked": {
-        "narHash": "sha256-J72Lyt2wy83E46wN8w6/Rih9kilM9wEjtY6KnbF0DsA=",
+        "narHash": "sha256-VMCf2Mhmx/qhLRQxlTAsQWxtonS27kPW+oTYBBRWHMg=",
         "type": "file",
         "url": "https://devimages-cdn.apple.com/design/resources/download/SF-Compact.dmg"
       },
@@ -760,7 +760,7 @@
     "sf-pro": {
       "flake": false,
       "locked": {
-        "narHash": "sha256-Q/pOQ4MGhW/ZtLka+UUQcwSoZFDWW34XvutxL4GvzUY=",
+        "narHash": "sha256-RX6X2ltVE88Hp1g9tpSywMT3UfdLpRxgw92KRpiAues=",
         "type": "file",
         "url": "https://devimages-cdn.apple.com/design/resources/download/SF-Pro.dmg"
       },
@@ -788,11 +788,11 @@
         "tinted-zed": "tinted-zed"
       },
       "locked": {
-        "lastModified": 1752170554,
-        "narHash": "sha256-4FY36NjEACoNXk8lSarwif/UJtABR9tCLxV9ro9p9RQ=",
+        "lastModified": 1755708361,
+        "narHash": "sha256-RmqBx2EamhIk0WVhQSNb8iehaVhilO7D0YAnMoFPqJQ=",
         "owner": "danth",
         "repo": "stylix",
-        "rev": "84e7ea0aa447fbc11293e76977302ab1ee0fab38",
+        "rev": "2355da455d7188228aaf20ac16ea9386e5aa6f0c",
         "type": "github"
       },
       "original": {
@@ -948,17 +948,17 @@
     "use-package-eglot": {
       "flake": false,
       "locked": {
-        "lastModified": 1753643841,
-        "narHash": "sha256-6ybMqHT/qUM3MQY6PdVN054M49pgz2RiRp/U10OgnHM=",
-        "owner": "aidanhall",
+        "lastModified": 1754999779,
+        "narHash": "sha256-P42tMHhpxAiLvKE7fWG1LuCbAJiMviQH9+XLFsc99K4=",
+        "owner": "firefoxsalesman",
         "repo": "use-package-eglot",
-        "rev": "6aa3c0ee317ff025995ac6626de7be9302937c7f",
-        "type": "gitlab"
+        "rev": "2decf8fa4b7ecb3783c1118e45196cd8cdb04b30",
+        "type": "github"
       },
       "original": {
-        "owner": "aidanhall",
+        "owner": "firefoxsalesman",
         "repo": "use-package-eglot",
-        "type": "gitlab"
+        "type": "github"
       }
     }
   },

@@ -50,234 +50,241 @@
         };
 
       emacs.init.usePackage = {
-          tab-bar = {
-            enable = true;
-            config = ''
-              (general-add-advice 'tab-new :after #'dashboard-open)
-              (defun efs/tab-bar-select ()
-                 (interactive)
-                 (setq tab-bar-tab-hints t)
-                 (tab-bar-select-tab (string-to-number (read-string "Tab Number: ")))
-                 (setq tab-bar-tab-hints nil))
-            '';
-            ghook = ["('exwm-init-hook 'tab-bar-mode)"];
-            general."s-u" = "'tab-bar-hydra/body";
-            custom = {
-              tab-bar-format = "'(tab-bar-format-tabs-groups tab-bar-separator doom-nano-tabline tab-bar-format-align-right tab-bar-format-global)";
-              tab-bar-close-button-show = false;
-              tab-bar-select-restore-windows = false;
-              tab-bar-auto-width-max = "'((150) 20)";
-            };
-            extraConfig = ''
-              :pretty-hydra
-              ((:color amaranth)
-               ("Navigation"
-                (("e" #'evil-tab-next "next")
-                 ("o" #'tab-bar-switch-to-prev-tab "prev")
-                 ("v" #'tab-recent "recent")
-                 ("b" #'tab-bar-lost-commands-switch-to-first-tab "first")
-                 ("B" #'tab-bar-lost-commands-switch-to-last-tab "last")
-                 ("/" #'efs/tab-bar-select "search"))
-                "Creation/Deletion"
-                (("s" #'tab-new "new")
-                 ("k" #'tab-close "close")
-                 ("r" #'tab-rename "rename")
-                 ("u" #'tab-undo "undo"))
-                "Groups"
-                (("g" #'tab-group "add to group")
-                 ("K" #'tab-close-group "close group"))
-                "Organization"
-                (("E" #'tab-bar-lost-commands-move-tab-forward "forward")
-                 ("O" #'tab-bar-lost-commands-move-tab-backward "backward"))
-                "Exit"
-                (("<return>" nil "" :color blue)
-                 ("<escape>" nil "" :color blue))))
-            '';
+        tab-bar = {
+          enable = true;
+          config = ''
+            (general-add-advice 'tab-new :after #'dashboard-open)
+            (defun efs/tab-bar-select ()
+               (interactive)
+               (setq tab-bar-tab-hints t)
+               (tab-bar-select-tab (string-to-number (read-string "Tab Number: ")))
+               (setq tab-bar-tab-hints nil))
+          '';
+          ghook = ["('exwm-init-hook 'tab-bar-mode)"];
+          general."s-u" = "'tab-bar-hydra/body";
+          custom = {
+            tab-bar-format = "'(tab-bar-format-tabs-groups tab-bar-separator doom-nano-tabline tab-bar-format-align-right tab-bar-format-global)";
+            tab-bar-close-button-show = false;
+            tab-bar-select-restore-windows = false;
+            tab-bar-auto-width-max = "'((150) 20)";
           };
+          extraConfig = ''
+            :pretty-hydra
+            ((:color amaranth)
+             ("Navigation"
+              (("e" #'evil-tab-next "next")
+               ("o" #'tab-bar-switch-to-prev-tab "prev")
+               ("v" #'tab-recent "recent")
+               ("b" #'tab-bar-lost-commands-switch-to-first-tab "first")
+               ("B" #'tab-bar-lost-commands-switch-to-last-tab "last")
+               ("/" #'efs/tab-bar-select "search"))
+              "Creation/Deletion"
+              (("s" #'tab-new "new")
+               ("k" #'tab-close "close")
+               ("r" #'tab-rename "rename")
+               ("u" #'tab-undo "undo"))
+              "Groups"
+              (("g" #'tab-group "add to group")
+               ("K" #'tab-close-group "close group"))
+              "Organization"
+              (("E" #'tab-bar-lost-commands-move-tab-forward "forward")
+               ("O" #'tab-bar-lost-commands-move-tab-backward "backward"))
+              "Exit"
+              (("<return>" nil "" :color blue)
+               ("<escape>" nil "" :color blue))))
+          '';
+        };
         
-          tab-bar-lost-commands = {
-            enable = true;
-            command = [
-              "tab-bar-lost-commands-move-tab-forward"
-              "tab-bar-lost-commands-move-tab-backward" 
-              "tab-bar-lost-commands-switch-to-first-tab" 
-              "tab-bar-lost-commands-switch-to-last-tab" 
-            ];
-          };
+        tab-bar-lost-commands = {
+          enable = true;
+          command = [
+            "tab-bar-lost-commands-move-tab-forward"
+            "tab-bar-lost-commands-move-tab-backward" 
+            "tab-bar-lost-commands-switch-to-first-tab" 
+            "tab-bar-lost-commands-switch-to-last-tab" 
+          ];
+        };
         
-          bufler = {
-            enable = true;
-            ghook = ["('tab-bar-mode-hook 'bufler-mode)"];
-            general = {
-              "s-h" = "'hydra:bufler/body";
-              "s-b" = "'bufler-hydra/body";
-              "s-f" = "'bufler-workspace-focus-buffer";
-              "s-F" = "'bufler-workspace-set";
-            };
-            generalTwo."'normal".evil-collection-unimpaired-mode-map = {
-              "]b" = "'bufler-cycle-buffers-forward";
-              "[b" = "'bufler-cycle-buffers-backward";
-            };
-            custom.bufler-groups = ''
-                (bufler-defgroups
-                  ;; Subgroup collecting all named workspaces.
-                  (group (auto-workspace))
-                  ;; Subgroup collecting buffers in a project.
-                  (group (auto-project))
-                  ;; Subgroup collecting tramp buffers
-                  (group (auto-tramp))
-                  ;; Grouping browser windows
-                  (group
-                   (group-or "Browsers"
-                             (name-match "Qutebrowser" (rx bos "Qutebrowser"))
-                             (mode-match "eww-mode" (rx bos "eww-"))))
-                  (group
-                   (group-or "Chat"
-                             (name-match "Thunderbird" (rx bos "Thunderbird"))
-                             (name-match "teams-for-linux" (rx bos "teams-for-linux"))
-                             (mode-match "ement" (rx bos "ement-"))
-                             (name-match "vesktop" (rx bos "vesktop"))))
-                  (group
-                   (group-or "Media"
-                             (name-match "mpv" (rx bos "Mpv"))
-                             (mode-match "elfeed-search-mode" (rx bos "elfeed-"))
-                             (mode-match "elfeed-show-mode" (rx bos "elfeed-"))
-                	     (mode-match "yeetube-mode" (rx bos "yeetube-"))))
-                  (group
-                   (group-or "Agenda"
-                             (name-match "tasks.org" (rx bos "tasks.org"))
-                             (mode-match "org-agenda-mode" (rx bos "org-agenda-"))))
-                  (group
-                   (group-or "Notes"
-                             (dir "~/doc/denote/")))
-                  (group
-                   (group-or "AV"
-                             (name-match "lmms" (rx bos "lmms"))
-                             (name-match "Gimp-2.10" (rx bos "Gimp-2.10"))
-                             (name-match "kdenlive" (rx bos "kdenlive"))))
-                  (group
-                   (group-or "Games"
-                             (dir "~/.local/PrismLauncher/")
-                             (name-match "Minecraft" (rx bos "Minecraft"))
-                             (name-match "PrismLauncher" (rx bos "PrismLauncher"))))
-                  (group
-                   ;; Subgroup collecting all `help-mode' and `info-mode' buffers.
-                   (group-or "Help/Info"
-                             (mode-match "*Help*" (rx bos (or "help-" "helpful-")))
-                             (mode-match "*Info*" (rx bos "info-"))))
-                  (group
-                   ;; Subgroup collecting all special buffers (i.e. ones that are not
-                   ;; file-backed), except `magit-status-mode' buffers (which are allowed to fall
-                   ;; through to other groups, so they end up grouped with their project buffers).
-                   (group-and "*Special*"
-                              (name-match "**Special**"
-                                          (rx bos "*" (or "Messages" "Warnings" "scratch" "Backtrace" "Pinentry") "*"))
-                              (lambda (buffer)
-                                (unless (or (funcall (mode-match "Magit" (rx bos "magit-status"))
-                                                     buffer)
-                                            (funcall (mode-match "Dired" (rx bos "dired"))
-                                                     buffer)
-                                            (funcall (auto-file) buffer))
-                                  "*Special*"))))
-                  (auto-directory))
-            '' ;
-            init = ''
-                ;; These functions were adapted from perspective-exwm
-                (defun bufler-cycle-buffers (proc)
-                  "Switches to the next or previous buffer in the workspace, if one exists, or the next buffer anywhere, if one doesn't exist."
-                  (let* ((workspace (bufler-workspace--tab-parameter 'bufler-workspace-path (tab-bar--current-tab-find))))
-                    (if workspace
-                        (let* ((current (current-buffer))
-                               (buffer-list (mapcar #'cdr
-                                                    (bufler-buffer-alist-at workspace :filter-fns bufler-filter-buffer-fns)))
-                               (current-pos (or (cl-position current buffer-list) -1))
-                               (len (length buffer-list))
-                               (next-pos (% (+ current-pos len
-                                               (if (eq proc 'evil-next-buffer) (- len 1) -1))
-                                            len))
-                               (next-buffer (nth next-pos buffer-list)))
-                          (switch-to-buffer next-buffer))
-                      (funcall proc))))
-                (defun bufler-cycle-buffers-forward ()
-                  "Cycles the buffers in the workspace forward."
-                  (interactive)
-                  (bufler-cycle-buffers 'evil-next-buffer))
-                (defun bufler-cycle-buffers-backward ()
-                  "Cycles the buffers in the workspace backward."
-                  (interactive)
-                  (bufler-cycle-buffers 'evil-prev-buffer))
-              
-            '';
-            config = ''
-                (defun bufler-bar ()
-                  (interactive)
-                  (bufler-sidebar)
-                  (with-selected-window (get-buffer-window "*Bufler*")
-                    (gsetq window-size-fixed 'width)
-                    (window-resize (selected-window) (- 35 (window-total-width)) t t)))
-                (evil-ex-define-cmd "ls" 'bufler-bar)
-              
-                (evil-collection-define-key 'normal 'bufler-list-mode-map
-                  (kbd "RET") 'bufler-list-buffer-switch
-                  (kbd "M-RET") 'bufler-list-buffer-peek
-                  "D" 'bufler-list-buffer-kill)
-              
-            '';
-            extraConfig = ''
-              :pretty-hydra
-              ((:color amaranth)
-                ("Move"
-                 (("o" bufler-cycle-buffers-backward "prev")
-                  ("e" bufler-cycle-buffers-forward "next"))
-                 "Tricks"
-                 (("/" consult-buffer "search" :color blue :exit t)
-                  ("i" ibuffer "list (ibuffer)" :color blue :exit t)
-                  ("k" kill-current-buffer "delete"))
-                 "Quit"
-                 (("<escape>" nil "quit" :color blue :exit t)
-                  ("<return>" nil "quit" :color blue :exit t))))
-            '';
+        bufler = {
+          enable = true;
+          ghook = ["('tab-bar-mode-hook 'bufler-mode)"];
+          general = {
+            "s-b" = "'bufler-hydra/body";
+            "s-f" = "'bufler-workspace-focus-buffer";
+            "s-F" = "'bufler-workspace-set";
           };
+          generalTwo."'normal".evil-collection-unimpaired-mode-map = {
+            "]b" = "'bufler-cycle-buffers-forward";
+            "[b" = "'bufler-cycle-buffers-backward";
+          };
+          custom.bufler-groups = ''
+            (bufler-defgroups
+              ;; Subgroup collecting all named workspaces.
+              (group (auto-workspace))
+              ;; Subgroup collecting buffers in a project.
+              (group (auto-project))
+              ;; Subgroup collecting tramp buffers
+              (group (auto-tramp))
+              ;; Grouping browser windows
+              (group
+               (group-or "Browsers"
+                         (name-match "Qutebrowser" (rx bos "Qutebrowser"))
+                         (name-match "Tor Browser" (rx bos "Tor Browser"))
+                         (mode-match "eww-mode" (rx bos "eww-"))))
+              (group
+               (group-or "Chat"
+                         (name-match "Thunderbird" (rx bos "Thunderbird"))
+                         (name-match "teams-for-linux" (rx bos "teams-for-linux"))
+                         (mode-match "ement" (rx bos "ement-"))
+                         (name-match "vesktop" (rx bos "vesktop"))))
+              (group
+               (group-or "Media"
+                         (name-match "mpv" (rx bos "Mpv"))
+                         (mode-match "elfeed-search-mode" (rx bos "elfeed-"))
+                         (mode-match "elfeed-show-mode" (rx bos "elfeed-"))
+            	     (mode-match "yeetube-mode" (rx bos "yeetube-"))))
+              (group
+               (group-or "Agenda"
+                         (name-match "tasks.org" (rx bos "tasks.org"))
+                         (mode-match "org-agenda-mode" (rx bos "org-agenda-"))))
+              (group
+               (group-or "Ledger"
+            	     (mode-match "ledger-mode" (rx bos "ledger-"))
+            	     (mode-match "ledger-report-mode" (rx bos "ledger-"))))
+              (group
+               (group-or "Notes"
+                         (dir "~/doc/denote/")))
+              (group
+               (group-or "AV"
+                         (name-match "lmms" (rx bos "lmms"))
+                         (name-match "Gimp-2.10" (rx bos "Gimp-2.10"))
+                         (name-match "kdenlive" (rx bos "kdenlive"))))
+              (group
+               (group-or "Games"
+                         (dir "~/.local/PrismLauncher/")
+                         (name-match "Minecraft" (rx bos "Minecraft"))
+                         (name-match "PrismLauncher" (rx bos "PrismLauncher"))))
+              (group
+               ;; Subgroup collecting all `help-mode' and `info-mode' buffers.
+               (group-or "Help/Info"
+                         (mode-match "*Help*" (rx bos (or "help-" "helpful-")))
+                         (mode-match "*Info*" (rx bos "info-"))
+            	     (mode-match "Man-mode" (rx bos "Man-"))))
+              (group
+               ;; Subgroup collecting all special buffers (i.e. ones that are not
+               ;; file-backed), except `magit-status-mode' buffers (which are allowed to fall
+               ;; through to other groups, so they end up grouped with their project buffers).
+               (group-and "*Special*"
+                          (name-match "**Special**"
+                                      (rx bos "*" (or "Messages" "Warnings" "scratch" "Backtrace" "Pinentry") "*"))
+                          (lambda (buffer)
+                            (unless (or (funcall (mode-match "Magit" (rx bos "magit-status"))
+                                                 buffer)
+                                        (funcall (mode-match "Dired" (rx bos "dired"))
+                                                 buffer)
+                                        (funcall (auto-file) buffer))
+                              "*Special*"))))
+              (auto-directory))
+          '' ;
+          init = ''
+              ;; These functions were adapted from perspective-exwm
+              (defun bufler-cycle-buffers (proc)
+                "Switches to the next or previous buffer in the workspace, if one exists, or the next buffer anywhere, if one doesn't exist."
+                (let* ((workspace (bufler-workspace--tab-parameter 'bufler-workspace-path (tab-bar--current-tab-find))))
+                  (if workspace
+                      (let* ((current (current-buffer))
+                             (buffer-list (mapcar #'cdr
+                                                  (bufler-buffer-alist-at workspace :filter-fns bufler-filter-buffer-fns)))
+                             (current-pos (or (cl-position current buffer-list) -1))
+                             (len (length buffer-list))
+                             (next-pos (% (+ current-pos len
+                                             (if (eq proc 'evil-next-buffer) (- len 1) -1))
+                                          len))
+                             (next-buffer (nth next-pos buffer-list)))
+                        (switch-to-buffer next-buffer))
+                    (funcall proc))))
+              (defun bufler-cycle-buffers-forward ()
+                "Cycles the buffers in the workspace forward."
+                (interactive)
+                (bufler-cycle-buffers 'evil-next-buffer))
+              (defun bufler-cycle-buffers-backward ()
+                "Cycles the buffers in the workspace backward."
+                (interactive)
+                (bufler-cycle-buffers 'evil-prev-buffer))
+            
+          '';
+          config = ''
+              (defun bufler-bar ()
+                (interactive)
+                (bufler-sidebar)
+                (with-selected-window (get-buffer-window "*Bufler*")
+                  (gsetq window-size-fixed 'width)
+                  (window-resize (selected-window) (- 35 (window-total-width)) t t)))
+              (evil-ex-define-cmd "ls" 'bufler-bar)
+            
+              (evil-collection-define-key 'normal 'bufler-list-mode-map
+                (kbd "RET") 'bufler-list-buffer-switch
+                (kbd "M-RET") 'bufler-list-buffer-peek
+                "D" 'bufler-list-buffer-kill)
+            
+          '';
+          extraConfig = ''
+            :pretty-hydra
+            ((:color amaranth)
+              ("Move"
+               (("o" bufler-cycle-buffers-backward "prev")
+                ("e" bufler-cycle-buffers-forward "next"))
+               "Tricks"
+               (("/" consult-buffer "search" :color blue :exit t)
+                ("i" ibuffer "list (ibuffer)" :color blue :exit t)
+                ("k" kill-current-buffer "delete"))
+               "Quit"
+               (("<escape>" nil "quit" :color blue :exit t)
+                ("<return>" nil "quit" :color blue :exit t))))
+          '';
+        };
         
-          bufler-workspace-tabs = {
-            enable = true;
-            ghook = ["('bufler-mode-hook 'bufler-workspace-workspaces-as-tabs-mode)"];
-            gfhook = ["('bufler-workspace-workspaces-as-tabs-mode-hook '(global-tab-line-mode burly-tabs-mode))"];
-          };
+        bufler-workspace-tabs = {
+          enable = true;
+          ghook = ["('bufler-mode-hook 'bufler-workspace-workspaces-as-tabs-mode)"];
+          gfhook = ["('bufler-workspace-workspaces-as-tabs-mode-hook '(global-tab-line-mode burly-tabs-mode))"];
+        };
 
           elwm = {
             enable = true;
             defer = true;
             command = ["elwm-next" "elwm-prev" "elwm-rotate-window" "elwm-derotate-window" "elwm-split-window"];
             config = ''
-                (defun elwm-split-window ()
-                  "Split window according to the current layout.
-                  
-                  Window in the master area can't be split, instead the last window
-                  in the stack will be split.
-                  
-                  If selected window is window on the stack, the new window will be
-                  created next to it, according to the current layout."
-                  (interactive)
-                  (let ((buf (current-buffer)))
-                    (if (eq (count-windows) 1)
-                        (evil-window-vsplit)
-                      (cond
-                       ((eq elwm-current-layout 'tile-vertical-left)
-                        (if (elwm--in-master-area-p)
-                            ;; split the last window on the stack instead
-                            (set-window-buffer
-                             (select-window (split-window (car (last (elwm--sorted-window-list))) nil nil))
-                             buf)
-                          (evil-window-split)))
-                       ((eq elwm-current-layout 'tile-horizontal-top)
-                        (if (elwm--in-master-area-p)
-                            ;; split the last window on the stack instead
-                            (set-window-buffer
-                             (select-window (split-window (car (last (elwm--sorted-window-list))) nil t))
-                             buf)
-                          (evil-window-split)))))))
-              
+              (defun elwm-split-window ()
+                "Split window according to the current layout.
+                
+                Window in the master area can't be split, instead the last window
+                in the stack will be split.
+                
+                If selected window is window on the stack, the new window will be
+                created next to it, according to the current layout."
+                (interactive)
+                (let ((buf (current-buffer)))
+                  (unless (or (eq elwm-current-layout 'monocle) (eq elwm-current-layout 'follow))
+              	(if (eq (count-windows) 1)
+              	    (if (eq elwm-current-layout 'tile-vertical-left)
+              		(evil-window-vsplit)
+              	      (evil-window-split))
+              	  (cond
+              	   ((eq elwm-current-layout 'tile-vertical-left)
+              	    (if (elwm--in-master-area-p)
+              		;; split the last window on the stack instead
+              		(set-window-buffer
+              		 (select-window (split-window (car (last (elwm--sorted-window-list))) nil nil))
+              		 buf)
+              	      (evil-window-split)))
+              	   ((eq elwm-current-layout 'tile-horizontal-top)
+              	    (if (elwm--in-master-area-p)
+              		;; split the last window on the stack instead
+              		(set-window-buffer
+              		 (select-window (split-window (car (last (elwm--sorted-window-list))) nil t))
+              		 buf)
+              	      (evil-window-vsplit))))))))
             '';
             init = ''
                 (defun elwm-next ()
@@ -423,9 +430,11 @@
                 (interactive)
                 (if (= (count-windows) 1)
                     (when single-window--last-configuration
+              	(setq elwm-current-layout 'tile-vertical-left)
                       (set-window-configuration single-window--last-configuration)
               	(when treesitter-context-mode (treesitter-context-focus-mode -1)))
                   (setq single-window--last-configuration (current-window-configuration))
+                  (setq elwm-current-layout 'monocle)
                   (delete-other-windows)
                   (when (and treesitter-context-mode)
                     (treesitter-context-focus-mode 1))))
@@ -441,8 +450,12 @@
                  If called on only 1 window, activates follow mode & splits the window."
                 (interactive)
                 (if (= (count-windows) 1)
-                    (progn (follow-mode 1) (split-window-right))
-                  (progn (follow-mode -1) (delete-other-windows))))
+                    (progn (follow-mode 1)
+              	     (split-window-right)
+              	     (setq elwm-current-layout 'follow))
+                  (progn (follow-mode -1)
+              	   (delete-other-windows)
+              	   (setq elwm-current-layout 'tile-vertical-left))))
             '';
             config = ''
                 ;; Set the screen resolution (update this to be the correct resolution for your screen!)

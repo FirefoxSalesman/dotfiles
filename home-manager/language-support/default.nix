@@ -4,6 +4,7 @@
     imports = [
       ./org.nix
       ./vimscript.nix
-      ./fsharp.nix
+      ./ledger.nix
+      ./julia.nix
     ];
   }

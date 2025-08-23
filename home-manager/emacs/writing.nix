@@ -205,7 +205,7 @@
         
           writeroom-mode = {
             enable = true;
-            ghook = ["('(woman-mode-hook org-agenda-mode-hook org-mode-hook Info-mode-hook markdown-mode-hook) 'writeroom-mode)"];
+            ghook = ["('(Man-mode-hook org-agenda-mode-hook org-mode-hook Info-mode-hook markdown-mode-hook) 'writeroom-mode)"];
             gfhook = ["('writeroom-mode-hook 'visual-line-mode)"];
             custom = {
               writeroom-mode-line = true;

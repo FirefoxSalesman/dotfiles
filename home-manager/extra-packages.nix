@@ -5,6 +5,7 @@
       (config.lib.nixGL.wrap pkgs-stable.gimp)
       (config.lib.nixGL.wrap prismlauncher)
       (config.lib.nixGL.wrap blockbench)
+      (config.lib.nixGL.wrap tor-browser)
       wget
       zip
       unzip

@@ -55,7 +55,6 @@
                 "hI" '(describe-input-method :which-key "describe input method")
                 "hK" '(Info-goto-emacs-key-command :which-key "info: key command")
                 "hL" '(describe-language-environment :which-key "describe language environment")
-                "hM" '(woman :which-key "man")
                 "hP" '(describe-package :which-key "describe package")
                 "hR" '(info-display-manual :which-key "info: manual")
                 "hS" '(info-lookup-symbol :which-key "info: symbol")
@@ -65,7 +64,6 @@
                 "hd" '(apropos-documentation :which-key "apropos documentation")
                 "he" '(view-echo-area-messages :which-key "view echoed messages")
                 "hh" '(help-for-help :which-key "help for help")
-                "hi" '(info :which-key "info pages")
                 "hl" '(view-lossage :which-key "lossage")
                 "hn" '(view-emacs-news :which-key "emacs news")
                 "hp" '(finder-by-keyword :which-key "finder by keyword")
@@ -146,7 +144,7 @@
               }; 
               config = "(global-display-line-numbers-mode)";
               #Disable line numbers for some modes
-              ghook = ["('(org-mode-hook term-mode-hook dired-mode-hook eww-mode-hook eat-mode-hook markdown-mode-hook help-mode-hook helpful-mode-hook Info-mode-hook woman-mode-hook shell-mode-hook pdf-view-mode-hook elfeed-search-mode-hook elfeed-show-mode-hook eshell-mode-hook racket-repl-mode-hook sage-shell-mode-hook) (lambda () (display-line-numbers-mode 0)))"];
+              ghook = ["('(org-mode-hook term-mode-hook dired-mode-hook eww-mode-hook eat-mode-hook markdown-mode-hook help-mode-hook helpful-mode-hook Info-mode-hook Man-mode-hook shell-mode-hook pdf-view-mode-hook elfeed-search-mode-hook elfeed-show-mode-hook eshell-mode-hook racket-repl-mode-hook sage-shell-mode-hook) (lambda () (display-line-numbers-mode 0)))"];
             } ;
           
             elec-pair = {
@@ -205,12 +203,6 @@
               enable = true;
               custom.wgrep-auto-save-buffer = true;
               generalTwo."'normal".grep-mode-map."w" = "'wgrep-change-to-wgrep-mode";
-            };
-
-            ledger = {
-              enable = true;
-              package = epkgs: epkgs.ledger-mode;
-              mode = [''"\\.ledger\\'"''];
             };
 
             ednc = {

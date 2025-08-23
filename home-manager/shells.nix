@@ -120,12 +120,11 @@
                 (evil-normalize-keymaps)
                 (setenv "TERM" "xterm")
                 (gsetq eshell-command-aliases-list '(("gc" "torsocks git clone")
-              				       ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
-              				       ("l" "ls $*")
-              				       ("halt" "doas shutdown -P now")
-              				       ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'")
-              				       ("trash" "rm -rf ~/.local/Trash"))
-              	 eshell-history-size 0
+              					 ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
+              					 ("l" "ls $*")
+              					 ("halt" "doas shutdown -P now")
+              					 ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'"))
+              	   eshell-history-size 0
                        eshell-buffer-maximum-lines 100
                        eshell-hist-ignoredups t
                        eshell-scroll-to-bottom-on-input t))

@@ -252,6 +252,8 @@
                "j" = '''(evil-collection-consult-jump-list :which-key "jump")'';
                "i" = '''consult-imenu'';
                "h C-a" = '''(consult-apropos :which-key "apropos")'';
+               "h i" = '''(consult-info :which-key "info")'';
+               "h M" = '''(consult-man :which-key "man")'';
             };
           };
           config = ''
@@ -356,18 +358,9 @@
             minibuffer-local-map."a" = "'embark-act";
           };
           generalOne = {
-            embark-file-map = {
-              "2" = "(my/embark-split-action find-file split-window-below)";
-              "3" = "(my/embark-split-action find-file split-window-right)";
-            };
-            embark-buffer-map = {
-              "2" = "(my/embark-split-action switch-to-buffer split-window-below)";
-              "3" = "(my/embark-split-action switch-to-buffer split-window-right)";
-            };
-            embark-bookmark-map = {
-              "2" = "(my/embark-split-action bookmark-jump split-window-below)";
-              "3" = "(my/embark-split-action bookmark-jump split-window-right) ";
-            };
+            embark-file-map."2" = "(my/embark-split-action find-file elwm-split-window)";
+            embark-buffer-map."2" = "(my/embark-split-action switch-to-buffer elwm-split-window)";
+            embark-bookmark-map."2" = "(my/embark-split-action bookmark-jump elwm-split-window)";
           };
           config = ''
               (cl-defun embark--beginning-of-target (&key bounds &allow-other-keys)

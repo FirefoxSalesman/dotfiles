@@ -1,204 +1,201 @@
-  { inputs, pkgs, pkgs-stable, config, ... }:
+{ inputs, pkgs, lib, pkgs-stable, config, ... }:
 
-  {
-    imports = [
-      ./language-support
-      ./syntax-checkers
-    ];
+{
+  imports = [
+    ./language-support
+    ./syntax-checkers
+    ./project-management
+  ];
 
-    programs.emacs.init = {
-      ide = {
-        flymake = {
+  programs.emacs.init = {
+    ide = {
+      project = true;
+      flymake = {
+        enable = true;
+        preset = true;
+      };
+      symex = true;  
+      hoverDoc = true;
+      evil = true;
+      eglot = {
+        enable = true;
+        preset = true;
+      };
+      languages = {
+        bash.enable = true;
+        gradle.enable = true;
+        java.enable = true;
+        json.enable = true;
+        nix.enable = true;
+        toml.enable = true;
+        xml.enable = true;
+        zenscript.enable = true;
+        emacs-lisp = {
           enable = true;
-          preset = true;
+          flymake = true;
         };
-        symex = true;  
-        hoverDoc = true;
-        evil = true;
-        eglot = {
+        org = {
           enable = true;
-          preset = true;
+          aesthetics = {
+            enable = true;
+            headerFont = config.stylix.fonts.sansSerif.name;
+          };
+          captureTemplates.enable = true;
         };
-        languages = {
-          bash.enable = true;
-          gradle.enable = true;
-          java.enable = true;
-          json.enable = true;
-          nix.enable = true;
-          toml.enable = true;
-          xml.enable = true;
-          zenscript.enable = true;
-          emacs-lisp = {
-            enable = true;
-            flymake = true;
+        javascript.enable = true;
+        ledger.enable = true;
+        vimscript.enable = true;
+        julia.enable = true;
+      };
+    };
+
+    usePackage = {
+        editorconfig = {
+          enable = true;
+          afterCall = ["on-first-file-hook"];
+          config = ''(editorconfig-mode)'';
+        };
+      
+        rainbow-delimiters = {
+          enable = true;
+          ghook = ["('prog-mode-hook 'rainbow-delimiters-mode)"];
+        };
+      
+      # lsp-mode.gfhook = ["('lsp-mode-hook (lambda () (company-mode -1)))"];
+      # lsp-java.custom.lsp-java-content-provider-preferred = ''"fernflower"'';
+
+      
+
+        treesitter-context = {
+          enable = true;
+          ghook = ["('(js-ts-mode-hook haskell-mode java-ts-mode-hook rustic-mode-hook c-ts-mode-hook python-mode-hook json-ts-mode-hook) 'treesitter-context-mode)"];
+          custom.treesitter-context-frame-min-width = "30";
+          config = ''
+            (dolist (treesit-support '(treesitter-context--supported-mode treesitter-context--focus-supported-mode  treesitter-context--fold-supported-mode))
+                    (add-to-list treesit-support 'rustic-mode)
+                    (add-to-list treesit-support 'haskell-mode))
+          '';
+        };
+      
+        treesitter-context-fold = {
+          enable = true;
+          ghook = ["('treesitter-context-mode-hook 'treesitter-context-fold-mode)"];
+          generalTwo."'normal".treesitter-context-fold-mode-map = {
+            "zm" = "'treesitter-context-fold-hide";
+            "zo" = "'treesitter-context-fold-show";
+            "za" = "'treesitter-context-fold-toggle";
           };
-          org = {
-            enable = true;
-            aesthetics = {
-              enable = true;
-              headerFont = config.stylix.fonts.sansSerif.name;
-            };
-            captureTemplates.enable = true;
-          };
-          vimscript.enable = true;
+        };
+      
+        treesitter-context-focus = {
+          enable = true;
+          command = ["treesitter-context-focus-mode"];
+        };
+      
+      magit = {
+        enable = true;
+        custom.magit-display-buffer-function = "#'magit-display-buffer-same-window-except-diff-v1";
+        generalOne.project-prefix-map = {
+          "v" = "'magit-status";
+          "c" = "'magit-commit";
+          "p" = "'magit-pull";
+          "P" = "'magit-push";
+          "b" = "'magit-branch";
+          "m" = "'magit-merge";
         };
       };
+      
+      project.generalOne."efs/leader-keys"."P" = "project-prefix-map";
+      
+      # projection-multi = {
+      #   enable = true;
+      #   generalOne.project-prefix-map."RET" = "'projection-multi-compile";
+      #   config = ''
+      #     (require 'projection)
+      #     (global-projection-hook-mode)
+      #     (oset projection-project-type-maven build "mvn -B clean compile")
+      #   '' ;
+      # };
+      
+      projection-multi-embark = {
+        enable = true;
+        after = ["embark" "projection-multi"];
+        config = ''(projection-multi-embark-setup-command-map)'';
+      };
 
-      usePackage = {
-          editorconfig = {
-            enable = true;
-            afterCall = ["on-first-file-hook"];
-            config = ''(editorconfig-mode)'';
+        eglot = {
+          gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
+          generalTwo.local-leader.eglot-mode-map = {
+            "f" = "'eglot-format-buffer";
+            "a" = "'eglot-code-actions";
+            "d" = "'eldoc-doc-buffer";
           };
-        
-          rainbow-delimiters = {
-            enable = true;
-            ghook = ["('prog-mode-hook 'rainbow-delimiters-mode)"];
-          };
-        
-        # lsp-mode.gfhook = ["('lsp-mode-hook (lambda () (company-mode -1)))"];
-        # lsp-java.custom.lsp-java-content-provider-preferred = ''"fernflower"'';
+          config = ''
+              (defun my/eglot-capf ()
+                (setq-local completion-at-point-functions
+                            (list (cape-capf-super
+                                   #'tempel-complete
+                                   #'eglot-completion-at-point
+                                   #'cape-file)
+                                  #'cape-dabbrev)))
+              (general-add-advice 'evil-collection-eglot-setup
+              		    :after '(lambda ()
+              			      (general-def 'normal eglot-mode-map "K" 'evil-substitute)))
+          '';
+        } ;
+      
+        flymake = {
+          enable = true;
+          defer = true;
+          config = ''(evil-ex-define-cmd "trouble" 'flymake-show-buffer-diagnostics)'';
+        };
+      
+        eglot-tempel = {
+          enable = true;
+          after = ["eglot"];
+          config = ''(eglot-tempel-mode)'';
+        };
+      
+      #   dape = {
+      #     enable = true;
+      #     after = ["eglot"];
+      #     gfhook = ["('dape-on-stopped-hooks (list 'dape-info 'dape-repl))"];
+      #     custom = {
+      #       dape-window-arrangement = "gud";
+      #       dape-key-prefix = ''"\C-x\C-a"'';
+      #     };
+      #   };
 
-        
+        python-ts-mode = {
+          generalTwo."local-leader".python-mode-map."r" = "'python-shell-send-buffer";
+          custom = {
+            python-shell-interpreter = ''"ipython"'';
+            python-shell-interpreter-args = ''"-i --simple-prompt"'';
+          };
+        };
+      
+        code-cells.generalTwo = {
+          "'normal".code-cells-mode-map = {
+            "M-e" = "'code-cells-forward-cell";
+            "M-o" = "'code-cells-backward-cell";
+          };
+          "local-leader".code-cells-mode-map = {
+            "e" = "'code-cells-eval";
+          };
+        };
+      
+        racket-mode = {
+          gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
+          generalTwo.local-leader.racket-mode-map = {
+            "." = "'racket-xp-describe";
+            "r" = "'racket-run";
+          };
+        };
 
-          treesitter-context = {
-            enable = true;
-            ghook = ["('(js-ts-mode-hook haskell-mode java-ts-mode-hook rustic-mode-hook c-ts-mode-hook python-mode-hook json-ts-mode-hook) 'treesitter-context-mode)"];
-            custom.treesitter-context-frame-min-width = "30";
-            config = ''
-              (dolist (treesit-support '(treesitter-context--supported-mode treesitter-context--focus-supported-mode  treesitter-context--fold-supported-mode))
-                      (add-to-list treesit-support 'rustic-mode)
-                      (add-to-list treesit-support 'haskell-mode))
-            '';
-          };
-        
-          treesitter-context-fold = {
-            enable = true;
-            ghook = ["('treesitter-context-mode-hook 'treesitter-context-fold-mode)"];
-            generalTwo."'normal".treesitter-context-fold-mode-map = {
-              "zm" = "'treesitter-context-fold-hide";
-              "zo" = "'treesitter-context-fold-show";
-              "za" = "'treesitter-context-fold-toggle";
-            };
-          };
-        
-          treesitter-context-focus = {
-            enable = true;
-            command = ["treesitter-context-focus-mode"];
-          };
-        
-          magit = {
-            enable = true;
-            custom.magit-display-buffer-function = "#'magit-display-buffer-same-window-except-diff-v1";
-            config = ''
-                (defun dired-git-add ()
-                    (interactive)
-                    (start-process "git" nil "git" "add" (dired-get-marked-files)))
-            '';
-            generalOne.project-prefix-map = {
-              "v" = "'magit-status";
-              "c" = "'magit-commit";
-              "p" = "'magit-pull";
-              "P" = "'magit-push";
-              "b" = "'magit-branch";
-              "m" = "'magit-merge";
-            };
-          };
-        
-          project = {
-            enable = true;
-            generalOne."efs/leader-keys"."P" = "project-prefix-map";
-            custom.project-vc-extra-root-markers = '''("Cargo.toml")'';
-          };
-        
-          projection-multi = {
-            enable = true;
-            generalOne.project-prefix-map."RET" = "'projection-multi-compile";
-            config = ''
-                (require 'projection)
-                (global-projection-hook-mode)
-                (oset projection-project-type-maven build "mvn -B clean compile")
-            '' ;
-          };
-        
-          projection-multi-embark = {
-              enable = true;
-              after = ["embark" "projection-multi"];
-              config = ''(projection-multi-embark-setup-command-map)'';
-          };
+      cider.generalTwo.local-leader.cider-mode-map."s" = '''(cider-jack-in :which-key "start cider")''; 
 
-          eglot = {
-            gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
-            generalTwo.local-leader.eglot-mode-map = {
-              "f" = "'eglot-format-buffer";
-              "a" = "'eglot-code-actions";
-              "d" = "'eldoc-doc-buffer";
-            };
-            config = ''
-                (defun my/eglot-capf ()
-                  (setq-local completion-at-point-functions
-                              (list (cape-capf-super
-                                     #'tempel-complete
-                                     #'eglot-completion-at-point
-                                     #'cape-file)
-                                    #'cape-dabbrev)))
-                (general-add-advice 'evil-collection-eglot-setup
-                		    :after '(lambda ()
-                			      (general-def 'normal eglot-mode-map "K" 'evil-substitute)))
-            '';
-          } ;
-        
-          flymake = {
-            enable = true;
-            defer = true;
-            config = ''(evil-ex-define-cmd "trouble" 'flymake-show-buffer-diagnostics)'';
-          };
-        
-          eglot-tempel = {
-            enable = true;
-            after = ["eglot"];
-            config = ''(eglot-tempel-mode)'';
-          };
-        
-        #   dape = {
-        #     enable = true;
-        #     after = ["eglot"];
-        #     gfhook = ["('dape-on-stopped-hooks (list 'dape-info 'dape-repl))"];
-        #     custom = {
-        #       dape-window-arrangement = "gud";
-        #       dape-key-prefix = ''"\C-x\C-a"'';
-        #     };
-        #   };
-
-          python-ts-mode = {
-            generalTwo."local-leader".python-mode-map."r" = "'python-shell-send-buffer";
-            custom = {
-              python-shell-interpreter = ''"ipython"'';
-              python-shell-interpreter-args = ''"-i --simple-prompt"'';
-            };
-          };
-        
-          code-cells.generalTwo = {
-            "'normal".code-cells-mode-map = {
-              "M-e" = "'code-cells-forward-cell";
-              "M-o" = "'code-cells-backward-cell";
-            };
-            "local-leader".code-cells-mode-map = {
-              "e" = "'code-cells-eval";
-            };
-          };
-        
-          racket-mode = {
-            gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
-            generalTwo.local-leader.racket-mode-map = {
-              "." = "'racket-xp-describe";
-              "r" = "'racket-run";
-            };
-          };
-
-        cider.generalTwo.local-leader.cider-mode-map."s" = '''(cider-jack-in :which-key "start cider")''; 
-
-        java-ts-mode.init = ''
+      java-ts-mode = {
+        init = ''
             (defun tkj/java-decompile-class ()
               "Run the FernFlower decompiler on the current .class file using
              fernflower, and opens the decompiled Java file."
@@ -219,9 +216,13 @@
                           (find-file decompiled-file)
                         (message "Error: Decompiled file not found at %s" decompiled-file)))
                   (message "Error: This command can only be run on .class files"))))
-        '';
+        '';  
+        eglot = lib.mkForce ''("jdtls" "-data" "~/.cache/emacs/cache/java-workspace"
+                                       :initializationOptions (:java (:contentProvider (:preferred "fernflower"))
+                                                               :extendedClientCapabilities (:classFileContentsSupport t)))'';
+      };
 
-        prolog-mode.generalTwo."local-leader".prolog-mode-map."r" = '''(run-prolog :which-key "run")'';
-      } ;
-    };
-  }
+      prolog-mode.generalTwo."local-leader".prolog-mode-map."r" = '''(run-prolog :which-key "run")'';
+    } ;
+  };
+}

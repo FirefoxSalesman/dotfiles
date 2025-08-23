@@ -55,15 +55,17 @@
           '';
         };
 
-        yeetube = {
-          enable = true;
-          generalOne."efs/leader-keys"."y" = '''(yeetube-search :which-key "search")'';
-          generalTwo."'normal"."yeetube-mode-map" = {
-            "RET" = "'yeetube-play";
-            "r" = "'yeetube-channel-videos";
-            "s" = "'yeetube-channel-search";
-          };
+      yeetube = {
+        enable = true;
+        custom.yeetube-play-function = "'mpv-play-url";
+        generalOne."efs/leader-keys"."y" = '''(yeetube-search :which-key "search")'';
+        generalTwo."'normal"."yeetube-mode-map" = {
+          "RET" = "'yeetube-play";
+          "r" = "'yeetube-channel-videos";
+          "s" = "'yeetube-channel-search";
+          "d" = "'yeetube-download-video";
         };
+      };
 
       #   ement = {
       #     enable = true;

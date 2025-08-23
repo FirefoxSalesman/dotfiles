@@ -771,6 +771,11 @@ Dev templates: https://github.com/the-nix-way/dev-templates
       ${pkgs.coreutils}/bin/echo "install [packages]: install packages with yay"
       ${pkgs.coreutils}/bin/echo "optimize: clean up package cache"
       ${pkgs.coreutils}/bin/echo "update: update all packages"
+      ${pkgs.coreutils}/bin/echo "add: install a package"
+      ${pkgs.coreutils}/bin/echo "rm: uninstall a package"
+      ${pkgs.coreutils}/bin/echo "flake: perform a nix flake operation"
+      ${pkgs.coreutils}/bin/echo "template: set up a devshell template"
+      ${pkgs.coreutils}/bin/echo "tmp: temporarily install a package"
     }
 
     getTemplates() {
@@ -788,6 +793,7 @@ Dev templates: https://github.com/the-nix-way/dev-templates
       add ) yay -S ''${@:2} ;;
       rm ) yay -Rs ''${@:2} ;;
       flake ) nix flake ''${@:2} ;;
+      tmp ) nix-shell -p ''${@:2};;
       template ) template;;
       help ) help ;;
     esac
@@ -1162,12 +1168,11 @@ Eat lets us get away with using eshell all the time. It can be used to get into 
     (evil-normalize-keymaps)
     (setenv "TERM" "xterm")
     (gsetq eshell-command-aliases-list '(("gc" "torsocks git clone")
-  				       ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
-  				       ("l" "ls $*")
-  				       ("halt" "doas shutdown -P now")
-  				       ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'")
-  				       ("trash" "rm -rf ~/.local/Trash"))
-  	 eshell-history-size 0
+  					 ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
+  					 ("l" "ls $*")
+  					 ("halt" "doas shutdown -P now")
+  					 ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'"))
+  	   eshell-history-size 0
            eshell-buffer-maximum-lines 100
            eshell-hist-ignoredups t
            eshell-scroll-to-bottom-on-input t))
@@ -1875,6 +1880,7 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
       (config.lib.nixGL.wrap pkgs-stable.gimp)
       (config.lib.nixGL.wrap prismlauncher)
       (config.lib.nixGL.wrap blockbench)
+      (config.lib.nixGL.wrap tor-browser)
       wget
       zip
       unzip
@@ -1934,84 +1940,95 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
 ** Development
 This was more directly stolen than the other parts
 I think most of it was from the github page for lsp mode, but it's been a while, & I don't remember much.
-https://github.com/emacs-lsp/lsp-java/blob/9230a0007c79a661028c142f35c7b8d1f9f55453/lsp-java.el
+https://github.com/joaotavora/eglot/discussions/888
+https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 #+begin_src nix :noweb yes :tangle development.nix
-  { inputs, pkgs, pkgs-stable, config, ... }:
+{ inputs, pkgs, lib, pkgs-stable, config, ... }:
 
-  {
-    imports = [
-      ./language-support
-      ./syntax-checkers
-    ];
+{
+  imports = [
+    ./language-support
+    ./syntax-checkers
+    ./project-management
+  ];
 
-    programs.emacs.init = {
-      ide = {
-        flymake = {
+  programs.emacs.init = {
+    ide = {
+      project = true;
+      flymake = {
+        enable = true;
+        preset = true;
+      };
+      symex = true;  
+      hoverDoc = true;
+      evil = true;
+      eglot = {
+        enable = true;
+        preset = true;
+      };
+      languages = {
+        bash.enable = true;
+        gradle.enable = true;
+        java.enable = true;
+        json.enable = true;
+        nix.enable = true;
+        toml.enable = true;
+        xml.enable = true;
+        zenscript.enable = true;
+        emacs-lisp = {
           enable = true;
-          preset = true;
+          flymake = true;
         };
-        symex = true;  
-        hoverDoc = true;
-        evil = true;
-        eglot = {
+        org = {
           enable = true;
-          preset = true;
-        };
-        languages = {
-          bash.enable = true;
-          gradle.enable = true;
-          java.enable = true;
-          json.enable = true;
-          nix.enable = true;
-          toml.enable = true;
-          xml.enable = true;
-          zenscript.enable = true;
-          emacs-lisp = {
+          aesthetics = {
             enable = true;
-            flymake = true;
+            headerFont = config.stylix.fonts.sansSerif.name;
           };
-          org = {
-            enable = true;
-            aesthetics = {
-              enable = true;
-              headerFont = config.stylix.fonts.sansSerif.name;
-            };
-            captureTemplates.enable = true;
-          };
-          vimscript.enable = true;
+          captureTemplates.enable = true;
         };
+        javascript.enable = true;
+        ledger.enable = true;
+        vimscript.enable = true;
+        julia.enable = true;
+      };
+    };
+
+    usePackage = {
+      <<Development Misc>>
+      
+      # lsp-mode.gfhook = ["('lsp-mode-hook (lambda () (company-mode -1)))"];
+      # lsp-java.custom.lsp-java-content-provider-preferred = ''"fernflower"'';
+
+      <<Development Direnv>>
+
+      <<Development Treesitter>>
+      
+      <<Development Project>>
+
+      <<Development Eglot>>
+      
+      # <<Development Dape>>
+
+      <<Development Python>>
+      
+      <<Development Racket>>
+
+      cider.generalTwo.local-leader.cider-mode-map."s" = '''(cider-jack-in :which-key "start cider")''; 
+
+      java-ts-mode = {
+        init = ''
+          <<Java Config>>
+        '';  
+        eglot = lib.mkForce ''("jdtls" "-data" "~/.cache/emacs/cache/java-workspace"
+                                       :initializationOptions (:java (:contentProvider (:preferred "fernflower"))
+                                                               :extendedClientCapabilities (:classFileContentsSupport t)))'';
       };
 
-      usePackage = {
-        <<Development Misc>>
-        
-        # lsp-mode.gfhook = ["('lsp-mode-hook (lambda () (company-mode -1)))"];
-        # lsp-java.custom.lsp-java-content-provider-preferred = ''"fernflower"'';
-
-        <<Development Direnv>>
-
-        <<Development Treesitter>>
-        
-        <<Development Project>>
-
-        <<Development Eglot>>
-        
-        # <<Development Dape>>
-
-        <<Development Python>>
-        
-        <<Development Racket>>
-
-        cider.generalTwo.local-leader.cider-mode-map."s" = '''(cider-jack-in :which-key "start cider")''; 
-
-        java-ts-mode.init = ''
-          <<Java Config>>
-        '';
-
-        prolog-mode.generalTwo."local-leader".prolog-mode-map."r" = '''(run-prolog :which-key "run")'';
-      } ;
-    };
-  }
+      prolog-mode.generalTwo."local-leader".prolog-mode-map."r" = '''(run-prolog :which-key "run")'';
+    } ;
+  };
+}
 #+end_src
 
 *** Misc
@@ -2059,7 +2076,7 @@ https://github.com/emacs-lsp/lsp-java/blob/9230a0007c79a661028c142f35c7b8d1f9f55
   };
 #+end_src
 
-*** Java Decompiler
+*** Java
 Borrowed from here:
 https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 #+NAME: Java Config
@@ -2089,55 +2106,41 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 *** Project
 #+NAME: Development Project
 #+begin_src nix :noweb yes
-  magit = {
-    enable = true;
-    custom.magit-display-buffer-function = "#'magit-display-buffer-same-window-except-diff-v1";
-    config = ''
-      <<Emacs Magit Config>>
-    '';
-    generalOne.project-prefix-map = {
-      "v" = "'magit-status";
-      "c" = "'magit-commit";
-      "p" = "'magit-pull";
-      "P" = "'magit-push";
-      "b" = "'magit-branch";
-      "m" = "'magit-merge";
-    };
+magit = {
+  enable = true;
+  custom.magit-display-buffer-function = "#'magit-display-buffer-same-window-except-diff-v1";
+  generalOne.project-prefix-map = {
+    "v" = "'magit-status";
+    "c" = "'magit-commit";
+    "p" = "'magit-pull";
+    "P" = "'magit-push";
+    "b" = "'magit-branch";
+    "m" = "'magit-merge";
   };
+};
 
-  project = {
-    enable = true;
-    generalOne."efs/leader-keys"."P" = "project-prefix-map";
-    custom.project-vc-extra-root-markers = '''("Cargo.toml")'';
-  };
+project.generalOne."efs/leader-keys"."P" = "project-prefix-map";
 
-  projection-multi = {
-    enable = true;
-    generalOne.project-prefix-map."RET" = "'projection-multi-compile";
-    config = ''
-      <<Emacs Development Projection Config>>
-    '' ;
-  };
+# projection-multi = {
+#   enable = true;
+#   generalOne.project-prefix-map."RET" = "'projection-multi-compile";
+#   config = ''
+#     <<Emacs Development Projection Config>>
+#   '' ;
+# };
 
-  projection-multi-embark = {
-      enable = true;
-      after = ["embark" "projection-multi"];
-      config = ''(projection-multi-embark-setup-command-map)'';
-  };
+projection-multi-embark = {
+  enable = true;
+  after = ["embark" "projection-multi"];
+  config = ''(projection-multi-embark-setup-command-map)'';
+};
 #+end_src
 
 #+NAME: Emacs Development Projection Config
 #+begin_src emacs-lisp
-  (require 'projection)
-  (global-projection-hook-mode)
-  (oset projection-project-type-maven build "mvn -B clean compile")
-#+end_src
-
-#+NAME: Emacs Magit Config
-#+begin_src emacs-lisp
-  (defun dired-git-add ()
-      (interactive)
-      (start-process "git" nil "git" "add" (dired-get-marked-files)))
+(require 'projection)
+(global-projection-hook-mode)
+(oset projection-project-type-maven build "mvn -B clean compile")
 #+end_src
 
 *** Eglot
@@ -2239,7 +2242,8 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
     imports = [
       ./org.nix
       ./vimscript.nix
-      ./fsharp.nix
+      ./ledger.nix
+      ./julia.nix
     ];
   }
 #+end_src
@@ -2593,39 +2597,66 @@ in
 }
 #+end_src
 
-**** fsharp
-#+begin_src nix :tangle language-support/fsharp.nix
+**** Ledger
+#+begin_src nix :tangle language-support/ledger.nix
 { pkgs, config, lib, ... }:
 
 let
   ide = config.programs.emacs.init.ide;
 in
 {
-  options.programs.emacs.init.ide.languages.fsharp.enable = lib.mkEnableOption "Enables support for fsharp. Borrowed from doom";
+  options.programs.emacs.init.ide.languages.ledger.enable = lib.mkEnableOption "Enables support for ledger.";
+  config.programs.emacs.init.usePackage.ledger = lib.mkIf ide.languages.ledger.enable {
+    enable = true;
+    package = epkgs: epkgs.ledger-mode;
+    extraPackages = [pkgs.ledger];
+    mode = [''("\\.ledger\\'" . ledger-mode)''];
+  };
+}
+#+end_src
 
-  config.programs.emacs.init.usePackage = lib.mkIf ide.languages.fsharp.enable {
-    fsharp-mode = {
+
+**** Julia
+https://github.com/tree-sitter/tree-sitter-julia
+#+begin_src nix :tangle language-support/julia.nix
+{ pkgs, config, lib, ... }:
+
+let
+  ide = config.programs.emacs.init.ide;
+in
+{
+  options.programs.emacs.init.ide.languages.julia.enable = lib.mkEnableOption "Enables support for julia (stolen from doom). No support for lspce.";
+
+  config.programs.emacs.init.usePackage = lib.mkIf ide.languages.julia.enable {
+    julia-ts-mode = {
       enable = true;
-      mode = [''"\\.fs[iylx]?\\'"''];
-      extraPackages = lib.mkIf (ide.lsp.enable || ide.lspce.enable) [pkgs.fsautocomplete];
-      eglot = ide.eglot.enable;
+      mode = [''"\\.jl\\'"''];
       lsp = ide.lsp.enable;
-      lspce = ide.lspce.enable;
-      babel = lib.mkIf ide.languages.org.enable "fsharp";
+      eglot = ide.eglot.enable;
     };
 
-    ob-fsharp = lib.mkIf ide.languages.org.enable {
+    julia-repl = {
       enable = true;
-      after = ["org"];
+      hook = ["(julia-ts-mode . julia-repl-mode)"];
     };
 
-    eglot-fsharp = lib.mkIf ide.eglot.enable {
+    eglot-jl = lib.mkIf ide.eglot.enable {
       enable = true;
-      after = ["fsharp-mode"];
-      custom = {
-        eglot-fsharp-server-path = ''"${pkgs.fsautocomplete}/bin/"'';
-        eglot-fsharp-server-install-dir = false;
-      };
+      after = ["eglot"];
+      hook = ["(julia-ts-mode . (lambda () (setq-local eglot-connect-timeout (max eglot-connect-timeout 60))))"];
+    };
+
+    lsp-julia = lib.mkIf ide.lsp.enable {
+      enable = true;
+      after = ["lsp-mode"];
+      config = ''
+        (add-to-list 'lsp-language-id-configuration '(julia-ts-mode . "julia"))
+        (lsp-register-client
+          (make-lsp-client :new-connection (lsp-stdio-connection 'lsp-julia--rls-command)
+                           :major-modes '(julia-mode ess-julia-mode julia-ts-mode)
+                           :server-id 'julia-ls
+                           :multi-root t))
+      '';
     };
   };
 }
@@ -2732,6 +2763,72 @@ in
 
         eglot.custom.eglot-stay-out-of = lib.mkIf ide.eglot.preset (lib.mkDefault "'(flymake)");
       };
+    };
+  };
+}
+#+end_src
+
+*** Project Management
+**** Default.nix
+#+begin_src nix :tangle project-management/default.nix
+{ ... }:
+
+{
+  imports = [
+    ./project.nix
+    ./projectile.nix
+  ];
+}
+#+end_src
+
+**** Project
+#+begin_src nix :tangle project-management/project.nix
+{ pkgs, config, lib, ... }:
+
+{
+  options.programs.emacs.init.ide.project = lib.mkEnableOption "Enables project.el for project management. Projection is used to provide quick build options";
+
+  config.programs.emacs.init.usePackage = lib.mkIf config.programs.emacs.init.ide.project {
+    project = {
+      enable = true;
+      custom.project-vc-extra-root-markers = '''("Cargo.toml" "?*.cabal" "build.gradle" "?*.csproj" "?*.fsproj" "?*.sln" "?*.nimble" "go.work" "go.mod" "*.go" "Taskfile.yml" "SConstruct" "meson.build" "default.nix" "flake.nix" "WORKSPACE" "configure.ac" "configure.in" "CMakeLists.txt" "composer.json" "rebar.config" "mix.exs" "Gruntfile.js" "gulpfile.js" "yarn.lock" "pnpm-lock.yaml" "package.json" "angular.json" "manage.py" "requirements.txt" "setup.py" "pyproject.toml" "tox.ini" "Pipfile" "poetry.lock" "pom.xml" "build.gradle.kts" "application.yml" "build.sbt" "build.sc" "project.clj" "build.boot" "deps.edn" ".bloop" "Gemfile" "shard.yml" "Cask" "Eask" "Eldev" "DESCRIPTION" "stack.yaml" "info.rkt" "pubspec.yaml" "elm.json" "Project.toml" """dune-project")'';
+    };
+
+    projection-multi = {
+      enable = true;
+      bindLocal.project-prefix-map."RET" = "projection-multi-compile";
+      config = ''
+        (require 'projection)
+        (global-projection-hook-mode)
+        (oset projection-project-type-maven build "mvn -B clean compile")
+      '';
+    };
+  };
+}
+#+end_src
+
+**** Projectile
+#+begin_src nix :tangle project-management/projectile.nix
+{ pkgs, config, lib, ... }:
+
+{
+  options.programs.emacs.init.ide.projectile = lib.mkEnableOption "Enables projectile support";
+
+  config.programs.emacs.init.usePackage = lib.mkIf config.programs.emacs.init.ide.projectile {
+    projectile = {
+      enable = true;
+      custom = {
+        projectile-per-project-compilation-buffer = lib.mkDefault true;
+        projectile-auto-discover = lib.mkDefault true;
+      };
+      extraPackages = [pkgs.fd];
+      config = "(projectile-mode)";
+      bind."C-c p" = "projectile-commander";
+    };
+
+    ripgrep = {
+      enable = true;
+      extraPackages = [pkgs.ripgrep];
     };
   };
 }
@@ -2922,8 +3019,6 @@ I'm running dired with a couple of small packages that improve on it
 
           <<Emacs Wgrep>>
 
-          <<Emacs Ledger>>
-
           <<Emacs Notifications>>
           
         };
@@ -2970,7 +3065,6 @@ I'm running dired with a couple of small packages that improve on it
   "hI" '(describe-input-method :which-key "describe input method")
   "hK" '(Info-goto-emacs-key-command :which-key "info: key command")
   "hL" '(describe-language-environment :which-key "describe language environment")
-  "hM" '(woman :which-key "man")
   "hP" '(describe-package :which-key "describe package")
   "hR" '(info-display-manual :which-key "info: manual")
   "hS" '(info-lookup-symbol :which-key "info: symbol")
@@ -2980,7 +3074,6 @@ I'm running dired with a couple of small packages that improve on it
   "hd" '(apropos-documentation :which-key "apropos documentation")
   "he" '(view-echo-area-messages :which-key "view echoed messages")
   "hh" '(help-for-help :which-key "help for help")
-  "hi" '(info :which-key "info pages")
   "hl" '(view-lossage :which-key "lossage")
   "hn" '(view-emacs-news :which-key "emacs news")
   "hp" '(finder-by-keyword :which-key "finder by keyword")
@@ -3066,7 +3159,7 @@ https://emacs.stackexchange.com/questions/75528/how-to-define-display-buffer-ali
     }; 
     config = "(global-display-line-numbers-mode)";
     #Disable line numbers for some modes
-    ghook = ["('(org-mode-hook term-mode-hook dired-mode-hook eww-mode-hook eat-mode-hook markdown-mode-hook help-mode-hook helpful-mode-hook Info-mode-hook woman-mode-hook shell-mode-hook pdf-view-mode-hook elfeed-search-mode-hook elfeed-show-mode-hook eshell-mode-hook racket-repl-mode-hook sage-shell-mode-hook) (lambda () (display-line-numbers-mode 0)))"];
+    ghook = ["('(org-mode-hook term-mode-hook dired-mode-hook eww-mode-hook eat-mode-hook markdown-mode-hook help-mode-hook helpful-mode-hook Info-mode-hook Man-mode-hook shell-mode-hook pdf-view-mode-hook elfeed-search-mode-hook elfeed-show-mode-hook eshell-mode-hook racket-repl-mode-hook sage-shell-mode-hook) (lambda () (display-line-numbers-mode 0)))"];
   } ;
 
   elec-pair = {
@@ -3170,16 +3263,6 @@ Wgrep basically turns grep into sed.
     enable = true;
     custom.wgrep-auto-save-buffer = true;
     generalTwo."'normal".grep-mode-map."w" = "'wgrep-change-to-wgrep-mode";
-  };
-#+end_src
-
-**** Ledger
-#+NAME: Emacs Ledger
-#+begin_src nix
-  ledger = {
-    enable = true;
-    package = epkgs: epkgs.ledger-mode;
-    mode = [''"\\.ledger\\'"''];
   };
 #+end_src
 
@@ -3313,204 +3396,207 @@ We used general to bind commonly used functions to the spacebar. It is partially
 M-SPC is our local leader, & it's used for keys specific to a given major mode
 #+NAME: Emacs Evil Main
 #+begin_src nix :noweb yes
-  evil = {
-    enable = true;
-    demand = true;
-    gfhook = ["('doom-escape-hook 'evil-normal-state)"];
-    general."M-u" = "'universal-argument";
-    generalOne.universal-argument-map = {
-      "M-u" = "'universal-argument-more";
-      "C-u" = "'nil";
-    };
-    custom = {
-      # Various settings to make it more like vim
-      evil-want-integration = true;
-      evil-want-keybinding = false;
-      evil-want-minibuffer = true;
-      evil-want-C-u-scroll = true;
-      evil-want-C-w-delete = true;
-      evil-want-C-u-delete = true;
-      evil-want-C-h-delete = true;
-      evil-want-C-i-jump = true;
-      evil-move-cursor-back = false;
-      evil-move-beyond-eol = true; # Combined with move-cursor-back, it prevents the cursor from moving behind a "/" when selecting a directory in the minibuffer
-      evil-cross-lines = true;
-      sentence-end-double-space = false;
-    };
-    generalOne."'insert" = {
+evil = {
+  enable = true;
+  demand = true;
+  gfhook = ["('doom-escape-hook 'evil-normal-state)"];
+  general."M-u" = "'universal-argument";
+  generalOne.universal-argument-map = {
+    "M-u" = "'universal-argument-more";
+    "C-u" = "'nil";
+  };
+  custom = {
+    # Various settings to make it more like vim
+    evil-want-integration = true;
+    evil-want-keybinding = false;
+    evil-want-minibuffer = true;
+    evil-want-C-u-scroll = true;
+    evil-want-C-w-delete = true;
+    evil-want-C-u-delete = true;
+    evil-want-C-h-delete = true;
+    evil-want-C-i-jump = true;
+    evil-move-cursor-back = false;
+    evil-move-beyond-eol = true; # Combined with move-cursor-back, it prevents the cursor from moving behind a "/" when selecting a directory in the minibuffer
+    evil-cross-lines = true;
+    sentence-end-double-space = false;
+  };
+  generalOne = {
+    "'insert" = {
       "C-s" = "'insert-char";
       "C-k" = "'kill-line";
     };
-    config = ''
+    "'normal"."C-s" = "'evil-write";
+  };
+  config = ''
       <<emacs-evil-config>>
     '';
-  };
+};
 #+end_src
 
 #+NAME: emacs-evil-config
 #+begin_src emacs-lisp
-  ;; Initiate evil mode
-  (evil-mode)
-  (evil-ex-define-cmd "q" '(lambda () (interactive) (prescient--save) (save-buffers-kill-emacs)))
-  (evil-ex-define-cmd "Undotree" 'vundo)
-  (evil-ex-define-cmd "k[ill]" 'kill-current-buffer)
-  (gsetq evil-want-Y-yank-to-eol t)
-  (evil-set-undo-system 'undo-redo)
+;; Initiate evil mode
+(evil-mode)
+(evil-ex-define-cmd "q" '(lambda () (interactive) (prescient--save) (save-buffers-kill-emacs)))
+(evil-ex-define-cmd "Undotree" 'vundo)
+(evil-ex-define-cmd "k[ill]" 'kill-current-buffer)
+(evil-ex-define-cmd "trash" '(lambda () (interactive) (start-process-shell-command "rm" nil "rm -rf ~/.local/Trash")))
+(gsetq evil-want-Y-yank-to-eol t)
+(evil-set-undo-system 'undo-redo)
 
-  (evil-set-initial-state 'messages-buffer-mode 'normal)
-  (evil-set-initial-state 'dashboard-mode 'normal)
-  (general-advice-add '(evil-scroll-down evil-scroll-up evil-scroll-page-up evil-scroll-page-down) :after #'(lambda (arg) (evil-window-middle)))
+(evil-set-initial-state 'messages-buffer-mode 'normal)
+(evil-set-initial-state 'dashboard-mode 'normal)
+(general-advice-add '(evil-scroll-down evil-scroll-up evil-scroll-page-up evil-scroll-page-down) :after #'(lambda (arg) (evil-window-middle)))
 
-  (evil-add-command-properties #'flymake-goto-next-error :jump t)
-  (evil-add-command-properties #'flymake-goto-prev-error :jump t)
-  (evil-add-command-properties #'evil-scroll-up :jump t)
-  (evil-add-command-properties #'evil-scroll-down :jump t)
-  (evil-add-command-properties #'consult-grep :jump t)
+(evil-add-command-properties #'flymake-goto-next-error :jump t)
+(evil-add-command-properties #'flymake-goto-prev-error :jump t)
+(evil-add-command-properties #'evil-scroll-up :jump t)
+(evil-add-command-properties #'evil-scroll-down :jump t)
+(evil-add-command-properties #'consult-grep :jump t)
 
-  (evil-define-operator ergo-word-delete (beg end type register yank-handler)
-    "Delete word."
-    :motion evil-a-word
-    (evil-delete beg end type register yank-handler))
+(evil-define-operator ergo-word-delete (beg end type register yank-handler)
+  "Delete word."
+  :motion evil-a-word
+  (evil-delete beg end type register yank-handler))
 
-  (evil-define-operator ergo-word-change (beg end type register yank-handler)
-    "Delete word."
-    :motion evil-inner-word
-    (evil-change beg end type register yank-handler))
+(evil-define-operator ergo-word-change (beg end type register yank-handler)
+  "Delete word."
+  :motion evil-inner-word
+  (evil-change beg end type register yank-handler))
 
-  (general-def 'normal
-    "i" 'evil-forward-char
-    "I" 'evil-window-top
-    "C-i" 'evil-goto-line
-    "n" 'evil-backward-char
-    "N" 'evil-window-bottom
-    "C-n" 'evil-goto-first-line
-    "E" 'evil-scroll-down
-    "o" 'evil-previous-visual-line
-    "O" 'evil-scroll-up
-    "x" 'evil-backward-WORD-begin
-    "X" 'evil-backward-word-begin
-    "C-x" 'evil-backward-WORD-end
-    "j" 'evil-undo
-    "J" 'evil-redo
-    "a" 'evil-ex
-    "r" 'evil-insert-line
-    "R" 'evil-open-above
-    "s" 'evil-append-line
-    "S" 'evil-open-below
-    "t" 'evil-insert
-    "T" 'evil-append
-    "C-t" 'evil-replace-state
-    "u" 'evil-forward-WORD-begin
-    "U" 'evil-forward-word-begin
-    "C-u" 'evil-forward-WORD-end
-    "-" 'evil-jump-backward
-    "_" 'evil-jump-forward
-    "m" 'evil-search-next
-    "M" 'evil-search-previous
-    "k" 'evil-delete-char
-    "K" 'evil-substitute
-    "l" 'evil-invert-char
-    "L" 'evil-invert-case
-    "c" 'evil-visual-char
-    "C" 'evil-visual-line
-    "C-c" 'evil-visual-block
-    "v" 'evil-delete
-    "V" 'evil-change
-    "C-v" 'evil-delete-line
-    "d" 'evil-yank
-    "D" 'evil-yank-line
-    "G" 'evil-paste-after
-    ";" 'evil-end-of-visual-line
-    ":" 'evil-end-of-line
-    "C-;" 'evil-end-of-line
-    "p" 'ergo-word-delete
-    "P" 'ergo-word-change
-    "C-p" 'ergo-word-change
-    "$" 'evil-execute-macro
-    "~" 'evil-record-macro
-    "C-z" 'evil-goto-last-change-reverse
-    "w" 'evil-repeat
-    "W" 'evil-ex-repeat
-    "C-w" 'evil-ex-repeat
-    "l" 'evil-shift-right-line
-    "L" 'evil-shift-left-line
-    "C-l" 'evil-shift-left-line
-    "y" 'evil-shift-right
-    "Y" 'evil-shift-left
-    "<escape>" 'doom/escape)
-    
+(general-def 'normal
+  "i" 'evil-forward-char
+  "I" 'evil-window-top
+  "C-i" 'evil-goto-line
+  "n" 'evil-backward-char
+  "N" 'evil-window-bottom
+  "C-n" 'evil-goto-first-line
+  "E" 'evil-scroll-down
+  "o" 'evil-previous-visual-line
+  "O" 'evil-scroll-up
+  "x" 'evil-backward-WORD-begin
+  "X" 'evil-backward-word-begin
+  "C-x" 'evil-backward-WORD-end
+  "j" 'evil-undo
+  "J" 'evil-redo
+  "a" 'evil-ex
+  "r" 'evil-insert-line
+  "R" 'evil-open-above
+  "s" 'evil-append-line
+  "S" 'evil-open-below
+  "t" 'evil-insert
+  "T" 'evil-append
+  "C-t" 'evil-replace-state
+  "u" 'evil-forward-WORD-begin
+  "U" 'evil-forward-word-begin
+  "C-u" 'evil-forward-WORD-end
+  "-" 'evil-jump-backward
+  "_" 'evil-jump-forward
+  "m" 'evil-search-next
+  "M" 'evil-search-previous
+  "k" 'evil-delete-char
+  "K" 'evil-substitute
+  "l" 'evil-invert-char
+  "L" 'evil-invert-case
+  "c" 'evil-visual-char
+  "C" 'evil-visual-line
+  "C-c" 'evil-visual-block
+  "v" 'evil-delete
+  "V" 'evil-change
+  "C-v" 'evil-delete-line
+  "d" 'evil-yank
+  "D" 'evil-yank-line
+  "G" 'evil-paste-after
+  ";" 'evil-end-of-visual-line
+  ":" 'evil-end-of-line
+  "C-;" 'evil-end-of-line
+  "p" 'ergo-word-delete
+  "P" 'ergo-word-change
+  "C-p" 'ergo-word-change
+  "$" 'evil-execute-macro
+  "~" 'evil-record-macro
+  "C-z" 'evil-goto-last-change-reverse
+  "w" 'evil-repeat
+  "W" 'evil-ex-repeat
+  "C-w" 'evil-ex-repeat
+  "l" 'evil-shift-right-line
+  "L" 'evil-shift-left-line
+  "C-l" 'evil-shift-left-line
+  "y" 'evil-shift-right
+  "Y" 'evil-shift-left
+  "<escape>" 'doom/escape)
+  
 
-  (general-def 'motion
-    "i" 'evil-forward-char
-    "I" 'evil-window-top
-    "C-i" 'evil-goto-line
-    "n" 'evil-backward-char
-    "N" 'evil-window-bottom
-    "C-n" 'evil-goto-first-line
-    "e" 'evil-next-visual-line
-    "C-e" 'evil-scroll-page-down
-    "o" 'evil-previous-visual-line
-    "C-o" 'evil-scroll-page-up
-    "a" 'evil-ex
-    "h" 'evil-set-marker
-    "m" 'evil-search-next
-    "M" 'evil-search-previous
-    "-" 'evil-jump-backward
-    "_" 'evil-jump-forward
-    "/" 'isearch-forward-regexp
-    "?" 'isearch-backward-regexp
-    "f" 'evil-first-non-blank-of-visual-line
-    "F" 'evil-beginning-of-visual-line
-    "C-f" 'evil-first-non-blank
-    "B" 'evil-goto-line)
+(general-def 'motion
+  "i" 'evil-forward-char
+  "I" 'evil-window-top
+  "C-i" 'evil-goto-line
+  "n" 'evil-backward-char
+  "N" 'evil-window-bottom
+  "C-n" 'evil-goto-first-line
+  "e" 'evil-next-visual-line
+  "C-e" 'evil-scroll-page-down
+  "o" 'evil-previous-visual-line
+  "C-o" 'evil-scroll-page-up
+  "a" 'evil-ex
+  "h" 'evil-set-marker
+  "m" 'evil-search-next
+  "M" 'evil-search-previous
+  "-" 'evil-jump-backward
+  "_" 'evil-jump-forward
+  "/" 'isearch-forward-regexp
+  "?" 'isearch-backward-regexp
+  "f" 'evil-first-non-blank-of-visual-line
+  "F" 'evil-beginning-of-visual-line
+  "C-f" 'evil-first-non-blank
+  "B" 'evil-goto-line)
 
-  (general-swap-key nil '(motion normal visual)
-    "g" "b"
-    "z" "q"
-    "Z" "Q")
+(general-swap-key nil '(motion normal visual)
+  "g" "b"
+  "z" "q"
+  "Z" "Q")
 
-  (general-def
-    :keymaps 'override
-    :states '(normal visual)
-    "g" 'evil-paste-before
-    "z" 'evil-jump-item
-    "Z" 'evil-goto-last-change)
+(general-def
+  :keymaps 'override
+  :states '(normal visual)
+  "g" 'evil-paste-before
+  "z" 'evil-jump-item
+  "Z" 'evil-goto-last-change)
 
-  (general-def
-    :keymaps 'override
-    :states '(operator visual)
-    "i" 'evil-forward-char
-    "s" evil-inner-text-objects-map
-    "t" evil-outer-text-objects-map)
+(general-def
+  :keymaps 'override
+  :states '(operator visual)
+  "i" 'evil-forward-char
+  "s" evil-inner-text-objects-map
+  "t" evil-outer-text-objects-map)
 
-  (general-def 'visual
-    "o" 'evil-previous-visual-line
-    "e" 'evil-next-visual-line
-    ;; "n" 'evil-backward-char
-    ;; "i" 'evil-forward-char
-    "U" 'evil-forward-word-begin
-    "u" 'evil-forward-WORD-begin
-    "X" 'evil-backward-word-begin
-    "x" 'evil-backward-WORD-begin
-    "v" 'evil-delete-char
-    "V" 'evil-substitute
-    "C-v" 'evil-substitute
-    "t" evil-outer-text-objects-map
-    "s" evil-inner-text-objects-map
-    "l" 'evil-invert-case
-    "y" 'evil-shift-right
-    "Y" 'evil-shift-left
-    "C-t" 'evil-replace
-    "R" 'evil-insert-line
-    "C-r" 'evil-append-line
-    "d" 'evil-yank-line
-    "D" 'evil-yank-line
-    "C-d" 'evil-yank-line
-    "G" 'evil-paste)
+(general-def 'visual
+  "o" 'evil-previous-visual-line
+  "e" 'evil-next-visual-line
+  ;; "n" 'evil-backward-char
+  ;; "i" 'evil-forward-char
+  "U" 'evil-forward-word-begin
+  "u" 'evil-forward-WORD-begin
+  "X" 'evil-backward-word-begin
+  "x" 'evil-backward-WORD-begin
+  "v" 'evil-delete-char
+  "V" 'evil-substitute
+  "C-v" 'evil-substitute
+  "t" evil-outer-text-objects-map
+  "s" evil-inner-text-objects-map
+  "l" 'evil-invert-case
+  "y" 'evil-shift-right
+  "Y" 'evil-shift-left
+  "C-t" 'evil-replace
+  "R" 'evil-insert-line
+  "C-r" 'evil-append-line
+  "d" 'evil-yank-line
+  "D" 'evil-yank-line
+  "C-d" 'evil-yank-line
+  "G" 'evil-paste)
 
-  (general-def 'normal "bl" '(consult-goto-line :which-key "go to line")
-    "b/" '(consult-keep-lines :which-key "delete non-matching lines"))
-
+(general-def 'normal "bl" '(consult-goto-line :which-key "go to line")
+  "b/" '(consult-keep-lines :which-key "delete non-matching lines"))
 #+end_src
 
 **** Extensions
@@ -4237,6 +4323,8 @@ Evil integration is from noctuid & minad
          "j" = '''(evil-collection-consult-jump-list :which-key "jump")'';
          "i" = '''consult-imenu'';
          "h C-a" = '''(consult-apropos :which-key "apropos")'';
+         "h i" = '''(consult-info :which-key "info")'';
+         "h M" = '''(consult-man :which-key "man")'';
       };
     };
     config = ''
@@ -4359,18 +4447,9 @@ avy actions from karthink
       minibuffer-local-map."a" = "'embark-act";
     };
     generalOne = {
-      embark-file-map = {
-        "2" = "(my/embark-split-action find-file split-window-below)";
-        "3" = "(my/embark-split-action find-file split-window-right)";
-      };
-      embark-buffer-map = {
-        "2" = "(my/embark-split-action switch-to-buffer split-window-below)";
-        "3" = "(my/embark-split-action switch-to-buffer split-window-right)";
-      };
-      embark-bookmark-map = {
-        "2" = "(my/embark-split-action bookmark-jump split-window-below)";
-        "3" = "(my/embark-split-action bookmark-jump split-window-right) ";
-      };
+      embark-file-map."2" = "(my/embark-split-action find-file elwm-split-window)";
+      embark-buffer-map."2" = "(my/embark-split-action switch-to-buffer elwm-split-window)";
+      embark-bookmark-map."2" = "(my/embark-split-action bookmark-jump elwm-split-window)";
     };
     config = ''
       <<Emacs Embark Config>>
@@ -5006,7 +5085,7 @@ I couldn't get olivetti to work.
 #+begin_src nix
   writeroom-mode = {
     enable = true;
-    ghook = ["('(woman-mode-hook org-agenda-mode-hook org-mode-hook Info-mode-hook markdown-mode-hook) 'writeroom-mode)"];
+    ghook = ["('(Man-mode-hook org-agenda-mode-hook org-mode-hook Info-mode-hook markdown-mode-hook) 'writeroom-mode)"];
     gfhook = ["('writeroom-mode-hook 'visual-line-mode)"];
     custom = {
       writeroom-mode-line = true;
@@ -5155,174 +5234,179 @@ Almost everything here was copied from David Wilson. Thank you, David, for pract
 I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.el
 #+NAME: Emacs Window Management Tab Bar
 #+begin_src nix
-  tab-bar = {
-    enable = true;
-    config = ''
-      (general-add-advice 'tab-new :after #'dashboard-open)
-      (defun efs/tab-bar-select ()
-         (interactive)
-         (setq tab-bar-tab-hints t)
-         (tab-bar-select-tab (string-to-number (read-string "Tab Number: ")))
-         (setq tab-bar-tab-hints nil))
-    '';
-    ghook = ["('exwm-init-hook 'tab-bar-mode)"];
-    general."s-u" = "'tab-bar-hydra/body";
-    custom = {
-      tab-bar-format = "'(tab-bar-format-tabs-groups tab-bar-separator doom-nano-tabline tab-bar-format-align-right tab-bar-format-global)";
-      tab-bar-close-button-show = false;
-      tab-bar-select-restore-windows = false;
-      tab-bar-auto-width-max = "'((150) 20)";
-    };
-    extraConfig = ''
-      :pretty-hydra
-      ((:color amaranth)
-       ("Navigation"
-        (("e" #'evil-tab-next "next")
-         ("o" #'tab-bar-switch-to-prev-tab "prev")
-         ("v" #'tab-recent "recent")
-         ("b" #'tab-bar-lost-commands-switch-to-first-tab "first")
-         ("B" #'tab-bar-lost-commands-switch-to-last-tab "last")
-         ("/" #'efs/tab-bar-select "search"))
-        "Creation/Deletion"
-        (("s" #'tab-new "new")
-         ("k" #'tab-close "close")
-         ("r" #'tab-rename "rename")
-         ("u" #'tab-undo "undo"))
-        "Groups"
-        (("g" #'tab-group "add to group")
-         ("K" #'tab-close-group "close group"))
-        "Organization"
-        (("E" #'tab-bar-lost-commands-move-tab-forward "forward")
-         ("O" #'tab-bar-lost-commands-move-tab-backward "backward"))
-        "Exit"
-        (("<return>" nil "" :color blue)
-         ("<escape>" nil "" :color blue))))
-    '';
+tab-bar = {
+  enable = true;
+  config = ''
+    (general-add-advice 'tab-new :after #'dashboard-open)
+    (defun efs/tab-bar-select ()
+       (interactive)
+       (setq tab-bar-tab-hints t)
+       (tab-bar-select-tab (string-to-number (read-string "Tab Number: ")))
+       (setq tab-bar-tab-hints nil))
+  '';
+  ghook = ["('exwm-init-hook 'tab-bar-mode)"];
+  general."s-u" = "'tab-bar-hydra/body";
+  custom = {
+    tab-bar-format = "'(tab-bar-format-tabs-groups tab-bar-separator doom-nano-tabline tab-bar-format-align-right tab-bar-format-global)";
+    tab-bar-close-button-show = false;
+    tab-bar-select-restore-windows = false;
+    tab-bar-auto-width-max = "'((150) 20)";
   };
+  extraConfig = ''
+    :pretty-hydra
+    ((:color amaranth)
+     ("Navigation"
+      (("e" #'evil-tab-next "next")
+       ("o" #'tab-bar-switch-to-prev-tab "prev")
+       ("v" #'tab-recent "recent")
+       ("b" #'tab-bar-lost-commands-switch-to-first-tab "first")
+       ("B" #'tab-bar-lost-commands-switch-to-last-tab "last")
+       ("/" #'efs/tab-bar-select "search"))
+      "Creation/Deletion"
+      (("s" #'tab-new "new")
+       ("k" #'tab-close "close")
+       ("r" #'tab-rename "rename")
+       ("u" #'tab-undo "undo"))
+      "Groups"
+      (("g" #'tab-group "add to group")
+       ("K" #'tab-close-group "close group"))
+      "Organization"
+      (("E" #'tab-bar-lost-commands-move-tab-forward "forward")
+       ("O" #'tab-bar-lost-commands-move-tab-backward "backward"))
+      "Exit"
+      (("<return>" nil "" :color blue)
+       ("<escape>" nil "" :color blue))))
+  '';
+};
 
-  tab-bar-lost-commands = {
-    enable = true;
-    command = [
-      "tab-bar-lost-commands-move-tab-forward"
-      "tab-bar-lost-commands-move-tab-backward" 
-      "tab-bar-lost-commands-switch-to-first-tab" 
-      "tab-bar-lost-commands-switch-to-last-tab" 
-    ];
-  };
+tab-bar-lost-commands = {
+  enable = true;
+  command = [
+    "tab-bar-lost-commands-move-tab-forward"
+    "tab-bar-lost-commands-move-tab-backward" 
+    "tab-bar-lost-commands-switch-to-first-tab" 
+    "tab-bar-lost-commands-switch-to-last-tab" 
+  ];
+};
 #+end_src
 
 *** Bufler
 Bufler is the other half of tab bar. It lets us automatically narrow buffers down to a given workspace
 #+NAME: Emacs Window Management Bufler
 #+begin_src nix :noweb yes
-  bufler = {
-    enable = true;
-    ghook = ["('tab-bar-mode-hook 'bufler-mode)"];
-    general = {
-      "s-h" = "'hydra:bufler/body";
-      "s-b" = "'bufler-hydra/body";
-      "s-f" = "'bufler-workspace-focus-buffer";
-      "s-F" = "'bufler-workspace-set";
-    };
-    generalTwo."'normal".evil-collection-unimpaired-mode-map = {
-      "]b" = "'bufler-cycle-buffers-forward";
-      "[b" = "'bufler-cycle-buffers-backward";
-    };
-    custom.bufler-groups = ''
-      <<Emacs Bufler Defgroups>>
-    '' ;
-    init = ''
-      <<Emacs Bufler Init>>
-    '';
-    config = ''
-      <<Emacs Bufler Config>>
-    '';
-    extraConfig = ''
-      :pretty-hydra
-      ((:color amaranth)
-        ("Move"
-         (("o" bufler-cycle-buffers-backward "prev")
-          ("e" bufler-cycle-buffers-forward "next"))
-         "Tricks"
-         (("/" consult-buffer "search" :color blue :exit t)
-          ("i" ibuffer "list (ibuffer)" :color blue :exit t)
-          ("k" kill-current-buffer "delete"))
-         "Quit"
-         (("<escape>" nil "quit" :color blue :exit t)
-          ("<return>" nil "quit" :color blue :exit t))))
-    '';
+bufler = {
+  enable = true;
+  ghook = ["('tab-bar-mode-hook 'bufler-mode)"];
+  general = {
+    "s-b" = "'bufler-hydra/body";
+    "s-f" = "'bufler-workspace-focus-buffer";
+    "s-F" = "'bufler-workspace-set";
   };
+  generalTwo."'normal".evil-collection-unimpaired-mode-map = {
+    "]b" = "'bufler-cycle-buffers-forward";
+    "[b" = "'bufler-cycle-buffers-backward";
+  };
+  custom.bufler-groups = ''
+    <<Emacs Bufler Defgroups>>
+  '' ;
+  init = ''
+    <<Emacs Bufler Init>>
+  '';
+  config = ''
+    <<Emacs Bufler Config>>
+  '';
+  extraConfig = ''
+    :pretty-hydra
+    ((:color amaranth)
+      ("Move"
+       (("o" bufler-cycle-buffers-backward "prev")
+        ("e" bufler-cycle-buffers-forward "next"))
+       "Tricks"
+       (("/" consult-buffer "search" :color blue :exit t)
+        ("i" ibuffer "list (ibuffer)" :color blue :exit t)
+        ("k" kill-current-buffer "delete"))
+       "Quit"
+       (("<escape>" nil "quit" :color blue :exit t)
+        ("<return>" nil "quit" :color blue :exit t))))
+  '';
+};
 
-  bufler-workspace-tabs = {
-    enable = true;
-    ghook = ["('bufler-mode-hook 'bufler-workspace-workspaces-as-tabs-mode)"];
-    gfhook = ["('bufler-workspace-workspaces-as-tabs-mode-hook '(global-tab-line-mode burly-tabs-mode))"];
-  };
+bufler-workspace-tabs = {
+  enable = true;
+  ghook = ["('bufler-mode-hook 'bufler-workspace-workspaces-as-tabs-mode)"];
+  gfhook = ["('bufler-workspace-workspaces-as-tabs-mode-hook '(global-tab-line-mode burly-tabs-mode))"];
+};
 #+end_src
 
 #+NAME: Emacs Bufler Defgroups
 #+begin_src emacs-lisp
-  (bufler-defgroups
-    ;; Subgroup collecting all named workspaces.
-    (group (auto-workspace))
-    ;; Subgroup collecting buffers in a project.
-    (group (auto-project))
-    ;; Subgroup collecting tramp buffers
-    (group (auto-tramp))
-    ;; Grouping browser windows
-    (group
-     (group-or "Browsers"
-               (name-match "Qutebrowser" (rx bos "Qutebrowser"))
-               (mode-match "eww-mode" (rx bos "eww-"))))
-    (group
-     (group-or "Chat"
-               (name-match "Thunderbird" (rx bos "Thunderbird"))
-               (name-match "teams-for-linux" (rx bos "teams-for-linux"))
-               (mode-match "ement" (rx bos "ement-"))
-               (name-match "vesktop" (rx bos "vesktop"))))
-    (group
-     (group-or "Media"
-               (name-match "mpv" (rx bos "Mpv"))
-               (mode-match "elfeed-search-mode" (rx bos "elfeed-"))
-               (mode-match "elfeed-show-mode" (rx bos "elfeed-"))
-  	     (mode-match "yeetube-mode" (rx bos "yeetube-"))))
-    (group
-     (group-or "Agenda"
-               (name-match "tasks.org" (rx bos "tasks.org"))
-               (mode-match "org-agenda-mode" (rx bos "org-agenda-"))))
-    (group
-     (group-or "Notes"
-               (dir "~/doc/denote/")))
-    (group
-     (group-or "AV"
-               (name-match "lmms" (rx bos "lmms"))
-               (name-match "Gimp-2.10" (rx bos "Gimp-2.10"))
-               (name-match "kdenlive" (rx bos "kdenlive"))))
-    (group
-     (group-or "Games"
-               (dir "~/.local/PrismLauncher/")
-               (name-match "Minecraft" (rx bos "Minecraft"))
-               (name-match "PrismLauncher" (rx bos "PrismLauncher"))))
-    (group
-     ;; Subgroup collecting all `help-mode' and `info-mode' buffers.
-     (group-or "Help/Info"
-               (mode-match "*Help*" (rx bos (or "help-" "helpful-")))
-               (mode-match "*Info*" (rx bos "info-"))))
-    (group
-     ;; Subgroup collecting all special buffers (i.e. ones that are not
-     ;; file-backed), except `magit-status-mode' buffers (which are allowed to fall
-     ;; through to other groups, so they end up grouped with their project buffers).
-     (group-and "*Special*"
-                (name-match "**Special**"
-                            (rx bos "*" (or "Messages" "Warnings" "scratch" "Backtrace" "Pinentry") "*"))
-                (lambda (buffer)
-                  (unless (or (funcall (mode-match "Magit" (rx bos "magit-status"))
-                                       buffer)
-                              (funcall (mode-match "Dired" (rx bos "dired"))
-                                       buffer)
-                              (funcall (auto-file) buffer))
-                    "*Special*"))))
-    (auto-directory))
+(bufler-defgroups
+  ;; Subgroup collecting all named workspaces.
+  (group (auto-workspace))
+  ;; Subgroup collecting buffers in a project.
+  (group (auto-project))
+  ;; Subgroup collecting tramp buffers
+  (group (auto-tramp))
+  ;; Grouping browser windows
+  (group
+   (group-or "Browsers"
+             (name-match "Qutebrowser" (rx bos "Qutebrowser"))
+             (name-match "Tor Browser" (rx bos "Tor Browser"))
+             (mode-match "eww-mode" (rx bos "eww-"))))
+  (group
+   (group-or "Chat"
+             (name-match "Thunderbird" (rx bos "Thunderbird"))
+             (name-match "teams-for-linux" (rx bos "teams-for-linux"))
+             (mode-match "ement" (rx bos "ement-"))
+             (name-match "vesktop" (rx bos "vesktop"))))
+  (group
+   (group-or "Media"
+             (name-match "mpv" (rx bos "Mpv"))
+             (mode-match "elfeed-search-mode" (rx bos "elfeed-"))
+             (mode-match "elfeed-show-mode" (rx bos "elfeed-"))
+	     (mode-match "yeetube-mode" (rx bos "yeetube-"))))
+  (group
+   (group-or "Agenda"
+             (name-match "tasks.org" (rx bos "tasks.org"))
+             (mode-match "org-agenda-mode" (rx bos "org-agenda-"))))
+  (group
+   (group-or "Ledger"
+	     (mode-match "ledger-mode" (rx bos "ledger-"))
+	     (mode-match "ledger-report-mode" (rx bos "ledger-"))))
+  (group
+   (group-or "Notes"
+             (dir "~/doc/denote/")))
+  (group
+   (group-or "AV"
+             (name-match "lmms" (rx bos "lmms"))
+             (name-match "Gimp-2.10" (rx bos "Gimp-2.10"))
+             (name-match "kdenlive" (rx bos "kdenlive"))))
+  (group
+   (group-or "Games"
+             (dir "~/.local/PrismLauncher/")
+             (name-match "Minecraft" (rx bos "Minecraft"))
+             (name-match "PrismLauncher" (rx bos "PrismLauncher"))))
+  (group
+   ;; Subgroup collecting all `help-mode' and `info-mode' buffers.
+   (group-or "Help/Info"
+             (mode-match "*Help*" (rx bos (or "help-" "helpful-")))
+             (mode-match "*Info*" (rx bos "info-"))
+	     (mode-match "Man-mode" (rx bos "Man-"))))
+  (group
+   ;; Subgroup collecting all special buffers (i.e. ones that are not
+   ;; file-backed), except `magit-status-mode' buffers (which are allowed to fall
+   ;; through to other groups, so they end up grouped with their project buffers).
+   (group-and "*Special*"
+              (name-match "**Special**"
+                          (rx bos "*" (or "Messages" "Warnings" "scratch" "Backtrace" "Pinentry") "*"))
+              (lambda (buffer)
+                (unless (or (funcall (mode-match "Magit" (rx bos "magit-status"))
+                                     buffer)
+                            (funcall (mode-match "Dired" (rx bos "dired"))
+                                     buffer)
+                            (funcall (auto-file) buffer))
+                  "*Special*"))))
+  (auto-directory))
 #+end_src
 
 #+NAME: Emacs Bufler Init
@@ -5389,34 +5473,36 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 
 #+NAME: Emacs Elwm Config
 #+begin_src emacs-lisp
-  (defun elwm-split-window ()
-    "Split window according to the current layout.
-    
-    Window in the master area can't be split, instead the last window
-    in the stack will be split.
-    
-    If selected window is window on the stack, the new window will be
-    created next to it, according to the current layout."
-    (interactive)
-    (let ((buf (current-buffer)))
-      (if (eq (count-windows) 1)
-          (evil-window-vsplit)
-        (cond
-         ((eq elwm-current-layout 'tile-vertical-left)
-          (if (elwm--in-master-area-p)
-              ;; split the last window on the stack instead
-              (set-window-buffer
-               (select-window (split-window (car (last (elwm--sorted-window-list))) nil nil))
-               buf)
-            (evil-window-split)))
-         ((eq elwm-current-layout 'tile-horizontal-top)
-          (if (elwm--in-master-area-p)
-              ;; split the last window on the stack instead
-              (set-window-buffer
-               (select-window (split-window (car (last (elwm--sorted-window-list))) nil t))
-               buf)
-            (evil-window-split)))))))
-
+(defun elwm-split-window ()
+  "Split window according to the current layout.
+  
+  Window in the master area can't be split, instead the last window
+  in the stack will be split.
+  
+  If selected window is window on the stack, the new window will be
+  created next to it, according to the current layout."
+  (interactive)
+  (let ((buf (current-buffer)))
+    (unless (or (eq elwm-current-layout 'monocle) (eq elwm-current-layout 'follow))
+	(if (eq (count-windows) 1)
+	    (if (eq elwm-current-layout 'tile-vertical-left)
+		(evil-window-vsplit)
+	      (evil-window-split))
+	  (cond
+	   ((eq elwm-current-layout 'tile-vertical-left)
+	    (if (elwm--in-master-area-p)
+		;; split the last window on the stack instead
+		(set-window-buffer
+		 (select-window (split-window (car (last (elwm--sorted-window-list))) nil nil))
+		 buf)
+	      (evil-window-split)))
+	   ((eq elwm-current-layout 'tile-horizontal-top)
+	    (if (elwm--in-master-area-p)
+		;; split the last window on the stack instead
+		(set-window-buffer
+		 (select-window (split-window (car (last (elwm--sorted-window-list))) nil t))
+		 buf)
+	      (evil-window-vsplit))))))))
 #+end_src
 
 #+NAME: Emacs Elwm Init
@@ -5609,9 +5695,11 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
   (interactive)
   (if (= (count-windows) 1)
       (when single-window--last-configuration
+	(setq elwm-current-layout 'tile-vertical-left)
         (set-window-configuration single-window--last-configuration)
 	(when treesitter-context-mode (treesitter-context-focus-mode -1)))
     (setq single-window--last-configuration (current-window-configuration))
+    (setq elwm-current-layout 'monocle)
     (delete-other-windows)
     (when (and treesitter-context-mode)
       (treesitter-context-focus-mode 1))))
@@ -5627,8 +5715,12 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
    If called on only 1 window, activates follow mode & splits the window."
   (interactive)
   (if (= (count-windows) 1)
-      (progn (follow-mode 1) (split-window-right))
-    (progn (follow-mode -1) (delete-other-windows))))
+      (progn (follow-mode 1)
+	     (split-window-right)
+	     (setq elwm-current-layout 'follow))
+    (progn (follow-mode -1)
+	   (delete-other-windows)
+	   (setq elwm-current-layout 'tile-vertical-left))))
 #+end_src
 
 #+NAME: Emacs Exwm Config
@@ -5880,7 +5972,6 @@ This is where all the audio/video stuff goes
 
 #+end_src
 
-
 *** MPV
 The mpv package lets us start an mpv process & puppeteer it with emacs. I'm definitely not using it to its full potential.
 =efs/mpv-browse-url= originates from https://karthinks.com/software/lazy-elfeed/
@@ -6111,15 +6202,17 @@ It's a simple text based web browser. I use it for short web searches & for find
 *** Yeetube
 #+NAME: Emacs Internet Yeetube
 #+begin_src nix
-  yeetube = {
-    enable = true;
-    generalOne."efs/leader-keys"."y" = '''(yeetube-search :which-key "search")'';
-    generalTwo."'normal"."yeetube-mode-map" = {
-      "RET" = "'yeetube-play";
-      "r" = "'yeetube-channel-videos";
-      "s" = "'yeetube-channel-search";
-    };
+yeetube = {
+  enable = true;
+  custom.yeetube-play-function = "'mpv-play-url";
+  generalOne."efs/leader-keys"."y" = '''(yeetube-search :which-key "search")'';
+  generalTwo."'normal"."yeetube-mode-map" = {
+    "RET" = "'yeetube-play";
+    "r" = "'yeetube-channel-videos";
+    "s" = "'yeetube-channel-search";
+    "d" = "'yeetube-download-video";
   };
+};
 #+end_src
 
 *** Ement
