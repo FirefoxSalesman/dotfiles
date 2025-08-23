@@ -50,10 +50,6 @@
             inherit inputs;
             inherit (prev.emacsPackages) trivialBuild;
           });
-          org-modern-indent = (prev.emacsPackages.callPackage ./packages/emacs/org-modern-indent.nix {
-            inherit inputs;
-            inherit (prev.emacsPackages) trivialBuild compat;
-          });
           org-novelist = (prev.emacsPackages.callPackage ./packages/emacs/org-novelist.nix {
             inherit inputs;
             inherit (prev.emacsPackages) trivialBuild org;

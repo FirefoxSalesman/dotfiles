@@ -210,15 +210,16 @@
         "doom-utils": "doom-utils",
         "eglot-booster": "eglot-booster",
         "eglot-x": "eglot-x",
+        "org-modern-indent": "org-modern-indent",
         "symex2": "symex2",
         "use-package-eglot": "use-package-eglot"
       },
       "locked": {
-        "lastModified": 1754999830,
-        "narHash": "sha256-BYGNuiAaPNgGSfvjtnV4PK6SDSb7Jvp3S3TUKm+m5wg=",
+        "lastModified": 1755980772,
+        "narHash": "sha256-iWKcDyZPGwbkr3zHjZbyHn/GTAn0Nd3zsH8sTbExzZA=",
         "owner": "firefoxsalesman",
         "repo": "NixEmacs",
-        "rev": "7d891ca0a8994aaf125b2e3da5340ecf06ae4196",
+        "rev": "74adab6a9e07080c9cdf3d54a83d5553c92deccd",
         "type": "github"
       },
       "original": {
@@ -233,11 +234,11 @@
         "nixpkgs-stable": "nixpkgs-stable"
       },
       "locked": {
-        "lastModified": 1755882549,
-        "narHash": "sha256-BoiJ6CnM0feswbJ+32waU4aqAimmsrn4vLUx80KtLq8=",
+        "lastModified": 1755968767,
+        "narHash": "sha256-XePYDL0JRHMIBFnpg+dkHMkX38rdzjavZB+Mlxx/LTA=",
         "owner": "nix-community",
         "repo": "emacs-overlay",
-        "rev": "016d29b671ddce7500e7b7d448259008fe9ad6c3",
+        "rev": "57d1c7abf226954672ef6fd46a1c7d598f5661cf",
         "type": "github"
       },
       "original": {
@@ -406,11 +407,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1755810213,
-        "narHash": "sha256-QdenO8f0PTg+tC6HuSvngKcbRZA5oZKmjUT+MXKOLQg=",
+        "lastModified": 1755914636,
+        "narHash": "sha256-VJ+Gm6YsHlPfUCpmRQxvdiZW7H3YPSrdVOewQHAhZN8=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "6911d3e7f475f7b3558b4f5a6aba90fa86099baa",
+        "rev": "8b55a6ac58b678199e5bba701aaff69e2b3281c0",
         "type": "github"
       },
       "original": {
@@ -678,7 +679,6 @@
         "nixgl": "nixgl",
         "nixpkgs": "nixpkgs_3",
         "nixpkgs-stable": "nixpkgs-stable_2",
-        "org-modern-indent": "org-modern-indent",
         "org-novelist": "org-novelist",
         "repeaters": "repeaters",
         "stylix": "stylix",

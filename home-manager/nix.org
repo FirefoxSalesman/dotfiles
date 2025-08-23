@@ -94,11 +94,6 @@ treesitter-context = {
   flake = false;
 };
 
-org-modern-indent = {
-  url = "github:alphapapa/org-modern-indent";
-  flake = false;
-};
-
 org-novelist = {
   url = "github:sympodius/org-novelist";
   flake = false;
@@ -149,7 +144,7 @@ exwm-qutebrowser = {
     inherit self;
     inherit inputs;
     inherit system;
-    inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline symex2 treesitter-context gptel-quick org-modern-indent org-novelist mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
+    inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline symex2 treesitter-context gptel-quick org-novelist mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
     inherit pkgs-stable;
   };
   modules = [
@@ -213,10 +208,6 @@ exwm-qutebrowser = {
           ezf = (prev.emacsPackages.callPackage ./packages/emacs/ezf.nix {
             inherit inputs;
             inherit (prev.emacsPackages) trivialBuild;
-          });
-          org-modern-indent = (prev.emacsPackages.callPackage ./packages/emacs/org-modern-indent.nix {
-            inherit inputs;
-            inherit (prev.emacsPackages) trivialBuild compat;
           });
           org-novelist = (prev.emacsPackages.callPackage ./packages/emacs/org-novelist.nix {
             inherit inputs;
@@ -348,24 +339,6 @@ exwm-qutebrowser = {
     version = "current";
     src = inputs.ezf;
   }
-#+end_src
-
-*** Org Modern Indent
-#+begin_src nix :tangle packages/emacs/org-modern-indent.nix
-  { inputs, trivialBuild, compat } :
-
-  trivialBuild rec {
-    pname = "org-modern-indent";
-    version = "current";
-    src = inputs.org-modern-indent;
-
-    propagatedUserEnvPkgs = [
-      compat
-    ];
-
-    buildInputs = propagatedUserEnvPkgs;
-  }
-
 #+end_src
 
 *** Org Novelist
@@ -1946,12 +1919,6 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 { inputs, pkgs, lib, pkgs-stable, config, ... }:
 
 {
-  imports = [
-    ./language-support
-    ./syntax-checkers
-    ./project-management
-  ];
-
   programs.emacs.init = {
     ide = {
       project = true;
@@ -1975,10 +1942,7 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
         toml.enable = true;
         xml.enable = true;
         zenscript.enable = true;
-        emacs-lisp = {
-          enable = true;
-          flymake = true;
-        };
+        emacs-lisp.enable = true;
         org = {
           enable = true;
           aesthetics = {
@@ -2233,705 +2197,104 @@ projection-multi-embark = {
   };
 #+end_src
 
-*** Language Support
-**** Default.nix
-#+begin_src nix :tangle language-support/default.nix
-  { ... }:
-
-  {
-    imports = [
-      ./org.nix
-      ./vimscript.nix
-      ./ledger.nix
-      ./julia.nix
-    ];
-  }
-#+end_src
-**** Org
-Additions to make
-+ [ ] Things relating to org capture (requires us to know how to use it first)
-#+begin_src nix :tangle language-support/org.nix
-{ pkgs, config, lib, ... } :
-
-let
-  ide = config.programs.emacs.init.ide;
-in
-  {
-    options.programs.emacs.init.ide.languages.org = {
-      enable = lib.mkEnableOption "Enables support for org mode. Borrows a great deal from emacs from scratch & doom emacs";
-      aesthetics = {
-        enable = lib.mkEnableOption "Enables org-modern & org-modern indent";
-        headerFont = lib.mkOption {
-          type = lib.types.str;
-          default = "Liberation Serif";
-          description = "The font to use for org headers. Defaults to Liberation Serif, since that's on most machines & I don't know what I'm doing";
-        };
-      };
-      captureTemplates = {
-        enable = lib.mkEnableOption "Enables doom's org-capture templates";
-        todoFile = lib.mkOption {
-          type = lib.types.str;
-          default = "tasks.org";
-          description = "The file in your org-directory to put todo entries for your agenda in";
-        };
-        notesFile = lib.mkOption {
-          type = lib.types.str;
-          default = "notes.org";
-          description = "The file in your org-directory to put your notes in";
-        };
-        journalFile = lib.mkOption {
-          type = lib.types.str;
-          default = "journal.org";
-          description = "The file in your org-directory to put your journal entries in";
-        };
-      };
-    };
-
-    config = lib.mkIf ide.languages.org.enable {
-      programs.emacs.init.usePackage = {
-        org = {
-          enable = true;
-          mode = [''("\\.org\\'" . org-mode)''];
-          deferIncrementally = ["calendar" "find-func" "format-spec" "org-macs" "org-compat" "org-faces" "org-entities" "org-list" "org-pcomplete" "org-src" "org-footnote" "org-macro" "ob" "org" "org-agenda" "org-capture"];
-          symex = ide.symex;
-          babel = "org";
-          custom = {
-            org-confirm-babel-evaluate = lib.mkDefault false;
-            org-src-fontify-natively = lib.mkDefault true;
-            org-src-tab-acts-natively = lib.mkDefault true;
-            org-log-done = lib.mkDefault false;
-            org-log-into-drawer = lib.mkDefault true;
-            org-hide-emphasis-markers = lib.mkIf ide.languages.org.aesthetics.enable (lib.mkDefault true);
-            org-ellipsis = lib.mkIf ide.languages.org.aesthetics.enable (lib.mkDefault ''" ▾"'');
-
-            # Settings from doom
-            org-indirect-buffer-display = lib.mkDefault "'current-window";
-            org-enforce-todo-dependencies = lib.mkDefault true;
-            org-imenu-depth = lib.mkDefault "6";
-            org-tags-column = lib.mkDefault "0";
-            org-startup-folded  = lib.mkDefault false;
-            org-agenda-inhibit-startup = lib.mkDefault true;
-            org-agenda-window-setup = lib.mkDefault "'current-window";
-            org-agenda-skip-unavailable-files = lib.mkDefault true;
-            org-agenda-span = lib.mkDefault "10";
-            org-agenda-start-on-weekday = lib.mkDefault false;
-            org-agenda-start-day = lib.mkDefault ''"-3d"'';
-            org-refile-targets = lib.mkDefault ''
-              '((nil :maxlevel . 3)
-                (org-agenda-files :maxlevel . 3))
-            '';
-            org-refile-use-outline-path = lib.mkDefault "'file";
-            org-outline-path-complete-in-steps = lib.mkDefault false;
-            org-src-preserve-indentation = lib.mkDefault true;
-            org-link-elisp-confirm-function = lib.mkDefault false;
-            org-src-window-setup = lib.mkDefault "'other-window";
-            org-babel-lisp-eval-fn = lib.mkIf ide.languages.common-lisp.enable (lib.mkDefault "#'sly-eval");
-            org-modules = lib.mkDefault "'(ol-bibtex)";
-            org-agenda-files = lib.mkIf ide.languages.org.captureTemplates.enable (lib.mkDefault ''(list (expand-file-name "${ide.languages.org.captureTemplates.todoFile}" org-directory))'');
-            org-default-notes-file = lib.mkIf ide.languages.org.captureTemplates.enable (lib.mkDefault ''(expand-file-name "${ide.languages.org.captureTemplates.notesFile}" org-directory)'');
-            # borrowed from doom
-            org-capture-bookmark = lib.mkIf ide.languages.org.captureTemplates.enable (lib.mkDefault false);
-            org-capture-templates = lib.mkIf ide.languages.org.captureTemplates.enable (lib.mkDefault ''
-              '(("t" "Personal todo" entry
-                 (file org-default-todo-file)
-                 "* TODO [ ] %?\n%i\n%a" :prepend t)
-                ("n" "Personal notes" entry
-                 (file org-default-notes-file)
-                 "* %u %?\n%i\n%a" :prepend t)
-                ("j" "Journal" entry
-                 (file+olp+datetree org-default-journal-file)
-                 "* %U %?\n%i\n%a" :prepend t)
-
-                ;; Will use {project-root}/{todo,notes,changelog}.org, unless a
-                ;; {todo,notes,changelog}.org file is found in a parent directory.
-                ;; Uses the basename from `+org-capture-todo-file',
-                ;; `+org-capture-changelog-file' and `+org-capture-notes-file'.
-                ("p" "Templates for projects")
-                ("pt" "Project-local todo" entry ; {project-root}/todo.org
-                 (file nix-emacs-project-todo)
-                 "* TODO %?\n%i\n%a" :prepend t)
-                ("pn" "Project-local notes" entry ; {project-root}/notes.org
-                 (file nix-emacs-project-notes)
-                 "* %U %?\n%i\n%a" :prepend t)
-                ("pc" "Project-local changelog" entry  ; {project-root}/changelog.org
-                 (file+headline nix-emacs-project-changelog "Unreleased")
-                 "* %U %?\n%i\n%a" :prepend t))
-            '');
-          };
-          hook = ["(org-mode . org-indent-mode)"];
-          init = ''
-            (defun nix-emacs-project-file (file)
-              "Retrieves file from the root of the current project."
-              (expand-file-name file (project-root (project-current))))
-            (defun nix-emacs-project-todo ()
-              "Retrieves the project's todo.org file. Borrowed from doom emacs"
-              (nix-emacs-project-file "todo.org"))
-            (defun nix-emacs-project-notes ()
-              "Retrieves the project's notes.org file. Borrowed from doom emacs"
-              (nix-emacs-project-file "notes.org"))
-            (defun nix-emacs-project-changelog ()
-              "Retrieves the project's changelog.org file. Borrowed from doom emacs"
-              (nix-emacs-project-file "changelog.org"))
-          '';
-          config = ''
-            (defvar org-default-todo-file (expand-file-name "${ide.languages.org.captureTemplates.todoFile}" org-directory))
-            (defvar org-default-journal-file (expand-file-name "${ide.languages.org.captureTemplates.journalFile}" org-directory))
-            ;;(org-babel-do-load-languages
-            ;;'org-babel-load-languages
-            ;;'((emacs-lisp . t )
-              ;;(python . t)
-              ;;(R . t)))
-            (push '("conf-unix" . conf-unix) org-src-lang-modes)
-            ;; borrowed from doom
-            (plist-put org-format-latex-options :scale 1.5)
-          '';
-        };
-
-        org-appear = lib.mkIf ide.languages.org.aesthetics.enable {
-          enable = true;
-          hook = ["(org-mode . org-appear-mode)"];
-        };
-
-        org-contrib = lib.mkIf ide.hoverDoc {
-          enable = true;
-          config = ''(ox-extras-activate '(ignore-headlines))'';
-          deferIncrementally = ["ox-extra"];
-        };
-
-        org-modern = lib.mkIf ide.languages.org.aesthetics.enable {
-          enable = true;
-          hook = [
-            "(org-mode . org-modern-mode)"
-            "(org-mode . org-toggle-pretty-entities)"
-            "(org-mode . variable-pitch-mode)"
-            "(org-mode . visual-line-mode)"
-            "(org-mode . nix-emacs-org-font-setup)"
-          ];
-          custom = {
-            org-modern-star = "'replace";
-            org-modern-hide-stars = "'leading";
-          };
-          init = ''
-            (defun nix-emacs-org-font-setup ()
-              "Sets up org fonts. Originates from Emacs from Scratch."
-              ;;Set faces for heading levels
-              (dolist (face '((org-document-title . 1.4)
-                              (org-level-1 . 1.4)
-                              (org-level-2 . 1.3)
-                              (org-level-3 . 1.2)
-                              (org-level-4 . 1.1)
-                              (org-level-5 . 1.05)
-                              (org-level-6 . 1.05)
-                              (org-level-7 . 1.05)
-                              (org-level-8 . 1.05)))
-                      (set-face-attribute (car face) nil :font "${ide.languages.org.aesthetics.headerFont}" :weight 'regular :height (cdr face)))
-
-              ;; Ensure that anything that should be fixed-pitch in Org files appears that way
-              (dolist (face (list 'org-block 'org-table 'org-formula 'org-checkbox 'line-number 'line-number-current-line))
-                (set-face-attribute face nil :inherit 'fixed-pitch))
-              (dolist (face (list 'org-code 'org-table 'org-verbatim))
-                (set-face-attribute face nil :inherit '(shadow fixed-pitch)))
-              (dolist (face (list 'org-special-keyword 'org-meta-line))
-                (set-face-attribute face nil :inherit '(font-lock-comment-face fixed-pitch))))
-          '';
-        };
-
-        eldoc-box = lib.mkIf ide.hoverDoc {
-          enable = true;
-          hook = ["(org-mode . eldoc-box-hover-mode)"];
-        };
-
-        org-modern-indent = lib.mkIf ide.languages.org.aesthetics.enable {
-          enable = true;
-          afterCall = ["org-mode-hook"];
-          config = ''(add-hook 'org-mode-hook 'org-modern-indent-mode 90)'';
-        };
-
-        evil-org = lib.mkIf ide.evil {
-          enable = true;
-          ghook = ["('org-mode-hook 'evil-org-mode)"];
-          gfhook = ["('org-capture-mode-hook 'evil-insert-state)"];
-          # stolen from doom
-          generalTwo."'normal".org-mode-map = {
-            "]h" = '''(org-forward-heading-same-level :which-key "next heading")'';
-            "[h" = '''(org-backward-heading-same-level :which-key "prev heading")'';
-            "]c" = '''(org-babel-next-src-block :which-key "next src block")'';
-            "[c" = '''(org-babel-previous-src-block :which-key "prev src block")'';
-            "]l" = '''(org-next-link :which-key "next link")'';
-            "[l" = '''(org-previous-link :which-key "prev link")'';
-          };
-          init = ''
-            (add-to-list 'evil-fold-list
-	                       `((org-mode)
-	                         :open org-cycle
-	                         :open-all nil
-	                         :close org-cycle
-	                         :close-all nil
-	                         :toggle org-cycle
-	                         :delete nil
-	                         :open-rec nil))        
-          '';
-          config = ''
-            (with-eval-after-load 'evil-collection
-              (when (equal evil-collection-unimpaired-want-repeat-mode-integration t)
-                (evil-collection-unimpaired-defvar-keymap org-forward-heading-same-level-repeat-map
-                  "h" #'org-forward-heading-same-level
-                  "H" #'org-backward-heading-same-level)
-                (evil-collection-unimpaired-defvar-keymap org-backward-heading-same-level-repeat-map
-                  "h" #'org-backward-heading-same-level
-                  "H" #'org-forward-heading-same-level)
-                (evil-collection-unimpaired-defvar-keymap org-babel-next-src-block-repeat-map
-                  "c" #'org-babel-next-src-block
-                  "C" #'org-babel-previous-src-block)
-                (evil-collection-unimpaired-defvar-keymap org-babel-previous-src-block-repeat-map
-                  "c" #'org-babel-previous-src-block
-                  "C" #'org-babel-next-src-block)
-                (evil-collection-unimpaired-defvar-keymap org-next-link-repeat-map
-                  "l" #'org-next-link
-                  "L" #'org-previous-link)
-                (evil-collection-unimpaired-defvar-keymap org-previous-link-repeat-map
-                  "l" #'org-previous-link
-                  "L" #'org-next-link)
-                (dolist (cmd '(org-forward-heading-same-level
-                               org-backward-heading-same-level
-                               org-babel-next-src-block
-                               org-babel-previous-src-block
-                               org-next-link
-                               org-previous-link))
-                        (put cmd 'repeat-map (intern (format "%s-repeat-map" cmd))))))
-          '';
-        };
-
-        evil-org-agenda = lib.mkIf ide.evil {
-          enable = true;
-          config = ''(evil-org-agenda-set-keys)'';
-          deferIncrementally = true;
-        };
-
-        # org babel additions
-        bash-ts-mode.babel = lib.mkIf ide.languages.bash.enable "shell";
-        clojure-mode.babel = lib.mkIf ide.languages.clojure.enable "clojure";
-        c-ts-mode.babel = lib.mkIf ide.languages.c.enable "C";
-
-        ob-coffeescript = lib.mkIf ide.languages.coffeescript.enable {
-          enable = true;
-          after = ["org"];
-          babel = "coffeescript";
-        };
-
-        lisp-mode = lib.mkIf ide.languages.common-lisp.enable {
-          enable = true;
-          babel = "lisp";
-        };
-
-        css-ts-mode.babel = lib.mkIf ide.languages.css.enable "css";
-        elisp-mode.babel = lib.mkIf ide.languages.emacs-lisp.enable "emacs-lisp";
-        forth-mode.babel = lib.mkIf ide.languages.forth.enable "forth";
-
-        ob-go = lib.mkIf ide.languages.go.enable {
-          enable = true;
-          babel = "go";
-        };
-
-        groovy-mode.babel = lib.mkIf ide.languages.gradle.enable "groovy";
-        haskell-mode.babel = lib.mkIf ide.languages.haskell.enable "haskell";
-
-        ob-hy = lib.mkIf ide.languages.hy.enable {
-          enable = true;
-          babel = "hy";
-        };
-
-        java-ts-mode.babel = lib.mkIf ide.languages.java.enable "java";
-        js-ts-mode.babel = lib.mkIf ide.languages.javascript.enable "js";
-
-        ob-kotlin = lib.mkIf ide.languages.kotlin.enable {
-          enable = true;
-          babel = "kotlin";
-        };
-
-        latex.babel = lib.mkIf ide.languages.latex.enable "latex";
-        lua-ts-mode.babel = lib.mkIf ide.languages.lua.enable "lua";
-
-        ob-nix = lib.mkIf ide.languages.nix.enable {
-          enable = true;
-          babel = "nix";
-        };
-
-        plantuml-mode.babel = lib.mkIf ide.languages.plantuml.enable "plantuml";
-
-        ob-prolog = lib.mkIf ide.languages.prolog.enable {
-          enable = true;
-          babel = "prolog";
-        };
-
-        python-ts-mode.babel = lib.mkIf ide.languages.python.enable "python";
-        ess-r-mode.babel = lib.mkIf ide.languages.r.enable "R";
-        ruby-ts-mode.babel = lib.mkIf ide.languages.ruby.enable "ruby";
-        scheme-mode.babel = lib.mkIf ide.languages.scheme.enable "scheme";
-        sql-mode.babel = lib.mkIf ide.languages.sql.enable "sql";
-        typescript-ts-mode.babel = lib.mkIf ide.languages.typescript.enable "typescript";
-      };
-   };
-}
-#+end_src
-
-**** Vimscript
-#+begin_src nix :tangle language-support/vimscript.nix
-{ pkgs, config, lib, ... }:
-
-let
-  ide = config.programs.emacs.init.ide;
-in
-{
-  options.programs.emacs.init.ide.languages.vimscript.enable = lib.mkEnableOption "Enables support for vimscript, because why not?";
-
-  config.programs.emacs.init.usePackage.vimscript-ts-mode = lib.mkIf ide.languages.vimscript.enable {
-    enable = true;
-    mode = [''"\\.vim\\'"''];
-    extraPackages = lib.mkIf (ide.eglot.enable || ide.lsp.enable || ide.lspce.enable || ide.lsp-bridge.enable) [pkgs.vim-language-server];
-    eglot = lib.mkIf ide.eglot.enable ''("vim-language-server" "--stdio")'';
-    lsp = ide.lsp.enable;
-    lspce = ide.lspce.enable;
-    config = lib.mkIf ide.lspce.enable ''(with-eval-after-load 'lspce (add-to-list 'lspce-server-programs '("vimscript" "vim-language-server" "--stdio")))'' ;
-  };
-}
-#+end_src
-
-**** Ledger
-#+begin_src nix :tangle language-support/ledger.nix
-{ pkgs, config, lib, ... }:
-
-let
-  ide = config.programs.emacs.init.ide;
-in
-{
-  options.programs.emacs.init.ide.languages.ledger.enable = lib.mkEnableOption "Enables support for ledger.";
-  config.programs.emacs.init.usePackage.ledger = lib.mkIf ide.languages.ledger.enable {
-    enable = true;
-    package = epkgs: epkgs.ledger-mode;
-    extraPackages = [pkgs.ledger];
-    mode = [''("\\.ledger\\'" . ledger-mode)''];
-  };
-}
-#+end_src
-
-
-**** Julia
-https://github.com/tree-sitter/tree-sitter-julia
-#+begin_src nix :tangle language-support/julia.nix
-{ pkgs, config, lib, ... }:
-
-let
-  ide = config.programs.emacs.init.ide;
-in
-{
-  options.programs.emacs.init.ide.languages.julia.enable = lib.mkEnableOption "Enables support for julia (stolen from doom). No support for lspce.";
-
-  config.programs.emacs.init.usePackage = lib.mkIf ide.languages.julia.enable {
-    julia-ts-mode = {
-      enable = true;
-      mode = [''"\\.jl\\'"''];
-      lsp = ide.lsp.enable;
-      eglot = ide.eglot.enable;
-    };
-
-    julia-repl = {
-      enable = true;
-      hook = ["(julia-ts-mode . julia-repl-mode)"];
-    };
-
-    eglot-jl = lib.mkIf ide.eglot.enable {
-      enable = true;
-      after = ["eglot"];
-      hook = ["(julia-ts-mode . (lambda () (setq-local eglot-connect-timeout (max eglot-connect-timeout 60))))"];
-    };
-
-    lsp-julia = lib.mkIf ide.lsp.enable {
-      enable = true;
-      after = ["lsp-mode"];
-      config = ''
-        (add-to-list 'lsp-language-id-configuration '(julia-ts-mode . "julia"))
-        (lsp-register-client
-          (make-lsp-client :new-connection (lsp-stdio-connection 'lsp-julia--rls-command)
-                           :major-modes '(julia-mode ess-julia-mode julia-ts-mode)
-                           :server-id 'julia-ls
-                           :multi-root t))
-      '';
-    };
-  };
-}
-#+end_src
-
-*** Syntax Checking
-**** Default.nix
-#+begin_src nix :tangle syntax-checkers/default.nix
-{ lib, ... }:
-
-{
-  imports = [
-    ./flymake.nix
-    ./flycheck.nix
-  ];
-
-  options.programs.emacs.init.ide = {
-    flymake.enable = lib.mkEnableOption "Enables flymake for any languages that benefit from it.";
-    flycheck.enable = lib.mkEnableOption "Enables flycheck for any languages that benefit from it.";
-  };
-}
-#+end_src
-
-**** Flymake
-#+begin_src nix :tangle syntax-checkers/flymake.nix
-{ config, lib, ... }:
-
-let
-  ide = config.programs.emacs.init.ide;
-in
-{
-  options.programs.emacs.init.ide.flymake.preset = lib.mkEnableOption "Enables flymake's preset configuraiton.";
-
-  config = lib.mkIf ide.flymake.preset {
-    programs.emacs.init.usePackage = {
-      flymake = {
-        enable = true;
-        custom.flymake-indicator-position = "'right-fringe";
-        hook = lib.mkIf ide.languages.emacs-lisp.enable [''(flymake-mode . (lambda () (when (eq major-mode 'emacs-lisp-mode)
-                                                                                            (setq-local eldoc-documentation-functions '(elisp-eldoc-var-docstring
-                                                                                                                                        elisp-eldoc-funcall
-                                                                                                                                        t)))))''
-       ];
-      };
-
-      flymake-swi-prolog = lib.mkIf (ide.languages.prolog.enable && ide.flymake.enable) {
-        enable = true;
-        after = ["prolog-mode"]; 
-        hook = ["(prolog-mode . flymake-mode)"];
-      };
-
-      flymake-popon = lib.mkIf (ide.hoverDoc && !ide.flycheck.preset) {
-        enable = true;
-        custom.flymake-popon-method = "'posframe";
-        hook = ["(flymake-mode . flymake-popon-mode)"];
-      };
-
-      flyover.hook = lib.mkIf ide.flycheck.preset ["(flymake-mode . flyover-mode)"];
-
-      eglot.hook = lib.mkIf ide.eglot.preset [''(eglot-managed-mode . (lambda () (setq-local eldoc-documentation-functions '(eglot-signature-eldoc-function
-                                                                                                                             eglot-hover-eldoc-function
-                                                                                                                             t
-                                                                                                                             eglot-x-hover-eldoc-function))))''];
-    };
-  };
-}
-#+end_src
-
-**** Flycheck
-#+begin_src nix :tangle syntax-checkers/flycheck.nix
-{ config, lib, ... }:
-
-let
-  ide = config.programs.emacs.init.ide;
-in
-{
-  options.programs.emacs.init.ide.flycheck.preset = lib.mkEnableOption "Enables flycheck's preset options (largely borrowed from doom)";
-
-  config = lib.mkIf ide.flycheck.preset {
-    programs.emacs = {
-      extraPackages = epkgs: [epkgs.on];
-      init.usePackage = {
-        flycheck = {
-          enable = true;
-          hook = ["(on-first-buffer . global-flycheck-mode)"];
-          extraConfig = '':preface (require 'on)'';
-          custom = {
-            flycheck-idle-change-delay = "1.0";
-            flycheck-buffer-switch-check-intermediate-buffers = true;
-            flycheck-display-errors-delay = "0.25";
-          };
-        };
-
-        flycheck-posframe = lib.mkIf ide.hoverDoc {
-          enable = true;
-          hook = ["(flycheck-mode . flycheck-posframe-mode)"];
-        };
-
-        flycheck-eglot = lib.mkIf ide.eglot.preset {
-          enable = true;
-          after = ["flycheck" "eglot"];
-          config = "(global-flycheck-eglot-mode)";
-        };
-
-        eglot.custom.eglot-stay-out-of = lib.mkIf ide.eglot.preset (lib.mkDefault "'(flymake)");
-      };
-    };
-  };
-}
-#+end_src
-
-*** Project Management
-**** Default.nix
-#+begin_src nix :tangle project-management/default.nix
-{ ... }:
-
-{
-  imports = [
-    ./project.nix
-    ./projectile.nix
-  ];
-}
-#+end_src
-
-**** Project
-#+begin_src nix :tangle project-management/project.nix
-{ pkgs, config, lib, ... }:
-
-{
-  options.programs.emacs.init.ide.project = lib.mkEnableOption "Enables project.el for project management. Projection is used to provide quick build options";
-
-  config.programs.emacs.init.usePackage = lib.mkIf config.programs.emacs.init.ide.project {
-    project = {
-      enable = true;
-      custom.project-vc-extra-root-markers = '''("Cargo.toml" "?*.cabal" "build.gradle" "?*.csproj" "?*.fsproj" "?*.sln" "?*.nimble" "go.work" "go.mod" "*.go" "Taskfile.yml" "SConstruct" "meson.build" "default.nix" "flake.nix" "WORKSPACE" "configure.ac" "configure.in" "CMakeLists.txt" "composer.json" "rebar.config" "mix.exs" "Gruntfile.js" "gulpfile.js" "yarn.lock" "pnpm-lock.yaml" "package.json" "angular.json" "manage.py" "requirements.txt" "setup.py" "pyproject.toml" "tox.ini" "Pipfile" "poetry.lock" "pom.xml" "build.gradle.kts" "application.yml" "build.sbt" "build.sc" "project.clj" "build.boot" "deps.edn" ".bloop" "Gemfile" "shard.yml" "Cask" "Eask" "Eldev" "DESCRIPTION" "stack.yaml" "info.rkt" "pubspec.yaml" "elm.json" "Project.toml" """dune-project")'';
-    };
-
-    projection-multi = {
-      enable = true;
-      bindLocal.project-prefix-map."RET" = "projection-multi-compile";
-      config = ''
-        (require 'projection)
-        (global-projection-hook-mode)
-        (oset projection-project-type-maven build "mvn -B clean compile")
-      '';
-    };
-  };
-}
-#+end_src
-
-**** Projectile
-#+begin_src nix :tangle project-management/projectile.nix
-{ pkgs, config, lib, ... }:
-
-{
-  options.programs.emacs.init.ide.projectile = lib.mkEnableOption "Enables projectile support";
-
-  config.programs.emacs.init.usePackage = lib.mkIf config.programs.emacs.init.ide.projectile {
-    projectile = {
-      enable = true;
-      custom = {
-        projectile-per-project-compilation-buffer = lib.mkDefault true;
-        projectile-auto-discover = lib.mkDefault true;
-      };
-      extraPackages = [pkgs.fd];
-      config = "(projectile-mode)";
-      bind."C-c p" = "projectile-commander";
-    };
-
-    ripgrep = {
-      enable = true;
-      extraPackages = [pkgs.ripgrep];
-    };
-  };
-}
-#+end_src
-
 ** File Management
 I'm running dired with a couple of small packages that improve on it
 #+begin_src nix :noweb yes :tangle emacs/file-management.nix
-  { inputs, ... }:
+{ inputs, ... }:
 
-  {
-    programs.emacs.init.usePackage = {
-      dired = {
-        enable = true;
-        gfhook = ["('dired-mode-hook (list 'dired-omit-mode 'hl-line-mode (lambda () (setq-local
+{
+  programs.emacs.init.usePackage = {
+    dired = {
+      enable = true;
+      gfhook = ["('dired-mode-hook (list 'dired-omit-mode 'hl-line-mode (lambda () (setq-local
         visible-cursor nil))))"];
-        general = {
-          "C-x C-j" = "'dired-jump";
-          "C-x d" = "'consult-dir";
-        };
-        generalOne."efs/leader-keys"."d" = '''(dired :which-key "dired")'';
-        generalTwo."'normal".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
-        custom = {
-          dired-recursive-deletes = "'always";
-          dired-listing-switches = ''"-agho --group-directories-first"'';
-          # We're doing our best to get rid of that 1st extraneous line
-          dired-free-space = false;
-        };
-        config = ''(with-eval-after-load 'dired-x (gsetq dired-omit-extensions (delete ".class" dired-omit-extensions)))'';
+      general = {
+        "C-x C-j" = "'dired-jump";
+        "C-x d" = "'consult-dir";
       };
+      generalOne."efs/leader-keys"."d" = '''(dired :which-key "dired")'';
+      generalTwo."'normal".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
+      custom = {
+        dired-recursive-deletes = "'always";
+        dired-listing-switches = ''"-agho --group-directories-first"'';
+        # We're doing our best to get rid of that 1st extraneous line
+        dired-free-space = false;
+      };
+      config = ''(with-eval-after-load 'dired-x (gsetq dired-omit-extensions (delete ".class" dired-omit-extensions)))'';
+    };
 
-      openwith = {
-        enable = true;
-        defer = true;
-        ghook = ["('dired-mode-hook 'openwith-mode)"];
-        config = ''
+    openwith = {
+      enable = true;
+      defer = true;
+      ghook = ["('dired-mode-hook 'openwith-mode)"];
+      config = ''
           <<Emacs Openwith Config>>
         '';
-      };
+    };
 
-      dired-hide-dotfiles = {
-        enable = true;
-        defer = true;
-        ghook = ["('dired-mode-hook 'dired-hide-dotfiles-mode)"];
-        config = ''(general-def 'normal dired-mode-map "H" 'dired-hide-dotfiles-mode)'';
-      };
+    dired-hide-dotfiles = {
+      enable = true;
+      defer = true;
+      ghook = ["('dired-mode-hook 'dired-hide-dotfiles-mode)"];
+      config = ''(general-def 'normal dired-mode-map "H" 'dired-hide-dotfiles-mode)'';
+    };
 
-      all-the-icons-dired = {
-        enable = true;
-        ghook = ["('dired-mode-hook 'all-the-icons-dired-mode)"];
-      };
+    all-the-icons-dired = {
+      enable = true;
+      ghook = ["('dired-mode-hook 'all-the-icons-dired-mode)"];
+    };
 
-      dired-single = {
-        enable = true;
-        ghook = [''
+    dired-single = {
+      enable = true;
+      ghook = [''
           ('dired-mode-hook (lambda () (general-def 'normal dired-mode-map
                "B" 'evil-goto-line
                "n" 'dired-single-prev
                "i" 'dired-single-next)))
         ''];
-      };
+    };
 
-      dired-ranger = {
-        enable = true;
-        ghook = [''
+    dired-ranger = {
+      enable = true;
+      ghook = [''
           ('dired-mode-hook (lambda () (general-def 'normal dired-mode-map
                "d" 'dired-ranger-copy
                "O" 'dired-ranger-move
                "G" 'dired-ranger-paste)))
         ''];
-      };
-
-      diredfl = {
-        enable = true;
-        ghook = ["('dired-mode-hook 'diredfl-mode)"];
-      };
-
-      dired-posframe = {
-        enable = true;
-        generalTwo."'normal".dired-mode-map."M-t" = "'dired-posframe-mode";
-      };
-      
-      image = {
-        enable = true;
-        gfhook = ["('image-mode-hook 'image-transform-fit-to-window)"];
-        generalTwo."'normal".image-map = {
-          "E" = "'image-next-file";
-          "O" = "'image-previous-file";
-        };
-        custom.image-animate-loop = true;
-      };
-
-      dired-narrow = {
-        enable = true;
-        generalTwo."'normal".dired-mode-map."N" = "'dired-narrow-fuzzy";
-      };
     };
-  }
+
+    diredfl = {
+      enable = true;
+      ghook = ["('dired-mode-hook 'diredfl-mode)"];
+    };
+
+    dired-posframe = {
+      enable = true;
+      generalTwo."'normal".dired-mode-map."M-t" = "'dired-posframe-mode";
+    };
+    
+    image = {
+      enable = true;
+      gfhook = ["('image-mode-hook 'image-transform-fit-to-window)"];
+      generalTwo."'normal".image-map = {
+        "E" = "'image-next-file";
+        "O" = "'image-previous-file";
+      };
+      custom.image-animate-loop = true;
+    };
+
+    dired-narrow = {
+      enable = true;
+      generalTwo."'normal".dired-mode-map."N" = "'dired-narrow-fuzzy";
+    };
+  };
+}
 #+end_src
 
 #+NAME: Emacs Openwith Config
 #+begin_src emacs-lisp
-  (gsetq openwith-associations
+(gsetq openwith-associations
        (list
         (list (openwith-make-extension-regexp
                '("ff"))
@@ -2949,24 +2312,24 @@ I'm running dired with a couple of small packages that improve on it
               "mpv"
               '(file))))
 
-  (defun dired-do-async-delete (&optional arg)
-    "Delete all marked (or next ARG) files.
+(defun dired-do-async-delete (&optional arg)
+  "Delete all marked (or next ARG) files.
   `dired-recursive-deletes' controls whether deletion of
   non-empty directories is allowed."
-    ;; This is more consistent with the file marking feature than
-    ;; dired-do-flagged-delete.
-    (interactive "P")
-    (let (markers)
-      (dired-internal-do-deletions
-       (nreverse
-        ;; this may move point if ARG is an integer
-        (dired-map-over-marks (cons (dired-get-filename)
-                                    (let ((m (point-marker)))
-                                      (push m markers)
-                                      m))
-                              arg))
-       arg t)
-      (async-start (lambda ()
+  ;; This is more consistent with the file marking feature than
+  ;; dired-do-flagged-delete.
+  (interactive "P")
+  (let (markers)
+    (dired-internal-do-deletions
+     (nreverse
+      ;; this may move point if ARG is an integer
+      (dired-map-over-marks (cons (dired-get-filename)
+                                  (let ((m (point-marker)))
+                                    (push m markers)
+                                    m))
+                            arg))
+     arg t)
+    (async-start (lambda ()
   		   (dolist (m markers) (set-marker m nil)))
   		 'ignore)))
 #+end_src

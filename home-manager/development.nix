@@ -1,12 +1,6 @@
 { inputs, pkgs, lib, pkgs-stable, config, ... }:
 
 {
-  imports = [
-    ./language-support
-    ./syntax-checkers
-    ./project-management
-  ];
-
   programs.emacs.init = {
     ide = {
       project = true;
@@ -30,10 +24,7 @@
         toml.enable = true;
         xml.enable = true;
         zenscript.enable = true;
-        emacs-lisp = {
-          enable = true;
-          flymake = true;
-        };
+        emacs-lisp.enable = true;
         org = {
           enable = true;
           aesthetics = {
