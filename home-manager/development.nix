@@ -25,14 +25,6 @@
         xml.enable = true;
         zenscript.enable = true;
         emacs-lisp.enable = true;
-        org = {
-          enable = true;
-          aesthetics = {
-            enable = true;
-            headerFont = config.stylix.fonts.sansSerif.name;
-          };
-          captureTemplates.enable = true;
-        };
         javascript.enable = true;
         ledger.enable = true;
         vimscript.enable = true;

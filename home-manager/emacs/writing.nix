@@ -15,7 +15,16 @@
           magicLatexBuffer = true;
           cdlatex = true;
         };
+        org = {
+          enable = true;
+          aesthetics = {
+            enable = true;
+            headerFont = config.stylix.fonts.sansSerif.name;
+          };
+          captureTemplates.enable = true;
+        };
       };
+
       usePackage = {
           org = {
             gfhook = ["('org-mode-hook '(ispell-minor-mode my/org-capf))"];
