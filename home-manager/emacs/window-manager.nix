@@ -305,11 +305,12 @@
             '';
           };
 
-          golden-ratio = {
-            enable = true;
-            defer = true;
-            ghook = ["('on-first-input-hook 'golden-ratio-mode)"];
-          };
+        golden-ratio = {
+          enable = true;
+          defer = true;
+          ghook = ["('on-first-input-hook 'golden-ratio-mode)"];
+          config = "(general-add-advice 'golden-ratio :after '(lambda () (exwm-mff-warp-to-selected)))";
+        };
         
           exwm = {
             enable = true;
@@ -479,7 +480,8 @@
           exwm-mff = {
             enable = true;
             defer = true;
-            ghook = ["('exwm-init-hook 'exwm-mff-mode)"];
+            command = ["exwm-mff-warp-to-selected"];
+            # ghook = ["('exwm-init-hook 'exwm-mff-mode)"];
           };
         
           exwm-outer-gaps = {

@@ -1,4 +1,4 @@
-{ inputs, pkgs, lib, pkgs-stable, config, ... }:
+{ lib, ... }:
 
 {
   programs.emacs.init = {
@@ -27,8 +27,6 @@
         emacs-lisp.enable = true;
         javascript.enable = true;
         ledger.enable = true;
-        vimscript.enable = true;
-        julia.enable = true;
       };
     };
 

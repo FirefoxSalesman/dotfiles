@@ -1916,7 +1916,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 https://github.com/joaotavora/eglot/discussions/888
 https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 #+begin_src nix :noweb yes :tangle development.nix
-{ inputs, pkgs, lib, pkgs-stable, config, ... }:
+{ lib, ... }:
 
 {
   programs.emacs.init = {
@@ -1945,8 +1945,6 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
         emacs-lisp.enable = true;
         javascript.enable = true;
         ledger.enable = true;
-        vimscript.enable = true;
-        julia.enable = true;
       };
     };
 
@@ -3407,6 +3405,110 @@ Undo-Fu lets us have linear undos. It's our undo system in evil
   };
 #+end_src
 
+**** Framework
+#+begin_src nix :tangle keybinds/default.nix
+{ ... }:
+
+{
+  imports = [
+    ./evil.nix
+  ];
+}
+#+end_src
+
+**** Evil
+#+begin_src nix :tangle keybinds/evil.nix
+{ pkgs, config, lib, ... }:
+
+let bindOption = key: desc: lib.mkOption {
+      type = lib.types.str;
+      default = key;
+      description = "Binding for evil-${desc}.";
+    };
+    keybinds = config.programs.emacs.init.keybinds;
+    keys = keybinds.evil.keys;
+in
+{
+  options.programs.emacs.init.keybinds.evil = {
+    enable = lib.mkEnableOption "Enables evil-mode";
+    keys = {
+      append = bindOption "a" "append";
+      append-line = bindOption "S-${keys.append}" "append-line";
+      change = bindOption "c" "change";
+      change-line = bindOption "S-${keys.change}" "change-line";
+      delete = bindOption "d" "delete";
+      delete-line = bindOption "S-${keys.delete}" "delete-line";
+      insert = bindOption "i" "insert";
+      insert-line = bindOption "S-${keys.insert}" "insert-line";
+      join = bindOption "J" "join";
+      set-marker = bindOption "m" "set-marker";
+      open-below = bindOption "o" "open-below";
+      open-above = bindOption "S-${keys.open-below}" "open-above";
+      paste-after = bindOption "p" "paste-after";
+      paste-before = bindOption "S-${keys.paste-before}" "paste-before" ;
+      record-macro = bindOption "q" "record-macro";
+      execute-last-recorded-macro = bindOption "S-${keys.record-macro}" "execute-last-recorded-macro";
+      replace = bindOption "r" "replace";
+      enter-replace-state = bindOption "S-${keys.replace}" "enter-replace-state";
+      substitute = bindOption "s" "substitute";
+      change-whole-ilne bindOption "S-${keys.substitute}" "change-whole-ilne";
+      delete-char = bindOption "x" "delete-char";
+      delete-backward-char = bindOption "S-${keys.insert}" "delete-backward-char";
+      yank = bindOption "y" "yank";
+      yank-line = bindOption "S-${keys.yank}" "yank-line";
+      ex-repeat-substitute = "&" "ex-repeat-substitute";
+      g-prefix = lib.mkOption {
+        type: lib.types.str;
+        default = "g";
+        description = "The key used for evil's g-prefix";
+      };
+      z-prefix = lib.mkOption {
+        type: lib.types.str;
+        default = "z";
+        description = "The key used for evil's z-prefix";
+      };
+      repeat = bindOption "." "repeat";
+      execute-macro = bindOption "@" "execute-macro";
+      use-register = bindOption "\\" "use-register";
+      invert-char = bindOption "~" "invert-char";
+      indent = bindOption "=" "indent";
+      shift-left = bindOption "<" "shift-left";
+      shift-right = bindOption ">" "shift-right";
+      undo = bindOption "u" "undo";
+      redo = bindOption "C-r" "redo";
+      backward-word-begin = bindOption "b" "backward-word-begin";
+      backward-WORD-begin = bindOption "S-${keys.backward-word-begin}" "backward-WORD-begin";
+      forward-word-end = bindOption "e" "forward-word-end";
+      forward-WORD-end = bindOption "S-${keys.forward-WORD-end}" "forward-WORD-end";
+      find-char = bindOption "f" "find-char";
+      find-char-backward = bindOption "S-${keys.find-char}" "find-char-backward";
+      goto-line = bindOption "S-${keys.b-prefix}";
+      backward-char = bindOption "h" "backward-char";
+      window-top = bindOption "S-${keys.backward-char}" "window-top";
+      next-line = bindOption "j" "next-line";
+      previous-line = bindOption "k" "previous-line";
+      forward-char = bindOption "l" "forward-char";
+      lookup = bindOption "K" "lookup";
+      window-bottom = bindOption "S-${keys.forward-char}" "window-bottom";
+      window-middle = bindOption "M" "window-middle";
+      search-next = bindOption "n" "search-next";
+      search-previous = bindOption "S-${keys.search-next}" "search-previous";
+      find-char-to = bindOption "t" "find-char-to";
+      find-char-to-backward = bindOption "S-${keys.find-char-to}" "find-char-to-backward";
+      forward-word-begin = bindOption "w" "forward-word-begin";
+      forward-WORD-begin = bindOption "S-${keys.forward-word-begin}" "forward-WORD-begin";
+      backward-paragraph = bindOption "{" "backward-paragraph";
+      forward-paragraph = bindOption "}" "forward-paragraph";
+      search-word-backward = bindOption "#" "search-word-backward";
+      end-of-line = bindOption "$" "end-of-line";
+      jump-item = bindOption "%" "jump-item";
+      goto-mark = bindOption "`" "goto-mark";
+      goto-mark-line = bindOption "'" "goto-mark-line";
+    };
+  };
+}
+#+end_src
+
 *** Completion System
 My completions system is based around vertico, because that's what all the cool kids use nowadays.
 #+begin_src nix :noweb yes :tangle emacs/completion-system.nix
@@ -4037,43 +4139,43 @@ An alternative to fzf.
 An improved help system that I lifted from emacs from scratch.
 Helpful gives more information, & which-key tells what keybinds you have available
 #+begin_src nix :tangle emacs/help-system.nix
-  { ... }:
+{ ... }:
 
-  {
-    programs.emacs.init.usePackage = {
-      which-key = {
-        enable = true;
-        defer = true;
-        config = ''(which-key-enable-god-mode-support)'';
-        ghook = ["('on-first-input-hook 'which-key-mode)"];
-        custom = {
-          which-key-idle-delay = "1";
-          # which-key-popup-type = "'minibuffer";
-        };
-      };
-
-      helpful = {
-        enable = true;
-        defer = true;
-        generalOne = {
-          "efs/leader-keys" = {
-            "hf" = "'helpful-function";
-            "hs" = "'helpful-symbol";
-            "hv" = "'helpful-variable";
-            "hx" = "'helpful-command";
-            "hk" = "'helpful-key";
-            "hm" = "'helpful-macro";
-          };
-          embark-become-help-map = {
-            "f" = "'helpful-function";
-            "s" = "'helpful-symbol";
-            "v" = "'helpful-variable";
-          };
-          embark-symbol-map."h" = "'helpful-symbol";
-        };
+{
+  programs.emacs.init.usePackage = {
+    which-key = {
+      enable = true;
+      defer = true;
+      config = ''(which-key-enable-god-mode-support)'';
+      ghook = ["('on-first-input-hook 'which-key-mode)"];
+      custom = {
+        which-key-idle-delay = "1";
+        # which-key-popup-type = "'minibuffer";
       };
     };
-  }
+
+    helpful = {
+      enable = true;
+      defer = true;
+      generalOne = {
+        "efs/leader-keys" = {
+          "hf" = "'helpful-function";
+          "hs" = "'helpful-symbol";
+          "hv" = "'helpful-variable";
+          "hx" = "'helpful-command";
+          "hk" = "'helpful-key";
+          "hm" = "'helpful-macro";
+        };
+        embark-become-help-map = {
+          "f" = "'helpful-function";
+          "s" = "'helpful-symbol";
+          "v" = "'helpful-variable";
+        };
+        embark-symbol-map."h" = "'helpful-symbol";
+      };
+    };
+  };
+}
 #+end_src
 
 *** Password Management
@@ -4140,7 +4242,7 @@ When you're prompted for your gpg password, the place for entry will be your mod
 
 *** Writing
 #+begin_src nix :noweb yes :tangle emacs/writing.nix
-  { inputs, pkgs, ... }:
+  { config, inputs, pkgs, ... }:
 
   {
     home.packages = with pkgs; [
@@ -4891,11 +4993,12 @@ bufler-workspace-tabs = {
 *** Golden Ratio
 #+NAME: Emacs Window Management Golden Ratio
 #+begin_src nix
-  golden-ratio = {
-    enable = true;
-    defer = true;
-    ghook = ["('on-first-input-hook 'golden-ratio-mode)"];
-  };
+golden-ratio = {
+  enable = true;
+  defer = true;
+  ghook = ["('on-first-input-hook 'golden-ratio-mode)"];
+  config = "(general-add-advice 'golden-ratio :after '(lambda () (exwm-mff-warp-to-selected)))";
+};
 #+end_src
 
 *** EXWM
@@ -5022,7 +5125,8 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
   exwm-mff = {
     enable = true;
     defer = true;
-    ghook = ["('exwm-init-hook 'exwm-mff-mode)"];
+    command = ["exwm-mff-warp-to-selected"];
+    # ghook = ["('exwm-init-hook 'exwm-mff-mode)"];
   };
 
   exwm-outer-gaps = {
