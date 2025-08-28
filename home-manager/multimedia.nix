@@ -4,7 +4,7 @@
     home.packages = with pkgs; [
       yt-dlp
       (config.lib.nixGL.wrap obs-studio)
-      (config.lib.nixGL.wrap kdePackages.kdenlive)
+      # (config.lib.nixGL.wrap kdePackages.kdenlive)
       lmms
       audacity
       mpc-cli

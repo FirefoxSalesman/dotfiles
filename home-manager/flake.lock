@@ -1,4 +1,3 @@
-
 {
   "nodes": {
     "app-launcher": {
@@ -216,11 +215,11 @@
         "use-package-eglot": "use-package-eglot"
       },
       "locked": {
-        "lastModified": 1755980772,
-        "narHash": "sha256-iWKcDyZPGwbkr3zHjZbyHn/GTAn0Nd3zsH8sTbExzZA=",
+        "lastModified": 1756397086,
+        "narHash": "sha256-tTTHiaRtG7tu8xRsbQ8XvlFxWUyUlBP3lPLVsgN2+eE=",
         "owner": "firefoxsalesman",
         "repo": "NixEmacs",
-        "rev": "74adab6a9e07080c9cdf3d54a83d5553c92deccd",
+        "rev": "f5802efe74b8d164fbdaed65d0e40b35ecd60102",
         "type": "github"
       },
       "original": {

@@ -1,6 +1,8 @@
 { lib, ... }:
 
 {
+  imports = [./language-support];
+
   programs.emacs.init = {
     ide = {
       project = true;
@@ -10,7 +12,6 @@
       };
       symex = true;  
       hoverDoc = true;
-      evil = true;
       eglot = {
         enable = true;
         preset = true;

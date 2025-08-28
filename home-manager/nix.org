@@ -1919,6 +1919,8 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 { lib, ... }:
 
 {
+  imports = [./language-support];
+
   programs.emacs.init = {
     ide = {
       project = true;
@@ -1928,7 +1930,6 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
       };
       symex = true;  
       hoverDoc = true;
-      evil = true;
       eglot = {
         enable = true;
         preset = true;
@@ -2187,6 +2188,56 @@ projection-multi-embark = {
   };
 #+end_src
 
+*** language support
+#+begin_src nix :tangle language-support/default.nix
+{ ... }:
+
+{
+  imports = [
+    ./dart.nix
+  ];
+}
+#+end_src
+
+**** dart
+#+begin_src nix :tangle language-support/dart.nix
+{ pkgs, config, lib, ... }:
+
+let ide = config.programs.emacs.init.ide;
+in
+{
+  options.programs.emacs.init.ide.languages.dart = {
+    enable = lib.mkEnableOption "Enables dart support. You'll need to install the language server yourself, as I can't find it in nixpkgs";
+    flutter = lib.mkEnableOption "Enables flutter support";
+  };
+
+  config.programs.emacs.init.usePackage = lib.mkIf ide.languages.dart.enable {
+    dart-mode = {
+      enable = true;
+      eglot = ide.eglot.enable;
+      lsp = ide.lsp.enable;
+      lspce = ide.lspce.enable;
+      config = lib.mkIf ide.lspce.enable ''(with-eval-after-load 'lspce (add-to-list 'lspce-server-programs (list "dart" "dart" "language-server")))'';
+    };
+
+    flutter = lib.mkIf ide.languages.dart.flutter {
+      enable = true;
+      after = ["dart-mode"];
+    };
+
+    hover = lib.mkIf ide.languages.dart.flutter {
+      enable = true;
+      after = ["dart-mode"];
+    };
+
+    lsp-dart = lib.mkIf ide.lsp.enable {
+      enable = true;
+      after = ["lsp-mode"];
+    };
+  };
+}
+#+end_src
+
 ** File Management
 I'm running dired with a couple of small packages that improve on it
 #+begin_src nix :noweb yes :tangle emacs/file-management.nix
@@ -2203,7 +2254,10 @@ I'm running dired with a couple of small packages that improve on it
         "C-x d" = "'consult-dir";
       };
       generalOne."efs/leader-keys"."d" = '''(dired :which-key "dired")'';
-      generalTwo."'normal".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
+      generalTwo."'normal".dired-mode-map = {
+        "w" = "'wdired-change-to-wdired-mode";
+        "h" = "'dired-mark";
+      };
       custom = {
         dired-recursive-deletes = "'always";
         dired-listing-switches = ''"-agho --group-directories-first"'';
@@ -2239,6 +2293,11 @@ I'm running dired with a couple of small packages that improve on it
       ghook = [''
           ('dired-mode-hook (lambda () (general-def 'normal dired-mode-map
                "B" 'evil-goto-line
+               "a" 'evil-ex
+               "o" 'evil-previous-line
+               "j" 'dired-unmark
+               "m" 'evil-search-next
+               "M" 'evil-search-previous
                "n" 'dired-single-prev
                "i" 'dired-single-next)))
         ''];
@@ -2712,21 +2771,45 @@ My keybinds have been rearranged to work with Colemak. Evil is used for the purp
 
 Evil mode provides vim-like keybinds.
 #+begin_src nix :noweb yes :tangle emacs/evil.nix
-  { inputs, ... }:
+  { inputs, config, ... }:
 
   {
-    programs.emacs.init.usePackage = {
-      <<Emacs Evil Main>>
+    programs.emacs.init = {
+      keybinds.evil = {
+        enable = true;
+        keys = {
+          forward = "i";
+          backward = "n";
+          up = "o";
+          down = "e";
+          prefer-visual-line = true;
+          evil-collection-swap-keys = ''
+            "x" "B"
+            "X" "b"
+            "u" "W"
+            "U" "w"
+            "j" "u"
+            "a" ":"
+            "m" "n"
+            "M" "N"
+            "h" "m"
+            "b" "g"
+          '';
+        };
+      };
+      usePackage = {
+        <<Emacs Evil Main>>
       
-      <<Emacs Evil Extensions>>
+        <<Emacs Evil Extensions>>
       
-      <<Emacs Evil Symex>>
+        <<Emacs Evil Symex>>
+ 
+        <<Emacs Evil God State>>
       
-      <<Emacs Evil God State>>
-      
-      <<Emacs Evil Compats>>
+        <<Emacs Evil Compats>>
 
-      <<Emacs Evil Undo>>
+        <<Emacs Evil Undo>>
+      };
     };
   }
 #+end_src
@@ -2750,29 +2833,7 @@ M-SPC is our local leader, & it's used for keys specific to a given major mode
 #+NAME: Emacs Evil Main
 #+begin_src nix :noweb yes
 evil = {
-  enable = true;
-  demand = true;
   gfhook = ["('doom-escape-hook 'evil-normal-state)"];
-  general."M-u" = "'universal-argument";
-  generalOne.universal-argument-map = {
-    "M-u" = "'universal-argument-more";
-    "C-u" = "'nil";
-  };
-  custom = {
-    # Various settings to make it more like vim
-    evil-want-integration = true;
-    evil-want-keybinding = false;
-    evil-want-minibuffer = true;
-    evil-want-C-u-scroll = true;
-    evil-want-C-w-delete = true;
-    evil-want-C-u-delete = true;
-    evil-want-C-h-delete = true;
-    evil-want-C-i-jump = true;
-    evil-move-cursor-back = false;
-    evil-move-beyond-eol = true; # Combined with move-cursor-back, it prevents the cursor from moving behind a "/" when selecting a directory in the minibuffer
-    evil-cross-lines = true;
-    sentence-end-double-space = false;
-  };
   generalOne = {
     "'insert" = {
       "C-s" = "'insert-char";
@@ -2781,30 +2842,20 @@ evil = {
     "'normal"."C-s" = "'evil-write";
   };
   config = ''
-      <<emacs-evil-config>>
-    '';
+    <<emacs-evil-config>>
+  '';
 };
 #+end_src
 
 #+NAME: emacs-evil-config
 #+begin_src emacs-lisp
-;; Initiate evil mode
-(evil-mode)
 (evil-ex-define-cmd "q" '(lambda () (interactive) (prescient--save) (save-buffers-kill-emacs)))
 (evil-ex-define-cmd "Undotree" 'vundo)
 (evil-ex-define-cmd "k[ill]" 'kill-current-buffer)
 (evil-ex-define-cmd "trash" '(lambda () (interactive) (start-process-shell-command "rm" nil "rm -rf ~/.local/Trash")))
-(gsetq evil-want-Y-yank-to-eol t)
-(evil-set-undo-system 'undo-redo)
 
-(evil-set-initial-state 'messages-buffer-mode 'normal)
 (evil-set-initial-state 'dashboard-mode 'normal)
-(general-advice-add '(evil-scroll-down evil-scroll-up evil-scroll-page-up evil-scroll-page-down) :after #'(lambda (arg) (evil-window-middle)))
 
-(evil-add-command-properties #'flymake-goto-next-error :jump t)
-(evil-add-command-properties #'flymake-goto-prev-error :jump t)
-(evil-add-command-properties #'evil-scroll-up :jump t)
-(evil-add-command-properties #'evil-scroll-down :jump t)
 (evil-add-command-properties #'consult-grep :jump t)
 
 (evil-define-operator ergo-word-delete (beg end type register yank-handler)
@@ -2818,14 +2869,11 @@ evil = {
   (evil-change beg end type register yank-handler))
 
 (general-def 'normal
-  "i" 'evil-forward-char
   "I" 'evil-window-top
   "C-i" 'evil-goto-line
-  "n" 'evil-backward-char
   "N" 'evil-window-bottom
   "C-n" 'evil-goto-first-line
   "E" 'evil-scroll-down
-  "o" 'evil-previous-visual-line
   "O" 'evil-scroll-up
   "x" 'evil-backward-WORD-begin
   "X" 'evil-backward-word-begin
@@ -2881,15 +2929,11 @@ evil = {
   
 
 (general-def 'motion
-  "i" 'evil-forward-char
   "I" 'evil-window-top
   "C-i" 'evil-goto-line
-  "n" 'evil-backward-char
   "N" 'evil-window-bottom
   "C-n" 'evil-goto-first-line
-  "e" 'evil-next-visual-line
   "C-e" 'evil-scroll-page-down
-  "o" 'evil-previous-visual-line
   "C-o" 'evil-scroll-page-up
   "a" 'evil-ex
   "h" 'evil-set-marker
@@ -2924,10 +2968,6 @@ evil = {
   "t" evil-outer-text-objects-map)
 
 (general-def 'visual
-  "o" 'evil-previous-visual-line
-  "e" 'evil-next-visual-line
-  ;; "n" 'evil-backward-char
-  ;; "i" 'evil-forward-char
   "U" 'evil-forward-word-begin
   "u" 'evil-forward-WORD-begin
   "X" 'evil-backward-word-begin
@@ -2953,143 +2993,114 @@ evil = {
 #+end_src
 
 **** Extensions
-Evil-snipe is used to make jumping more efficient.
 Easymotion's prefix is M-SPC, however, most important keys are already bound somewhere easier.
-Repeat map idea: https://hungyi.net/posts/hydra-for-evil-mc/
+Cursors hydra: https://hungyi.net/posts/hydra-for-evil-mc/
 #+NAME: Emacs Evil Extensions
 #+begin_src nix :noweb yes
-  evil-collection = {
-    enable = true;
-    custom.evil-collection-unimpaired-want-repeat-mode-integration = true;
-    config = ''
-      <<Emacs Evil Collection Config>>
-    '';
-  };
+evil-collection.custom.evil-collection-unimpaired-want-repeat-mode-integration = true;
 
-  evil-surround = {
-    enable = true;
-    deferIncrementally = true;
-    config = ''
-      <<Emacs Evil Surround Config>>
-    '';
-  };
+evil-surround = {
+  enable = true;
+  deferIncrementally = true;
+  config = ''
+    <<Emacs Evil Surround Config>>
+  '';
+};
 
-  evil-easymotion = {
-    enable = true;
-    generalOne = {
-      "'operator" = {
-       "/" = "'evil-avy-goto-char-2"; 
-       "?" = "'evil-avy-goto-char-2"; 
-      };
-      "(normal visual operator)" = {
-        "H-m" = "'evilem-motion-search-next";
-        "H-U" = "'evilem-motion-forward-word-begin";
-        "H-u" = "'evilem-motion-forward-WORD-begin";
-        "H-X" = "'evilem-motion-backward-word-begin";
-        "H-x" = "'evilem-motion-backward-WORD-begin";
-        "H-M" = "'evilem-motion-search-previous";
-        "H-e" = "'evilem-motion-next-visual-line";
-        "H-o" = "'evilem-motion-previous-visual-line";
-      };
+evil-easymotion = {
+  enable = true;
+  generalOne = {
+    "'operator" = {
+     "/" = "'evil-avy-goto-char-2"; 
+     "?" = "'evil-avy-goto-char-2"; 
     };
-    custom = {
-      avy-dispatch-alist = ''
-        '((?m . avy-action-cursor)
-  			  (?l . avy-action-ispell)
-  			  (?o . avy-action-embark)
-  			  (?h . avy-action-helpful)
-  			  (?g . avy-action-yank)
-  			  (?p . avy-action-teleport)
-  			  (?q . avy-action-fold))
-      '';
-      avy-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
-    };
-    config = ''
-      <<Emacs Evil Easymotion Config>>
-    '';
-  };
-
-  evil-nerd-commenter = {
-    enable = true;
-    defer = true;
-    generalOne."efs/leader-keys" = {
-      "c" = '''(:ignore t :which-key "comment")'';
-      "ci" = '''(evilnc-comment-or-uncomment-lines :which-key "comment line")'';
-      "cl" = '''(evilnc-quick-comment-or-uncomment-paragraphs :which-key "comment paragraph")'';
-      "cc" = '''(evilnc-copy-and-comment-lines :which-key "copy & comment lines")'';
-      "cp" = '''(evilnc-comment-or-uncomment-paragraphs :which-key comment paragraph)'';
-      "cr" = '''(comment-or-uncomment-region :which-key "comment region")'';
-      "cv" = '''(evilnc-toggle-invert-comment-line-by-line :which-key "invert comments")'';
-      "cy" = '''(evilnc-copy-and-comment-operator :which-key "copy & comment operator")'';
-      "co" = '''(evilnc-comment-operator :which-key "copy operator")'';
+    "(normal visual operator)" = {
+      "H-m" = "'evilem-motion-search-next";
+      "H-U" = "'evilem-motion-forward-word-begin";
+      "H-u" = "'evilem-motion-forward-WORD-begin";
+      "H-X" = "'evilem-motion-backward-word-begin";
+      "H-x" = "'evilem-motion-backward-WORD-begin";
+      "H-M" = "'evilem-motion-search-previous";
+      "H-e" = "'evilem-motion-next-visual-line";
+      "H-o" = "'evilem-motion-previous-visual-line";
     };
   };
-
-  evil-mc = {
-    enable = true;
-    defer = true;
-    command = ["evil-mc-pause-cursors" "evil-mc-make-cursor-here"];
-    generalOne = {
-      "'(normal visual)"."bz" = "'evil-mc-hydra/body";
-      "efs/leader-keys"."C" = "'evil-mc-hydra/body";
-    };
-    config = ''
-      <<Emacs Evil-MC Config>>
+  custom = {
+    avy-dispatch-alist = ''
+      '((?m . avy-action-cursor)
+			  (?l . avy-action-ispell)
+			  (?o . avy-action-embark)
+			  (?h . avy-action-helpful)
+			  (?g . avy-action-yank)
+			  (?p . avy-action-teleport)
+			  (?q . avy-action-fold))
     '';
-    extraConfig = ''
-      :pretty-hydra
-      ((:color pink :pre (evil-mc-pause-cursors))
-       ("Search"
-        (("m" #'evil-mc-make-and-goto-next-match "Search forward")
-         ("M" #'evil-mc-make-and-goto-prev-match "Search backward")
-         ("C-m" #'evil-mc-skip-and-goto-next-match "Skip forward")
-         ("C-M" #'evil-mc-skip-and-goto-prev-match "Skip backward"))
-        "Undo"
-        (("q" #'evil-mc-undo-all-cursors)
-         ("j" #'evil-mc-undo-last-added-cursor))
-        "Pause/Resume"
-        (("r" #'evil-mc-resume-cursors "Resume")
-         ("p" #'evil-mc-pause-cursors "Pause")
-         ("<return>" #'evil-mc-resume-cursors "Quit" :color blue))
-        "Create Cursors"
-        (("h" #'evil-mc-make-all-cursors "All")
-         ("s" #'evil-mc-make-cursor-here "Here")
-         ("E" #'evil-mc-make-cursor-move-next-line "Next Line")
-         ("O" #'evil-mc-make-cursor-move-prev-line "Prev Line"))))
-    '';
+    avy-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
   };
-#+end_src
+  config = ''
+    <<Emacs Evil Easymotion Config>>
+  '';
+};
 
-#+NAME: Emacs Evil Collection Config
-#+begin_src emacs-lisp
-  (defun my-hjkl-rotation (_mode mode-keymaps &rest _rest)
-    (evil-collection-translate-key 'normal mode-keymaps
-      "e" "j"
-      "o" "k"
-      "i" "l"
-      "n" "h"
-      "x" "B"
-      "X" "b"
-      "u" "W"
-      "U" "w"
-      "j" "u"
-      "a" ":"
-      "m" "n"
-      "M" "N"
-      "h" "m"
-      "b" "g"))
-  (general-add-hook 'evil-collection-setup-hook #'my-hjkl-rotation)
-  (evil-collection-init)
+evil-nerd-commenter = {
+  enable = true;
+  defer = true;
+  generalOne."efs/leader-keys" = {
+    "c" = '''(:ignore t :which-key "comment")'';
+    "ci" = '''(evilnc-comment-or-uncomment-lines :which-key "comment line")'';
+    "cl" = '''(evilnc-quick-comment-or-uncomment-paragraphs :which-key "comment paragraph")'';
+    "cc" = '''(evilnc-copy-and-comment-lines :which-key "copy & comment lines")'';
+    "cp" = '''(evilnc-comment-or-uncomment-paragraphs :which-key comment paragraph)'';
+    "cr" = '''(comment-or-uncomment-region :which-key "comment region")'';
+    "cv" = '''(evilnc-toggle-invert-comment-line-by-line :which-key "invert comments")'';
+    "cy" = '''(evilnc-copy-and-comment-operator :which-key "copy & comment operator")'';
+    "co" = '''(evilnc-comment-operator :which-key "copy operator")'';
+  };
+};
+
+evil-mc = {
+  enable = true;
+  defer = true;
+  command = ["evil-mc-pause-cursors" "evil-mc-make-cursor-here"];
+  generalOne = {
+    "'(normal visual)"."bz" = "'evil-mc-hydra/body";
+    "efs/leader-keys"."C" = "'evil-mc-hydra/body";
+  };
+  config = ''
+    <<Emacs Evil-MC Config>>
+  '';
+  extraConfig = ''
+    :pretty-hydra
+    ((:color pink :pre (evil-mc-pause-cursors))
+     ("Search"
+      (("m" #'evil-mc-make-and-goto-next-match "Search forward")
+       ("M" #'evil-mc-make-and-goto-prev-match "Search backward")
+       ("C-m" #'evil-mc-skip-and-goto-next-match "Skip forward")
+       ("C-M" #'evil-mc-skip-and-goto-prev-match "Skip backward"))
+      "Undo"
+      (("q" #'evil-mc-undo-all-cursors)
+       ("j" #'evil-mc-undo-last-added-cursor))
+      "Pause/Resume"
+      (("r" #'evil-mc-resume-cursors "Resume")
+       ("p" #'evil-mc-pause-cursors "Pause")
+       ("<return>" #'evil-mc-resume-cursors "Quit" :color blue))
+      "Create Cursors"
+      (("h" #'evil-mc-make-all-cursors "All")
+       ("s" #'evil-mc-make-cursor-here "Here")
+       ("E" #'evil-mc-make-cursor-move-next-line "Next Line")
+       ("O" #'evil-mc-make-cursor-move-prev-line "Prev Line"))))
+  '';
+};
 #+end_src
 
 #+NAME: Emacs Evil Surround Config
 #+begin_src emacs-lisp
-  (general-def 'visual evil-surround-mode-map "R" 'evil-surround-region)
-  (general-def 'operator evil-surround-mode-map
-    "s" nil
-    "r" 'evil-surround-edit
-    "R" 'evil-Surround-edit)
-  (global-evil-surround-mode)
+(general-def 'visual evil-surround-mode-map "R" 'evil-surround-region)
+(general-def 'operator evil-surround-mode-map
+  "s" nil
+  "r" 'evil-surround-edit
+  "R" 'evil-Surround-edit)
+(global-evil-surround-mode)
 #+end_src
 
 #+NAME: Emacs Evil Easymotion Config
@@ -3329,68 +3340,42 @@ By default, any key pressed while in god state is treated as if it was pressed w
 **** Compats
 #+NAME: Emacs Evil Compats
 #+begin_src nix :noweb yes
-  evil-org = {
-    custom.evil-org-movement-bindings = ''
-      '((up . "o")
-        (down . "e")
-        (left . "n")
-        (right . "i"))
-    '';
-    config = ''
-      <<Emacs Evil Org Config>>
-    '';
-  };
+evil-org.config = ''
+  <<Emacs Evil Org Config>>
+'';
 
-  evil-org-agenda = {
-    generalTwo."'motion".evil-org-agenda-mode-map = {
-      "e" = "'org-agenda-next-line";
-      "o" = "'org-agenda-previous-line";
-      "bn" = "'org-agenda-next-item";
-      "be" = "'org-agenda-previous-item";
-      "bI" = "'evil-window-bottom";
-      "C-e" = "'org-agenda-next-item";
-      "C-o" = "'org-agenda-previous-item";
-      "E" = "'org-agenda-priority-down";
-      "O" = "'org-agenda-priority-up";
-      "I" = "'org-agenda-do-date-later";
-      "M-e" = "'org-agenda-drag-line-forward";
-      "M-o" = "'org-agenda-drag-line-backward";
-      "C-S-i" = "'org-agenda-todo-nextset"; # Original binding "C-S-<right>"
-      "l" = "'org-agenda-diary-entry";
-    };
-    generalOne."efs/leader-keys"."oa" = '''(org-agenda :which-key "agenda")'';
+evil-org-agenda = {
+  generalTwo."'motion".evil-org-agenda-mode-map = {
+    "bn" = "'org-agenda-next-item";
+    "bI" = "'evil-window-bottom";
+    "I" = "'org-agenda-do-date-later";
+    "C-S-i" = "'org-agenda-todo-nextset"; # Original binding "C-S-<right>"
+    "l" = "'org-agenda-diary-entry";
   };
+  generalOne."efs/leader-keys"."oa" = '''(org-agenda :which-key "agenda")'';
+};
 
-  evil-markdown.custom.evil-markdown-movement-bindings = ''
-      '((up . "o")
-        (down . "e")
-        (left . "n")
-        (right . "i"))
-  '';
-
-  ewal-evil-cursors = {
-    enable = true;
-    demand = true;
-    config = ''(ewal-evil-cursors-get-colors :apply t)'';
-  };
+ewal-evil-cursors = {
+  enable = true;
+  demand = true;
+  config = ''(ewal-evil-cursors-get-colors :apply t)'';
+};
 #+end_src
 
 #+NAME: Emacs Evil Org Config
 #+begin_src emacs-lisp
-  (evil-define-key 'operator 'evil-org-mode
-    "i" 'evil-forward-char)
-  (evil-define-key 'normal 'evil-org-mode
-    "o" 'evil-previous-visual-line
-    "O" 'evil-scroll-up
-    "R" 'evil-org-open-above
-    "S" 'evil-org-open-below
-    "x" 'evil-backward-WORD-begin
-    "d" 'evil-yank
-    "M-e" 'evilem-motion-next-visual-line
-    "M-o" 'evilem-motion-previous-visual-line)
-  (evil-define-key 'visual 'evil-org-mode
-    "i" 'evil-forward-char
-    "s" evil-inner-text-objects-map)
+(evil-define-key 'operator 'evil-org-mode
+  "i" 'evil-forward-char)
+(evil-define-key 'normal 'evil-org-mode
+  "o" 'evil-previous-visual-line
+  "O" 'evil-scroll-up
+  "R" 'evil-org-open-above
+  "S" 'evil-org-open-below
+  "x" 'evil-backward-WORD-begin
+  "d" 'evil-yank)
+(evil-define-key 'visual 'evil-org-mode
+  "i" 'evil-forward-char
+  "s" evil-inner-text-objects-map)
 #+end_src
 
 **** Undo
@@ -3405,287 +3390,183 @@ Undo-Fu lets us have linear undos. It's our undo system in evil
   };
 #+end_src
 
-**** Framework
-#+begin_src nix :tangle keybinds/default.nix
-{ ... }:
-
-{
-  imports = [
-    ./evil.nix
-  ];
-}
-#+end_src
-
-**** Evil
-#+begin_src nix :tangle keybinds/evil.nix
-{ pkgs, config, lib, ... }:
-
-let bindOption = key: desc: lib.mkOption {
-      type = lib.types.str;
-      default = key;
-      description = "Binding for evil-${desc}.";
-    };
-    keybinds = config.programs.emacs.init.keybinds;
-    keys = keybinds.evil.keys;
-in
-{
-  options.programs.emacs.init.keybinds.evil = {
-    enable = lib.mkEnableOption "Enables evil-mode";
-    keys = {
-      append = bindOption "a" "append";
-      append-line = bindOption "S-${keys.append}" "append-line";
-      change = bindOption "c" "change";
-      change-line = bindOption "S-${keys.change}" "change-line";
-      delete = bindOption "d" "delete";
-      delete-line = bindOption "S-${keys.delete}" "delete-line";
-      insert = bindOption "i" "insert";
-      insert-line = bindOption "S-${keys.insert}" "insert-line";
-      join = bindOption "J" "join";
-      set-marker = bindOption "m" "set-marker";
-      open-below = bindOption "o" "open-below";
-      open-above = bindOption "S-${keys.open-below}" "open-above";
-      paste-after = bindOption "p" "paste-after";
-      paste-before = bindOption "S-${keys.paste-before}" "paste-before" ;
-      record-macro = bindOption "q" "record-macro";
-      execute-last-recorded-macro = bindOption "S-${keys.record-macro}" "execute-last-recorded-macro";
-      replace = bindOption "r" "replace";
-      enter-replace-state = bindOption "S-${keys.replace}" "enter-replace-state";
-      substitute = bindOption "s" "substitute";
-      change-whole-ilne bindOption "S-${keys.substitute}" "change-whole-ilne";
-      delete-char = bindOption "x" "delete-char";
-      delete-backward-char = bindOption "S-${keys.insert}" "delete-backward-char";
-      yank = bindOption "y" "yank";
-      yank-line = bindOption "S-${keys.yank}" "yank-line";
-      ex-repeat-substitute = "&" "ex-repeat-substitute";
-      g-prefix = lib.mkOption {
-        type: lib.types.str;
-        default = "g";
-        description = "The key used for evil's g-prefix";
-      };
-      z-prefix = lib.mkOption {
-        type: lib.types.str;
-        default = "z";
-        description = "The key used for evil's z-prefix";
-      };
-      repeat = bindOption "." "repeat";
-      execute-macro = bindOption "@" "execute-macro";
-      use-register = bindOption "\\" "use-register";
-      invert-char = bindOption "~" "invert-char";
-      indent = bindOption "=" "indent";
-      shift-left = bindOption "<" "shift-left";
-      shift-right = bindOption ">" "shift-right";
-      undo = bindOption "u" "undo";
-      redo = bindOption "C-r" "redo";
-      backward-word-begin = bindOption "b" "backward-word-begin";
-      backward-WORD-begin = bindOption "S-${keys.backward-word-begin}" "backward-WORD-begin";
-      forward-word-end = bindOption "e" "forward-word-end";
-      forward-WORD-end = bindOption "S-${keys.forward-WORD-end}" "forward-WORD-end";
-      find-char = bindOption "f" "find-char";
-      find-char-backward = bindOption "S-${keys.find-char}" "find-char-backward";
-      goto-line = bindOption "S-${keys.b-prefix}";
-      backward-char = bindOption "h" "backward-char";
-      window-top = bindOption "S-${keys.backward-char}" "window-top";
-      next-line = bindOption "j" "next-line";
-      previous-line = bindOption "k" "previous-line";
-      forward-char = bindOption "l" "forward-char";
-      lookup = bindOption "K" "lookup";
-      window-bottom = bindOption "S-${keys.forward-char}" "window-bottom";
-      window-middle = bindOption "M" "window-middle";
-      search-next = bindOption "n" "search-next";
-      search-previous = bindOption "S-${keys.search-next}" "search-previous";
-      find-char-to = bindOption "t" "find-char-to";
-      find-char-to-backward = bindOption "S-${keys.find-char-to}" "find-char-to-backward";
-      forward-word-begin = bindOption "w" "forward-word-begin";
-      forward-WORD-begin = bindOption "S-${keys.forward-word-begin}" "forward-WORD-begin";
-      backward-paragraph = bindOption "{" "backward-paragraph";
-      forward-paragraph = bindOption "}" "forward-paragraph";
-      search-word-backward = bindOption "#" "search-word-backward";
-      end-of-line = bindOption "$" "end-of-line";
-      jump-item = bindOption "%" "jump-item";
-      goto-mark = bindOption "`" "goto-mark";
-      goto-mark-line = bindOption "'" "goto-mark-line";
-    };
-  };
-}
-#+end_src
-
 *** Completion System
 My completions system is based around vertico, because that's what all the cool kids use nowadays.
 #+begin_src nix :noweb yes :tangle emacs/completion-system.nix
-  { inputs, pkgs, ... }:
+{ inputs, pkgs, ... }:
 
-  {
-    <<Emacs Templates File>>
+{
+  <<Emacs Templates File>>
 
-    programs.emacs.init.usePackage = {
-      <<Emacs Vertico>>
-      
-      <<Emacs Corfu>>
+  programs.emacs.init.usePackage = {
+    <<Emacs Vertico>>
+    
+    <<Emacs Corfu>>
 
-      <<Emacs Prescient>>
+    <<Emacs Prescient>>
 
-      <<Emacs Orderless>>
+    <<Emacs Orderless>>
 
-      <<Emacs Marginalia>>
+    <<Emacs Marginalia>>
 
-      <<Emacs Consult Main Package>>
+    <<Emacs Consult Main Package>>
 
-      <<Emacs Consult Extensions>>
+    <<Emacs Consult Extensions>>
 
-      <<Emacs Embark>>
+    <<Emacs Embark>>
 
-      <<Emacs App Launcher>>
+    <<Emacs App Launcher>>
 
-      <<Emacs Search>>
+    <<Emacs Search>>
 
-      <<Emacs Snippets>>
+    <<Emacs Snippets>>
 
-      <<Emacs Ezf>>
-    };
-  }
+    <<Emacs Ezf>>
+  };
+}
 #+end_src
 
 **** Vertico
 Vertico is basically dmenu for emacs. It lists out all the options in a command menu.
 #+NAME: Emacs Vertico
 #+begin_src nix :noweb yes
-  vertico = {
-    enable = true;
-    defer = true;
-    ghook = ["('on-first-input-hook 'vertico-mode)"];
-    # Enable cycling for 'vertico-next & 'vertico-previous'.
-    custom.vertico-cycle = true;
-    # This is for exwm's minibuffer issue
-    generalTwo."'normal".vertico-map = {
-      "RET" = "'vertico-exit";
-      "C-o" = "'vertico-scroll-down";
-      "C-e" = "'vertico-scroll-up";
-      "e" = "'vertico-next";
-      "o" = "'vertico-previous";
-      "I" = "'vertico-last";
-      "N" = "'vertico-first";
-      "B" = "'vertico-last";
-      "bg" = "'vertico-first";
-    };
+vertico = {
+  enable = true;
+  defer = true;
+  ghook = ["('on-first-input-hook 'vertico-mode)"];
+  # Enable cycling for 'vertico-next & 'vertico-previous'.
+  custom.vertico-cycle = true;
+  # This is for exwm's minibuffer issue
+  generalTwo."'normal".vertico-map = {
+    "RET" = "'vertico-exit";
+    "C-o" = "'vertico-scroll-down";
+    "C-e" = "'vertico-scroll-up";
+    "e" = "'vertico-next";
+    "o" = "'vertico-previous";
+    "I" = "'vertico-last";
+    "N" = "'vertico-first";
+    "B" = "'vertico-last";
+    "bg" = "'vertico-first";
   };
+};
 
-  vertico-quick = {
-    enable = true;
-    defer = true;
-    generalTwo."'normal".vertico-map = {
-      "H-o" = "'vertico-quick-jump";
-      "H-e" = "'vertico-quick-jump";
-    };
+vertico-quick = {
+  enable = true;
+  defer = true;
+  generalTwo."'normal".vertico-map = {
+    "H-o" = "'vertico-quick-jump";
+    "H-e" = "'vertico-quick-jump";
   };
+};
 #+end_src
 
 **** Corfu
 I took a lot of this from Gavin Freeborn's config
 #+NAME: Emacs Corfu
 #+begin_src nix :noweb yes
-  corfu = {
-    enable = true;
-    ghook = [
-      "('minibuffer-setup-hook 'corfu-enable-in-minibuffer)"
-      "('on-first-buffer-hook 'global-corfu-mode)"
-    ];
-    custom = {
-      corfu-cycle = true;
-      corfu-autodelay = "0";
-      corfu-auto-prefix = "2";
-      corfu-auto = true;
-      corfu-on-exact-match = "'show";
-    };
-    general."M-/" = "'completion-at-point";
-    generalOne.corfu-map = {
-      "RET" = "nil";
-      "TAB" = "nil";
-      "S-<return>" = "'corfu-insert";
-      "[tab]" = "nil";
-    };
-    generalTwo."'(insert emacs)".corfu-map = {
-      "S-SPC" = "'corfu-insert-separator";
-      "C-e" = "'corfu-next";
-      "C-p" = "nil";
-      "C-o" = "'corfu-previous";
-    };
-    config = ''
+corfu = {
+  enable = true;
+  ghook = [
+    "('minibuffer-setup-hook 'corfu-enable-in-minibuffer)"
+    "('on-first-buffer-hook 'global-corfu-mode)"
+  ];
+  custom = {
+    corfu-cycle = true;
+    corfu-autodelay = "0";
+    corfu-auto-prefix = "2";
+    corfu-auto = true;
+    corfu-on-exact-match = "'show";
+  };
+  general."M-/" = "'completion-at-point";
+  generalOne.corfu-map = {
+    "RET" = "nil";
+    "TAB" = "nil";
+    "S-<return>" = "'corfu-insert";
+    "[tab]" = "nil";
+  };
+  generalTwo."'(insert emacs)".corfu-map = {
+    "S-SPC" = "'corfu-insert-separator";
+    "C-e" = "'corfu-next";
+    "C-p" = "nil";
+    "C-o" = "'corfu-previous";
+  };
+  config = ''
       <<Emacs Corfu Config>>
     '';
-  };
+};
 
-  nerd-icons-corfu = {
-    enable = true;
-    config = ''(add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter)'';
-    after = ["corfu"];
-  };
+nerd-icons-corfu = {
+  enable = true;
+  config = ''(add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter)'';
+  after = ["corfu"];
+};
 
-  corfu-quick = {
-    enable = true;
-    generalTwo."'(insert emacs)".corfu-map = {
-      "M-o" = "'corfu-quick-insert";
-      "M-e" = "'corfu-quick-insert";
-    };
+corfu-quick = {
+  enable = true;
+  generalTwo."'(insert emacs)".corfu-map = {
+    "M-o" = "'corfu-quick-insert";
+    "M-e" = "'corfu-quick-insert";
   };
+};
 
-  corfu-popupinfo = {
-    enable = true;
-    ghook = ["('corfu-mode-hook 'corfu-popupinfo-mode)"];
-  };
+corfu-popupinfo = {
+  enable = true;
+  ghook = ["('corfu-mode-hook 'corfu-popupinfo-mode)"];
+};
 
-  cape = {
-    enable = true;
-    after = ["corfu"];
-    config = ''
+cape = {
+  enable = true;
+  after = ["corfu"];
+  config = ''
       <<Emacs Cape Config>>
     '';
-  };
+};
 #+end_src
 
 #+NAME: Emacs Corfu Config
 #+begin_src emacs-lisp
-  (defun corfu-enable-in-minibuffer ()
-    "Enable Corfu in the minibuffer."
-    (when (local-variable-p 'completion-at-point-functions)
-      (setq-local corfu-auto t) ;; Enable/disable auto completion
-      (corfu-mode 1)))
+(defun corfu-enable-in-minibuffer ()
+  "Enable Corfu in the minibuffer."
+  (when (local-variable-p 'completion-at-point-functions)
+    (setq-local corfu-auto t) ;; Enable/disable auto completion
+    (corfu-mode 1)))
 #+end_src
 
 #+NAME: Emacs Cape Config
 #+begin_src emacs-lisp
-  (dolist (src (list 'cape-dabbrev 'cape-file))
-          (add-to-list 'completion-at-point-functions src))
+(dolist (src (list 'cape-dabbrev 'cape-file))
+  (add-to-list 'completion-at-point-functions src))
 #+end_src
 
 **** Prescient
 Prescient is a big-braned history package that orders completion options by recency & frequency.
 #+NAME: Emacs Prescient
 #+begin_src nix
-  prescient = {
-    enable = true;
-    defer = true;
-    config = ''(prescient-persist-mode)'';
-    custom.prescient-history-length = "100";
-    afterCall = ["on-first-input-hook"];
-  };
+prescient = {
+  enable = true;
+  defer = true;
+  config = ''(prescient-persist-mode)'';
+  custom.prescient-history-length = "100";
+  afterCall = ["on-first-input-hook"];
+};
 
-  vertico-prescient = {
-    enable = true;
-    defer = true;
-    ghook = ["('minibuffer-mode-hook 'vertico-prescient-mode)"];
-    custom = {
-      vertico-prescient-enable-filtering = false;
-      vertico-prescient-completion-styles = "'(orderless prescient basic)";
-      vertico-prescient-enable-sorting = true;
-    };
+vertico-prescient = {
+  enable = true;
+  defer = true;
+  ghook = ["('minibuffer-mode-hook 'vertico-prescient-mode)"];
+  custom = {
+    vertico-prescient-enable-filtering = false;
+    vertico-prescient-completion-styles = "'(orderless prescient basic)";
+    vertico-prescient-enable-sorting = true;
   };
+};
 
-  corfu-prescient = {
-    enable = true;
-    defer = true;
-    ghook = ["('corfu-mode-hook 'corfu-prescient-mode)"];
-    custom.corfu-prescient-completion-styles = "'(basic prescient)";
-  };
+corfu-prescient = {
+  enable = true;
+  defer = true;
+  ghook = ["('corfu-mode-hook 'corfu-prescient-mode)"];
+  custom.corfu-prescient-completion-styles = "'(basic prescient)";
+};
 #+end_src
 
 **** Orderless
@@ -3693,28 +3574,28 @@ Orderless basically turns the completion system into a fuzzy finder. It's here t
 This config is stolen directly from David Wilson
 #+NAME: Emacs Orderless
 #+begin_src nix
-  orderless = {
-    enable = true;
-    defer = true;
-    custom = {
-      completion-styles = "'(orderless prescient basic)";
-      completion-category-defaults = false;
-      completion-category-overrides = "'((file (styles . (partial-completion))))";
-    };
-    afterCall = ["on-first-input-hook"];
+orderless = {
+  enable = true;
+  defer = true;
+  custom = {
+    completion-styles = "'(orderless prescient basic)";
+    completion-category-defaults = false;
+    completion-category-overrides = "'((file (styles . (partial-completion))))";
   };
+  afterCall = ["on-first-input-hook"];
+};
 #+end_src
 
 **** Marginalia
 Marginalia provides extra information on the options in a vertico completion, that way you know what you're getting ahead of time.
 #+NAME: Emacs Marginalia
 #+begin_src nix
-  marginalia = {
-    enable = true;
-    defer = true;
-    config = ''(marginalia-mode)'';
-    afterCall = ["on-first-input-hook"];
-  };
+marginalia = {
+  enable = true;
+  defer = true;
+  config = ''(marginalia-mode)'';
+  afterCall = ["on-first-input-hook"];
+};
 #+end_src
 
 **** Consult
@@ -3723,143 +3604,142 @@ Replaces a bunch of commands with new commands.
 Evil integration is from noctuid & minad
 #+NAME: Emacs Consult Main Package
 #+begin_src nix :noweb yes
-  consult = {
-    enable = true;
-    defer = true;
-    extraPackages = with pkgs; [
-      fd
-      ripgrep
-    ];
-    ghook = ["('minibuffer-setup-hook 'consult-initial-narrow)"];
-    command = ["consult-goto-line" "consult-keep-lines" "noct-consult-ripgrep-or-line"];
-    general = {
-      "C-x C-f" = "'consult-find";
-      # https://taonaw.com/2025/05/15/two-eamcs-tweaks-i-forgot.html
-      "C-c C-r" = "'consult-recent-file";
-      "C-x b" = "'nil";
-      "M-y" = "'nil";
-      # C-c bindings (mode-specific-map)
-      "C-c m" = "'consult-mode-command";
-      "C-c k" = "'consult-kmacro";
-      # C-x bindings (ctl-x-map)
-      "C-x M-:" = "'consult-complex-command"; # orig. repeat-complex-command
-      "C-x 5 b" = "'consult-buffer-other-frame"; # orig. switch-to-buffer-other-frame
-      # Custom M-# bindings for fast register access
-      "M-#" = "'consult-register-load";
-      "M-'" = "'consult-register-store";       # orig. abbrev-prefix-mark (unrelated)
-      "C-M-#" = "'consult-register";
-      # M-g bindings (goto-map)
-      "M-g e" = "'consult-compile-error";
-      "M-g f" = "'consult-flymake"; # Alternative: consult-flycheck
-      "M-g m" = "'consult-mark";
-      "M-g k" = "'consult-global-mark";
-      "M-g i" = "'consult-imenu-multi";
-      # M-s bindings (search-map)
-      "M-s D" = "'consult-locate";
-      "M-s G" = "'consult-git-grep";
-      "M-s g" = "'consult-ripgrep";
-      "M-s m" = "'consult-multi-occur";
-      "M-s u" = "'consult-focus-lines";
-      # Isearch integration
-      "M-s e" = "'consult-isearch-history"; # orig. isearch-edit-string
-      "M-s L" = "'consult-line-multi"; # needed by consult-line to detect isearch
+consult = {
+  enable = true;
+  defer = true;
+  extraPackages = with pkgs; [
+    fd
+    ripgrep
+  ];
+  ghook = ["('minibuffer-setup-hook 'consult-initial-narrow)"];
+  command = ["consult-goto-line" "consult-keep-lines" "noct-consult-ripgrep-or-line"];
+  general = {
+    # https://taonaw.com/2025/05/15/two-eamcs-tweaks-i-forgot.html
+    "M-y" = "'nil";
+    # C-c bindings (mode-specific-map)
+    "C-c m" = "'consult-mode-command";
+    "C-c k" = "'consult-kmacro";
+    # Custom M-# bindings for fast register access
+    "M-#" = "'consult-register-load";
+    "M-'" = "'consult-register-store";       # orig. abbrev-prefix-mark (unrelated)
+    "C-M-#" = "'consult-register";
+    # M-s bindings (search-map)
+    "M-s E" = "'consult-compile-error";
+    "M-s m" = "'consult-mark";
+    "M-s k" = "'consult-global-mark";
+    "M-s D" = "'consult-locate";
+    "M-s G" = "'consult-git-grep";
+    "M-s g" = "'consult-ripgrep";
+    "M-s u" = "'consult-focus-lines";
+    # Isearch integration
+    "M-s e" = "'consult-isearch-history"; # orig. isearch-edit-string
+    "M-s L" = "'consult-line-multi"; # needed by consult-line to detect isearch
+  };
+  custom = {
+    consult-buffer-sources = "'(consult--source-buffer)";
+    xref-show-xrefs-function = "#'consult-xref";
+  };
+  generalOne = {
+    "'normal" = {
+      "?" = "'consult-line-multi";
+      "M-g" = "'consult-yank-pop"; # orig. evil-paste-pop
+      "M-E" = "'consult-isearch-history "; # orig. isearch-edit-string
+      "H-'" = "'evil-collection-consult-mark";
+      "H--" = "'evil-collection-consult-jump-list";
+      "H-q" = "'consult-flymake"; # Alternative: consult-flycheck
+    };  
+    "efs/leader-keys" = {
+      "b" = '''(consult-bookmark :which-key "bookmarks")'';
+      "i" = '''consult-imenu'';
+      "I" = '''consult-imenu-multi'';
+      "h C-a" = '''(consult-apropos :which-key "apropos")'';
+      "h i" = '''(consult-info :which-key "info")'';
+      "h M" = '''(consult-man :which-key "man")'';
     };
-    custom = {
-      consult-buffer-sources = "'(consult--source-buffer)";
-      xref-show-xrefs-function = "#'consult-xref";
+    ctl-x-map = {
+      "M-:" = "'consult-complex-command"; # orig. repeat-complex-command
+      "5 b" = "'consult-buffer-other-frame"; # orig. switch-to-buffer-other-frame
+      "b" = "'nil";
+      "C-f" = "'consult-find";
+      "C-r" = "'consult-recent-file";
     };
-    generalOne = {
-      "'normal" = {
-        "?" = "'consult-line-multi";
-        "H-m" = "'evil-collection-consult-mark";
-        "M-g" = "'consult-yank-pop"; # orig. evil-paste-pop
-        "M-E" = "'consult-isearch-history "; # orig. isearch-edit-string
-      };  
-      "efs/leader-keys" = {
-         "b" = '''(consult-bookmark :which-key "bookmarks")'';
-         "j" = '''(evil-collection-consult-jump-list :which-key "jump")'';
-         "i" = '''consult-imenu'';
-         "h C-a" = '''(consult-apropos :which-key "apropos")'';
-         "h i" = '''(consult-info :which-key "info")'';
-         "h M" = '''(consult-man :which-key "man")'';
-      };
-    };
-    config = ''
+  };
+  config = ''
       <<Emacs Consult Config>>
     '';
-  } ;
+} ;
 #+end_src
 
 #+NAME: Emacs Consult Config
 #+begin_src emacs-lisp
-  (defun efs/save-search-history (pattern)
-  	"Gets history from pattern, & saves it where evil mode can find it"
-  	(add-to-history 'evil-search-forward-history pattern)
-  	(add-to-history 'search-ring pattern)
-  	(add-to-history 'regexp-search-ring pattern)
-  	(setq evil-ex-search-pattern (list pattern t t))
-  	(setq evil-ex-search-direction 'forward)
-  	(when evil-ex-search-persistent-highlight
-            (evil-ex-search-activate-highlight evil-ex-search-pattern)))
+(defun efs/save-search-history (pattern)
+  "Gets history from pattern, & saves it where evil mode can find it"
+  (add-to-history 'evil-search-forward-history pattern)
+  (add-to-history 'search-ring pattern)
+  (add-to-history 'regexp-search-ring pattern)
+  (setq evil-ex-search-pattern (list pattern t t))
+  (setq evil-ex-search-direction 'forward)
+  (when evil-ex-search-persistent-highlight
+    (evil-ex-search-activate-highlight evil-ex-search-pattern)))
 
-  (defun noct-consult-line-evil-history (&rest _)
-    "Add latest `consult-line' search pattern to the evil search history ring.
+(defun noct-consult-line-evil-history (&rest _)
+  "Add latest `consult-line' search pattern to the evil search history ring.
   This only works with orderless and for the first component of the search."
-    (when (and (bound-and-true-p evil-mode)
-               (eq evil-search-module 'isearch))
-      (efs/save-search-history (cadr (orderless-compile
+  (when (and (bound-and-true-p evil-mode)
+             (eq evil-search-module 'isearch))
+    (efs/save-search-history (cadr (orderless-compile
   				    (car consult--line-history))))))
 
-  (general-add-advice #'consult-line :after #'noct-consult-line-evil-history)
+(general-add-advice #'consult-line :after #'noct-consult-line-evil-history)
 
-  (defvar consult--bufler-workspace+
-    `(:name "Workspace"
-            :narrow ?w
-            :category buffer
-            :face consult-buffer
-            :history  buffer-name-history
-            :state    ,#'consult--buffer-state
-            :enabled  ,(lambda () (bufler-workspace--tab-parameter 'bufler-workspace-path (tab-bar--current-tab-find)))
-            :items
-            ,(lambda ()
-               (let ((bufler-vc-state nil))
-                 (mapcar #'buffer-name
-                         (mapcar #'cdr
-                                 (bufler-buffer-alist-at
-                                  (bufler-workspace--tab-parameter 'bufler-workspace-path (tab-bar--current-tab-find))
-                                  :filter-fns bufler-filter-buffer-fns))))))
-    "Bufler workspace buffers source for `consult-buffer'.")
+(defvar consult--bufler-workspace+
+  `(:name "Workspace"
+          :narrow ?w
+          :category buffer
+          :face consult-buffer
+          :history  buffer-name-history
+          :state    ,#'consult--buffer-state
+          :enabled  ,(lambda () (bufler-workspace--tab-parameter 'bufler-workspace-path (tab-bar--current-tab-find)))
+          :items
+          ,(lambda ()
+             (let ((bufler-vc-state nil))
+               (mapcar #'buffer-name
+                       (mapcar #'cdr
+                               (bufler-buffer-alist-at
+                                (bufler-workspace--tab-parameter 'bufler-workspace-path (tab-bar--current-tab-find))
+                                :filter-fns bufler-filter-buffer-fns))))))
+  "Bufler workspace buffers source for `consult-buffer'.")
 
-  (push #'consult--bufler-workspace+ consult-buffer-sources)
+(push #'consult--bufler-workspace+ consult-buffer-sources)
 
-  ;; Stolen from the wiki
-  (defun consult-initial-narrow ()
-    (when (and (eq this-command #'consult-buffer)
-               (bufler-workspace--tab-parameter 'bufler-workspace-path (tab-bar--current-tab-find)))
-      (setq unread-command-events (append unread-command-events (list ?w 32)))))
+;; Stolen from the wiki
+(defun consult-initial-narrow ()
+  (when (and (eq this-command #'consult-buffer)
+             (bufler-workspace--tab-parameter 'bufler-workspace-path (tab-bar--current-tab-find)))
+    (setq unread-command-events (append unread-command-events (list ?w 32)))))
 
-  (defcustom noct-consult-ripgrep-or-line-limit 1000000
-    "Buffer size threshold for `noct-consult-ripgrep-or-line'.
+(defcustom noct-consult-ripgrep-or-line-limit 1000000
+  "Buffer size threshold for `noct-consult-ripgrep-or-line'.
   When the number of characters in a buffer exceeds this threshold,
   `consult-ripgrep' will be used instead of `consult-line'."
-    :type 'integer)
+  :type 'integer)
 
-  (defun noct-consult-ripgrep-or-line (&optional initial)
-    "Call `consult-line' for small buffers or `consult-ripgrep' for large files."
-    (interactive)
-    (if (or (not buffer-file-name)
-            (buffer-narrowed-p)
-            (ignore-errors
-              (file-remote-p buffer-file-name))
-            (jka-compr-get-compression-info buffer-file-name)
-            (<= (buffer-size)
-                (/ noct-consult-ripgrep-or-line-limit
-                   (if (eq major-mode 'org-mode) 4 1))))
-        (consult-line initial)
-      ((lambda ()
-         (when (file-writable-p buffer-file-name)
+(defun noct-consult-ripgrep-or-line (&optional initial)
+  "Call `consult-line' for small buffers or `consult-ripgrep' for large files."
+  (interactive)
+  (if (or (not buffer-file-name)
+          (buffer-narrowed-p)
+          (ignore-errors
+            (file-remote-p buffer-file-name))
+          (jka-compr-get-compression-info buffer-file-name)
+          (<= (buffer-size)
+              (/ noct-consult-ripgrep-or-line-limit
+                 (if (eq major-mode 'org-mode) 4 1))))
+      (consult-line initial)
+    ((lambda ()
+       (when (file-writable-p buffer-file-name)
   	 (save-buffer))
-         (let ((consult-project-function (lambda (x) nil)))
+       (let ((consult-project-function (lambda (x) nil)))
   	 (consult-ripgrep (list (shell-quote-argument buffer-file-name)) (concat " " initial))
   	 (efs/save-search-history (string-trim-left (car consult--grep-history) "# ")))))))
 #+end_src
@@ -3867,14 +3747,14 @@ Evil integration is from noctuid & minad
 ***** Extensions
 #+NAME: Emacs Consult Extensions
 #+begin_src nix
-  consult-dir = {
-    enable = true;
-    defer = true;
-    generalOne.vertico-map = {
-      "C-x d" = "'consult-dir";
-      "C-x j" = "'consult-dir-jump-file";
-    };
+consult-dir = {
+  enable = true;
+  defer = true;
+  generalOne.vertico-map = {
+    "C-x d" = "'consult-dir";
+    "C-x j" = "'consult-dir-jump-file";
   };
+};
 #+end_src
 
 **** Embark
@@ -3885,189 +3765,189 @@ Which-key indicator from the embark wiki
 avy actions from karthink
 #+NAME: Emacs Embark
 #+begin_src nix :noweb yes
-  embark = {
-    enable = true;
-    defer = true;
-    command = ["embark-act"];
-    general."M-a" = "'embark-dwim";
-    custom = {
-      # Replace key help with a completing-read interface
-      prefix-help-command = "#'embark-prefix-help-command";
-      embark-indicators = ''
+embark = {
+  enable = true;
+  defer = true;
+  command = ["embark-act"];
+  general."M-a" = "'embark-dwim";
+  custom = {
+    # Replace key help with a completing-read interface
+    prefix-help-command = "#'embark-prefix-help-command";
+    embark-indicators = ''
         '(embark-which-key-indicator
           embark-highlight-indicator
           embark-isearch-highlight-indicator)
       '';
-    };
-    generalTwo."'normal" = {
-      embark-collect-mode-map."q" = "'evil-record-macro";
-      minibuffer-local-map."a" = "'embark-act";
-    };
-    generalOne = {
-      embark-file-map."2" = "(my/embark-split-action find-file elwm-split-window)";
-      embark-buffer-map."2" = "(my/embark-split-action switch-to-buffer elwm-split-window)";
-      embark-bookmark-map."2" = "(my/embark-split-action bookmark-jump elwm-split-window)";
-    };
-    config = ''
+  };
+  generalTwo."'normal" = {
+    embark-collect-mode-map."q" = "'evil-record-macro";
+    minibuffer-local-map."a" = "'embark-act";
+  };
+  generalOne = {
+    embark-file-map."2" = "(my/embark-split-action find-file elwm-split-window)";
+    embark-buffer-map."2" = "(my/embark-split-action switch-to-buffer elwm-split-window)";
+    embark-bookmark-map."2" = "(my/embark-split-action bookmark-jump elwm-split-window)";
+  };
+  config = ''
       <<Emacs Embark Config>>
     '';
-    init = ''
+  init = ''
       <<Emacs Embark Init>>
     '';
-  } ;
+} ;
 
-  embark-consult = {
-    enable = true;
-    after = ["embark" "consult"];
-    ghook = ["('embark-collect-mode-hook 'consult-preview-at-point-mode)"];
-  };
+embark-consult = {
+  enable = true;
+  after = ["embark" "consult"];
+  ghook = ["('embark-collect-mode-hook 'consult-preview-at-point-mode)"];
+};
 #+end_src
 
 #+NAME: Emacs Embark Config
 #+begin_src emacs-lisp
-  (cl-defun embark--beginning-of-target (&key bounds &allow-other-keys)
-    "Go to beginning of the target BOUNDS."
-    (goto-char (car bounds)))
+(cl-defun embark--beginning-of-target (&key bounds &allow-other-keys)
+  "Go to beginning of the target BOUNDS."
+  (goto-char (car bounds)))
 
-  (cl-defun embark--end-of-target (&key bounds &allow-other-keys)
-    "Go to end of the target BOUNDS."
-    (goto-char (cdr bounds)))
+(cl-defun embark--end-of-target (&key bounds &allow-other-keys)
+  "Go to end of the target BOUNDS."
+  (goto-char (cdr bounds)))
 #+end_src
 
 #+NAME: Emacs Embark Init
 #+begin_src emacs-lisp
-  (defun embark-which-key-indicator ()
-    "An embark indicator that displays keymaps using which-key.
+(defun embark-which-key-indicator ()
+  "An embark indicator that displays keymaps using which-key.
       The which-key help message will show the type and value of the
       current target followed by an ellipsis if there are further
       targets."
-    (lambda (&optional keymap targets prefix)
-      (if (null keymap)
-          (which-key--hide-popup-ignore-command)
-        (which-key--show-keymap
-         (if (eq (plist-get (car targets) :type) 'embark-become)
-             "Become"
-           (format "Act on %s '%s'%s"
-                   (plist-get (car targets) :type)
-                   (embark--truncate-target (plist-get (car targets) :target))
-                   (if (cdr targets) "…" "")))
-         (if prefix
-             (pcase (lookup-key keymap prefix 'accept-default)
-               ((and (pred keymapp) km) km)
-               (_ (key-binding prefix 'accept-default)))
-           keymap)
-         nil nil t (lambda (binding)
-                     (not (string-suffix-p "-argument" (cdr binding))))))))
+  (lambda (&optional keymap targets prefix)
+    (if (null keymap)
+        (which-key--hide-popup-ignore-command)
+      (which-key--show-keymap
+       (if (eq (plist-get (car targets) :type) 'embark-become)
+           "Become"
+         (format "Act on %s '%s'%s"
+                 (plist-get (car targets) :type)
+                 (embark--truncate-target (plist-get (car targets) :target))
+                 (if (cdr targets) "…" "")))
+       (if prefix
+           (pcase (lookup-key keymap prefix 'accept-default)
+             ((and (pred keymapp) km) km)
+             (_ (key-binding prefix 'accept-default)))
+         keymap)
+       nil nil t (lambda (binding)
+                   (not (string-suffix-p "-argument" (cdr binding))))))))
 
-  (defun embark-hide-which-key-indicator (fn &rest args)
-    "Hide the which-key indicator immediately when using the completing-read prompter."
-    (which-key--hide-popup-ignore-command)
-    (let ((embark-indicators
-           (remq #'embark-which-key-indicator embark-indicators)))
-      (apply fn args)))
+(defun embark-hide-which-key-indicator (fn &rest args)
+  "Hide the which-key indicator immediately when using the completing-read prompter."
+  (which-key--hide-popup-ignore-command)
+  (let ((embark-indicators
+         (remq #'embark-which-key-indicator embark-indicators)))
+    (apply fn args)))
 
-  (advice-add #'embark-completing-read-prompter
-              :around #'embark-hide-which-key-indicator)
+(advice-add #'embark-completing-read-prompter
+            :around #'embark-hide-which-key-indicator)
 
-  (eval-when-compile
-    (defmacro my/embark-split-action (fn split-type)
-      `(defun ,(intern (concat "my/embark-"
-                               (symbol-name fn)
-                               "-"
-                               (car (last  (split-string
-                                            (symbol-name split-type) "-"))))) ()
-         (interactive)
-         (funcall #',split-type)
-         (call-interactively #',fn))))
+(eval-when-compile
+  (defmacro my/embark-split-action (fn split-type)
+    `(defun ,(intern (concat "my/embark-"
+                             (symbol-name fn)
+                             "-"
+                             (car (last  (split-string
+                                          (symbol-name split-type) "-"))))) ()
+       (interactive)
+       (funcall #',split-type)
+       (call-interactively #',fn))))
 
-  ;; Hide the modeline of embark live/completions buffers
-  (add-to-list 'display-buffer-alist
-               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-                 nil
-                 (window-parameters (mode-line-format . none))))
+;; Hide the modeline of embark live/completions buffers
+(add-to-list 'display-buffer-alist
+             '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+               nil
+               (window-parameters (mode-line-format . none))))
 #+end_src
 
 **** App Launcher
 #+NAME: Emacs App Launcher
 #+begin_src nix
-  app-launcher = {
-    enable = true;
-    defer = true;
-    command = ["app-launcher-run-app"];
-  };
+app-launcher = {
+  enable = true;
+  defer = true;
+  command = ["app-launcher-run-app"];
+};
 #+end_src
 
 **** Search
 #+NAME: Emacs Search
 #+begin_src nix :noweb yes
-  ace-isearch = {
-    enable = true;
-    demand = true;
-    gfhook = ["('pdf-view-mode-hook (lambda () (ace-isearch-mode -1)))"];
-    generalOne.isearch-mode-map."C-a" = "'avy-isearch";
-    config = ''
+ace-isearch = {
+  enable = true;
+  demand = true;
+  gfhook = ["('pdf-view-mode-hook (lambda () (ace-isearch-mode -1)))"];
+  generalOne.isearch-mode-map."C-a" = "'avy-isearch";
+  config = ''
       <<Emacs Search Config>>
     '';
-    custom = {
-      ace-isearch-on-evil-mode = true;
-      ace-isearch-input-length = "5";
-      ace-isearch-jump-based-on-one-char = false;
-      ace-isearch-function-from-isearch = "'ace-isearch-consult-ripgrep-or-line-from-isearch";
-    };
+  custom = {
+    ace-isearch-on-evil-mode = true;
+    ace-isearch-input-length = "5";
+    ace-isearch-jump-based-on-one-char = false;
+    ace-isearch-function-from-isearch = "'ace-isearch-consult-ripgrep-or-line-from-isearch";
   };
+};
 #+end_src
 
 #+NAME: Emacs Search Config
 #+begin_src emacs-lisp
-  (global-ace-isearch-mode)
-  (defun ace-isearch-consult-ripgrep-or-line-from-isearch ()
-    "Invoke `noct-consult-ripgrep-or-line' from ace-isearch."
-    (interactive)
-    (let (($query (if isearch-regexp
+(global-ace-isearch-mode)
+(defun ace-isearch-consult-ripgrep-or-line-from-isearch ()
+  "Invoke `noct-consult-ripgrep-or-line' from ace-isearch."
+  (interactive)
+  (let (($query (if isearch-regexp
   		    isearch-string
   		  (regexp-quote isearch-string))))
-      (isearch-update-ring isearch-string isearch-regexp)
-      (let (search-nonincremental-instead)
-        (ignore-errors (isearch-done t t)))
-      (noct-consult-ripgrep-or-line $query)))
+    (isearch-update-ring isearch-string isearch-regexp)
+    (let (search-nonincremental-instead)
+      (ignore-errors (isearch-done t t)))
+    (noct-consult-ripgrep-or-line $query)))
 #+end_src
 
 **** Snippets
 #+NAME: Emacs Snippets
 #+begin_src nix :noweb yes
-  tempel = {
-    enable = true;
-    command = ["tempel-complete"];
-    custom.tempel-path = ''"~/.config/emacs/templates.eld"'';
-    init = ''
+tempel = {
+  enable = true;
+  command = ["tempel-complete"];
+  custom.tempel-path = ''"~/.config/emacs/templates.eld"'';
+  init = ''
       <<Emacs Templ Init>>
     '';
-  };
+};
 
-  tempel-collection = {
-    enable = true;
-    after = ["tempel"];
-  };
+tempel-collection = {
+  enable = true;
+  after = ["tempel"];
+};
 #+end_src
 
 #+NAME: Emacs Templ Init
 #+begin_src emacs-lisp
-  (defun tempel-setup-capf ()
-    " Add the Tempel Capf to `completion-at-point-functions'.
+(defun tempel-setup-capf ()
+  " Add the Tempel Capf to `completion-at-point-functions'.
     `tempel-expand' only triggers on exact matches. Alternatively use
     `tempel-complete' if you want to see all matches, but then you
     should also configure `tempel-trigger-prefix', such that Tempel
     does not trigger too often when you don't expect it. NOTE: We add
     `tempel-expand' *before* the main programming mode Capf, such
     that it will be tried first."
-    (setq-local completion-at-point-functions
-                (cons #'tempel-expand
-                      completion-at-point-functions)))
+  (setq-local completion-at-point-functions
+              (cons #'tempel-expand
+                    completion-at-point-functions)))
 #+end_src
 
 #+NAME: Emacs Templates File
 #+begin_src nix
-  home.file.".config/emacs/templates.eld".text = ''
+home.file.".config/emacs/templates.eld".text = ''
     nix-mode
     (upackage p "= {" n "  enable = true;" q "  }")
 
@@ -4129,10 +4009,10 @@ avy actions from karthink
 An alternative to fzf.
 #+NAME: Emacs Ezf
 #+begin_src nix
-  ezf = {
-    enable = true;
-    deferIncrementally = true;
-  };
+ezf = {
+  enable = true;
+  deferIncrementally = true;
+};
 #+end_src
 
 *** Help System
@@ -5375,7 +5255,7 @@ This is where all the audio/video stuff goes
     home.packages = with pkgs; [
       yt-dlp
       (config.lib.nixGL.wrap obs-studio)
-      (config.lib.nixGL.wrap kdePackages.kdenlive)
+      # (config.lib.nixGL.wrap kdePackages.kdenlive)
       lmms
       audacity
       mpc-cli
