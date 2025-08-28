@@ -30,62 +30,7 @@
 
             prelude =''
               (defalias 'gsetq #'general-setq)
-              
-              (use-package on
-                :demand t)
-              
-              (general-create-definer efs/leader-keys
-                :keymaps 'override
-                :states '(emacs insert normal hybrid motion visual operator)
-                :prefix "SPC"
-                :global-prefix "C-SPC")
-              
-              (efs/leader-keys
-                "f" '(find-file :which-key "find or create file")
-                ;; Help
-                "h" '(:ignore t :which-key "help")
-                "h." '(display-local-help :which-key "display local help")
-                "h4" '(info-other-window :which-key "info other window")
-                "hA" '((lambda () (interactive) (async-shell-command "${pkgs.wiki}/bin/wiki")) :which-key "arch wiki")
-                "hC" '(describe-coding-system :which-key "describe coding system")
-                "hD" '(view-emacs-debugging :which-key "emacs debugging")
-                "hE" '(view-external-packages :which-key "external packages")
-                "hF" '(describe-face :which-key "face")
-                "hb" '(embark-bindings :which-key "display all keybinds")
-                "hI" '(describe-input-method :which-key "describe input method")
-                "hK" '(Info-goto-emacs-key-command :which-key "info: key command")
-                "hL" '(describe-language-environment :which-key "describe language environment")
-                "hP" '(describe-package :which-key "describe package")
-                "hR" '(info-display-manual :which-key "info: manual")
-                "hS" '(info-lookup-symbol :which-key "info: symbol")
-                "hT" '(view-emacs-todo :which-key "things you can do to help emacs")
-                "ha" '(about-emacs :which-key "about emacs")
-                "hc" '(describe-key-briefly :which-key "short describe key")
-                "hd" '(apropos-documentation :which-key "apropos documentation")
-                "he" '(view-echo-area-messages :which-key "view echoed messages")
-                "hh" '(help-for-help :which-key "help for help")
-                "hl" '(view-lossage :which-key "lossage")
-                "hn" '(view-emacs-news :which-key "emacs news")
-                "hp" '(finder-by-keyword :which-key "finder by keyword")
-                "hq" '(help-quit :which-key "help quit")
-                "hr" '(info-emacs-manual :which-key "info: emacs")
-                "hs" '(describe-syntax :which-key "describe syntax")
-                "ht" '(help-with-tutorial :which-key "emacs tutor")
-                "hw" '(where-is :which-key "find binds of command")
-                "h C-f" '(view-emacs-FAQ :which-key "emacs FAQ")
-                "h C-p" '(view-emacs-problems :which-key "view emacs problems")
-                "h C-s" '(search-forward-help-for-help :which-key "search in help for help")
-                "h C-m" '(describe-keymap :which-key "keymap")
-                "l" '((lambda () (interactive) (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k")))) :which-key "compile")
-                "L" '((lambda () (interactive) (if (project-current) (project-recompile) (recompile))) :which-key "recompile")
-                ;; Mount/unmount drive
-                "u" '((lambda () (interactive) (start-process-shell-command "udisksmenu" nil "${pkgs.udisksmenu}/bin/udisksmenu")) :which-key "mount/unmount drive"))
-              
               (general-unbind "C-h")
-              
-              (general-create-definer local-leader
-                :prefix "M-SPC"
-                :states '(emacs insert normal hybrid motion visual operator))
               
               (use-package hydra
                 :defer t)

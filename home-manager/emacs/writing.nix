@@ -40,7 +40,7 @@
                                          ("+" (:strike-through t))
                                          ("!" (:overline t) verbatim))'';
             };
-            generalOne."efs/leader-keys" = {
+            generalOne.global-leader = {
               "o" = '''(:ignore t :which-key "org")'';
               "op" = '''org-capture'';
             };
@@ -87,7 +87,7 @@
               denote-dired-directories = "(list denote-directory)";
               
             };
-            generalOne."efs/leader-keys" = {
+            generalOne.global-leader = {
               "oc" = '''(denote :which-key "create note")'';
               "or" = '''(denote-rename-file :whick-key "denote rename")'';
               "oi" = '''(denote-link :which-key "link to note")'';
@@ -110,7 +110,7 @@
                   (consult-notes-denote-mode))
               
             '';
-            generalOne."efs/leader-keys" = {
+            generalOne.global-leader = {
               "of" = '''(consult-notes :which-key "find note")'';
               "os" = '''(consult-notes-search-in-all-notes :which-key "search notes")'';
             };
@@ -221,7 +221,7 @@
               writeroom-maximize-window = false;
               writeroom-global-effects = false;
             };
-            generalOne."efs/leader-keys"."w" = '''(writeroom-mode :which-key "writeroom")'';
+            generalOne.global-leader."w" = '''(writeroom-mode :which-key "writeroom")'';
           };
 
           flyspell = {
@@ -256,7 +256,7 @@
           citar-denote = {
             enable = true;
             command = ["citar-denote-mode"];
-            generalOne."efs/leader-keys" = {
+            generalOne.global-leader = {
               "on" = '''(citar-create-note :which-key "new citar note")'';
               "oo" = '''(citar-denote-open-note :which-key "open citar note")'';
               "ol" = "'citar-denote-link-reference";

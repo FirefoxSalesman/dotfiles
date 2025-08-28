@@ -10,7 +10,7 @@
         "C-x C-j" = "'dired-jump";
         "C-x d" = "'consult-dir";
       };
-      generalOne."efs/leader-keys"."d" = '''(dired :which-key "dired")'';
+      generalOne.global-leader."d" = '''(dired :which-key "dired")'';
       generalTwo."'normal".dired-mode-map = {
         "w" = "'wdired-change-to-wdired-mode";
         "h" = "'dired-mark";

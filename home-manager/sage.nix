@@ -8,7 +8,7 @@
           defer = true;
           custom."sage-shell-edit:display-function" = ''"display-buffer"'';
           config = ''(sage-shell:define-alias)'';
-          generalOne."efs/leader-keys"."S" = '''(run-sage :which-key "sage")'';
+          generalOne.global-leader."S" = '''(run-sage :which-key "sage")'';
           generalTwo."local-leader"."sage-shell-mode-map"."h" = "'sage-shell:help";
         };
     

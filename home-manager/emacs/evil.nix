@@ -1,16 +1,19 @@
-  { inputs, config, ... }:
+  { pkgs, inputs, config, ... }:
 
   {
+    imports = [../keybinds];
+
     programs.emacs.init = {
-      keybinds.evil = {
-        enable = true;
-        keys = {
-          forward = "i";
-          backward = "n";
-          up = "o";
-          down = "e";
-          prefer-visual-line = true;
-          evil-collection-swap-keys = ''
+      keybinds = {
+        evil = {
+          enable = true;
+          keys = {
+            forward = "i";
+            backward = "n";
+            up = "o";
+            down = "e";
+            prefer-visual-line = true;
+            evil-collection-swap-keys = ''
             "x" "B"
             "X" "b"
             "u" "W"
@@ -22,6 +25,11 @@
             "h" "m"
             "b" "g"
           '';
+          };
+        };
+        leader-key = {
+          enable = true;
+          globalPrefix = "s";
         };
       };
       usePackage = {
@@ -178,6 +186,18 @@
               "b/" '(consult-keep-lines :which-key "delete non-matching lines"))
           '';
         };
+        
+        general.generalOne = {
+          help-map = {
+            "A" = '''((lambda () (interactive) (async-shell-command "${pkgs.wiki}/bin/wiki")) :which-key "arch wiki")'';
+            "b" = '''(embark-bindings :which-key "display all keybinds")'';
+          };
+          global-leader = {
+            "l" = '''((lambda () (interactive) (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k")))) :which-key "compile")'';
+            "L" = '''((lambda () (interactive) (if (project-current) (project-recompile) (recompile))) :which-key "recompile")'';
+            "u" = '''((lambda () (interactive) (start-process-shell-command "udisksmenu" nil "${pkgs.udisksmenu}/bin/udisksmenu")) :which-key "mount/unmount drive")'';
+          };
+        };
       
         evil-collection.custom.evil-collection-unimpaired-want-repeat-mode-integration = true;
         
@@ -264,7 +284,7 @@
         evil-nerd-commenter = {
           enable = true;
           defer = true;
-          generalOne."efs/leader-keys" = {
+          generalOne.global-leader = {
             "c" = '''(:ignore t :which-key "comment")'';
             "ci" = '''(evilnc-comment-or-uncomment-lines :which-key "comment line")'';
             "cl" = '''(evilnc-quick-comment-or-uncomment-paragraphs :which-key "comment paragraph")'';
@@ -283,7 +303,7 @@
           command = ["evil-mc-pause-cursors" "evil-mc-make-cursor-here"];
           generalOne = {
             "'(normal visual)"."bz" = "'evil-mc-hydra/body";
-            "efs/leader-keys"."C" = "'evil-mc-hydra/body";
+            global-leader."C" = "'evil-mc-hydra/body";
           };
           config = ''
               (global-evil-mc-mode)
@@ -498,7 +518,7 @@
             "C-S-i" = "'org-agenda-todo-nextset"; # Original binding "C-S-<right>"
             "l" = "'org-agenda-diary-entry";
           };
-          generalOne."efs/leader-keys"."oa" = '''(org-agenda :which-key "agenda")'';
+          generalOne.global-leader."oa" = '''(org-agenda :which-key "agenda")'';
         };
         
         ewal-evil-cursors = {

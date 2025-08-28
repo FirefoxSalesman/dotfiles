@@ -7,7 +7,7 @@
         defer = true;
         command = ["start-ollama"];
         custom.gptel-default-mode = "'org-mode";
-        generalOne."efs/leader-keys" = {
+        generalOne.global-leader = {
           "g" = '''(:ignore t :which-key "gptel")'';
           "gs" = '''(start-ollama :which-key "start")'';
           "gp" = '''(gptel :which-key "prompt")'';
@@ -39,7 +39,7 @@
         defer = true;
         generalOne = {
           embark-general-map."?" = '''(gptel-quick :which-key "summarize")''; 
-          "efs/leader-keys"."gq" = '''(gptel-quick :which-key "summarize")'';
+          global-leader."gq" = '''(gptel-quick :which-key "summarize")'';
         };
       };
     };

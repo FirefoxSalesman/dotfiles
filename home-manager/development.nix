@@ -87,7 +87,7 @@
         };
       };
       
-      project.generalOne."efs/leader-keys"."P" = "project-prefix-map";
+      project.generalOne.global-leader."P" = "project-prefix-map";
       
       # projection-multi = {
       #   enable = true;

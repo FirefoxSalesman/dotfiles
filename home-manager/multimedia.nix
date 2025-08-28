@@ -29,7 +29,7 @@
     
       programs.emacs.init.usePackage.mpc-wrapper = {
         enable = true;
-        generalOne."efs/leader-keys" = {
+        generalOne.global-leader = {
           "m" = '''(:ignore t :which-key "mpd")'';
           "mp" = '''(mpc-play :which-key "replay file")'';
           "mm" = '''(music-menu :which-key "menu")'';

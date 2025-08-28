@@ -48,7 +48,7 @@
         emacs.init.usePackage.envrc = {
             enable = true;
             ghook = ["('after-init-hook 'envrc-global-mode)"];
-            generalOne."efs/leader-keys" = {
+            generalOne.global-leader = {
               "e" = '''(:ignore t :which-key "direnv")'';
               "ea" = '''(envrc-allow :which-key "allow")'';
               "eu" = '''(envrc-reload :which-key "update dir")'';

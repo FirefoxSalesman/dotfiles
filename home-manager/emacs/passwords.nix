@@ -7,7 +7,7 @@
         password-store = {
           enable = true;
           defer = true;
-          generalOne."efs/leader-keys" = {
+          generalOne.global-leader = {
             "p" = '''(:ignore t :which-key "pass")'';
             "py" = '''(password-store-copy :which-key "yank")'';
             "pi" = '''(password-store-insert :which-key "insert")'';
@@ -19,7 +19,7 @@
         password-store-otp = {
           enable = true;
           defer = true;
-          generalOne."efs/leader-keys"."po" = '''(password-store-otp-token-copy :which-key "copy otp")'';
+          generalOne.global-leader."po" = '''(password-store-otp-token-copy :which-key "copy otp")'';
         };
       
         pinentry = {

@@ -17,7 +17,7 @@
       enable = true;
       defer = true;
       generalOne = {
-        "efs/leader-keys" = {
+        global-leader = {
           "hf" = "'helpful-function";
           "hs" = "'helpful-symbol";
           "hv" = "'helpful-variable";

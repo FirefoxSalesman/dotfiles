@@ -58,7 +58,7 @@
       yeetube = {
         enable = true;
         custom.yeetube-play-function = "'mpv-play-url";
-        generalOne."efs/leader-keys"."y" = '''(yeetube-search :which-key "search")'';
+        generalOne.global-leader."y" = '''(yeetube-search :which-key "search")'';
         generalTwo."'normal"."yeetube-mode-map" = {
           "RET" = "'yeetube-play";
           "r" = "'yeetube-channel-videos";
@@ -71,7 +71,7 @@
       #     enable = true;
       #     defer = true;
       #     generalOne = {
-      #       "efs/leader-keys"."e" = '''(ement-connect :which-key "element")''; 
+      #       global-leader."e" = '''(ement-connect :which-key "element")''; 
       #       local-leader."s" = '''(ement-sidebar :which-key "sidebar")'';
       #     };
       #     init = ''
@@ -86,7 +86,7 @@
 
         webjump = {
           enable = true;
-          generalOne."efs/leader-keys"."s" = "'webjump";
+          generalOne.global-leader."s" = "'webjump";
           custom.webjump-sites = ''
             '(("DuckDuckGo" . [simple-query "duckduckgo.com" "duckduckgo.com/?q=" ""])
               ("Invidious" . [simple-query "inv.nadeko.net" "inv.nadeko.net/search?q=" ""])
@@ -119,7 +119,7 @@
                                     "https://youtube.com/feeds/videos.xml?channel_id=UCUQs6rEz6lRGHn6DWqss0hA"
                                     "https://notrelated.xyz/rss")
             '';
-          generalOne."efs/leader-keys"."r" = '''((lambda () (interactive) (elfeed) (elfeed-update)) :which-key "rss")'';
+          generalOne.global-leader."r" = '''((lambda () (interactive) (elfeed) (elfeed-update)) :which-key "rss")'';
         };
       
     };

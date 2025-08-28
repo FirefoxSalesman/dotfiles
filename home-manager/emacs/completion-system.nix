@@ -239,7 +239,7 @@
           "H--" = "'evil-collection-consult-jump-list";
           "H-q" = "'consult-flymake"; # Alternative: consult-flycheck
         };  
-        "efs/leader-keys" = {
+        global-leader = {
           "b" = '''(consult-bookmark :which-key "bookmarks")'';
           "i" = '''consult-imenu'';
           "I" = '''consult-imenu-multi'';
