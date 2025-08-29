@@ -1,4 +1,4 @@
-  { pkgs, inputs, config, ... }:
+  { lib, pkgs, inputs, config, ... }:
 
   {
     imports = [../keybinds];
@@ -42,6 +42,19 @@
             };
             "'normal"."C-s" = "'evil-write";
           };
+        };
+        
+        general.generalOne = {
+          help-map."A" = '''((lambda () (interactive) (async-shell-command "${pkgs.wiki}/bin/wiki")) :which-key "arch wiki")'';
+          global-leader = {
+            "l" = '''((lambda () (interactive) (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k")))) :which-key "compile")'';
+            "L" = '''((lambda () (interactive) (if (project-current) (project-recompile) (recompile))) :which-key "recompile")'';
+            "u" = '''((lambda () (interactive) (start-process-shell-command "udisksmenu" nil "${pkgs.udisksmenu}/bin/udisksmenu")) :which-key "mount/unmount drive")'';
+          };
+        };
+      
+        evil-collection = {
+          custom.evil-collection-unimpaired-want-repeat-mode-integration = true;
           config = ''
             (evil-ex-define-cmd "q" '(lambda () (interactive) (prescient--save) (save-buffers-kill-emacs)))
             (evil-ex-define-cmd "Undotree" 'vundo)
@@ -120,7 +133,6 @@
               "y" 'evil-shift-right
               "Y" 'evil-shift-left
               "<escape>" 'doom/escape)
-              
             
             (general-def 'motion
               "I" 'evil-window-top
@@ -182,24 +194,10 @@
               "C-d" 'evil-yank-line
               "G" 'evil-paste)
             
-            (general-def 'normal "bl" '(consult-goto-line :which-key "go to line")
-              "b/" '(consult-keep-lines :which-key "delete non-matching lines"))
+            (general-def 'normal "bl" 'consult-goto-line
+              "b/" 'consult-keep-lines)
           '';
         };
-        
-        general.generalOne = {
-          help-map = {
-            "A" = '''((lambda () (interactive) (async-shell-command "${pkgs.wiki}/bin/wiki")) :which-key "arch wiki")'';
-            "b" = '''(embark-bindings :which-key "display all keybinds")'';
-          };
-          global-leader = {
-            "l" = '''((lambda () (interactive) (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k")))) :which-key "compile")'';
-            "L" = '''((lambda () (interactive) (if (project-current) (project-recompile) (recompile))) :which-key "recompile")'';
-            "u" = '''((lambda () (interactive) (start-process-shell-command "udisksmenu" nil "${pkgs.udisksmenu}/bin/udisksmenu")) :which-key "mount/unmount drive")'';
-          };
-        };
-      
-        evil-collection.custom.evil-collection-unimpaired-want-repeat-mode-integration = true;
         
         evil-surround = {
           enable = true;
@@ -218,8 +216,8 @@
           enable = true;
           generalOne = {
             "'operator" = {
-             "/" = "'evil-avy-goto-char-2"; 
-             "?" = "'evil-avy-goto-char-2"; 
+              "/" = "'evil-avy-goto-char-2"; 
+              "?" = "'evil-avy-goto-char-2"; 
             };
             "(normal visual operator)" = {
               "H-m" = "'evilem-motion-search-next";
@@ -245,39 +243,39 @@
             avy-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
           };
           config = ''
-              ;; Stolen from karthink
-              (defun avy-action-cursor (pt)
-                (save-excursion
-                  (goto-char pt)
-                  (evil-mc-make-cursor-here))
-                (select-window
-                 (cdr (ring-ref avy-ring 0)))
-                t)
+            ;; Stolen from karthink
+            (defun avy-action-cursor (pt)
+              (save-excursion
+                (goto-char pt)
+                (evil-mc-make-cursor-here))
+              (select-window
+               (cdr (ring-ref avy-ring 0)))
+              t)
             
-              (defun avy-action-helpful (pt)
-                (save-excursion
-                  (goto-char pt)
-                  (helpful-at-point))
-                (select-window
-                 (cdr (ring-ref avy-ring 0)))
-                t)
+            (defun avy-action-helpful (pt)
+              (save-excursion
+                (goto-char pt)
+                (helpful-at-point))
+              (select-window
+               (cdr (ring-ref avy-ring 0)))
+              t)
             
-              (defun avy-action-fold (pt)
-                (save-excursion
-                  (goto-char pt)
-                  (evil-toggle-fold))
-                (select-window
-                 (cdr (ring-ref avy-ring 0)))
-                t)
+            (defun avy-action-fold (pt)
+              (save-excursion
+                (goto-char pt)
+                (evil-toggle-fold))
+              (select-window
+               (cdr (ring-ref avy-ring 0)))
+              t)
             
-              (defun avy-action-embark (pt)
-                (unwind-protect
-                    (save-excursion
-                      (goto-char pt)
-                      (embark-act))
-                  (select-window
-                   (cdr (ring-ref avy-ring 0))))
-                t)
+            (defun avy-action-embark (pt)
+              (unwind-protect
+                  (save-excursion
+                    (goto-char pt)
+                    (embark-act))
+                (select-window
+                 (cdr (ring-ref avy-ring 0))))
+              t)
           '';
         };
         
@@ -306,16 +304,16 @@
             global-leader."C" = "'evil-mc-hydra/body";
           };
           config = ''
-              (global-evil-mc-mode)
+            (global-evil-mc-mode)
             
-              (general-add-hook 'doom-escape-hook (lambda () (when (evil-mc-has-cursors-p)
+            (general-add-hook 'doom-escape-hook (lambda () (when (evil-mc-has-cursors-p)
               						 (evil-mc-undo-all-cursors)
               						 (evil-mc-resume-cursors) t)))
             
-              ;; Don't mess with my macros.
-              ;; https://github.com/gabesoft/evil-mc/issues/83
-              (gsetq evil-mc-cursor-variables
-                     (mapcar
+            ;; Don't mess with my macros.
+            ;; https://github.com/gabesoft/evil-mc/issues/83
+            (gsetq evil-mc-cursor-variables
+                   (mapcar
               	(lambda (s)
               	  (remove 'register-alist
               		  (remove 'evil-markers-alist
@@ -504,6 +502,7 @@
             "R" 'evil-org-open-above
             "S" 'evil-org-open-below
             "x" 'evil-backward-WORD-begin
+            "X" 'evil-backward-word-begin
             "d" 'evil-yank)
           (evil-define-key 'visual 'evil-org-mode
             "i" 'evil-forward-char

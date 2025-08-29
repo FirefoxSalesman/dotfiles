@@ -32,9 +32,6 @@
               (defalias 'gsetq #'general-setq)
               (general-unbind "C-h")
               
-              (use-package hydra
-                :defer t)
-              
               (use-package pretty-hydra
                 :demand t
                 :custom

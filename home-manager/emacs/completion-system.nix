@@ -243,17 +243,19 @@
           "b" = '''(consult-bookmark :which-key "bookmarks")'';
           "i" = '''consult-imenu'';
           "I" = '''consult-imenu-multi'';
-          "h C-a" = '''(consult-apropos :which-key "apropos")'';
-          "h i" = '''(consult-info :which-key "info")'';
-          "h M" = '''(consult-man :which-key "man")'';
+        };
+        help-map = {
+          "C-a" = '''(consult-apropos :which-key "apropos")'';
+          "i" = '''(consult-info :which-key "info")'';
+          "M" = '''(consult-man :which-key "man")'';
         };
         ctl-x-map = {
           "M-:" = "'consult-complex-command"; # orig. repeat-complex-command
-          "5 b" = "'consult-buffer-other-frame"; # orig. switch-to-buffer-other-frame
           "b" = "'nil";
           "C-f" = "'consult-find";
           "C-r" = "'consult-recent-file";
         };
+        ctl-x-5-map."b" = "'consult-buffer-other-frame"; # orig. switch-to-buffer-other-frame
       };
       config = ''
           (defun efs/save-search-history (pattern)
@@ -354,22 +356,14 @@
       };
       generalTwo."'normal" = {
         embark-collect-mode-map."q" = "'evil-record-macro";
-        minibuffer-local-map."a" = "'embark-act";
+        vertico-map."a" = "'embark-act";
       };
       generalOne = {
         embark-file-map."2" = "(my/embark-split-action find-file elwm-split-window)";
         embark-buffer-map."2" = "(my/embark-split-action switch-to-buffer elwm-split-window)";
         embark-bookmark-map."2" = "(my/embark-split-action bookmark-jump elwm-split-window)";
+        help-map."b" = '''(embark-bindings :which-key "display all keybinds")'';
       };
-      config = ''
-          (cl-defun embark--beginning-of-target (&key bounds &allow-other-keys)
-            "Go to beginning of the target BOUNDS."
-            (goto-char (car bounds)))
-          
-          (cl-defun embark--end-of-target (&key bounds &allow-other-keys)
-            "Go to end of the target BOUNDS."
-            (goto-char (cdr bounds)))
-        '';
       init = ''
           (defun embark-which-key-indicator ()
             "An embark indicator that displays keymaps using which-key.
@@ -414,14 +408,8 @@
                  (interactive)
                  (funcall #',split-type)
                  (call-interactively #',fn))))
-          
-          ;; Hide the modeline of embark live/completions buffers
-          (add-to-list 'display-buffer-alist
-                       '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-                         nil
-                         (window-parameters (mode-line-format . none))))
-        '';
-    } ;
+      '';
+    };
     
     embark-consult = {
       enable = true;

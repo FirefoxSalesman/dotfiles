@@ -11,10 +11,7 @@
         "C-x d" = "'consult-dir";
       };
       generalOne.global-leader."d" = '''(dired :which-key "dired")'';
-      generalTwo."'normal".dired-mode-map = {
-        "w" = "'wdired-change-to-wdired-mode";
-        "h" = "'dired-mark";
-      };
+      generalTwo."'normal".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
       custom = {
         dired-recursive-deletes = "'always";
         dired-listing-switches = ''"-agho --group-directories-first"'';
@@ -87,11 +84,11 @@
       ghook = [''
           ('dired-mode-hook (lambda () (general-def 'normal dired-mode-map
                "B" 'evil-goto-line
-               "a" 'evil-ex
-               "o" 'evil-previous-line
-               "j" 'dired-unmark
-               "m" 'evil-search-next
-               "M" 'evil-search-previous
+               ;;"a" 'evil-ex
+               ;;"o" 'evil-previous-line
+               ;;"j" 'dired-unmark
+               ;;"m" 'evil-search-next
+               ;;"M" 'evil-search-previous
                "n" 'dired-single-prev
                "i" 'dired-single-next)))
         ''];

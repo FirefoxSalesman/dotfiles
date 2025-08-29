@@ -1795,23 +1795,48 @@ Solaire dims certain parts of the frame.
 *** Posframes
 Vertico Posframe puts vertico in a separate frame, causing it to actually look like dmenu.
 #+NAME: Emacs Ricing Posframes
-#+begin_src nix
-  vertico-posframe = {
-    enable = true;
-    defer = true;
-    ghook = ["('vertico-mode-hook 'vertico-posframe-mode)"];
-    config = ''(set-face-attribute 'vertico-posframe-face nil :family 'variable-pitch)'';
-  };
+#+begin_src nix :noweb yes
+vertico-posframe = {
+  enable = true;
+  defer = true;
+  ghook = ["('vertico-mode-hook 'vertico-posframe-mode)"];
+  config = ''(set-face-attribute 'vertico-posframe-face nil :family 'variable-pitch)'';
+};
 
-  which-key-posframe = {
-    enable = true;
-    defer = true;
-    ghook = ["('which-key-mode-hook 'which-key-posframe-mode)"];
-    custom = {
-      which-key-posframe-poshandler = "'posframe-poshandler-frame-bottom-center";
-      which-key-posframe-parameters = "'(:parent-frame nil :refposhandler posframe-refposhandler-xwininfo)";
-    };
-  };
+which-key-posframe = {
+  enable = true;
+  defer = true;
+  ghook = ["('which-key-mode-hook 'which-key-posframe-mode)"];
+  custom.which-key-posframe-poshandler = "'posframe-poshandler-frame-bottom-center";
+  config = ''
+    <<Emacs Ricing Posframes Which Key Config>>
+  '';
+};
+#+end_src
+
+#+NAME: Emacs Ricing Posframes Which Key Config
+#+begin_src emacs-lisp
+(defun which-key-posframe--show-buffer (act-popup-dim)
+  "Show which-key buffer when popup type is posframe.
+Argument ACT-POPUP-DIM has the form (HEIGHT . WIDTH), specifying
+the dimensions of the buffer text to be displayed in the popup."
+  (when (posframe-workable-p)
+    (save-window-excursion
+      (posframe-show
+       which-key--buffer
+       :font which-key-posframe-font
+       :position (point)
+       :poshandler which-key-posframe-poshandler
+       :background-color (face-attribute 'which-key-posframe :background nil t)
+       :foreground-color (face-attribute 'which-key-posframe :foreground nil t)
+       :height (car act-popup-dim)
+       :width (cdr act-popup-dim)
+       :lines-truncate t
+       :internal-border-width which-key-posframe-border-width
+       :internal-border-color (face-attribute 'which-key-posframe-border
+                                              :background nil t)
+       :parent-frame nil :refposhandler 'posframe-refposhandler-xwininfo
+       :override-parameters which-key-posframe-parameters))))
 #+end_src
 
 *** Mustache File
@@ -2254,10 +2279,7 @@ I'm running dired with a couple of small packages that improve on it
         "C-x d" = "'consult-dir";
       };
       generalOne.global-leader."d" = '''(dired :which-key "dired")'';
-      generalTwo."'normal".dired-mode-map = {
-        "w" = "'wdired-change-to-wdired-mode";
-        "h" = "'dired-mark";
-      };
+      generalTwo."'normal".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
       custom = {
         dired-recursive-deletes = "'always";
         dired-listing-switches = ''"-agho --group-directories-first"'';
@@ -2293,11 +2315,11 @@ I'm running dired with a couple of small packages that improve on it
       ghook = [''
           ('dired-mode-hook (lambda () (general-def 'normal dired-mode-map
                "B" 'evil-goto-line
-               "a" 'evil-ex
-               "o" 'evil-previous-line
-               "j" 'dired-unmark
-               "m" 'evil-search-next
-               "M" 'evil-search-previous
+               ;;"a" 'evil-ex
+               ;;"o" 'evil-previous-line
+               ;;"j" 'dired-unmark
+               ;;"m" 'evil-search-next
+               ;;"M" 'evil-search-previous
                "n" 'dired-single-prev
                "i" 'dired-single-next)))
         ''];
@@ -2453,9 +2475,6 @@ I'm running dired with a couple of small packages that improve on it
 #+begin_src emacs-lisp
 (defalias 'gsetq #'general-setq)
 (general-unbind "C-h")
-
-(use-package hydra
-  :defer t)
 
 (use-package pretty-hydra
   :demand t
@@ -2716,7 +2735,7 @@ My keybinds have been rearranged to work with Colemak. Evil is used for the purp
 
 Evil mode provides vim-like keybinds.
 #+begin_src nix :noweb yes :tangle emacs/evil.nix
-  { pkgs, inputs, config, ... }:
+  { lib, pkgs, inputs, config, ... }:
 
   {
     imports = [../keybinds];
@@ -2780,9 +2799,6 @@ It should be noted that C-g quits out of insert mode. That, like most of this co
 
 Differences from the spec:
 + numbers & symbols aren't rebound
-
-We used general to bind commonly used functions to the spacebar. It is partially based on the bindings in doom emacs.
-M-SPC is our local leader, & it's used for keys specific to a given major mode
 #+NAME: Emacs Evil Main
 #+begin_src nix :noweb yes
 evil = {
@@ -2794,16 +2810,10 @@ evil = {
     };
     "'normal"."C-s" = "'evil-write";
   };
-  config = ''
-    <<emacs-evil-config>>
-  '';
 };
 
 general.generalOne = {
-  help-map = {
-    "A" = '''((lambda () (interactive) (async-shell-command "${pkgs.wiki}/bin/wiki")) :which-key "arch wiki")'';
-    "b" = '''(embark-bindings :which-key "display all keybinds")'';
-  };
+  help-map."A" = '''((lambda () (interactive) (async-shell-command "${pkgs.wiki}/bin/wiki")) :which-key "arch wiki")'';
   global-leader = {
     "l" = '''((lambda () (interactive) (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k")))) :which-key "compile")'';
     "L" = '''((lambda () (interactive) (if (project-current) (project-recompile) (recompile))) :which-key "recompile")'';
@@ -2812,157 +2822,17 @@ general.generalOne = {
 };
 #+end_src
 
-#+NAME: emacs-evil-config
-#+begin_src emacs-lisp
-(evil-ex-define-cmd "q" '(lambda () (interactive) (prescient--save) (save-buffers-kill-emacs)))
-(evil-ex-define-cmd "Undotree" 'vundo)
-(evil-ex-define-cmd "k[ill]" 'kill-current-buffer)
-(evil-ex-define-cmd "trash" '(lambda () (interactive) (start-process-shell-command "rm" nil "rm -rf ~/.local/Trash")))
-
-(evil-set-initial-state 'dashboard-mode 'normal)
-
-(evil-add-command-properties #'consult-grep :jump t)
-
-(evil-define-operator ergo-word-delete (beg end type register yank-handler)
-  "Delete word."
-  :motion evil-a-word
-  (evil-delete beg end type register yank-handler))
-
-(evil-define-operator ergo-word-change (beg end type register yank-handler)
-  "Delete word."
-  :motion evil-inner-word
-  (evil-change beg end type register yank-handler))
-
-(general-def 'normal
-  "I" 'evil-window-top
-  "C-i" 'evil-goto-line
-  "N" 'evil-window-bottom
-  "C-n" 'evil-goto-first-line
-  "E" 'evil-scroll-down
-  "O" 'evil-scroll-up
-  "x" 'evil-backward-WORD-begin
-  "X" 'evil-backward-word-begin
-  "C-x" 'evil-backward-WORD-end
-  "j" 'evil-undo
-  "J" 'evil-redo
-  "a" 'evil-ex
-  "r" 'evil-insert-line
-  "R" 'evil-open-above
-  "s" 'evil-append-line
-  "S" 'evil-open-below
-  "t" 'evil-insert
-  "T" 'evil-append
-  "C-t" 'evil-replace-state
-  "u" 'evil-forward-WORD-begin
-  "U" 'evil-forward-word-begin
-  "C-u" 'evil-forward-WORD-end
-  "-" 'evil-jump-backward
-  "_" 'evil-jump-forward
-  "m" 'evil-search-next
-  "M" 'evil-search-previous
-  "k" 'evil-delete-char
-  "K" 'evil-substitute
-  "l" 'evil-invert-char
-  "L" 'evil-invert-case
-  "c" 'evil-visual-char
-  "C" 'evil-visual-line
-  "C-c" 'evil-visual-block
-  "v" 'evil-delete
-  "V" 'evil-change
-  "C-v" 'evil-delete-line
-  "d" 'evil-yank
-  "D" 'evil-yank-line
-  "G" 'evil-paste-after
-  ";" 'evil-end-of-visual-line
-  ":" 'evil-end-of-line
-  "C-;" 'evil-end-of-line
-  "p" 'ergo-word-delete
-  "P" 'ergo-word-change
-  "C-p" 'ergo-word-change
-  "$" 'evil-execute-macro
-  "~" 'evil-record-macro
-  "C-z" 'evil-goto-last-change-reverse
-  "w" 'evil-repeat
-  "W" 'evil-ex-repeat
-  "C-w" 'evil-ex-repeat
-  "l" 'evil-shift-right-line
-  "L" 'evil-shift-left-line
-  "C-l" 'evil-shift-left-line
-  "y" 'evil-shift-right
-  "Y" 'evil-shift-left
-  "<escape>" 'doom/escape)
-  
-
-(general-def 'motion
-  "I" 'evil-window-top
-  "C-i" 'evil-goto-line
-  "N" 'evil-window-bottom
-  "C-n" 'evil-goto-first-line
-  "C-e" 'evil-scroll-page-down
-  "C-o" 'evil-scroll-page-up
-  "a" 'evil-ex
-  "h" 'evil-set-marker
-  "m" 'evil-search-next
-  "M" 'evil-search-previous
-  "-" 'evil-jump-backward
-  "_" 'evil-jump-forward
-  "/" 'isearch-forward-regexp
-  "?" 'isearch-backward-regexp
-  "f" 'evil-first-non-blank-of-visual-line
-  "F" 'evil-beginning-of-visual-line
-  "C-f" 'evil-first-non-blank
-  "B" 'evil-goto-line)
-
-(general-swap-key nil '(motion normal visual)
-  "g" "b"
-  "z" "q"
-  "Z" "Q")
-
-(general-def
-  :keymaps 'override
-  :states '(normal visual)
-  "g" 'evil-paste-before
-  "z" 'evil-jump-item
-  "Z" 'evil-goto-last-change)
-
-(general-def
-  :keymaps 'override
-  :states '(operator visual)
-  "i" 'evil-forward-char
-  "s" evil-inner-text-objects-map
-  "t" evil-outer-text-objects-map)
-
-(general-def 'visual
-  "U" 'evil-forward-word-begin
-  "u" 'evil-forward-WORD-begin
-  "X" 'evil-backward-word-begin
-  "x" 'evil-backward-WORD-begin
-  "v" 'evil-delete-char
-  "V" 'evil-substitute
-  "C-v" 'evil-substitute
-  "t" evil-outer-text-objects-map
-  "s" evil-inner-text-objects-map
-  "l" 'evil-invert-case
-  "y" 'evil-shift-right
-  "Y" 'evil-shift-left
-  "C-t" 'evil-replace
-  "R" 'evil-insert-line
-  "C-r" 'evil-append-line
-  "d" 'evil-yank-line
-  "D" 'evil-yank-line
-  "C-d" 'evil-yank-line
-  "G" 'evil-paste)
-
-(general-def 'normal "bl" '(consult-goto-line :which-key "go to line")
-  "b/" '(consult-keep-lines :which-key "delete non-matching lines"))
-#+end_src
-
 **** Extensions
 Easymotion's prefix is M-SPC, however, most important keys are already bound somewhere easier.
 Cursors hydra: https://hungyi.net/posts/hydra-for-evil-mc/
 #+NAME: Emacs Evil Extensions
 #+begin_src nix :noweb yes
-evil-collection.custom.evil-collection-unimpaired-want-repeat-mode-integration = true;
+evil-collection = {
+  custom.evil-collection-unimpaired-want-repeat-mode-integration = true;
+  config = ''
+    <<Evil Collection Config>>
+  '';
+};
 
 evil-surround = {
   enable = true;
@@ -2976,8 +2846,8 @@ evil-easymotion = {
   enable = true;
   generalOne = {
     "'operator" = {
-     "/" = "'evil-avy-goto-char-2"; 
-     "?" = "'evil-avy-goto-char-2"; 
+      "/" = "'evil-avy-goto-char-2"; 
+      "?" = "'evil-avy-goto-char-2"; 
     };
     "(normal visual operator)" = {
       "H-m" = "'evilem-motion-search-next";
@@ -3058,6 +2928,149 @@ evil-mc = {
 };
 #+end_src
 
+#+NAME: Evil Collection Config
+#+begin_src emacs-lisp
+(evil-ex-define-cmd "q" '(lambda () (interactive) (prescient--save) (save-buffers-kill-emacs)))
+(evil-ex-define-cmd "Undotree" 'vundo)
+(evil-ex-define-cmd "k[ill]" 'kill-current-buffer)
+(evil-ex-define-cmd "trash" '(lambda () (interactive) (start-process-shell-command "rm" nil "rm -rf ~/.local/Trash")))
+
+(evil-set-initial-state 'dashboard-mode 'normal)
+
+(evil-add-command-properties #'consult-grep :jump t)
+
+(evil-define-operator ergo-word-delete (beg end type register yank-handler)
+  "Delete word."
+  :motion evil-a-word
+  (evil-delete beg end type register yank-handler))
+
+(evil-define-operator ergo-word-change (beg end type register yank-handler)
+  "Delete word."
+  :motion evil-inner-word
+  (evil-change beg end type register yank-handler))
+
+(general-def 'normal
+  "I" 'evil-window-top
+  "C-i" 'evil-goto-line
+  "N" 'evil-window-bottom
+  "C-n" 'evil-goto-first-line
+  "E" 'evil-scroll-down
+  "O" 'evil-scroll-up
+  "x" 'evil-backward-WORD-begin
+  "X" 'evil-backward-word-begin
+  "C-x" 'evil-backward-WORD-end
+  "j" 'evil-undo
+  "J" 'evil-redo
+  "a" 'evil-ex
+  "r" 'evil-insert-line
+  "R" 'evil-open-above
+  "s" 'evil-append-line
+  "S" 'evil-open-below
+  "t" 'evil-insert
+  "T" 'evil-append
+  "C-t" 'evil-replace-state
+  "u" 'evil-forward-WORD-begin
+  "U" 'evil-forward-word-begin
+  "C-u" 'evil-forward-WORD-end
+  "-" 'evil-jump-backward
+  "_" 'evil-jump-forward
+  "m" 'evil-search-next
+  "M" 'evil-search-previous
+  "k" 'evil-delete-char
+  "K" 'evil-substitute
+  "l" 'evil-invert-char
+  "L" 'evil-invert-case
+  "c" 'evil-visual-char
+  "C" 'evil-visual-line
+  "C-c" 'evil-visual-block
+  "v" 'evil-delete
+  "V" 'evil-change
+  "C-v" 'evil-delete-line
+  "d" 'evil-yank
+  "D" 'evil-yank-line
+  "G" 'evil-paste-after
+  ";" 'evil-end-of-visual-line
+  ":" 'evil-end-of-line
+  "C-;" 'evil-end-of-line
+  "p" 'ergo-word-delete
+  "P" 'ergo-word-change
+  "C-p" 'ergo-word-change
+  "$" 'evil-execute-macro
+  "~" 'evil-record-macro
+  "C-z" 'evil-goto-last-change-reverse
+  "w" 'evil-repeat
+  "W" 'evil-ex-repeat
+  "C-w" 'evil-ex-repeat
+  "l" 'evil-shift-right-line
+  "L" 'evil-shift-left-line
+  "C-l" 'evil-shift-left-line
+  "y" 'evil-shift-right
+  "Y" 'evil-shift-left
+  "<escape>" 'doom/escape)
+
+(general-def 'motion
+  "I" 'evil-window-top
+  "C-i" 'evil-goto-line
+  "N" 'evil-window-bottom
+  "C-n" 'evil-goto-first-line
+  "C-e" 'evil-scroll-page-down
+  "C-o" 'evil-scroll-page-up
+  "a" 'evil-ex
+  "h" 'evil-set-marker
+  "m" 'evil-search-next
+  "M" 'evil-search-previous
+  "-" 'evil-jump-backward
+  "_" 'evil-jump-forward
+  "/" 'isearch-forward-regexp
+  "?" 'isearch-backward-regexp
+  "f" 'evil-first-non-blank-of-visual-line
+  "F" 'evil-beginning-of-visual-line
+  "C-f" 'evil-first-non-blank
+  "B" 'evil-goto-line)
+
+(general-swap-key nil '(motion normal visual)
+  "g" "b"
+  "z" "q"
+  "Z" "Q")
+
+(general-def
+  :keymaps 'override
+  :states '(normal visual)
+  "g" 'evil-paste-before
+  "z" 'evil-jump-item
+  "Z" 'evil-goto-last-change)
+
+(general-def
+  :keymaps 'override
+  :states '(operator visual)
+  "i" 'evil-forward-char
+  "s" evil-inner-text-objects-map
+  "t" evil-outer-text-objects-map)
+
+(general-def 'visual
+  "U" 'evil-forward-word-begin
+  "u" 'evil-forward-WORD-begin
+  "X" 'evil-backward-word-begin
+  "x" 'evil-backward-WORD-begin
+  "v" 'evil-delete-char
+  "V" 'evil-substitute
+  "C-v" 'evil-substitute
+  "t" evil-outer-text-objects-map
+  "s" evil-inner-text-objects-map
+  "l" 'evil-invert-case
+  "y" 'evil-shift-right
+  "Y" 'evil-shift-left
+  "C-t" 'evil-replace
+  "R" 'evil-insert-line
+  "C-r" 'evil-append-line
+  "d" 'evil-yank-line
+  "D" 'evil-yank-line
+  "C-d" 'evil-yank-line
+  "G" 'evil-paste)
+
+(general-def 'normal "bl" 'consult-goto-line
+  "b/" 'consult-keep-lines)
+#+end_src
 #+NAME: Emacs Evil Surround Config
 #+begin_src emacs-lisp
 (general-def 'visual evil-surround-mode-map "R" 'evil-surround-region)
@@ -3070,53 +3083,53 @@ evil-mc = {
 
 #+NAME: Emacs Evil Easymotion Config
 #+begin_src emacs-lisp
-  ;; Stolen from karthink
-  (defun avy-action-cursor (pt)
-    (save-excursion
-      (goto-char pt)
-      (evil-mc-make-cursor-here))
-    (select-window
-     (cdr (ring-ref avy-ring 0)))
-    t)
+;; Stolen from karthink
+(defun avy-action-cursor (pt)
+  (save-excursion
+    (goto-char pt)
+    (evil-mc-make-cursor-here))
+  (select-window
+   (cdr (ring-ref avy-ring 0)))
+  t)
 
-  (defun avy-action-helpful (pt)
-    (save-excursion
-      (goto-char pt)
-      (helpful-at-point))
-    (select-window
-     (cdr (ring-ref avy-ring 0)))
-    t)
+(defun avy-action-helpful (pt)
+  (save-excursion
+    (goto-char pt)
+    (helpful-at-point))
+  (select-window
+   (cdr (ring-ref avy-ring 0)))
+  t)
 
-  (defun avy-action-fold (pt)
-    (save-excursion
-      (goto-char pt)
-      (evil-toggle-fold))
-    (select-window
-     (cdr (ring-ref avy-ring 0)))
-    t)
+(defun avy-action-fold (pt)
+  (save-excursion
+    (goto-char pt)
+    (evil-toggle-fold))
+  (select-window
+   (cdr (ring-ref avy-ring 0)))
+  t)
 
-  (defun avy-action-embark (pt)
-    (unwind-protect
-        (save-excursion
-          (goto-char pt)
-          (embark-act))
-      (select-window
-       (cdr (ring-ref avy-ring 0))))
-    t)
+(defun avy-action-embark (pt)
+  (unwind-protect
+      (save-excursion
+        (goto-char pt)
+        (embark-act))
+    (select-window
+     (cdr (ring-ref avy-ring 0))))
+  t)
 #+end_src
 
 #+NAME: Emacs Evil-MC Config
 #+begin_src emacs-lisp
-  (global-evil-mc-mode)
+(global-evil-mc-mode)
 
-  (general-add-hook 'doom-escape-hook (lambda () (when (evil-mc-has-cursors-p)
+(general-add-hook 'doom-escape-hook (lambda () (when (evil-mc-has-cursors-p)
   						 (evil-mc-undo-all-cursors)
   						 (evil-mc-resume-cursors) t)))
 
-  ;; Don't mess with my macros.
-  ;; https://github.com/gabesoft/evil-mc/issues/83
-  (gsetq evil-mc-cursor-variables
-         (mapcar
+;; Don't mess with my macros.
+;; https://github.com/gabesoft/evil-mc/issues/83
+(gsetq evil-mc-cursor-variables
+       (mapcar
   	(lambda (s)
   	  (remove 'register-alist
   		  (remove 'evil-markers-alist
@@ -3337,6 +3350,7 @@ ewal-evil-cursors = {
   "R" 'evil-org-open-above
   "S" 'evil-org-open-below
   "x" 'evil-backward-WORD-begin
+  "X" 'evil-backward-word-begin
   "d" 'evil-yank)
 (evil-define-key 'visual 'evil-org-mode
   "i" 'evil-forward-char
@@ -3681,17 +3695,19 @@ consult = {
       "b" = '''(consult-bookmark :which-key "bookmarks")'';
       "i" = '''consult-imenu'';
       "I" = '''consult-imenu-multi'';
-      "h C-a" = '''(consult-apropos :which-key "apropos")'';
-      "h i" = '''(consult-info :which-key "info")'';
-      "h M" = '''(consult-man :which-key "man")'';
+    };
+    help-map = {
+      "C-a" = '''(consult-apropos :which-key "apropos")'';
+      "i" = '''(consult-info :which-key "info")'';
+      "M" = '''(consult-man :which-key "man")'';
     };
     ctl-x-map = {
       "M-:" = "'consult-complex-command"; # orig. repeat-complex-command
-      "5 b" = "'consult-buffer-other-frame"; # orig. switch-to-buffer-other-frame
       "b" = "'nil";
       "C-f" = "'consult-find";
       "C-r" = "'consult-recent-file";
     };
+    ctl-x-5-map."b" = "'consult-buffer-other-frame"; # orig. switch-to-buffer-other-frame
   };
   config = ''
       <<Emacs Consult Config>>
@@ -3810,37 +3826,24 @@ embark = {
   };
   generalTwo."'normal" = {
     embark-collect-mode-map."q" = "'evil-record-macro";
-    minibuffer-local-map."a" = "'embark-act";
+    vertico-map."a" = "'embark-act";
   };
   generalOne = {
     embark-file-map."2" = "(my/embark-split-action find-file elwm-split-window)";
     embark-buffer-map."2" = "(my/embark-split-action switch-to-buffer elwm-split-window)";
     embark-bookmark-map."2" = "(my/embark-split-action bookmark-jump elwm-split-window)";
+    help-map."b" = '''(embark-bindings :which-key "display all keybinds")'';
   };
-  config = ''
-      <<Emacs Embark Config>>
-    '';
   init = ''
       <<Emacs Embark Init>>
-    '';
-} ;
+  '';
+};
 
 embark-consult = {
   enable = true;
   after = ["embark" "consult"];
   ghook = ["('embark-collect-mode-hook 'consult-preview-at-point-mode)"];
 };
-#+end_src
-
-#+NAME: Emacs Embark Config
-#+begin_src emacs-lisp
-(cl-defun embark--beginning-of-target (&key bounds &allow-other-keys)
-  "Go to beginning of the target BOUNDS."
-  (goto-char (car bounds)))
-
-(cl-defun embark--end-of-target (&key bounds &allow-other-keys)
-  "Go to end of the target BOUNDS."
-  (goto-char (cdr bounds)))
 #+end_src
 
 #+NAME: Emacs Embark Init
@@ -3888,12 +3891,6 @@ embark-consult = {
        (interactive)
        (funcall #',split-type)
        (call-interactively #',fn))))
-
-;; Hide the modeline of embark live/completions buffers
-(add-to-list 'display-buffer-alist
-             '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-               nil
-               (window-parameters (mode-line-format . none))))
 #+end_src
 
 **** App Launcher
@@ -4600,6 +4597,8 @@ Almost everything here was copied from David Wilson. Thank you, David, for pract
         <<Emacs Window Management EXWM>>
         
         <<Emacs Window Management Popper & Proced>>
+        
+        <<Emacs Ace Window>>
       };
     };
   }
@@ -4815,19 +4814,12 @@ bufler-workspace-tabs = {
 
 #+NAME: Emacs Bufler Config
 #+begin_src emacs-lisp
-  (defun bufler-bar ()
-    (interactive)
-    (bufler-sidebar)
-    (with-selected-window (get-buffer-window "*Bufler*")
-      (gsetq window-size-fixed 'width)
-      (window-resize (selected-window) (- 35 (window-total-width)) t t)))
-  (evil-ex-define-cmd "ls" 'bufler-bar)
-
-  (evil-collection-define-key 'normal 'bufler-list-mode-map
-    (kbd "RET") 'bufler-list-buffer-switch
-    (kbd "M-RET") 'bufler-list-buffer-peek
-    "D" 'bufler-list-buffer-kill)
-
+(defun bufler-bar ()
+  (interactive)
+  (bufler-sidebar)
+  (with-selected-window (get-buffer-window "*Bufler*")
+    (gsetq window-size-fixed 'width)
+    (window-resize (selected-window) (- 35 (window-total-width)) t t)))
 #+end_src
 
 *** ELWM
@@ -4906,7 +4898,7 @@ golden-ratio = {
   enable = true;
   defer = true;
   ghook = ["('on-first-input-hook 'golden-ratio-mode)"];
-  config = "(general-add-advice 'golden-ratio :after '(lambda () (exwm-mff-warp-to-selected)))";
+  config = "(general-add-advice 'golden-ratio :after 'exwm-mff-warp-to-selected)";
 };
 #+end_src
 
@@ -4981,9 +4973,10 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
                                    ?\s-f
                                    ?\s-F
                                    ?\s-u
+                                   ?\s-/
                                    ?\s-'	;; popper-toggle-latest
                                    ?\s-\" ;; popper-toggle-type
-                                   ?\C-\ 
+                                   ?\s-\ 
                                    XF86AudioRaiseVolume
                                    XF86AudioLowerVolume
                                    XF86AudioMute
@@ -5218,6 +5211,51 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
       i3bar-command = ''"${(import ../scripts/i3status-rust.nix {inherit pkgs;})}/bin/i3status-rust"'';
     };
   };
+#+end_src
+
+*** Ace Window
+#+NAME: Emacs Ace Window
+#+begin_src nix :noweb yes
+ace-window = {
+  enable = true;
+  custom = {
+    aw-scope = "'frame";
+    aw-keys = "'(?c ?r ?s ?t ?n ?e ?i ?a)";
+  };
+  general."s-/" = "'ace-window";
+  config = ''
+    <<Emacs Ace Window Config>>
+  '';
+};
+#+end_src
+
+#+NAME: Emacs Ace Window Config
+#+begin_src emacs-lisp
+(ace-window-posframe-mode)
+
+(defun aw--lead-overlay-posframe (path leaf)
+  (let* ((wnd (cdr leaf))
+         (str (format "%s" (apply #'string path)))
+         ;; It's important that buffer names are not unique across
+         ;; multiple invocations: posframe becomes very slow when
+         ;; creating new frames, and so being able to reuse old ones
+         ;; makes a huge difference. What defines "able to reuse" is
+         ;; something like: a frame exists which hasn't been deleted
+         ;; (with posframe-delete) and has the same configuration as
+         ;; the requested new frame.
+         (bufname (format " *aw-posframe-buffer-%s*" path)))
+    (with-selected-window wnd
+      (push bufname aw--posframe-frames)
+      (posframe-show bufname
+                     :string str
+                     :poshandler aw-posframe-position-handler
+		     :refposhandler 'posframe-refposhandler-xwininfo
+		     :parent-frame nil
+                     :font (face-font 'aw-leading-char-face)
+                     :foreground-color (face-foreground 'aw-leading-char-face nil t)
+                     :background-color (face-background 'aw-leading-char-face nil t)))))
+
+(general-add-advice 'ace-window :after (lambda (&rest args) (golden-ratio)))
 #+end_src
 
 ** GPT.el

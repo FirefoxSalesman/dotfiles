@@ -214,19 +214,12 @@
             
           '';
           config = ''
-              (defun bufler-bar ()
-                (interactive)
-                (bufler-sidebar)
-                (with-selected-window (get-buffer-window "*Bufler*")
-                  (gsetq window-size-fixed 'width)
-                  (window-resize (selected-window) (- 35 (window-total-width)) t t)))
-              (evil-ex-define-cmd "ls" 'bufler-bar)
-            
-              (evil-collection-define-key 'normal 'bufler-list-mode-map
-                (kbd "RET") 'bufler-list-buffer-switch
-                (kbd "M-RET") 'bufler-list-buffer-peek
-                "D" 'bufler-list-buffer-kill)
-            
+            (defun bufler-bar ()
+              (interactive)
+              (bufler-sidebar)
+              (with-selected-window (get-buffer-window "*Bufler*")
+                (gsetq window-size-fixed 'width)
+                (window-resize (selected-window) (- 35 (window-total-width)) t t)))
           '';
           extraConfig = ''
             :pretty-hydra
@@ -309,7 +302,7 @@
           enable = true;
           defer = true;
           ghook = ["('on-first-input-hook 'golden-ratio-mode)"];
-          config = "(general-add-advice 'golden-ratio :after '(lambda () (exwm-mff-warp-to-selected)))";
+          config = "(general-add-advice 'golden-ratio :after 'exwm-mff-warp-to-selected)";
         };
         
           exwm = {
@@ -364,9 +357,10 @@
                                            ?\s-f
                                            ?\s-F
                                            ?\s-u
+                                           ?\s-/
                                            ?\s-'	;; popper-toggle-latest
                                            ?\s-\" ;; popper-toggle-type
-                                           ?\C-\ 
+                                           ?\s-\ 
                                            XF86AudioRaiseVolume
                                            XF86AudioLowerVolume
                                            XF86AudioMute
@@ -531,6 +525,42 @@
                   "k" 'proced-send-signal)
             '';
           };
+        
+        ace-window = {
+          enable = true;
+          custom = {
+            aw-scope = "'frame";
+            aw-keys = "'(?c ?r ?s ?t ?n ?e ?i ?a)";
+          };
+          general."s-/" = "'ace-window";
+          config = ''
+            (ace-window-posframe-mode)
+            
+            (defun aw--lead-overlay-posframe (path leaf)
+              (let* ((wnd (cdr leaf))
+                     (str (format "%s" (apply #'string path)))
+                     ;; It's important that buffer names are not unique across
+                     ;; multiple invocations: posframe becomes very slow when
+                     ;; creating new frames, and so being able to reuse old ones
+                     ;; makes a huge difference. What defines "able to reuse" is
+                     ;; something like: a frame exists which hasn't been deleted
+                     ;; (with posframe-delete) and has the same configuration as
+                     ;; the requested new frame.
+                     (bufname (format " *aw-posframe-buffer-%s*" path)))
+                (with-selected-window wnd
+                  (push bufname aw--posframe-frames)
+                  (posframe-show bufname
+                                 :string str
+                                 :poshandler aw-posframe-position-handler
+            		     :refposhandler 'posframe-refposhandler-xwininfo
+            		     :parent-frame nil
+                                 :font (face-font 'aw-leading-char-face)
+                                 :foreground-color (face-foreground 'aw-leading-char-face nil t)
+                                 :background-color (face-background 'aw-leading-char-face nil t)))))
+            
+            (general-add-advice 'ace-window :after (lambda (&rest args) (golden-ratio)))
+          '';
+        };
       };
     };
   }
