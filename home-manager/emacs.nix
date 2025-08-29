@@ -122,30 +122,21 @@
               custom.auto-save-file-name-transforms = ''`((".*" ,(no-littering-expand-var-file-name "auto-save/") t))'';
             };
 
-            doom-escape = {
-              enable = true;
-              package = epkgs: epkgs.doom-utils;
-              gfhook = ["('doom-escape-hook (list (lambda () (setq efs/vertico-active nil)) 'transient-quit-one))"];
-              general."C-g" = "'doom/escape";
-              config = ''
-                  (with-eval-after-load 'eldoc
-                    (eldoc-add-command 'doom/escape))
+          async = {
+            enable = true;
+            config = ''
+                (autoload 'dired-async-mode "dired-async.el" nil t)
+                (dired-async-mode)
               '';
-            };
-
-            async = {
-              enable = true;
-              config = ''
-                  (autoload 'dired-async-mode "dired-async.el" nil t)
-                  (dired-async-mode)
-              '';
-            };
+          };
 
             wgrep = {
               enable = true;
               custom.wgrep-auto-save-buffer = true;
               generalTwo."'normal".grep-mode-map."w" = "'wgrep-change-to-wgrep-mode";
             };
+
+          doom-escape.gfhook = ["('doom-escape-hook (lambda () (setq efs/vertico-active nil)))"];
 
             ednc = {
               enable = true;

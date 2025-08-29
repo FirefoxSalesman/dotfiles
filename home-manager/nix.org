@@ -2447,11 +2447,11 @@ I'm running dired with a couple of small packages that improve on it
 
           <<Emacs Cleanup>>
 
-          <<Emacs Doom Escape>>
-
           <<Emacs Async>>
 
           <<Emacs Wgrep>>
+
+          doom-escape.gfhook = ["('doom-escape-hook (lambda () (setq efs/vertico-active nil)))"];
 
           <<Emacs Notifications>>
           
@@ -2583,43 +2583,22 @@ Emacs has a propensity for leaving garbage lying around. This configuration that
   };
 #+end_src
 
-**** Doom Escape
-Credits: Doom Escape is from doom. (Wow)
-#+NAME: Emacs Doom Escape
-#+begin_src nix :noweb yes
-  doom-escape = {
-    enable = true;
-    package = epkgs: epkgs.doom-utils;
-    gfhook = ["('doom-escape-hook (list (lambda () (setq efs/vertico-active nil)) 'transient-quit-one))"];
-    general."C-g" = "'doom/escape";
-    config = ''
-      <<Doom Escape Config>>
-    '';
-  };
-#+end_src
-
-#+NAME: Doom Escape Config
-#+begin_src emacs-lisp
-  (with-eval-after-load 'eldoc
-    (eldoc-add-command 'doom/escape))
-#+end_src
-
 **** Async
 Async lets emacs create other instances of itself to run functions. It still has to be passed back to the main instance, but it does help with the single-threadedness.
 #+NAME: Emacs Async
 #+begin_src nix :noweb yes
-  async = {
-    enable = true;
-    config = ''
+async = {
+  enable = true;
+  config = ''
       <<Emacs Async Config>>
     '';
-  };
+};
 #+end_src
 
 #+NAME: Emacs Async Config
 #+begin_src emacs-lisp
-  (autoload 'dired-async-mode "dired-async.el" nil t)
-  (dired-async-mode)
+(autoload 'dired-async-mode "dired-async.el" nil t)
+(dired-async-mode)
 #+end_src
 
 **** Wgrep
@@ -2768,6 +2747,7 @@ Evil mode provides vim-like keybinds.
           enable = true;
           globalPrefix = "s";
         };
+        doomEscape.enable = true;
       };
       usePackage = {
         <<Emacs Evil Main>>
@@ -3376,6 +3356,7 @@ Undo-Fu lets us have linear undos. It's our undo system in evil
 {
   imports = [
     ./leader-key.nix
+    ./doom-escape.nix
   ];
 }
 #+end_src
@@ -3429,6 +3410,26 @@ in
         };
       };
     };
+  };
+}
+#+end_src
+
+***** Doom Escape
+Credits: Doom Escape is from doom. (Wow)
+#+begin_src nix :tangle keybinds/doom-escape.nix
+{ pkgs, lib, config, ... }:
+
+let
+  keybinds = config.programs.emacs.init.keybinds;
+in
+{
+  options.programs.emacs.init.keybinds.doomEscape.enable = lib.mkEnableOption "Enables doom escape, as seen in doom emacs";
+
+  config.programs.emacs.init.usePackage.doom-escape = lib.mkIf keybinds.doomEscape.enable {
+    enable = true;
+    package = epkgs: epkgs.doom-utils;
+    bind."C-g" = "doom/escape";
+    generalOne."'normal"."<escape>" = lib.mkIf keybinds.evil.enable "'doom/escape";
   };
 }
 #+end_src
@@ -5222,11 +5223,34 @@ ace-window = {
     aw-scope = "'frame";
     aw-keys = "'(?c ?r ?s ?t ?n ?e ?i ?a)";
   };
+  preface = ''
+    <<Emacs Ace Window Preface>>
+  '';
+  init = ''(setopt aw-dispatch-alist '((?k aw-delete-window "Delete Window")
+                                       (?m aw-swap-window "Swap Windows")
+                                       (?M aw-move-window "Move Window")
+                                       (?d aw-copy-window "Copy Window")
+                                       (?b aw-switch-buffer-in-window "Select Buffer")
+                                       (?f aw-flip-window)
+                                       (?u aw-switch-buffer-other-window "Switch Buffer Other Window")
+                                       (?x aw-execute-command-other-window "Execute Command Other Window")
+                                       (?v efs-aw-split-window-elwm "Split Window")
+                                       (?o delete-other-windows "Delete Other Windows")
+                                       (?T aw-transpose-frame "Transpose Frame")
+                                       (?? aw-show-dispatch-help)))'';
   general."s-/" = "'ace-window";
   config = ''
     <<Emacs Ace Window Config>>
   '';
 };
+#+end_src
+
+#+NAME: Emacs Ace Window Preface
+#+begin_src emacs-lisp
+(defun efs-aw-split-window-elwm (window)
+  "Split WINDOW horizontally."
+  (select-window window)
+  (elwm-split-window))
 #+end_src
 
 #+NAME: Emacs Ace Window Config

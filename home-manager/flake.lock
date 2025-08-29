@@ -144,11 +144,11 @@
     "doom-utils": {
       "flake": false,
       "locked": {
-        "lastModified": 1708378736,
-        "narHash": "sha256-q6geZYywWJbeKUMedqR6RoNCNljA5R2obIHKwcVmKlI=",
+        "lastModified": 1756497521,
+        "narHash": "sha256-Xsmvs2VULsWTNa3PkZDWzZPHSlLVm/kN10EwEGBC1o0=",
         "owner": "firefoxsalesman",
         "repo": "doom-utils",
-        "rev": "17498f8ad2f7961803b605508d095487fdde090a",
+        "rev": "139cc9edb9ea3be3196363f6becf8bf8e9162bae",
         "type": "github"
       },
       "original": {

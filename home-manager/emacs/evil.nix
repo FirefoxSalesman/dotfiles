@@ -31,6 +31,7 @@
           enable = true;
           globalPrefix = "s";
         };
+        doomEscape.enable = true;
       };
       usePackage = {
         evil = {

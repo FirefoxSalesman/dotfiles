@@ -532,6 +532,24 @@
             aw-scope = "'frame";
             aw-keys = "'(?c ?r ?s ?t ?n ?e ?i ?a)";
           };
+          preface = ''
+            (defun efs-aw-split-window-elwm (window)
+              "Split WINDOW horizontally."
+              (select-window window)
+              (elwm-split-window))
+          '';
+          init = ''(setopt aw-dispatch-alist '((?k aw-delete-window "Delete Window")
+                                               (?m aw-swap-window "Swap Windows")
+                                               (?M aw-move-window "Move Window")
+                                               (?d aw-copy-window "Copy Window")
+                                               (?b aw-switch-buffer-in-window "Select Buffer")
+                                               (?f aw-flip-window)
+                                               (?u aw-switch-buffer-other-window "Switch Buffer Other Window")
+                                               (?x aw-execute-command-other-window "Execute Command Other Window")
+                                               (?v efs-aw-split-window-elwm "Split Window")
+                                               (?o delete-other-windows "Delete Other Windows")
+                                               (?T aw-transpose-frame "Transpose Frame")
+                                               (?? aw-show-dispatch-help)))'';
           general."s-/" = "'ace-window";
           config = ''
             (ace-window-posframe-mode)
