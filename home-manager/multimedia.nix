@@ -5,7 +5,7 @@
       yt-dlp
       (config.lib.nixGL.wrap obs-studio)
       # (config.lib.nixGL.wrap kdePackages.kdenlive)
-      lmms
+      pkgs-stable.lmms
       audacity
       mpc-cli
       doomer
