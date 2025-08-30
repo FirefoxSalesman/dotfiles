@@ -1,8 +1,6 @@
   { lib, pkgs, inputs, config, ... }:
 
   {
-    imports = [../keybinds];
-
     programs.emacs.init = {
       keybinds = {
         evil = {
@@ -32,30 +30,11 @@
           globalPrefix = "s";
         };
         doomEscape.enable = true;
+        undo.enable = true;
       };
       usePackage = {
         evil = {
           gfhook = ["('doom-escape-hook 'evil-normal-state)"];
-          generalOne = {
-            "'insert" = {
-              "C-s" = "'insert-char";
-              "C-k" = "'kill-line";
-            };
-            "'normal"."C-s" = "'evil-write";
-          };
-        };
-        
-        general.generalOne = {
-          help-map."A" = '''((lambda () (interactive) (async-shell-command "${pkgs.wiki}/bin/wiki")) :which-key "arch wiki")'';
-          global-leader = {
-            "l" = '''((lambda () (interactive) (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k")))) :which-key "compile")'';
-            "L" = '''((lambda () (interactive) (if (project-current) (project-recompile) (recompile))) :which-key "recompile")'';
-            "u" = '''((lambda () (interactive) (start-process-shell-command "udisksmenu" nil "${pkgs.udisksmenu}/bin/udisksmenu")) :which-key "mount/unmount drive")'';
-          };
-        };
-      
-        evil-collection = {
-          custom.evil-collection-unimpaired-want-repeat-mode-integration = true;
           config = ''
             (evil-ex-define-cmd "q" '(lambda () (interactive) (prescient--save) (save-buffers-kill-emacs)))
             (evil-ex-define-cmd "Undotree" 'vundo)
@@ -132,8 +111,7 @@
               "L" 'evil-shift-left-line
               "C-l" 'evil-shift-left-line
               "y" 'evil-shift-right
-              "Y" 'evil-shift-left
-              "<escape>" 'doom/escape)
+              "Y" 'evil-shift-left)
             
             (general-def 'motion
               "I" 'evil-window-top
@@ -198,7 +176,25 @@
             (general-def 'normal "bl" 'consult-goto-line
               "b/" 'consult-keep-lines)
           '';
+          generalOne = {
+            "'insert" = {
+              "C-s" = "'insert-char";
+              "C-k" = "'kill-line";
+            };
+            "'normal"."C-s" = "'evil-write";
+          };
         };
+        
+        emacs.generalOne = {
+          help-map."A" = '''((lambda () (interactive) (async-shell-command "${pkgs.wiki}/bin/wiki")) :which-key "arch wiki")'';
+          global-leader = {
+            "l" = '''((lambda () (interactive) (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k")))) :which-key "compile")'';
+            "L" = '''((lambda () (interactive) (if (project-current) (project-recompile) (recompile))) :which-key "recompile")'';
+            "u" = '''((lambda () (interactive) (start-process-shell-command "udisksmenu" nil "${pkgs.udisksmenu}/bin/udisksmenu")) :which-key "mount/unmount drive")'';
+          };
+        };
+      
+        evil-collection.custom.evil-collection-unimpaired-want-repeat-mode-integration = true;
         
         evil-surround = {
           enable = true;
@@ -518,7 +514,6 @@
             "C-S-i" = "'org-agenda-todo-nextset"; # Original binding "C-S-<right>"
             "l" = "'org-agenda-diary-entry";
           };
-          generalOne.global-leader."oa" = '''(org-agenda :which-key "agenda")'';
         };
         
         ewal-evil-cursors = {
@@ -526,13 +521,6 @@
           demand = true;
           config = ''(ewal-evil-cursors-get-colors :apply t)'';
         };
-
-          undo-fu = {
-            enable = true;
-            custom.undo-fu-session-compression = "'zst";
-            afterCall = ["on-first-buffer-hook"];
-            config = ''(gsetq evil-undo-system 'undo-fu)'';
-          };
       };
     };
   }

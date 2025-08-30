@@ -475,12 +475,11 @@
             enable = true;
             defer = true;
             command = ["exwm-mff-warp-to-selected"];
-            # ghook = ["('exwm-init-hook 'exwm-mff-mode)"];
           };
         
           exwm-outer-gaps = {
             enable = true;
-            config = ''(exwm-outer-gaps-mode)'';
+            config = ''(ignore-errors (exwm-outer-gaps-mode))'';
             after = ["exwm"];
           };
         

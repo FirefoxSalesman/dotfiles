@@ -215,11 +215,11 @@
         "use-package-eglot": "use-package-eglot"
       },
       "locked": {
-        "lastModified": 1756416881,
-        "narHash": "sha256-TEgOTbgbexLHbMK8r9/AL1nxztBm/iVAe8vnaBjvLm8=",
+        "lastModified": 1756570598,
+        "narHash": "sha256-KHgm15BE/RFvCbXhGFnGXnmHjLkHH8pAeYKto9Rj+oo=",
         "owner": "firefoxsalesman",
         "repo": "NixEmacs",
-        "rev": "29ec3b83da71295d629ba9001358a05f343780d6",
+        "rev": "8055e05e308336f167ef10fc1147ea3d061b484d",
         "type": "github"
       },
       "original": {
@@ -234,11 +234,11 @@
         "nixpkgs-stable": "nixpkgs-stable"
       },
       "locked": {
-        "lastModified": 1756485131,
-        "narHash": "sha256-jWIKZYrzry8QWR/eRh3I/DUC4kd1SNZqs2bWmz4M/yM=",
+        "lastModified": 1756544801,
+        "narHash": "sha256-+xkwz8de9XaBe2a54+Oq35V2oNqD2lyR/HCTaTCRxLo=",
         "owner": "nix-community",
         "repo": "emacs-overlay",
-        "rev": "70f78565e9055b2f39249b7630073d59f8663efb",
+        "rev": "1c6ba6fb3b8a444dec1cbebff0d5914b569b4d24",
         "type": "github"
       },
       "original": {

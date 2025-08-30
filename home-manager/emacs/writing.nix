@@ -40,16 +40,9 @@
                                          ("+" (:strike-through t))
                                          ("!" (:overline t) verbatim))'';
             };
-            generalOne.global-leader = {
-              "o" = '''(:ignore t :which-key "org")'';
-              "op" = '''org-capture'';
-            };
             generalTwo.local-leader.org-mode-map = {
-              "e" = '''(org-export-dispatch :which-key "export")'';
               "o" = '''(consult-org-heading :which-key "outline")'';
               "a" = '''(avy-org-goto-heading-timer :which-key "avy")'';
-              "i" = '''(org-toggle-inline-images :which-key "show images")'';
-              "b" = '''(org-edit-special :which-key "edit block")'';
             };
         
             config = ''
@@ -140,15 +133,6 @@
             };
           };
         
-          tex.generalTwo.local-leader.LaTeX-mode-map = {
-            "p" = '''(preview-at-point :which-key "preview")'';
-            "a" = '''(eglot-code-actions :which-key "code actions")'';
-            "n" = '''(flymake-goto-next-error :which-key "next error")'';
-            "e" = '''(flymake-goto-prev-error :which-key "previous error")'';
-            "f" = '''(eglot-format :which-key "format")'';
-            "u" = '''(preview-clearout-at-point :which-key "unpreview")'';
-          };
-        
           pdf-tools = {
             enable = true;
             defer = true;
@@ -192,12 +176,7 @@
                 "[h" = "'markdown-previous-visible-heading";
                 "]h" = "'markdown-next-visible-heading";
               };  
-              local-leader.markdown-mode-map = {
-                "o" = '''(consult-outline :which-key "go to heading")'';
-                "a" = '''(eglot-code-actions :which-key "code actions")'';
-                "n" = '''(flymake-goto-next-error :which-key "next error")'';
-                "e" = '''(flymake-goto-prev-error :which-key "previous error")'';
-              };
+              local-leader.markdown-mode-map."o" = '''(consult-outline :which-key "go to heading")'';
             };
             init = ''
                 (defun efs/markdown-font-setup ()

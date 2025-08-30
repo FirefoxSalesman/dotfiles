@@ -1,8 +1,6 @@
 { lib, ... }:
 
 {
-  imports = [./language-support];
-
   programs.emacs.init = {
     ide = {
       project = true;
@@ -87,18 +85,6 @@
         };
       };
       
-      project.generalOne.global-leader."P" = "project-prefix-map";
-      
-      # projection-multi = {
-      #   enable = true;
-      #   generalOne.project-prefix-map."RET" = "'projection-multi-compile";
-      #   config = ''
-      #     (require 'projection)
-      #     (global-projection-hook-mode)
-      #     (oset projection-project-type-maven build "mvn -B clean compile")
-      #   '' ;
-      # };
-      
       projection-multi-embark = {
         enable = true;
         after = ["embark" "projection-multi"];
@@ -107,11 +93,6 @@
 
         eglot = {
           gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
-          generalTwo.local-leader.eglot-mode-map = {
-            "f" = "'eglot-format-buffer";
-            "a" = "'eglot-code-actions";
-            "d" = "'eldoc-doc-buffer";
-          };
           config = ''
               (defun my/eglot-capf ()
                 (setq-local completion-at-point-functions
@@ -125,12 +106,6 @@
               			      (general-def 'normal eglot-mode-map "K" 'evil-substitute)))
           '';
         } ;
-      
-        flymake = {
-          enable = true;
-          defer = true;
-          config = ''(evil-ex-define-cmd "trouble" 'flymake-show-buffer-diagnostics)'';
-        };
       
         eglot-tempel = {
           enable = true;
@@ -148,33 +123,12 @@
       #     };
       #   };
 
-        python-ts-mode = {
-          generalTwo."local-leader".python-mode-map."r" = "'python-shell-send-buffer";
-          custom = {
+        python-ts-mode.custom = {
             python-shell-interpreter = ''"ipython"'';
             python-shell-interpreter-args = ''"-i --simple-prompt"'';
-          };
         };
       
-        code-cells.generalTwo = {
-          "'normal".code-cells-mode-map = {
-            "M-e" = "'code-cells-forward-cell";
-            "M-o" = "'code-cells-backward-cell";
-          };
-          "local-leader".code-cells-mode-map = {
-            "e" = "'code-cells-eval";
-          };
-        };
-      
-        racket-mode = {
-          gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
-          generalTwo.local-leader.racket-mode-map = {
-            "." = "'racket-xp-describe";
-            "r" = "'racket-run";
-          };
-        };
-
-      cider.generalTwo.local-leader.cider-mode-map."s" = '''(cider-jack-in :which-key "start cider")''; 
+      racket-mode.gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
 
       java-ts-mode = {
         init = ''
@@ -204,7 +158,6 @@
                                                                :extendedClientCapabilities (:classFileContentsSupport t)))'';
       };
 
-      prolog-mode.generalTwo."local-leader".prolog-mode-map."r" = '''(run-prolog :which-key "run")'';
     } ;
   };
 }

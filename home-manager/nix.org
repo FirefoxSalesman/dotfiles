@@ -1944,8 +1944,6 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 { lib, ... }:
 
 {
-  imports = [./language-support];
-
   programs.emacs.init = {
     ide = {
       project = true;
@@ -1992,9 +1990,7 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 
       <<Development Python>>
       
-      <<Development Racket>>
-
-      cider.generalTwo.local-leader.cider-mode-map."s" = '''(cider-jack-in :which-key "start cider")''; 
+      racket-mode.gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
 
       java-ts-mode = {
         init = ''
@@ -2005,7 +2001,6 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
                                                                :extendedClientCapabilities (:classFileContentsSupport t)))'';
       };
 
-      prolog-mode.generalTwo."local-leader".prolog-mode-map."r" = '''(run-prolog :which-key "run")'';
     } ;
   };
 }
@@ -2099,16 +2094,6 @@ magit = {
   };
 };
 
-project.generalOne.global-leader."P" = "project-prefix-map";
-
-# projection-multi = {
-#   enable = true;
-#   generalOne.project-prefix-map."RET" = "'projection-multi-compile";
-#   config = ''
-#     <<Emacs Development Projection Config>>
-#   '' ;
-# };
-
 projection-multi-embark = {
   enable = true;
   after = ["embark" "projection-multi"];
@@ -2128,21 +2113,10 @@ projection-multi-embark = {
 #+begin_src nix :noweb yes
   eglot = {
     gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
-    generalTwo.local-leader.eglot-mode-map = {
-      "f" = "'eglot-format-buffer";
-      "a" = "'eglot-code-actions";
-      "d" = "'eldoc-doc-buffer";
-    };
     config = ''
       <<Development Eglot Config>>
     '';
   } ;
-
-  flymake = {
-    enable = true;
-    defer = true;
-    config = ''(evil-ex-define-cmd "trouble" 'flymake-show-buffer-diagnostics)'';
-  };
 
   eglot-tempel = {
     enable = true;
@@ -2182,85 +2156,10 @@ projection-multi-embark = {
 *** Python
 #+NAME: Development Python
 #+begin_src nix
-  python-ts-mode = {
-    generalTwo."local-leader".python-mode-map."r" = "'python-shell-send-buffer";
-    custom = {
+  python-ts-mode.custom = {
       python-shell-interpreter = ''"ipython"'';
       python-shell-interpreter-args = ''"-i --simple-prompt"'';
-    };
   };
-
-  code-cells.generalTwo = {
-    "'normal".code-cells-mode-map = {
-      "M-e" = "'code-cells-forward-cell";
-      "M-o" = "'code-cells-backward-cell";
-    };
-    "local-leader".code-cells-mode-map = {
-      "e" = "'code-cells-eval";
-    };
-  };
-#+end_src
-
-*** Racket
-#+NAME: Development Racket
-#+begin_src nix
-  racket-mode = {
-    gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
-    generalTwo.local-leader.racket-mode-map = {
-      "." = "'racket-xp-describe";
-      "r" = "'racket-run";
-    };
-  };
-#+end_src
-
-*** language support
-#+begin_src nix :tangle language-support/default.nix
-{ ... }:
-
-{
-  imports = [
-    ./dart.nix
-  ];
-}
-#+end_src
-
-**** dart
-#+begin_src nix :tangle language-support/dart.nix
-{ pkgs, config, lib, ... }:
-
-let ide = config.programs.emacs.init.ide;
-in
-{
-  options.programs.emacs.init.ide.languages.dart = {
-    enable = lib.mkEnableOption "Enables dart support. You'll need to install the language server yourself, as I can't find it in nixpkgs";
-    flutter = lib.mkEnableOption "Enables flutter support";
-  };
-
-  config.programs.emacs.init.usePackage = lib.mkIf ide.languages.dart.enable {
-    dart-mode = {
-      enable = true;
-      eglot = ide.eglot.enable;
-      lsp = ide.lsp.enable;
-      lspce = ide.lspce.enable;
-      config = lib.mkIf ide.lspce.enable ''(with-eval-after-load 'lspce (add-to-list 'lspce-server-programs (list "dart" "dart" "language-server")))'';
-    };
-
-    flutter = lib.mkIf ide.languages.dart.flutter {
-      enable = true;
-      after = ["dart-mode"];
-    };
-
-    hover = lib.mkIf ide.languages.dart.flutter {
-      enable = true;
-      after = ["dart-mode"];
-    };
-
-    lsp-dart = lib.mkIf ide.lsp.enable {
-      enable = true;
-      after = ["lsp-mode"];
-    };
-  };
-}
 #+end_src
 
 ** File Management
@@ -2717,8 +2616,6 @@ Evil mode provides vim-like keybinds.
   { lib, pkgs, inputs, config, ... }:
 
   {
-    imports = [../keybinds];
-
     programs.emacs.init = {
       keybinds = {
         evil = {
@@ -2748,6 +2645,7 @@ Evil mode provides vim-like keybinds.
           globalPrefix = "s";
         };
         doomEscape.enable = true;
+        undo.enable = true;
       };
       usePackage = {
         <<Emacs Evil Main>>
@@ -2759,8 +2657,6 @@ Evil mode provides vim-like keybinds.
         <<Emacs Evil God State>>
       
         <<Emacs Evil Compats>>
-
-        <<Emacs Evil Undo>>
       };
     };
   }
@@ -2783,6 +2679,9 @@ Differences from the spec:
 #+begin_src nix :noweb yes
 evil = {
   gfhook = ["('doom-escape-hook 'evil-normal-state)"];
+  config = ''
+    <<Evil Config>>
+  '';
   generalOne = {
     "'insert" = {
       "C-s" = "'insert-char";
@@ -2792,7 +2691,7 @@ evil = {
   };
 };
 
-general.generalOne = {
+emacs.generalOne = {
   help-map."A" = '''((lambda () (interactive) (async-shell-command "${pkgs.wiki}/bin/wiki")) :which-key "arch wiki")'';
   global-leader = {
     "l" = '''((lambda () (interactive) (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k")))) :which-key "compile")'';
@@ -2802,17 +2701,155 @@ general.generalOne = {
 };
 #+end_src
 
+#+NAME: Evil Config
+#+begin_src emacs-lisp
+(evil-ex-define-cmd "q" '(lambda () (interactive) (prescient--save) (save-buffers-kill-emacs)))
+(evil-ex-define-cmd "Undotree" 'vundo)
+(evil-ex-define-cmd "k[ill]" 'kill-current-buffer)
+(evil-ex-define-cmd "trash" '(lambda () (interactive) (start-process-shell-command "rm" nil "rm -rf ~/.local/Trash")))
+
+(evil-set-initial-state 'dashboard-mode 'normal)
+
+(evil-add-command-properties #'consult-grep :jump t)
+
+(evil-define-operator ergo-word-delete (beg end type register yank-handler)
+  "Delete word."
+  :motion evil-a-word
+  (evil-delete beg end type register yank-handler))
+
+(evil-define-operator ergo-word-change (beg end type register yank-handler)
+  "Delete word."
+  :motion evil-inner-word
+  (evil-change beg end type register yank-handler))
+
+(general-def 'normal
+  "I" 'evil-window-top
+  "C-i" 'evil-goto-line
+  "N" 'evil-window-bottom
+  "C-n" 'evil-goto-first-line
+  "E" 'evil-scroll-down
+  "O" 'evil-scroll-up
+  "x" 'evil-backward-WORD-begin
+  "X" 'evil-backward-word-begin
+  "C-x" 'evil-backward-WORD-end
+  "j" 'evil-undo
+  "J" 'evil-redo
+  "a" 'evil-ex
+  "r" 'evil-insert-line
+  "R" 'evil-open-above
+  "s" 'evil-append-line
+  "S" 'evil-open-below
+  "t" 'evil-insert
+  "T" 'evil-append
+  "C-t" 'evil-replace-state
+  "u" 'evil-forward-WORD-begin
+  "U" 'evil-forward-word-begin
+  "C-u" 'evil-forward-WORD-end
+  "-" 'evil-jump-backward
+  "_" 'evil-jump-forward
+  "m" 'evil-search-next
+  "M" 'evil-search-previous
+  "k" 'evil-delete-char
+  "K" 'evil-substitute
+  "l" 'evil-invert-char
+  "L" 'evil-invert-case
+  "c" 'evil-visual-char
+  "C" 'evil-visual-line
+  "C-c" 'evil-visual-block
+  "v" 'evil-delete
+  "V" 'evil-change
+  "C-v" 'evil-delete-line
+  "d" 'evil-yank
+  "D" 'evil-yank-line
+  "G" 'evil-paste-after
+  ";" 'evil-end-of-visual-line
+  ":" 'evil-end-of-line
+  "C-;" 'evil-end-of-line
+  "p" 'ergo-word-delete
+  "P" 'ergo-word-change
+  "C-p" 'ergo-word-change
+  "$" 'evil-execute-macro
+  "~" 'evil-record-macro
+  "C-z" 'evil-goto-last-change-reverse
+  "w" 'evil-repeat
+  "W" 'evil-ex-repeat
+  "C-w" 'evil-ex-repeat
+  "l" 'evil-shift-right-line
+  "L" 'evil-shift-left-line
+  "C-l" 'evil-shift-left-line
+  "y" 'evil-shift-right
+  "Y" 'evil-shift-left)
+
+(general-def 'motion
+  "I" 'evil-window-top
+  "C-i" 'evil-goto-line
+  "N" 'evil-window-bottom
+  "C-n" 'evil-goto-first-line
+  "C-e" 'evil-scroll-page-down
+  "C-o" 'evil-scroll-page-up
+  "a" 'evil-ex
+  "h" 'evil-set-marker
+  "m" 'evil-search-next
+  "M" 'evil-search-previous
+  "-" 'evil-jump-backward
+  "_" 'evil-jump-forward
+  "/" 'isearch-forward-regexp
+  "?" 'isearch-backward-regexp
+  "f" 'evil-first-non-blank-of-visual-line
+  "F" 'evil-beginning-of-visual-line
+  "C-f" 'evil-first-non-blank
+  "B" 'evil-goto-line)
+
+(general-swap-key nil '(motion normal visual)
+  "g" "b"
+  "z" "q"
+  "Z" "Q")
+
+(general-def
+  :keymaps 'override
+  :states '(normal visual)
+  "g" 'evil-paste-before
+  "z" 'evil-jump-item
+  "Z" 'evil-goto-last-change)
+
+(general-def
+  :keymaps 'override
+  :states '(operator visual)
+  "i" 'evil-forward-char
+  "s" evil-inner-text-objects-map
+  "t" evil-outer-text-objects-map)
+
+(general-def 'visual
+  "U" 'evil-forward-word-begin
+  "u" 'evil-forward-WORD-begin
+  "X" 'evil-backward-word-begin
+  "x" 'evil-backward-WORD-begin
+  "v" 'evil-delete-char
+  "V" 'evil-substitute
+  "C-v" 'evil-substitute
+  "t" evil-outer-text-objects-map
+  "s" evil-inner-text-objects-map
+  "l" 'evil-invert-case
+  "y" 'evil-shift-right
+  "Y" 'evil-shift-left
+  "C-t" 'evil-replace
+  "R" 'evil-insert-line
+  "C-r" 'evil-append-line
+  "d" 'evil-yank-line
+  "D" 'evil-yank-line
+  "C-d" 'evil-yank-line
+  "G" 'evil-paste)
+
+(general-def 'normal "bl" 'consult-goto-line
+  "b/" 'consult-keep-lines)
+#+end_src
+
 **** Extensions
 Easymotion's prefix is M-SPC, however, most important keys are already bound somewhere easier.
 Cursors hydra: https://hungyi.net/posts/hydra-for-evil-mc/
 #+NAME: Emacs Evil Extensions
 #+begin_src nix :noweb yes
-evil-collection = {
-  custom.evil-collection-unimpaired-want-repeat-mode-integration = true;
-  config = ''
-    <<Evil Collection Config>>
-  '';
-};
+evil-collection.custom.evil-collection-unimpaired-want-repeat-mode-integration = true;
 
 evil-surround = {
   enable = true;
@@ -2908,149 +2945,6 @@ evil-mc = {
 };
 #+end_src
 
-#+NAME: Evil Collection Config
-#+begin_src emacs-lisp
-(evil-ex-define-cmd "q" '(lambda () (interactive) (prescient--save) (save-buffers-kill-emacs)))
-(evil-ex-define-cmd "Undotree" 'vundo)
-(evil-ex-define-cmd "k[ill]" 'kill-current-buffer)
-(evil-ex-define-cmd "trash" '(lambda () (interactive) (start-process-shell-command "rm" nil "rm -rf ~/.local/Trash")))
-
-(evil-set-initial-state 'dashboard-mode 'normal)
-
-(evil-add-command-properties #'consult-grep :jump t)
-
-(evil-define-operator ergo-word-delete (beg end type register yank-handler)
-  "Delete word."
-  :motion evil-a-word
-  (evil-delete beg end type register yank-handler))
-
-(evil-define-operator ergo-word-change (beg end type register yank-handler)
-  "Delete word."
-  :motion evil-inner-word
-  (evil-change beg end type register yank-handler))
-
-(general-def 'normal
-  "I" 'evil-window-top
-  "C-i" 'evil-goto-line
-  "N" 'evil-window-bottom
-  "C-n" 'evil-goto-first-line
-  "E" 'evil-scroll-down
-  "O" 'evil-scroll-up
-  "x" 'evil-backward-WORD-begin
-  "X" 'evil-backward-word-begin
-  "C-x" 'evil-backward-WORD-end
-  "j" 'evil-undo
-  "J" 'evil-redo
-  "a" 'evil-ex
-  "r" 'evil-insert-line
-  "R" 'evil-open-above
-  "s" 'evil-append-line
-  "S" 'evil-open-below
-  "t" 'evil-insert
-  "T" 'evil-append
-  "C-t" 'evil-replace-state
-  "u" 'evil-forward-WORD-begin
-  "U" 'evil-forward-word-begin
-  "C-u" 'evil-forward-WORD-end
-  "-" 'evil-jump-backward
-  "_" 'evil-jump-forward
-  "m" 'evil-search-next
-  "M" 'evil-search-previous
-  "k" 'evil-delete-char
-  "K" 'evil-substitute
-  "l" 'evil-invert-char
-  "L" 'evil-invert-case
-  "c" 'evil-visual-char
-  "C" 'evil-visual-line
-  "C-c" 'evil-visual-block
-  "v" 'evil-delete
-  "V" 'evil-change
-  "C-v" 'evil-delete-line
-  "d" 'evil-yank
-  "D" 'evil-yank-line
-  "G" 'evil-paste-after
-  ";" 'evil-end-of-visual-line
-  ":" 'evil-end-of-line
-  "C-;" 'evil-end-of-line
-  "p" 'ergo-word-delete
-  "P" 'ergo-word-change
-  "C-p" 'ergo-word-change
-  "$" 'evil-execute-macro
-  "~" 'evil-record-macro
-  "C-z" 'evil-goto-last-change-reverse
-  "w" 'evil-repeat
-  "W" 'evil-ex-repeat
-  "C-w" 'evil-ex-repeat
-  "l" 'evil-shift-right-line
-  "L" 'evil-shift-left-line
-  "C-l" 'evil-shift-left-line
-  "y" 'evil-shift-right
-  "Y" 'evil-shift-left
-  "<escape>" 'doom/escape)
-
-(general-def 'motion
-  "I" 'evil-window-top
-  "C-i" 'evil-goto-line
-  "N" 'evil-window-bottom
-  "C-n" 'evil-goto-first-line
-  "C-e" 'evil-scroll-page-down
-  "C-o" 'evil-scroll-page-up
-  "a" 'evil-ex
-  "h" 'evil-set-marker
-  "m" 'evil-search-next
-  "M" 'evil-search-previous
-  "-" 'evil-jump-backward
-  "_" 'evil-jump-forward
-  "/" 'isearch-forward-regexp
-  "?" 'isearch-backward-regexp
-  "f" 'evil-first-non-blank-of-visual-line
-  "F" 'evil-beginning-of-visual-line
-  "C-f" 'evil-first-non-blank
-  "B" 'evil-goto-line)
-
-(general-swap-key nil '(motion normal visual)
-  "g" "b"
-  "z" "q"
-  "Z" "Q")
-
-(general-def
-  :keymaps 'override
-  :states '(normal visual)
-  "g" 'evil-paste-before
-  "z" 'evil-jump-item
-  "Z" 'evil-goto-last-change)
-
-(general-def
-  :keymaps 'override
-  :states '(operator visual)
-  "i" 'evil-forward-char
-  "s" evil-inner-text-objects-map
-  "t" evil-outer-text-objects-map)
-
-(general-def 'visual
-  "U" 'evil-forward-word-begin
-  "u" 'evil-forward-WORD-begin
-  "X" 'evil-backward-word-begin
-  "x" 'evil-backward-WORD-begin
-  "v" 'evil-delete-char
-  "V" 'evil-substitute
-  "C-v" 'evil-substitute
-  "t" evil-outer-text-objects-map
-  "s" evil-inner-text-objects-map
-  "l" 'evil-invert-case
-  "y" 'evil-shift-right
-  "Y" 'evil-shift-left
-  "C-t" 'evil-replace
-  "R" 'evil-insert-line
-  "C-r" 'evil-append-line
-  "d" 'evil-yank-line
-  "D" 'evil-yank-line
-  "C-d" 'evil-yank-line
-  "G" 'evil-paste)
-
-(general-def 'normal "bl" 'consult-goto-line
-  "b/" 'consult-keep-lines)
-#+end_src
 #+NAME: Emacs Evil Surround Config
 #+begin_src emacs-lisp
 (general-def 'visual evil-surround-mode-map "R" 'evil-surround-region)
@@ -3310,7 +3204,6 @@ evil-org-agenda = {
     "C-S-i" = "'org-agenda-todo-nextset"; # Original binding "C-S-<right>"
     "l" = "'org-agenda-diary-entry";
   };
-  generalOne.global-leader."oa" = '''(org-agenda :which-key "agenda")'';
 };
 
 ewal-evil-cursors = {
@@ -3335,103 +3228,6 @@ ewal-evil-cursors = {
 (evil-define-key 'visual 'evil-org-mode
   "i" 'evil-forward-char
   "s" evil-inner-text-objects-map)
-#+end_src
-
-**** Undo
-Undo-Fu lets us have linear undos. It's our undo system in evil
-#+NAME: Emacs Evil Undo
-#+begin_src nix
-  undo-fu = {
-    enable = true;
-    custom.undo-fu-session-compression = "'zst";
-    afterCall = ["on-first-buffer-hook"];
-    config = ''(gsetq evil-undo-system 'undo-fu)'';
-  };
-#+end_src
-
-**** modules
-#+begin_src nix :tangle keybinds/default.nix
-{ ... }:
-
-{
-  imports = [
-    ./leader-key.nix
-    ./doom-escape.nix
-  ];
-}
-#+end_src
-
-***** leader key
-#+begin_src nix :tangle keybinds/leader-key.nix
-{ pkgs, lib, config, ... }:
-
-let
-  keybinds = config.programs.emacs.init.keybinds;
-in
-{
-  options.programs.emacs.init.keybinds.leader-key = {
-    enable = lib.mkEnableOption "Enables the leader key.";
-    globalPrefix = lib.mkOption {
-      type = lib.types.string;
-      default = "C";
-      description = "The prefix key for nix-emacs/global-leader";
-    };
-    localPrefix = lib.mkOption {
-      type = lib.types.string;
-      default = "M";
-      description = "The prefix key for nix-emacs/local-leader";
-    };
-  };
-
-  config.programs.emacs.init = lib.mkIf keybinds.leader-key.enable {
-    prelude = ''
-      (general-create-definer global-leader
-        :keymaps 'override
-        :states '(emacs ${if keybinds.evil.enable then "insert normal hybrid motion visual operator" else ""})
-        :prefix "SPC"
-        :global-prefix "${keybinds.leader-key.globalPrefix}-SPC")
-        
-      (general-create-definer local-leader
-        :prefix "${keybinds.leader-key.localPrefix}-SPC"
-        :states '(emacs ${if keybinds.evil.enable then "insert normal hybrid motion visual operator" else ""}))
-
-    '';
-
-    usePackage.general = {
-      enable = true;
-      generalOne = {
-        global-leader = {
-          "f" = "'find-file";
-          "h" = "help-map";
-        };
-        help-map = {
-          "F" = "'describe-face";
-          "C-m" = "'describe-keymap";
-        };
-      };
-    };
-  };
-}
-#+end_src
-
-***** Doom Escape
-Credits: Doom Escape is from doom. (Wow)
-#+begin_src nix :tangle keybinds/doom-escape.nix
-{ pkgs, lib, config, ... }:
-
-let
-  keybinds = config.programs.emacs.init.keybinds;
-in
-{
-  options.programs.emacs.init.keybinds.doomEscape.enable = lib.mkEnableOption "Enables doom escape, as seen in doom emacs";
-
-  config.programs.emacs.init.usePackage.doom-escape = lib.mkIf keybinds.doomEscape.enable {
-    enable = true;
-    package = epkgs: epkgs.doom-utils;
-    bind."C-g" = "doom/escape";
-    generalOne."'normal"."<escape>" = lib.mkIf keybinds.evil.enable "'doom/escape";
-  };
-}
 #+end_src
 
 *** Completion System
@@ -4224,16 +4020,9 @@ How to add a latex package
                                  ("+" (:strike-through t))
                                  ("!" (:overline t) verbatim))'';
     };
-    generalOne.global-leader = {
-      "o" = '''(:ignore t :which-key "org")'';
-      "op" = '''org-capture'';
-    };
     generalTwo.local-leader.org-mode-map = {
-      "e" = '''(org-export-dispatch :which-key "export")'';
       "o" = '''(consult-org-heading :which-key "outline")'';
       "a" = '''(avy-org-goto-heading-timer :which-key "avy")'';
-      "i" = '''(org-toggle-inline-images :which-key "show images")'';
-      "b" = '''(org-edit-special :which-key "edit block")'';
     };
 
     config = ''
@@ -4365,15 +4154,6 @@ No idea what the rest of this is for.
 
 #+NAME: Emacs Latex
 #+begin_src nix :noweb yes
-  tex.generalTwo.local-leader.LaTeX-mode-map = {
-    "p" = '''(preview-at-point :which-key "preview")'';
-    "a" = '''(eglot-code-actions :which-key "code actions")'';
-    "n" = '''(flymake-goto-next-error :which-key "next error")'';
-    "e" = '''(flymake-goto-prev-error :which-key "previous error")'';
-    "f" = '''(eglot-format :which-key "format")'';
-    "u" = '''(preview-clearout-at-point :which-key "unpreview")'';
-  };
-
   pdf-tools = {
     enable = true;
     defer = true;
@@ -4426,12 +4206,7 @@ No idea what the rest of this is for.
         "[h" = "'markdown-previous-visible-heading";
         "]h" = "'markdown-next-visible-heading";
       };  
-      local-leader.markdown-mode-map = {
-        "o" = '''(consult-outline :which-key "go to heading")'';
-        "a" = '''(eglot-code-actions :which-key "code actions")'';
-        "n" = '''(flymake-goto-next-error :which-key "next error")'';
-        "e" = '''(flymake-goto-prev-error :which-key "previous error")'';
-      };
+      local-leader.markdown-mode-map."o" = '''(consult-outline :which-key "go to heading")'';
     };
     init = ''
       <<Emacs Markdown Init>>
@@ -4904,22 +4679,6 @@ golden-ratio = {
 #+end_src
 
 *** EXWM
-Installs exwm, deals with randr, executes autostart, & sets up binds.
-| Binding | Command                |
-| s-i     | Window managment hydra |
-| s-s     | slock                  |
-| s-'     | toggle popup           |
-| s-"     | cycle popup            |
-| s-C-'   | add/remove popup tag   |
-| s-b     | switch buffer          |
-| s-d     | launch program         |
-| s-t     | task manager           |
-
-+ exwm-mff: When you move to a different window, the mouse teleports to the center.
-=exwm-edit Keybindings=
-+ C-c C-' or C-c ': edit
-+ C-c C-' or C-c C-c: finish editing
-+ C-c C-k: cancel edit
 #+NAME: Emacs Window Management EXWM
 #+begin_src nix :noweb yes
   exwm = {
@@ -5029,12 +4788,11 @@ Installs exwm, deals with randr, executes autostart, & sets up binds.
     enable = true;
     defer = true;
     command = ["exwm-mff-warp-to-selected"];
-    # ghook = ["('exwm-init-hook 'exwm-mff-mode)"];
   };
 
   exwm-outer-gaps = {
     enable = true;
-    config = ''(exwm-outer-gaps-mode)'';
+    config = ''(ignore-errors (exwm-outer-gaps-mode))'';
     after = ["exwm"];
   };
 #+end_src
@@ -5559,7 +5317,7 @@ Putting =:session= in an org block is necessary for evaluation
 
       <<Emacs Internet EWW>>
 
-      # <<Emacs Internet Yeetube>>
+      <<Emacs Internet Yeetube>>
 
       # <<Emacs Internet Ement>>
 
