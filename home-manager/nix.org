@@ -2038,7 +2038,7 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
   treesitter-context-fold = {
     enable = true;
     ghook = ["('treesitter-context-mode-hook 'treesitter-context-fold-mode)"];
-    generalTwo."'normal".treesitter-context-fold-mode-map = {
+    generalTwo.":n".treesitter-context-fold-mode-map = {
       "zm" = "'treesitter-context-fold-hide";
       "zo" = "'treesitter-context-fold-show";
       "za" = "'treesitter-context-fold-toggle";
@@ -2178,7 +2178,7 @@ I'm running dired with a couple of small packages that improve on it
         "C-x d" = "'consult-dir";
       };
       generalOne.global-leader."d" = '''(dired :which-key "dired")'';
-      generalTwo."'normal".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
+      generalTwo.":n".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
       custom = {
         dired-recursive-deletes = "'always";
         dired-listing-switches = ''"-agho --group-directories-first"'';
@@ -2241,13 +2241,13 @@ I'm running dired with a couple of small packages that improve on it
 
     dired-posframe = {
       enable = true;
-      generalTwo."'normal".dired-mode-map."M-t" = "'dired-posframe-mode";
+      generalTwo.":n".dired-mode-map."M-t" = "'dired-posframe-mode";
     };
     
     image = {
       enable = true;
       gfhook = ["('image-mode-hook 'image-transform-fit-to-window)"];
-      generalTwo."'normal".image-map = {
+      generalTwo.":n".image-map = {
         "E" = "'image-next-file";
         "O" = "'image-previous-file";
       };
@@ -2256,7 +2256,7 @@ I'm running dired with a couple of small packages that improve on it
 
     dired-narrow = {
       enable = true;
-      generalTwo."'normal".dired-mode-map."N" = "'dired-narrow-fuzzy";
+      generalTwo.":n".dired-mode-map."N" = "'dired-narrow-fuzzy";
     };
   };
 }
@@ -2516,7 +2516,7 @@ Wgrep basically turns grep into sed.
   wgrep = {
     enable = true;
     custom.wgrep-auto-save-buffer = true;
-    generalTwo."'normal".grep-mode-map."w" = "'wgrep-change-to-wgrep-mode";
+    generalTwo.":n".grep-mode-map."w" = "'wgrep-change-to-wgrep-mode";
   };
 #+end_src
 
@@ -2683,11 +2683,11 @@ evil = {
     <<Evil Config>>
   '';
   generalOne = {
-    "'insert" = {
+    ":i" = {
       "C-s" = "'insert-char";
       "C-k" = "'kill-line";
     };
-    "'normal"."C-s" = "'evil-write";
+    ":n"."C-s" = "'evil-write";
   };
 };
 
@@ -2862,11 +2862,11 @@ evil-surround = {
 evil-easymotion = {
   enable = true;
   generalOne = {
-    "'operator" = {
+    ":o" = {
       "/" = "'evil-avy-goto-char-2"; 
       "?" = "'evil-avy-goto-char-2"; 
     };
-    "(normal visual operator)" = {
+    ":nvo" = {
       "H-m" = "'evilem-motion-search-next";
       "H-U" = "'evilem-motion-forward-word-begin";
       "H-u" = "'evilem-motion-forward-WORD-begin";
@@ -2915,7 +2915,7 @@ evil-mc = {
   defer = true;
   command = ["evil-mc-pause-cursors" "evil-mc-make-cursor-here"];
   generalOne = {
-    "'(normal visual)"."bz" = "'evil-mc-hydra/body";
+    ":nv"."bz" = "'evil-mc-hydra/body";
     global-leader."C" = "'evil-mc-hydra/body";
   };
   config = ''
@@ -3018,7 +3018,7 @@ Gives us an entire state where we can rapidly make specific edits to code.
   symex = {
     enable = true;
     defer = true;
-    generalTwo."'normal"."(racket-repl-mode-map makefile-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
+    generalTwo.":n"."(racket-repl-mode-map makefile-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
     init = ''
       <<Emacs Symex Init>>    
     '';
@@ -3179,8 +3179,8 @@ By default, any key pressed while in god state is treated as if it was pressed w
     command = ["evil-god-state"];
     gfhook = ["('doom-escape-hook 'evil-god-state-bail)"];
     generalOne = {
-      "'normal"."," = "'evil-execute-in-god-state";
-      "'emacs"."<escape>" = "'evil-god-state";
+      ":n"."," = "'evil-execute-in-god-state";
+      ":e"."<escape>" = "'evil-god-state";
       evil-god-state-map = {
         "<escape>" = "'evil-god-state-bail";
         "<return>" = "'evil-emacs-state";
@@ -3197,7 +3197,7 @@ evil-org.config = ''
 '';
 
 evil-org-agenda = {
-  generalTwo."'motion".evil-org-agenda-mode-map = {
+  generalTwo.":m".evil-org-agenda-mode-map = {
     "bn" = "'org-agenda-next-item";
     "bI" = "'evil-window-bottom";
     "I" = "'org-agenda-do-date-later";
@@ -3277,7 +3277,7 @@ vertico = {
   # Enable cycling for 'vertico-next & 'vertico-previous'.
   custom.vertico-cycle = true;
   # This is for exwm's minibuffer issue
-  generalTwo."'normal".vertico-map = {
+  generalTwo.":n".vertico-map = {
     "RET" = "'vertico-exit";
     "C-o" = "'vertico-scroll-down";
     "C-e" = "'vertico-scroll-up";
@@ -3293,7 +3293,7 @@ vertico = {
 vertico-quick = {
   enable = true;
   defer = true;
-  generalTwo."'normal".vertico-map = {
+  generalTwo.":n".vertico-map = {
     "H-o" = "'vertico-quick-jump";
     "H-e" = "'vertico-quick-jump";
   };
@@ -3324,7 +3324,7 @@ corfu = {
     "S-<return>" = "'corfu-insert";
     "[tab]" = "nil";
   };
-  generalTwo."'(insert emacs)".corfu-map = {
+  generalTwo.":ie".corfu-map = {
     "S-SPC" = "'corfu-insert-separator";
     "C-e" = "'corfu-next";
     "C-p" = "nil";
@@ -3343,7 +3343,7 @@ nerd-icons-corfu = {
 
 corfu-quick = {
   enable = true;
-  generalTwo."'(insert emacs)".corfu-map = {
+  generalTwo.":ie".corfu-map = {
     "M-o" = "'corfu-quick-insert";
     "M-e" = "'corfu-quick-insert";
   };
@@ -3480,7 +3480,7 @@ consult = {
     xref-show-xrefs-function = "#'consult-xref";
   };
   generalOne = {
-    "'normal" = {
+    ":n" = {
       "?" = "'consult-line-multi";
       "M-g" = "'consult-yank-pop"; # orig. evil-paste-pop
       "M-E" = "'consult-isearch-history "; # orig. isearch-edit-string
@@ -3621,7 +3621,7 @@ embark = {
           embark-isearch-highlight-indicator)
       '';
   };
-  generalTwo."'normal" = {
+  generalTwo.":n" = {
     embark-collect-mode-map."q" = "'evil-record-macro";
     vertico-map."a" = "'embark-act";
   };
@@ -4174,7 +4174,7 @@ No idea what the rest of this is for.
     extraConfig = '':magic ("%PDF" . pdf-view-mode)'';
   };
 
-  cdlatex.generalTwo."'insert" = {
+  cdlatex.generalTwo.":i" = {
     cdlatex-mode-map."TAB" = "'cdlatex-tab";
     org-cdlatex-mode-map."TAB" = "'cdlatex-tab";
   };
@@ -4202,7 +4202,7 @@ No idea what the rest of this is for.
       markdown-hide-markup = true;
     };
     generalTwo = {
-      "'normal".markdown-mode-map = {
+      ":n".markdown-mode-map = {
         "[h" = "'markdown-previous-visible-heading";
         "]h" = "'markdown-next-visible-heading";
       };  
@@ -5373,7 +5373,7 @@ It's a simple text based web browser. I use it for short web searches & for find
       eww-form-checkbox-symbol = ''"[ ]"'';
       eww-auto-rename-buffer = "'title";
     };
-    generalTwo."'normal".eww-mode-map = {
+    generalTwo.":n".eww-mode-map = {
       "N" = "#'eww-back-url";
       "I" = "#'eww-forward-url";
       "P" = "#'eww-copy-page-url";
@@ -5403,7 +5403,7 @@ yeetube = {
   enable = true;
   custom.yeetube-play-function = "'mpv-play-url";
   generalOne.global-leader."y" = '''(yeetube-search :which-key "search")'';
-  generalTwo."'normal"."yeetube-mode-map" = {
+  generalTwo.":n"."yeetube-mode-map" = {
     "RET" = "'yeetube-play";
     "r" = "'yeetube-channel-videos";
     "s" = "'yeetube-channel-search";

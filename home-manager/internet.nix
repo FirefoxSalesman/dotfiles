@@ -38,7 +38,7 @@
             eww-form-checkbox-symbol = ''"[ ]"'';
             eww-auto-rename-buffer = "'title";
           };
-          generalTwo."'normal".eww-mode-map = {
+          generalTwo.":n".eww-mode-map = {
             "N" = "#'eww-back-url";
             "I" = "#'eww-forward-url";
             "P" = "#'eww-copy-page-url";
@@ -59,7 +59,7 @@
         enable = true;
         custom.yeetube-play-function = "'mpv-play-url";
         generalOne.global-leader."y" = '''(yeetube-search :which-key "search")'';
-        generalTwo."'normal"."yeetube-mode-map" = {
+        generalTwo.":n"."yeetube-mode-map" = {
           "RET" = "'yeetube-play";
           "r" = "'yeetube-channel-videos";
           "s" = "'yeetube-channel-search";

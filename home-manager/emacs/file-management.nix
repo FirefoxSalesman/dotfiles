@@ -11,7 +11,7 @@
         "C-x d" = "'consult-dir";
       };
       generalOne.global-leader."d" = '''(dired :which-key "dired")'';
-      generalTwo."'normal".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
+      generalTwo.":n".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
       custom = {
         dired-recursive-deletes = "'always";
         dired-listing-switches = ''"-agho --group-directories-first"'';
@@ -111,13 +111,13 @@
 
     dired-posframe = {
       enable = true;
-      generalTwo."'normal".dired-mode-map."M-t" = "'dired-posframe-mode";
+      generalTwo.":n".dired-mode-map."M-t" = "'dired-posframe-mode";
     };
     
     image = {
       enable = true;
       gfhook = ["('image-mode-hook 'image-transform-fit-to-window)"];
-      generalTwo."'normal".image-map = {
+      generalTwo.":n".image-map = {
         "E" = "'image-next-file";
         "O" = "'image-previous-file";
       };
@@ -126,7 +126,7 @@
 
     dired-narrow = {
       enable = true;
-      generalTwo."'normal".dired-mode-map."N" = "'dired-narrow-fuzzy";
+      generalTwo.":n".dired-mode-map."N" = "'dired-narrow-fuzzy";
     };
   };
 }

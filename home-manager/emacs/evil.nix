@@ -177,11 +177,11 @@
               "b/" 'consult-keep-lines)
           '';
           generalOne = {
-            "'insert" = {
+            ":i" = {
               "C-s" = "'insert-char";
               "C-k" = "'kill-line";
             };
-            "'normal"."C-s" = "'evil-write";
+            ":n"."C-s" = "'evil-write";
           };
         };
         
@@ -212,11 +212,11 @@
         evil-easymotion = {
           enable = true;
           generalOne = {
-            "'operator" = {
+            ":o" = {
               "/" = "'evil-avy-goto-char-2"; 
               "?" = "'evil-avy-goto-char-2"; 
             };
-            "(normal visual operator)" = {
+            ":nvo" = {
               "H-m" = "'evilem-motion-search-next";
               "H-U" = "'evilem-motion-forward-word-begin";
               "H-u" = "'evilem-motion-forward-WORD-begin";
@@ -297,7 +297,7 @@
           defer = true;
           command = ["evil-mc-pause-cursors" "evil-mc-make-cursor-here"];
           generalOne = {
-            "'(normal visual)"."bz" = "'evil-mc-hydra/body";
+            ":nv"."bz" = "'evil-mc-hydra/body";
             global-leader."C" = "'evil-mc-hydra/body";
           };
           config = ''
@@ -343,7 +343,7 @@
           symex = {
             enable = true;
             defer = true;
-            generalTwo."'normal"."(racket-repl-mode-map makefile-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
+            generalTwo.":n"."(racket-repl-mode-map makefile-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
             init = ''
                 (with-eval-after-load 'evil-easymotion
                   (evilem-make-motion-plain evilem-symex-forward 'symex-traverse-forward :post-hook 'symex-select-nearest-in-line)
@@ -481,8 +481,8 @@
             command = ["evil-god-state"];
             gfhook = ["('doom-escape-hook 'evil-god-state-bail)"];
             generalOne = {
-              "'normal"."," = "'evil-execute-in-god-state";
-              "'emacs"."<escape>" = "'evil-god-state";
+              ":n"."," = "'evil-execute-in-god-state";
+              ":e"."<escape>" = "'evil-god-state";
               evil-god-state-map = {
                 "<escape>" = "'evil-god-state-bail";
                 "<return>" = "'evil-emacs-state";
@@ -507,7 +507,7 @@
         '';
         
         evil-org-agenda = {
-          generalTwo."'motion".evil-org-agenda-mode-map = {
+          generalTwo.":m".evil-org-agenda-mode-map = {
             "bn" = "'org-agenda-next-item";
             "bI" = "'evil-window-bottom";
             "I" = "'org-agenda-do-date-later";

@@ -159,7 +159,7 @@
             extraConfig = '':magic ("%PDF" . pdf-view-mode)'';
           };
         
-          cdlatex.generalTwo."'insert" = {
+          cdlatex.generalTwo.":i" = {
             cdlatex-mode-map."TAB" = "'cdlatex-tab";
             org-cdlatex-mode-map."TAB" = "'cdlatex-tab";
           };
@@ -172,7 +172,7 @@
               markdown-hide-markup = true;
             };
             generalTwo = {
-              "'normal".markdown-mode-map = {
+              ":n".markdown-mode-map = {
                 "[h" = "'markdown-previous-visible-heading";
                 "]h" = "'markdown-next-visible-heading";
               };  

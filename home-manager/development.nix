@@ -60,7 +60,7 @@
         treesitter-context-fold = {
           enable = true;
           ghook = ["('treesitter-context-mode-hook 'treesitter-context-fold-mode)"];
-          generalTwo."'normal".treesitter-context-fold-mode-map = {
+          generalTwo.":n".treesitter-context-fold-mode-map = {
             "zm" = "'treesitter-context-fold-hide";
             "zo" = "'treesitter-context-fold-show";
             "za" = "'treesitter-context-fold-toggle";

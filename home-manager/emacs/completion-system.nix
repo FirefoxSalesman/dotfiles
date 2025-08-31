@@ -66,7 +66,7 @@
       # Enable cycling for 'vertico-next & 'vertico-previous'.
       custom.vertico-cycle = true;
       # This is for exwm's minibuffer issue
-      generalTwo."'normal".vertico-map = {
+      generalTwo.":n".vertico-map = {
         "RET" = "'vertico-exit";
         "C-o" = "'vertico-scroll-down";
         "C-e" = "'vertico-scroll-up";
@@ -82,7 +82,7 @@
     vertico-quick = {
       enable = true;
       defer = true;
-      generalTwo."'normal".vertico-map = {
+      generalTwo.":n".vertico-map = {
         "H-o" = "'vertico-quick-jump";
         "H-e" = "'vertico-quick-jump";
       };
@@ -108,7 +108,7 @@
         "S-<return>" = "'corfu-insert";
         "[tab]" = "nil";
       };
-      generalTwo."'(insert emacs)".corfu-map = {
+      generalTwo.":ie".corfu-map = {
         "S-SPC" = "'corfu-insert-separator";
         "C-e" = "'corfu-next";
         "C-p" = "nil";
@@ -131,7 +131,7 @@
     
     corfu-quick = {
       enable = true;
-      generalTwo."'(insert emacs)".corfu-map = {
+      generalTwo.":ie".corfu-map = {
         "M-o" = "'corfu-quick-insert";
         "M-e" = "'corfu-quick-insert";
       };
@@ -231,7 +231,7 @@
         xref-show-xrefs-function = "#'consult-xref";
       };
       generalOne = {
-        "'normal" = {
+        ":n" = {
           "?" = "'consult-line-multi";
           "M-g" = "'consult-yank-pop"; # orig. evil-paste-pop
           "M-E" = "'consult-isearch-history "; # orig. isearch-edit-string
@@ -354,7 +354,7 @@
               embark-isearch-highlight-indicator)
           '';
       };
-      generalTwo."'normal" = {
+      generalTwo.":n" = {
         embark-collect-mode-map."q" = "'evil-record-macro";
         vertico-map."a" = "'embark-act";
       };

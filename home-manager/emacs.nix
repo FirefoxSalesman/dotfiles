@@ -133,7 +133,7 @@
             wgrep = {
               enable = true;
               custom.wgrep-auto-save-buffer = true;
-              generalTwo."'normal".grep-mode-map."w" = "'wgrep-change-to-wgrep-mode";
+              generalTwo.":n".grep-mode-map."w" = "'wgrep-change-to-wgrep-mode";
             };
 
           doom-escape.gfhook = ["('doom-escape-hook (lambda () (setq efs/vertico-active nil)))"];
