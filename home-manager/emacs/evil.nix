@@ -1,6 +1,7 @@
   { lib, pkgs, inputs, config, ... }:
 
   {
+    imports = [../keybinds];
     programs.emacs.init = {
       keybinds = {
         evil = {
@@ -31,6 +32,14 @@
         };
         doomEscape.enable = true;
         undo.enable = true;
+        whichKey = {
+          enable = true;
+          posframe = {
+            enable = true;
+            unparent = true;
+          };
+        };
+        god.enable = true;
       };
       usePackage = {
         evil = {
@@ -475,21 +484,6 @@
             '';
           } ;
  
-          evil-god-state = {
-            enable = true;
-            defer = true;
-            command = ["evil-god-state"];
-            gfhook = ["('doom-escape-hook 'evil-god-state-bail)"];
-            generalOne = {
-              ":n"."," = "'evil-execute-in-god-state";
-              ":e"."<escape>" = "'evil-god-state";
-              evil-god-state-map = {
-                "<escape>" = "'evil-god-state-bail";
-                "<return>" = "'evil-emacs-state";
-              };
-            };
-          };
-      
         evil-org.config = ''
           (evil-define-key 'operator 'evil-org-mode
             "i" 'evil-forward-char)

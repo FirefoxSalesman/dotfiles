@@ -1795,76 +1795,41 @@ Solaire dims certain parts of the frame.
 *** Posframes
 Vertico Posframe puts vertico in a separate frame, causing it to actually look like dmenu.
 #+NAME: Emacs Ricing Posframes
-#+begin_src nix :noweb yes
+#+begin_src nix
 vertico-posframe = {
   enable = true;
   defer = true;
   ghook = ["('vertico-mode-hook 'vertico-posframe-mode)"];
   config = ''(set-face-attribute 'vertico-posframe-face nil :family 'variable-pitch)'';
 };
-
-which-key-posframe = {
-  enable = true;
-  defer = true;
-  ghook = ["('which-key-mode-hook 'which-key-posframe-mode)"];
-  custom.which-key-posframe-poshandler = "'posframe-poshandler-frame-bottom-center";
-  config = ''
-    <<Emacs Ricing Posframes Which Key Config>>
-  '';
-};
-#+end_src
-
-#+NAME: Emacs Ricing Posframes Which Key Config
-#+begin_src emacs-lisp
-(defun which-key-posframe--show-buffer (act-popup-dim)
-  "Show which-key buffer when popup type is posframe.
-Argument ACT-POPUP-DIM has the form (HEIGHT . WIDTH), specifying
-the dimensions of the buffer text to be displayed in the popup."
-  (when (posframe-workable-p)
-    (save-window-excursion
-      (posframe-show
-       which-key--buffer
-       :font which-key-posframe-font
-       :position (point)
-       :poshandler which-key-posframe-poshandler
-       :background-color (face-attribute 'which-key-posframe :background nil t)
-       :foreground-color (face-attribute 'which-key-posframe :foreground nil t)
-       :height (car act-popup-dim)
-       :width (cdr act-popup-dim)
-       :lines-truncate t
-       :internal-border-width which-key-posframe-border-width
-       :internal-border-color (face-attribute 'which-key-posframe-border
-                                              :background nil t)
-       :parent-frame nil :refposhandler 'posframe-refposhandler-xwininfo
-       :override-parameters which-key-posframe-parameters))))
 #+end_src
 
 *** Mustache File
 #+begin_src json-ts :tangle pywal.json.mustache
   {
-      "special": {
-          "background": "#{{base00-hex}}",
-          "foreground": "#{{base07-hex}}",
-          "cursor": "#{{base07-hex}}"
-      },
-      "colors": {
-          "color0": "#{{base00-hex}}",
-          "color1": "#{{base01-hex}}",
-          "color2": "#{{base02-hex}}",
-          "color3": "#{{base03-hex}}",
-          "color4": "#{{base04-hex}}",
-          "color5": "#{{base05-hex}}",
-          "color6": "#{{base06-hex}}",
-          "color7": "#{{base07-hex}}",
-          "color8": "#{{base08-hex}}",
-          "color9": "#{{base09-hex}}",
-          "color10": "#{{base0A-hex}}",
-          "color11": "#{{base0B-hex}}",
-          "color12": "#{{base0C-hex}}",
-          "color13": "#{{base0D-hex}}",
-          "color14": "#{{base0E-hex}}",
-          "color15": "#{{base0F-hex}}"
-      }
+    "special": {
+      "background": "#{{base00-hex}}",
+      "foreground": "#{{base07-hex}}",
+      "cursor": "#{{base07-hex}}"
+    },
+    "colors": {
+      "color0": "#{{base00-hex}}",
+      "color1": "#{{base01-hex}}",
+      "color2": "#{{base02-hex}}",
+      "color3": "#{{base03-hex}}",
+      "color4": "#{{base04-hex}}",
+      "color5": "#{{base05-hex}}",
+      "color6": "#{{base06-hex}}",
+      "color7": "#{{base07-hex}}",
+      "color8": "#{{base08-hex}}",
+      "color9": "#{{base09-hex}}",
+      "color10": "#{{base0A-hex}}",
+      "color11": "#{{base0B-hex}}",
+      "color12": "#{{base0C-hex}}",
+      "color13": "#{{base0D-hex}}",
+      "color14": "#{{base0E-hex}}",
+      "color15": "#{{base0F-hex}}"
+    }
   }
 
 #+end_src
@@ -2616,6 +2581,7 @@ Evil mode provides vim-like keybinds.
   { lib, pkgs, inputs, config, ... }:
 
   {
+    imports = [../keybinds];
     programs.emacs.init = {
       keybinds = {
         evil = {
@@ -2646,6 +2612,14 @@ Evil mode provides vim-like keybinds.
         };
         doomEscape.enable = true;
         undo.enable = true;
+        whichKey = {
+          enable = true;
+          posframe = {
+            enable = true;
+            unparent = true;
+          };
+        };
+        god.enable = true;
       };
       usePackage = {
         <<Emacs Evil Main>>
@@ -2654,8 +2628,6 @@ Evil mode provides vim-like keybinds.
       
         <<Emacs Evil Symex>>
  
-        <<Emacs Evil God State>>
-      
         <<Emacs Evil Compats>>
       };
     };
@@ -3161,34 +3133,6 @@ Gives us an entire state where we can rapidly make specific edits to code.
 
 #+end_src
 
-**** God State
-God state lets you use emacs bindings faster, & without hanging on modifier keys.
-By default, any key pressed while in god state is treated as if it was pressed with control.
-
-=bindings:=
-+ SPC- removes control
-+ g- switches from control to meta
-+ G- switches from just control to control & meta
-+ ,- enter god state
-+ ESC- exit god state
-#+NAME: Emacs Evil God State
-#+begin_src nix
-  evil-god-state = {
-    enable = true;
-    defer = true;
-    command = ["evil-god-state"];
-    gfhook = ["('doom-escape-hook 'evil-god-state-bail)"];
-    generalOne = {
-      ":n"."," = "'evil-execute-in-god-state";
-      ":e"."<escape>" = "'evil-god-state";
-      evil-god-state-map = {
-        "<escape>" = "'evil-god-state-bail";
-        "<return>" = "'evil-emacs-state";
-      };
-    };
-  };
-#+end_src
-
 **** Compats
 #+NAME: Emacs Evil Compats
 #+begin_src nix :noweb yes
@@ -3228,6 +3172,128 @@ ewal-evil-cursors = {
 (evil-define-key 'visual 'evil-org-mode
   "i" 'evil-forward-char
   "s" evil-inner-text-objects-map)
+#+end_src
+
+**** Modules
+#+begin_src nix :tangle keybinds/default.nix
+{ ... }:
+
+{
+  imports = [
+    ./which-key.nix
+    ./god.nix
+  ];
+}
+#+end_src
+
+***** Which key
+#+begin_src nix :tangle keybinds/which-key.nix
+{ config, lib, ... }:
+
+let
+  keybinds = config.programs.emacs.init.keybinds;
+in
+{
+  options.programs.emacs.init.keybinds.whichKey = {
+    enable = lib.mkEnableOption "Enables which-key";
+    posframe = {
+      enable = lib.mkEnableOption "Creates a posframe popup for which-key";
+      unparent = lib.mkEnableOption "Posframe is in a new frame (useful for exwm)";
+    };
+  };
+
+  config.programs.emacs.init = lib.mkIf keybinds.whichKey.enable {
+    hasOn = true;
+    usePackage = {
+      which-key = {
+        enable = true;
+        defer = true;
+        ghook = ["('on-first-input-hook 'which-key-mode)"];
+        custom.which-key-idle-delay = "1";
+      };
+      
+      which-key-posframe = lib.mkIf keybinds.whichKey.posframe.enable {
+        enable = true;
+        defer = true;
+        ghook = ["('which-key-mode-hook 'which-key-posframe-mode)"];
+        custom.which-key-posframe-poshandler = "'posframe-poshandler-frame-bottom-center";
+        config = lib.mkIf keybinds.whichKey.posframe.unparent ''
+          (defun which-key-posframe--show-buffer (act-popup-dim)
+             "Show which-key buffer when popup type is posframe.
+           Argument ACT-POPUP-DIM has the form (HEIGHT . WIDTH), specifying
+           the dimensions of the buffer text to be displayed in the popup."
+             (when (posframe-workable-p)
+               (save-window-excursion
+                 (posframe-show
+                  which-key--buffer
+                  :font which-key-posframe-font
+                  :position (point)
+                  :poshandler which-key-posframe-poshandler
+                  :background-color (face-attribute 'which-key-posframe :background nil t)
+                  :foreground-color (face-attribute 'which-key-posframe :foreground nil t)
+                  :height (car act-popup-dim)
+                  :width (cdr act-popup-dim)
+                  :lines-truncate t
+                  :internal-border-width which-key-posframe-border-width
+                  :internal-border-color (face-attribute 'which-key-posframe-border
+                                                         :background nil t)
+                  :parent-frame nil :refposhandler 'posframe-refposhandler-xwininfo
+                  :override-parameters which-key-posframe-parameters))))
+        '';
+      };
+    };
+  };
+}
+#+end_src
+
+***** God Mode
+#+begin_src nix :tangle keybinds/god.nix
+{ lib, config, ... }:
+
+let
+  keybinds = config.programs.emacs.init.keybinds;
+in
+{
+  options.programs.emacs.init.keybinds.god.enable = lib.mkEnableOption "Enables god-mode. (Borrowed from doom)";
+
+  config.programs.emacs.init = lib.mkIf keybinds.god.enable {
+    hasOn = lib.mkIf (!keybinds.evil.enable) true;
+    usePackage = {
+      god-mode =  {
+        enable = true;
+        hook = lib.mkIf (!keybinds.evil.enable) ["(on-init-ui-hook . god-mode-all)"];
+        custom = {
+          god-exempt-major-modes = false;
+          god-exempt-predicates = false;
+        };
+        preface = lib.mkIf (!keybinds.evil.enable) ''
+          (defun toggle-god-mode ()
+                 (interactive)
+                 (if god-local-mode
+                     (god-local-mode-pause)
+                     (god-local-mode-resume)))
+        '';
+        bindLocal.god-local-mode-map."<escape>" = lib.mkIf (!keybinds.evil.enable) "toggle-god-mode";
+        bind."<escape>" = lib.mkIf (!keybinds.evil.enable) "toggle-god-mode";
+        config = lib.mkIf keybinds.whichKey.enable "(with-eval-after-load 'which-key (which-key-enable-god-mode-support))";
+      };
+
+      evil-god-state = lib.mkIf keybinds.evil.enable {
+        enable = true;
+        command = ["evil-god-state"];
+        gfhook = lib.mkIf keybinds.doomEscape.enable ["('doom-escape-hook 'evil-god-state-bail)"];
+        generalOne = {
+          ":n"."," = "'evil-execute-in-god-state";
+          ":e"."<escape>" = "'evil-god-state";
+          evil-god-state-map = {
+            "<escape>" = "'evil-god-state-bail";
+            "<return>" = "'evil-emacs-state";
+          };
+        };
+      };
+    };
+  };
+}
 #+end_src
 
 *** Completion System
@@ -3846,17 +3912,6 @@ Helpful gives more information, & which-key tells what keybinds you have availab
 
 {
   programs.emacs.init.usePackage = {
-    which-key = {
-      enable = true;
-      defer = true;
-      config = ''(which-key-enable-god-mode-support)'';
-      ghook = ["('on-first-input-hook 'which-key-mode)"];
-      custom = {
-        which-key-idle-delay = "1";
-        # which-key-popup-type = "'minibuffer";
-      };
-    };
-
     helpful = {
       enable = true;
       defer = true;
