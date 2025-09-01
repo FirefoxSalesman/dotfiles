@@ -1,7 +1,6 @@
   { lib, pkgs, inputs, config, ... }:
 
   {
-    imports = [../keybinds];
     programs.emacs.init = {
       keybinds = {
         evil = {
