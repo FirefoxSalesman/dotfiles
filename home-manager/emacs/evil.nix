@@ -62,127 +62,6 @@
               "Delete word."
               :motion evil-inner-word
               (evil-change beg end type register yank-handler))
-            
-            (general-def 'normal
-              "I" 'evil-window-top
-              "C-i" 'evil-goto-line
-              "N" 'evil-window-bottom
-              "C-n" 'evil-goto-first-line
-              "E" 'evil-scroll-down
-              "O" 'evil-scroll-up
-              "x" 'evil-backward-WORD-begin
-              "X" 'evil-backward-word-begin
-              "C-x" 'evil-backward-WORD-end
-              "j" 'evil-undo
-              "J" 'evil-redo
-              "a" 'evil-ex
-              "r" 'evil-insert-line
-              "R" 'evil-open-above
-              "s" 'evil-append-line
-              "S" 'evil-open-below
-              "t" 'evil-insert
-              "T" 'evil-append
-              "C-t" 'evil-replace-state
-              "u" 'evil-forward-WORD-begin
-              "U" 'evil-forward-word-begin
-              "C-u" 'evil-forward-WORD-end
-              "-" 'evil-jump-backward
-              "_" 'evil-jump-forward
-              "m" 'evil-search-next
-              "M" 'evil-search-previous
-              "k" 'evil-delete-char
-              "K" 'evil-substitute
-              "l" 'evil-invert-char
-              "L" 'evil-invert-case
-              "c" 'evil-visual-char
-              "C" 'evil-visual-line
-              "C-c" 'evil-visual-block
-              "v" 'evil-delete
-              "V" 'evil-change
-              "C-v" 'evil-delete-line
-              "d" 'evil-yank
-              "D" 'evil-yank-line
-              "G" 'evil-paste-after
-              ";" 'evil-end-of-visual-line
-              ":" 'evil-end-of-line
-              "C-;" 'evil-end-of-line
-              "p" 'ergo-word-delete
-              "P" 'ergo-word-change
-              "C-p" 'ergo-word-change
-              "$" 'evil-execute-macro
-              "~" 'evil-record-macro
-              "C-z" 'evil-goto-last-change-reverse
-              "w" 'evil-repeat
-              "W" 'evil-ex-repeat
-              "C-w" 'evil-ex-repeat
-              "l" 'evil-shift-right-line
-              "L" 'evil-shift-left-line
-              "C-l" 'evil-shift-left-line
-              "y" 'evil-shift-right
-              "Y" 'evil-shift-left)
-            
-            (general-def 'motion
-              "I" 'evil-window-top
-              "C-i" 'evil-goto-line
-              "N" 'evil-window-bottom
-              "C-n" 'evil-goto-first-line
-              "C-e" 'evil-scroll-page-down
-              "C-o" 'evil-scroll-page-up
-              "a" 'evil-ex
-              "h" 'evil-set-marker
-              "m" 'evil-search-next
-              "M" 'evil-search-previous
-              "-" 'evil-jump-backward
-              "_" 'evil-jump-forward
-              "/" 'isearch-forward-regexp
-              "?" 'isearch-backward-regexp
-              "f" 'evil-first-non-blank-of-visual-line
-              "F" 'evil-beginning-of-visual-line
-              "C-f" 'evil-first-non-blank
-              "B" 'evil-goto-line)
-            
-            (general-swap-key nil '(motion normal visual)
-              "g" "b"
-              "z" "q"
-              "Z" "Q")
-            
-            (general-def
-              :keymaps 'override
-              :states '(normal visual)
-              "g" 'evil-paste-before
-              "z" 'evil-jump-item
-              "Z" 'evil-goto-last-change)
-            
-            (general-def
-              :keymaps 'override
-              :states '(operator visual)
-              "i" 'evil-forward-char
-              "s" evil-inner-text-objects-map
-              "t" evil-outer-text-objects-map)
-            
-            (general-def 'visual
-              "U" 'evil-forward-word-begin
-              "u" 'evil-forward-WORD-begin
-              "X" 'evil-backward-word-begin
-              "x" 'evil-backward-WORD-begin
-              "v" 'evil-delete-char
-              "V" 'evil-substitute
-              "C-v" 'evil-substitute
-              "t" evil-outer-text-objects-map
-              "s" evil-inner-text-objects-map
-              "l" 'evil-invert-case
-              "y" 'evil-shift-right
-              "Y" 'evil-shift-left
-              "C-t" 'evil-replace
-              "R" 'evil-insert-line
-              "C-r" 'evil-append-line
-              "d" 'evil-yank-line
-              "D" 'evil-yank-line
-              "C-d" 'evil-yank-line
-              "G" 'evil-paste)
-            
-            (general-def 'normal "bl" 'consult-goto-line
-              "b/" 'consult-keep-lines)
           '';
           generalOne = {
             ":i" = {
@@ -191,6 +70,131 @@
             };
             ":n"."C-s" = "'evil-write";
           };
+          extraConfig = ''
+            :general-config
+            ('normal
+             "I" 'evil-window-top
+             "C-i" 'evil-goto-line
+             "N" 'evil-window-bottom
+             "C-n" 'evil-goto-first-line
+             "E" 'evil-scroll-down
+             "O" 'evil-scroll-up
+             "x" 'evil-backward-WORD-begin
+             "X" 'evil-backward-word-begin
+             "C-x" 'evil-backward-WORD-end
+             "j" 'evil-undo
+             "J" 'evil-redo
+             "a" 'evil-ex
+             "r" 'evil-insert-line
+             "R" 'evil-open-above
+             "s" 'evil-append-line
+             "S" 'evil-open-below
+             "t" 'evil-insert
+             "T" 'evil-append
+             "C-t" 'evil-replace-state
+             "u" 'evil-forward-WORD-begin
+             "U" 'evil-forward-word-begin
+             "C-u" 'evil-forward-WORD-end
+             "-" 'evil-jump-backward
+             "_" 'evil-jump-forward
+             "m" 'evil-search-next
+             "M" 'evil-search-previous
+             "k" 'evil-delete-char
+             "K" 'evil-substitute
+             "l" 'evil-invert-char
+             "L" 'evil-invert-case
+             "c" 'evil-visual-char
+             "C" 'evil-visual-line
+             "C-c" 'evil-visual-block
+             "v" 'evil-delete
+             "V" 'evil-change
+             "C-v" 'evil-delete-line
+             "d" 'evil-yank
+             "D" 'evil-yank-line
+             "G" 'evil-paste-after
+             ";" 'evil-end-of-visual-line
+             ":" 'evil-end-of-line
+             "C-;" 'evil-end-of-line
+             "p" 'ergo-word-delete
+             "P" 'ergo-word-change
+             "C-p" 'ergo-word-change
+             "$" 'evil-execute-macro
+             "~" 'evil-record-macro
+             "C-z" 'evil-goto-last-change-reverse
+             "w" 'evil-repeat
+             "W" 'evil-ex-repeat
+             "C-w" 'evil-ex-repeat
+             "l" 'evil-shift-right-line
+             "L" 'evil-shift-left-line
+             "C-l" 'evil-shift-left-line
+             "/" 'isearch-forward-regexp
+             "?" 'isearch-backward-regexp
+             "y" 'evil-shift-right
+             "Y" 'evil-shift-left)
+            
+            ('motion
+             "I" 'evil-window-top
+             "C-i" 'evil-goto-line
+             "N" 'evil-window-bottom
+             "C-n" 'evil-goto-first-line
+             "C-e" 'evil-scroll-page-down
+             "C-o" 'evil-scroll-page-up
+             "a" 'evil-ex
+             "h" 'evil-set-marker
+             "m" 'evil-search-next
+             "M" 'evil-search-previous
+             "-" 'evil-jump-backward
+             "_" 'evil-jump-forward
+             "/" 'isearch-forward-regexp
+             "?" 'isearch-backward-regexp
+             "f" 'evil-first-non-blank-of-visual-line
+             "F" 'evil-beginning-of-visual-line
+             "C-f" 'evil-first-non-blank
+             "B" 'evil-goto-line)
+            
+            (general-swap-key nil '(motion normal visual)
+              "g" "b"
+              "z" "q"
+              "Z" "Q")
+            
+            (:keymaps 'override
+            	  :states '(normal visual)
+            	  "g" 'evil-paste-before
+            	  "z" 'evil-jump-item
+            	  "Z" 'evil-goto-last-change)
+            
+            (:keymaps 'override
+            	  :states '(operator visual)
+            	  "i" 'evil-forward-char
+            	  "s" evil-inner-text-objects-map
+            	  "t" evil-outer-text-objects-map)
+            
+            ('visual
+             "U" 'evil-forward-word-begin
+             "u" 'evil-forward-WORD-begin
+             "X" 'evil-backward-word-begin
+             "x" 'evil-backward-WORD-begin
+             "v" 'evil-delete-char
+             "V" 'evil-substitute
+             "C-v" 'evil-substitute
+             "t" evil-outer-text-objects-map
+             "s" evil-inner-text-objects-map
+             "l" 'evil-invert-case
+             "y" 'evil-shift-right
+             "Y" 'evil-shift-left
+             "C-t" 'evil-replace
+             "R" 'evil-insert-line
+             "C-r" 'evil-append-line
+             "d" 'evil-yank-line
+             "D" 'evil-yank-line
+             "C-d" 'evil-yank-line
+             "/" 'isearch-forward-regexp
+             "?" 'isearch-backward-regexp
+             "G" 'evil-paste)
+            
+            ('normal "bl" 'consult-goto-line
+            	 "b/" 'consult-keep-lines)
+          '';
         };
         
         emacs.generalOne = {
@@ -207,13 +211,9 @@
         evil-surround = {
           enable = true;
           deferIncrementally = true;
-          config = ''
-            (general-def 'visual evil-surround-mode-map "R" 'evil-surround-region)
-            (general-def 'operator evil-surround-mode-map
-              "s" nil
-              "r" 'evil-surround-edit
-              "R" 'evil-Surround-edit)
-            (global-evil-surround-mode)
+          config = "(global-evil-surround-mode)";
+          extraConfig = ''
+            
           '';
         };
         

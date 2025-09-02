@@ -518,10 +518,10 @@
           proced = {
             enable = true;
             command = ["proced"];
-            config = ''
-                (general-def 'normal proced-mode-map
-                  "j" 'proced-unmark
-                  "k" 'proced-send-signal)
+            extraConfig = ''
+                :general-config ('normal proced-mode-map
+              			   "j" 'proced-unmark
+              			   "k" 'proced-send-signal)
             '';
           };
         

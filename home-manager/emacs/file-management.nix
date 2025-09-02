@@ -71,7 +71,7 @@
       enable = true;
       defer = true;
       ghook = ["('dired-mode-hook 'dired-hide-dotfiles-mode)"];
-      config = ''(general-def 'normal dired-mode-map "H" 'dired-hide-dotfiles-mode)'';
+      extraConfig = '':general-config ('normal dired-mode-map "H" 'dired-hide-dotfiles-mode)'';
     };
 
     all-the-icons-dired = {

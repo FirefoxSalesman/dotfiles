@@ -40,10 +40,7 @@
                                          ("+" (:strike-through t))
                                          ("!" (:overline t) verbatim))'';
             };
-            generalTwo.local-leader.org-mode-map = {
-              "o" = '''(consult-org-heading :which-key "outline")'';
-              "a" = '''(avy-org-goto-heading-timer :which-key "avy")'';
-            };
+            generalTwo.local-leader.org-mode-map."a" = '''(avy-org-goto-heading-timer :which-key "avy")'';
         
             config = ''
                 (defun my/org-capf ()
@@ -176,9 +173,8 @@
                 "[h" = "'markdown-previous-visible-heading";
                 "]h" = "'markdown-next-visible-heading";
               };  
-              local-leader.markdown-mode-map."o" = '''(consult-outline :which-key "go to heading")'';
             };
-            init = ''
+            preface = ''
                 (defun efs/markdown-font-setup ()
                   (variable-pitch-mode)
                   (dolist (face '((markdown-header-face-1 . 1.4)

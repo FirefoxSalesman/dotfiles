@@ -2166,7 +2166,7 @@ I'm running dired with a couple of small packages that improve on it
       enable = true;
       defer = true;
       ghook = ["('dired-mode-hook 'dired-hide-dotfiles-mode)"];
-      config = ''(general-def 'normal dired-mode-map "H" 'dired-hide-dotfiles-mode)'';
+      extraConfig = '':general-config ('normal dired-mode-map "H" 'dired-hide-dotfiles-mode)'';
     };
 
     all-the-icons-dired = {
@@ -2660,6 +2660,9 @@ evil = {
     };
     ":n"."C-s" = "'evil-write";
   };
+  extraConfig = ''
+    <<Evil Extra Config>>
+  '';
 };
 
 emacs.generalOne = {
@@ -2692,129 +2695,135 @@ emacs.generalOne = {
   "Delete word."
   :motion evil-inner-word
   (evil-change beg end type register yank-handler))
+#+end_src
 
-(general-def 'normal
-  "I" 'evil-window-top
-  "C-i" 'evil-goto-line
-  "N" 'evil-window-bottom
-  "C-n" 'evil-goto-first-line
-  "E" 'evil-scroll-down
-  "O" 'evil-scroll-up
-  "x" 'evil-backward-WORD-begin
-  "X" 'evil-backward-word-begin
-  "C-x" 'evil-backward-WORD-end
-  "j" 'evil-undo
-  "J" 'evil-redo
-  "a" 'evil-ex
-  "r" 'evil-insert-line
-  "R" 'evil-open-above
-  "s" 'evil-append-line
-  "S" 'evil-open-below
-  "t" 'evil-insert
-  "T" 'evil-append
-  "C-t" 'evil-replace-state
-  "u" 'evil-forward-WORD-begin
-  "U" 'evil-forward-word-begin
-  "C-u" 'evil-forward-WORD-end
-  "-" 'evil-jump-backward
-  "_" 'evil-jump-forward
-  "m" 'evil-search-next
-  "M" 'evil-search-previous
-  "k" 'evil-delete-char
-  "K" 'evil-substitute
-  "l" 'evil-invert-char
-  "L" 'evil-invert-case
-  "c" 'evil-visual-char
-  "C" 'evil-visual-line
-  "C-c" 'evil-visual-block
-  "v" 'evil-delete
-  "V" 'evil-change
-  "C-v" 'evil-delete-line
-  "d" 'evil-yank
-  "D" 'evil-yank-line
-  "G" 'evil-paste-after
-  ";" 'evil-end-of-visual-line
-  ":" 'evil-end-of-line
-  "C-;" 'evil-end-of-line
-  "p" 'ergo-word-delete
-  "P" 'ergo-word-change
-  "C-p" 'ergo-word-change
-  "$" 'evil-execute-macro
-  "~" 'evil-record-macro
-  "C-z" 'evil-goto-last-change-reverse
-  "w" 'evil-repeat
-  "W" 'evil-ex-repeat
-  "C-w" 'evil-ex-repeat
-  "l" 'evil-shift-right-line
-  "L" 'evil-shift-left-line
-  "C-l" 'evil-shift-left-line
-  "y" 'evil-shift-right
-  "Y" 'evil-shift-left)
+#+NAME: Evil Extra Config
+#+begin_src emacs-lisp
+:general-config
+('normal
+ "I" 'evil-window-top
+ "C-i" 'evil-goto-line
+ "N" 'evil-window-bottom
+ "C-n" 'evil-goto-first-line
+ "E" 'evil-scroll-down
+ "O" 'evil-scroll-up
+ "x" 'evil-backward-WORD-begin
+ "X" 'evil-backward-word-begin
+ "C-x" 'evil-backward-WORD-end
+ "j" 'evil-undo
+ "J" 'evil-redo
+ "a" 'evil-ex
+ "r" 'evil-insert-line
+ "R" 'evil-open-above
+ "s" 'evil-append-line
+ "S" 'evil-open-below
+ "t" 'evil-insert
+ "T" 'evil-append
+ "C-t" 'evil-replace-state
+ "u" 'evil-forward-WORD-begin
+ "U" 'evil-forward-word-begin
+ "C-u" 'evil-forward-WORD-end
+ "-" 'evil-jump-backward
+ "_" 'evil-jump-forward
+ "m" 'evil-search-next
+ "M" 'evil-search-previous
+ "k" 'evil-delete-char
+ "K" 'evil-substitute
+ "l" 'evil-invert-char
+ "L" 'evil-invert-case
+ "c" 'evil-visual-char
+ "C" 'evil-visual-line
+ "C-c" 'evil-visual-block
+ "v" 'evil-delete
+ "V" 'evil-change
+ "C-v" 'evil-delete-line
+ "d" 'evil-yank
+ "D" 'evil-yank-line
+ "G" 'evil-paste-after
+ ";" 'evil-end-of-visual-line
+ ":" 'evil-end-of-line
+ "C-;" 'evil-end-of-line
+ "p" 'ergo-word-delete
+ "P" 'ergo-word-change
+ "C-p" 'ergo-word-change
+ "$" 'evil-execute-macro
+ "~" 'evil-record-macro
+ "C-z" 'evil-goto-last-change-reverse
+ "w" 'evil-repeat
+ "W" 'evil-ex-repeat
+ "C-w" 'evil-ex-repeat
+ "l" 'evil-shift-right-line
+ "L" 'evil-shift-left-line
+ "C-l" 'evil-shift-left-line
+ "/" 'isearch-forward-regexp
+ "?" 'isearch-backward-regexp
+ "y" 'evil-shift-right
+ "Y" 'evil-shift-left)
 
-(general-def 'motion
-  "I" 'evil-window-top
-  "C-i" 'evil-goto-line
-  "N" 'evil-window-bottom
-  "C-n" 'evil-goto-first-line
-  "C-e" 'evil-scroll-page-down
-  "C-o" 'evil-scroll-page-up
-  "a" 'evil-ex
-  "h" 'evil-set-marker
-  "m" 'evil-search-next
-  "M" 'evil-search-previous
-  "-" 'evil-jump-backward
-  "_" 'evil-jump-forward
-  "/" 'isearch-forward-regexp
-  "?" 'isearch-backward-regexp
-  "f" 'evil-first-non-blank-of-visual-line
-  "F" 'evil-beginning-of-visual-line
-  "C-f" 'evil-first-non-blank
-  "B" 'evil-goto-line)
+('motion
+ "I" 'evil-window-top
+ "C-i" 'evil-goto-line
+ "N" 'evil-window-bottom
+ "C-n" 'evil-goto-first-line
+ "C-e" 'evil-scroll-page-down
+ "C-o" 'evil-scroll-page-up
+ "a" 'evil-ex
+ "h" 'evil-set-marker
+ "m" 'evil-search-next
+ "M" 'evil-search-previous
+ "-" 'evil-jump-backward
+ "_" 'evil-jump-forward
+ "/" 'isearch-forward-regexp
+ "?" 'isearch-backward-regexp
+ "f" 'evil-first-non-blank-of-visual-line
+ "F" 'evil-beginning-of-visual-line
+ "C-f" 'evil-first-non-blank
+ "B" 'evil-goto-line)
 
 (general-swap-key nil '(motion normal visual)
   "g" "b"
   "z" "q"
   "Z" "Q")
 
-(general-def
-  :keymaps 'override
-  :states '(normal visual)
-  "g" 'evil-paste-before
-  "z" 'evil-jump-item
-  "Z" 'evil-goto-last-change)
+(:keymaps 'override
+	  :states '(normal visual)
+	  "g" 'evil-paste-before
+	  "z" 'evil-jump-item
+	  "Z" 'evil-goto-last-change)
 
-(general-def
-  :keymaps 'override
-  :states '(operator visual)
-  "i" 'evil-forward-char
-  "s" evil-inner-text-objects-map
-  "t" evil-outer-text-objects-map)
+(:keymaps 'override
+	  :states '(operator visual)
+	  "i" 'evil-forward-char
+	  "s" evil-inner-text-objects-map
+	  "t" evil-outer-text-objects-map)
 
-(general-def 'visual
-  "U" 'evil-forward-word-begin
-  "u" 'evil-forward-WORD-begin
-  "X" 'evil-backward-word-begin
-  "x" 'evil-backward-WORD-begin
-  "v" 'evil-delete-char
-  "V" 'evil-substitute
-  "C-v" 'evil-substitute
-  "t" evil-outer-text-objects-map
-  "s" evil-inner-text-objects-map
-  "l" 'evil-invert-case
-  "y" 'evil-shift-right
-  "Y" 'evil-shift-left
-  "C-t" 'evil-replace
-  "R" 'evil-insert-line
-  "C-r" 'evil-append-line
-  "d" 'evil-yank-line
-  "D" 'evil-yank-line
-  "C-d" 'evil-yank-line
-  "G" 'evil-paste)
+('visual
+ "U" 'evil-forward-word-begin
+ "u" 'evil-forward-WORD-begin
+ "X" 'evil-backward-word-begin
+ "x" 'evil-backward-WORD-begin
+ "v" 'evil-delete-char
+ "V" 'evil-substitute
+ "C-v" 'evil-substitute
+ "t" evil-outer-text-objects-map
+ "s" evil-inner-text-objects-map
+ "l" 'evil-invert-case
+ "y" 'evil-shift-right
+ "Y" 'evil-shift-left
+ "C-t" 'evil-replace
+ "R" 'evil-insert-line
+ "C-r" 'evil-append-line
+ "d" 'evil-yank-line
+ "D" 'evil-yank-line
+ "C-d" 'evil-yank-line
+ "/" 'isearch-forward-regexp
+ "?" 'isearch-backward-regexp
+ "G" 'evil-paste)
 
-(general-def 'normal "bl" 'consult-goto-line
-  "b/" 'consult-keep-lines)
+('normal "bl" 'consult-goto-line
+	 "b/" 'consult-keep-lines)
 #+end_src
-
+    
 **** Extensions
 Easymotion's prefix is M-SPC, however, most important keys are already bound somewhere easier.
 Cursors hydra: https://hungyi.net/posts/hydra-for-evil-mc/
@@ -2825,7 +2834,8 @@ evil-collection.custom.evil-collection-unimpaired-want-repeat-mode-integration =
 evil-surround = {
   enable = true;
   deferIncrementally = true;
-  config = ''
+  config = "(global-evil-surround-mode)";
+  extraConfig = ''
     <<Emacs Evil Surround Config>>
   '';
 };
@@ -2916,14 +2926,14 @@ evil-mc = {
 };
 #+end_src
 
-#+NAME: Emacs Evil Surround Config
+#+NAME: Emacs Evil Surround Extra Config
 #+begin_src emacs-lisp
-(general-def 'visual evil-surround-mode-map "R" 'evil-surround-region)
-(general-def 'operator evil-surround-mode-map
+:general-config
+('visual evil-surround-mode-map "R" 'evil-surround-region)
+('operator evil-surround-mode-map
   "s" nil
   "r" 'evil-surround-edit
   "R" 'evil-Surround-edit)
-(global-evil-surround-mode)
 #+end_src
 
 #+NAME: Emacs Evil Easymotion Config
@@ -3179,32 +3189,38 @@ My completions system is based around vertico, because that's what all the cool 
 { inputs, pkgs, ... }:
 
 {
+  imports = [../completion];
+
   <<Emacs Templates File>>
 
-  programs.emacs.init.usePackage = {
-    <<Emacs Vertico>>
-    
-    <<Emacs Corfu>>
+  programs.emacs.init = {
+    completions = {
+      prescient = true;
+      vertico = {
+        enable = true;
+        orderless = true;
+        evilConsultLine = true;
+        embark = true;
+      };
+    };
 
-    <<Emacs Prescient>>
+    usePackage = {
+      <<Emacs Vertico>>
+      
+      <<Emacs Corfu>>
 
-    <<Emacs Orderless>>
+      <<Emacs Consult>>
 
-    <<Emacs Marginalia>>
+      <<Emacs Embark>>
 
-    <<Emacs Consult Main Package>>
+      <<Emacs App Launcher>>
 
-    <<Emacs Consult Extensions>>
+      <<Emacs Search>>
 
-    <<Emacs Embark>>
+      <<Emacs Snippets>>
 
-    <<Emacs App Launcher>>
-
-    <<Emacs Search>>
-
-    <<Emacs Snippets>>
-
-    <<Emacs Ezf>>
+      <<Emacs Ezf>>
+    };
   };
 }
 #+end_src
@@ -3213,24 +3229,14 @@ My completions system is based around vertico, because that's what all the cool 
 Vertico is basically dmenu for emacs. It lists out all the options in a command menu.
 #+NAME: Emacs Vertico
 #+begin_src nix :noweb yes
-vertico = {
-  enable = true;
-  defer = true;
-  ghook = ["('on-first-input-hook 'vertico-mode)"];
-  # Enable cycling for 'vertico-next & 'vertico-previous'.
-  custom.vertico-cycle = true;
-  # This is for exwm's minibuffer issue
-  generalTwo.":n".vertico-map = {
-    "RET" = "'vertico-exit";
-    "C-o" = "'vertico-scroll-down";
-    "C-e" = "'vertico-scroll-up";
-    "e" = "'vertico-next";
-    "o" = "'vertico-previous";
-    "I" = "'vertico-last";
-    "N" = "'vertico-first";
-    "B" = "'vertico-last";
-    "bg" = "'vertico-first";
-  };
+vertico.generalTwo.":n".vertico-map = {
+  "C-o" = "'vertico-scroll-down";
+  "C-e" = "'vertico-scroll-up";
+  "j" = "'evil-undo";
+  "I" = "'vertico-last";
+  "N" = "'vertico-first";
+  "B" = "'vertico-last";
+  "bg" = "'vertico-first";
 };
 
 vertico-quick = {
@@ -3304,6 +3310,13 @@ cape = {
       <<Emacs Cape Config>>
     '';
 };
+
+corfu-prescient = {
+  enable = true;
+  defer = true;
+  ghook = ["('corfu-mode-hook 'corfu-prescient-mode)"];
+  custom.corfu-prescient-completion-styles = "'(basic prescient)";
+};
 #+end_src
 
 #+NAME: Emacs Corfu Config
@@ -3321,133 +3334,24 @@ cape = {
   (add-to-list 'completion-at-point-functions src))
 #+end_src
 
-**** Prescient
-Prescient is a big-braned history package that orders completion options by recency & frequency.
-#+NAME: Emacs Prescient
-#+begin_src nix
-prescient = {
-  enable = true;
-  defer = true;
-  config = ''(prescient-persist-mode)'';
-  custom.prescient-history-length = "100";
-  afterCall = ["on-first-input-hook"];
-};
-
-vertico-prescient = {
-  enable = true;
-  defer = true;
-  ghook = ["('minibuffer-mode-hook 'vertico-prescient-mode)"];
-  custom = {
-    vertico-prescient-enable-filtering = false;
-    vertico-prescient-completion-styles = "'(orderless prescient basic)";
-    vertico-prescient-enable-sorting = true;
-  };
-};
-
-corfu-prescient = {
-  enable = true;
-  defer = true;
-  ghook = ["('corfu-mode-hook 'corfu-prescient-mode)"];
-  custom.corfu-prescient-completion-styles = "'(basic prescient)";
-};
-#+end_src
-
-**** Orderless
-Orderless basically turns the completion system into a fuzzy finder. It's here to help me sift through my notes.
-This config is stolen directly from David Wilson
-#+NAME: Emacs Orderless
-#+begin_src nix
-orderless = {
-  enable = true;
-  defer = true;
-  custom = {
-    completion-styles = "'(orderless prescient basic)";
-    completion-category-defaults = false;
-    completion-category-overrides = "'((file (styles . (partial-completion))))";
-  };
-  afterCall = ["on-first-input-hook"];
-};
-#+end_src
-
-**** Marginalia
-Marginalia provides extra information on the options in a vertico completion, that way you know what you're getting ahead of time.
-#+NAME: Emacs Marginalia
-#+begin_src nix
-marginalia = {
-  enable = true;
-  defer = true;
-  config = ''(marginalia-mode)'';
-  afterCall = ["on-first-input-hook"];
-};
-#+end_src
-
 **** Consult
-***** Main Package
 Replaces a bunch of commands with new commands.
 Evil integration is from noctuid & minad
-#+NAME: Emacs Consult Main Package
+#+NAME: Emacs Consult
 #+begin_src nix :noweb yes
 consult = {
-  enable = true;
-  defer = true;
-  extraPackages = with pkgs; [
-    fd
-    ripgrep
-  ];
   ghook = ["('minibuffer-setup-hook 'consult-initial-narrow)"];
-  command = ["consult-goto-line" "consult-keep-lines" "noct-consult-ripgrep-or-line"];
-  general = {
-    # https://taonaw.com/2025/05/15/two-eamcs-tweaks-i-forgot.html
-    "M-y" = "'nil";
-    # C-c bindings (mode-specific-map)
-    "C-c m" = "'consult-mode-command";
-    "C-c k" = "'consult-kmacro";
-    # Custom M-# bindings for fast register access
-    "M-#" = "'consult-register-load";
-    "M-'" = "'consult-register-store";       # orig. abbrev-prefix-mark (unrelated)
-    "C-M-#" = "'consult-register";
-    # M-s bindings (search-map)
-    "M-s E" = "'consult-compile-error";
-    "M-s m" = "'consult-mark";
-    "M-s k" = "'consult-global-mark";
-    "M-s D" = "'consult-locate";
-    "M-s G" = "'consult-git-grep";
-    "M-s g" = "'consult-ripgrep";
-    "M-s u" = "'consult-focus-lines";
-    # Isearch integration
-    "M-s e" = "'consult-isearch-history"; # orig. isearch-edit-string
-    "M-s L" = "'consult-line-multi"; # needed by consult-line to detect isearch
-  };
-  custom = {
-    consult-buffer-sources = "'(consult--source-buffer)";
-    xref-show-xrefs-function = "#'consult-xref";
-  };
+  command = ["consult-goto-line" "consult-keep-lines"];
+  custom.consult-buffer-sources = "'(consult--source-buffer)";
   generalOne = {
     ":n" = {
-      "?" = "'consult-line-multi";
       "M-g" = "'consult-yank-pop"; # orig. evil-paste-pop
       "M-E" = "'consult-isearch-history "; # orig. isearch-edit-string
       "H-'" = "'evil-collection-consult-mark";
       "H--" = "'evil-collection-consult-jump-list";
       "H-q" = "'consult-flymake"; # Alternative: consult-flycheck
-    };  
-    global-leader = {
-      "b" = '''(consult-bookmark :which-key "bookmarks")'';
-      "i" = '''consult-imenu'';
-      "I" = '''consult-imenu-multi'';
     };
-    help-map = {
-      "C-a" = '''(consult-apropos :which-key "apropos")'';
-      "i" = '''(consult-info :which-key "info")'';
-      "M" = '''(consult-man :which-key "man")'';
-    };
-    ctl-x-map = {
-      "M-:" = "'consult-complex-command"; # orig. repeat-complex-command
-      "b" = "'nil";
-      "C-f" = "'consult-find";
-      "C-r" = "'consult-recent-file";
-    };
-    ctl-x-5-map."b" = "'consult-buffer-other-frame"; # orig. switch-to-buffer-other-frame
+    ctl-x-map."C-f" = "'consult-fd";
   };
   config = ''
       <<Emacs Consult Config>>
@@ -3457,26 +3361,6 @@ consult = {
 
 #+NAME: Emacs Consult Config
 #+begin_src emacs-lisp
-(defun efs/save-search-history (pattern)
-  "Gets history from pattern, & saves it where evil mode can find it"
-  (add-to-history 'evil-search-forward-history pattern)
-  (add-to-history 'search-ring pattern)
-  (add-to-history 'regexp-search-ring pattern)
-  (setq evil-ex-search-pattern (list pattern t t))
-  (setq evil-ex-search-direction 'forward)
-  (when evil-ex-search-persistent-highlight
-    (evil-ex-search-activate-highlight evil-ex-search-pattern)))
-
-(defun noct-consult-line-evil-history (&rest _)
-  "Add latest `consult-line' search pattern to the evil search history ring.
-  This only works with orderless and for the first component of the search."
-  (when (and (bound-and-true-p evil-mode)
-             (eq evil-search-module 'isearch))
-    (efs/save-search-history (cadr (orderless-compile
-  				    (car consult--line-history))))))
-
-(general-add-advice #'consult-line :after #'noct-consult-line-evil-history)
-
 (defvar consult--bufler-workspace+
   `(:name "Workspace"
           :narrow ?w
@@ -3502,44 +3386,6 @@ consult = {
   (when (and (eq this-command #'consult-buffer)
              (bufler-workspace--tab-parameter 'bufler-workspace-path (tab-bar--current-tab-find)))
     (setq unread-command-events (append unread-command-events (list ?w 32)))))
-
-(defcustom noct-consult-ripgrep-or-line-limit 1000000
-  "Buffer size threshold for `noct-consult-ripgrep-or-line'.
-  When the number of characters in a buffer exceeds this threshold,
-  `consult-ripgrep' will be used instead of `consult-line'."
-  :type 'integer)
-
-(defun noct-consult-ripgrep-or-line (&optional initial)
-  "Call `consult-line' for small buffers or `consult-ripgrep' for large files."
-  (interactive)
-  (if (or (not buffer-file-name)
-          (buffer-narrowed-p)
-          (ignore-errors
-            (file-remote-p buffer-file-name))
-          (jka-compr-get-compression-info buffer-file-name)
-          (<= (buffer-size)
-              (/ noct-consult-ripgrep-or-line-limit
-                 (if (eq major-mode 'org-mode) 4 1))))
-      (consult-line initial)
-    ((lambda ()
-       (when (file-writable-p buffer-file-name)
-  	 (save-buffer))
-       (let ((consult-project-function (lambda (x) nil)))
-  	 (consult-ripgrep (list (shell-quote-argument buffer-file-name)) (concat " " initial))
-  	 (efs/save-search-history (string-trim-left (car consult--grep-history) "# ")))))))
-#+end_src
-
-***** Extensions
-#+NAME: Emacs Consult Extensions
-#+begin_src nix
-consult-dir = {
-  enable = true;
-  defer = true;
-  generalOne.vertico-map = {
-    "C-x d" = "'consult-dir";
-    "C-x j" = "'consult-dir-jump-file";
-  };
-};
 #+end_src
 
 **** Embark
@@ -3551,76 +3397,21 @@ avy actions from karthink
 #+NAME: Emacs Embark
 #+begin_src nix :noweb yes
 embark = {
-  enable = true;
-  defer = true;
-  command = ["embark-act"];
   general."M-a" = "'embark-dwim";
-  custom = {
-    # Replace key help with a completing-read interface
-    prefix-help-command = "#'embark-prefix-help-command";
-    embark-indicators = ''
-        '(embark-which-key-indicator
-          embark-highlight-indicator
-          embark-isearch-highlight-indicator)
-      '';
-  };
-  generalTwo.":n" = {
-    embark-collect-mode-map."q" = "'evil-record-macro";
-    vertico-map."a" = "'embark-act";
-  };
+  generalTwo.":n".vertico-map."a" = "'embark-act";
   generalOne = {
     embark-file-map."2" = "(my/embark-split-action find-file elwm-split-window)";
     embark-buffer-map."2" = "(my/embark-split-action switch-to-buffer elwm-split-window)";
     embark-bookmark-map."2" = "(my/embark-split-action bookmark-jump elwm-split-window)";
-    help-map."b" = '''(embark-bindings :which-key "display all keybinds")'';
   };
   init = ''
       <<Emacs Embark Init>>
   '';
 };
-
-embark-consult = {
-  enable = true;
-  after = ["embark" "consult"];
-  ghook = ["('embark-collect-mode-hook 'consult-preview-at-point-mode)"];
-};
 #+end_src
 
 #+NAME: Emacs Embark Init
 #+begin_src emacs-lisp
-(defun embark-which-key-indicator ()
-  "An embark indicator that displays keymaps using which-key.
-      The which-key help message will show the type and value of the
-      current target followed by an ellipsis if there are further
-      targets."
-  (lambda (&optional keymap targets prefix)
-    (if (null keymap)
-        (which-key--hide-popup-ignore-command)
-      (which-key--show-keymap
-       (if (eq (plist-get (car targets) :type) 'embark-become)
-           "Become"
-         (format "Act on %s '%s'%s"
-                 (plist-get (car targets) :type)
-                 (embark--truncate-target (plist-get (car targets) :target))
-                 (if (cdr targets) "…" "")))
-       (if prefix
-           (pcase (lookup-key keymap prefix 'accept-default)
-             ((and (pred keymapp) km) km)
-             (_ (key-binding prefix 'accept-default)))
-         keymap)
-       nil nil t (lambda (binding)
-                   (not (string-suffix-p "-argument" (cdr binding))))))))
-
-(defun embark-hide-which-key-indicator (fn &rest args)
-  "Hide the which-key indicator immediately when using the completing-read prompter."
-  (which-key--hide-popup-ignore-command)
-  (let ((embark-indicators
-         (remq #'embark-which-key-indicator embark-indicators)))
-    (apply fn args)))
-
-(advice-add #'embark-completing-read-prompter
-            :around #'embark-hide-which-key-indicator)
-
 (eval-when-compile
   (defmacro my/embark-split-action (fn split-type)
     `(defun ,(intern (concat "my/embark-"
@@ -3645,37 +3436,19 @@ app-launcher = {
 
 **** Search
 #+NAME: Emacs Search
-#+begin_src nix :noweb yes
+#+begin_src nix
 ace-isearch = {
   enable = true;
   demand = true;
   gfhook = ["('pdf-view-mode-hook (lambda () (ace-isearch-mode -1)))"];
   generalOne.isearch-mode-map."C-a" = "'avy-isearch";
-  config = ''
-      <<Emacs Search Config>>
-    '';
+  config = "(global-ace-isearch-mode)";
   custom = {
     ace-isearch-on-evil-mode = true;
     ace-isearch-input-length = "5";
     ace-isearch-jump-based-on-one-char = false;
-    ace-isearch-function-from-isearch = "'ace-isearch-consult-ripgrep-or-line-from-isearch";
   };
 };
-#+end_src
-
-#+NAME: Emacs Search Config
-#+begin_src emacs-lisp
-(global-ace-isearch-mode)
-(defun ace-isearch-consult-ripgrep-or-line-from-isearch ()
-  "Invoke `noct-consult-ripgrep-or-line' from ace-isearch."
-  (interactive)
-  (let (($query (if isearch-regexp
-  		    isearch-string
-  		  (regexp-quote isearch-string))))
-    (isearch-update-ring isearch-string isearch-regexp)
-    (let (search-nonincremental-instead)
-      (ignore-errors (isearch-done t t)))
-    (noct-consult-ripgrep-or-line $query)))
 #+end_src
 
 **** Snippets
@@ -3779,6 +3552,283 @@ ezf = {
   enable = true;
   deferIncrementally = true;
 };
+#+end_src
+
+**** Modules
+#+begin_src nix :tangle completion/default.nix
+{ ... }:
+
+{
+  imports = [
+    ./vertico.nix
+    ./prescient.nix
+  ];
+}
+#+end_src
+
+***** Vertico
+We need to set up avy 1^st
+#+begin_src nix :tangle completion/vertico.nix
+{ pkgs, lib, config, ... }:
+
+let
+  completions = config.programs.emacs.init.completions;
+  keybinds = config.programs.emacs.init.keybinds;
+  ide = config.programs.emacs.init.ide;
+in
+{
+  options.programs.emacs.init.completions.vertico = {
+    enable = lib.mkEnableOption "Enables vertico as a completion system. Many things are borrowed from Doom";
+    orderless = lib.mkEnableOption "Enables orderless completion styles. Borrowed from David Wilson's config";
+    embark = lib.mkEnableOption "Enables embark's completion actions. Borrowed from Karthink, the embark wiki, & Doom";
+    evilConsultLine = lib.mkEnableOption "Evil's / runs consult-line. Borrowed from Noctuid's config.";
+  };
+
+  config.programs.emacs.init = lib.mkIf completions.vertico.enable {
+    hasOn = true;
+    usePackage = {
+      vertico = {
+        enable = true;
+        hook = ["(on-first-input . vertico-mode)"];
+        custom.vertico-cycle = true;
+        generalTwo.":n".vertico-map = lib.mkIf keybinds.evil.enable {
+          "RET" = "'vertico-exit";
+          "${keybinds.evil.keys.down}" = "'vertico-next";
+          "${keybinds.evil.keys.up}" = "'vertico-previous";
+        };
+      };
+      
+      marginalia = {
+        enable = true;
+        hook = ["(on-first-input . marginalia-mode)"];
+      };
+
+      consult = {
+        enable = true;
+        defer = true;
+        extraPackages = with pkgs; [
+          fd
+          ripgrep
+        ];
+        custom = {
+          consult-line-numbers-widen = true;
+          consult-async-min-input = "2";
+          consult-async-refresh-delay = "0.15";
+          consult-async-input-throttle = "0.2";
+          consult-async-input-debounce = "0.1";
+        };
+        bindLocal = {
+          help-map = {
+            "C-a" = lib.mkDefault "consult-apropos";
+            "i" = lib.mkDefault "consult-info";
+            "M" = lib.mkDefault "consult-man";
+          };
+          ctl-x-map = {
+            "M-:" = lib.mkDefault "consult-complex-command";
+            "b" = lib.mkDefault "consult-buffer";
+            "C-r" = lib.mkDefault "consult-recent-file";
+            "t b" = lib.mkDefault "consult-buffer-other-tab";
+          };
+          ctl-x-5-map."b" = lib.mkDefault "consult-buffer-other-frame";
+          ctl-x-4-map."b" = lib.mkDefault "consult-buffer-other-window";
+          ctl-x-r-map."b" = lib.mkDefault "consult-bookmark";
+          project-prefix-map."b" = lib.mkDefault "consult-project-buffer";
+          mode-specific-map = {
+            "m" = lib.mkDefault "consult-mode-command";
+            "k" = lib.mkDefault "consult-kmacro";
+          };
+          goto-map = {
+            "e" = lib.mkDefault "consult-compile-error";
+            "r" = lib.mkDefault "consult-grep-match";
+            "f" = lib.mkIf (!ide.flycheck.enable) (lib.mkDefault "consult-flymake");
+            "g" = lib.mkDefault "consult-goto-line";
+            "M-g" = lib.mkDefault "consult-goto-line";
+            "o" = lib.mkDefault "consult-outline";
+            "m" = lib.mkDefault "consult-mark";
+            "k" = lib.mkDefault "consult-global-mark";
+            "i" = lib.mkDefault "consult-imenu";
+            "I" = lib.mkDefault "consult-imenu-multi";
+          };
+          search-map = {
+            "d" = lib.mkDefault "consult-fd";
+            "c" = lib.mkDefault "consult-locate";
+            "g" = lib.mkDefault "consult-ripgrep";
+            "G" = lib.mkDefault "consult-git-grep";
+            "l" = lib.mkDefault "consult-line";
+            "L" = lib.mkDefault "consult-line-multi";
+            "k" = lib.mkDefault "consult-keep-lines";
+            "e" = lib.mkDefault "consult-isearch-history";
+            "u" = lib.mkDefault "consult-focus-lines";
+          };
+        };
+        generalOne = {
+          ":nmvo" = lib.mkIf completions.vertico.evilConsultLine {
+            "/" = lib.mkDefault "'consult-line";
+            "?" = lib.mkDefault "'consult-line-multi";
+          };
+          leader-key = lib.mkIf keybinds.leader-key.enable {
+            "b" = lib.mkDefault '''(consult-bookmark :which-key "bookmarks")'';
+            "i" = lib.mkDefault '''consult-imenu'';
+            "I" = lib.mkDefault '''consult-imenu-multi'';
+          };
+        };
+        generalTwo.local-leader = {
+          org-mode-map."o" = lib.mkIf ide.languages.org.enable (lib.mkDefault '''(consult-org-heading :which-key "outline")'');
+          markdown-mode-map."o" = lib.mkIf ide.languages.markdown.enable (lib.mkDefault '''(consult-outline :which-key "go to heading")'');
+        };
+        bind = {
+          "M-#" = lib.mkDefault "consult-register-load";
+          "M-'" = lib.mkDefault "consult-register-store";
+          "C-M-#" = lib.mkDefault "consult-register";
+          "M-y" = lib.mkDefault "consult-yank-pop";
+        };
+        custom.xref-show-xrefs-function = "#'consult-xref";
+        config = lib.mkIf keybinds.evil.enable ''
+          (defun nix-emacs-save-search-history (pattern)
+            "Gets history from pattern, & saves it where evil mode can find it"
+            (add-to-history 'evil-search-forward-history pattern)
+            (add-to-history 'search-ring pattern)
+            (add-to-history 'regexp-search-ring pattern)
+            (setq evil-ex-search-pattern (list pattern t t))
+            (setq evil-ex-search-direction 'forward)
+            (when evil-ex-search-persistent-highlight
+              (evil-ex-search-activate-highlight evil-ex-search-pattern)))
+          
+          (defun noct-consult-line-evil-history (&rest _)
+            "Add latest `consult-line' search pattern to the evil search history ring.
+            This only works with orderless and for the first component of the search."
+            (when (and (bound-and-true-p evil-mode)
+                       (eq evil-search-module 'isearch))
+              (nix-emacs-save-search-history (cadr (orderless-compile
+  				              (car consult--line-history))))))
+          
+          (general-add-advice #'consult-line :after #'noct-consult-line-evil-history)
+        '';
+      };
+
+      consult-flycheck = lib.mkIf ide.flycheck.enable {
+        enable = true;
+        bindLocal.goto-map."f" = lib.mkDefault "consult-flycheck";
+      };
+
+      consult-dir = {
+        enable = true;
+        config = "(add-to-list 'consult-dir-sources 'consult-dir--source-tramp-ssh t)";
+        custom.consult-dir-project-list-function = lib.mkIf ide.projectile (lib.mkDefault "#'consult-dir-projectile-dirs");
+        bindLocal.vertico-map = {
+          "C-x C-d" = "consult-dir";
+          "C-x C-j" = "consult-dir-jump-file";
+        };
+      };
+
+      # Borrowed from David Wilson
+      orderless = lib.mkIf completions.vertico.orderless {
+        enable = true;
+        custom = {
+          completion-styles = lib.mkDefault (if completions.prescient then "'(orderless prescient basic)" else "'(prescient basic)");
+          completion-category-defaults = lib.mkDefault false;
+          completion-category-overrides = lib.mkDefault "'((file (styles . (partial-completion))))";
+        };
+        afterCall = ["on-first-input-hook"];
+      };
+
+      vertico-prescient = lib.mkIf completions.prescient {
+        enable = true;
+        hook = ["(minibuffer-mode . vertico-prescient-mode)"];
+        custom = {
+          vertico-prescient-enable-filtering = false;
+          vertico-prescient-completion-styles = lib.mkDefault (if completions.vertico.orderless then "'(orderless prescient basic)" else "'(prescient basic)");
+          vertico-prescient-enable-sorting = true;
+        };
+      };
+
+      embark = lib.mkIf completions.vertico.embark {
+        enable = true;
+        command = ["embark-act"];
+        bind."M-;" = "'embark-dwim";
+        defer = true;
+        bindLocal = {
+          help-map."b" = "embark-bindings"; 
+          minibuffer-local-map."C-;" = "embark-act";
+        };
+        generalTwo = lib.mkIf keybinds.evil.enable {
+          ":nm".embark-collect-mode-map."q" = "'evil-record-macro";
+          ":n".vertico-map.":" = "'embark-act";
+        };
+        custom = {
+          # Replace key help with a completing-read interface
+          prefix-help-command = "#'embark-prefix-help-command";
+          which-key-use-C-h-commands = lib.mkIf keybinds.whichKey.enable false;
+          embark-indicators = lib.mkIf keybinds.whichKey.enable ''
+              '(embark-which-key-indicator
+                embark-highlight-indicator
+                embark-isearch-highlight-indicator)
+            '';
+        };
+        init = lib.mkIf keybinds.whichKey.enable ''
+          (defun embark-which-key-indicator ()
+            "An embark indicator that displays keymaps using which-key.
+                The which-key help message will show the type and value of the
+                current target followed by an ellipsis if there are further
+                targets."
+            (lambda (&optional keymap targets prefix)
+              (if (null keymap)
+                  (which-key--hide-popup-ignore-command)
+                (which-key--show-keymap
+                 (if (eq (plist-get (car targets) :type) 'embark-become)
+                     "Become"
+                   (format "Act on %s '%s'%s"
+                           (plist-get (car targets) :type)
+                           (embark--truncate-target (plist-get (car targets) :target))
+                           (if (cdr targets) "…" "")))
+                 (if prefix
+                     (pcase (lookup-key keymap prefix 'accept-default)
+                       ((and (pred keymapp) km) km)
+                       (_ (key-binding prefix 'accept-default)))
+                   keymap)
+                 nil nil t (lambda (binding)
+                             (not (string-suffix-p "-argument" (cdr binding))))))))
+          
+          (defun embark-hide-which-key-indicator (fn &rest args)
+            "Hide the which-key indicator immediately when using the completing-read prompter."
+            (which-key--hide-popup-ignore-command)
+            (let ((embark-indicators
+                   (remq #'embark-which-key-indicator embark-indicators)))
+              (apply fn args)))
+          
+          (advice-add #'embark-completing-read-prompter
+                      :around #'embark-hide-which-key-indicator)
+        '';
+      };
+      
+      embark-consult = lib.mkIf completions.vertico.embark {
+        enable = true;
+        after = ["embark" "consult"];
+        hook = ["(embark-collect-mode . consult-preview-at-point-mode)"];
+      };
+    };
+  };
+}
+#+end_src
+
+***** Prescient
+#+begin_src nix :tangle completion/prescient.nix
+{ config, lib, ... }:
+
+{
+  options.programs.emacs.init.completions.prescient = lib.mkEnableOption "Enables prescient sorting where possible";
+
+  config.programs.emacs.init = lib.mkIf config.programs.emacs.init.completions.prescient {
+    hasOn = true;
+    usePackage.prescient = {
+      enable = true;
+      defer = true;
+      config = "(prescient-persist-mode)";
+      custom.prescient-history-length = "100";
+      afterCall = ["on-first-input-hook"];
+    };
+  };
+}
 #+end_src
 
 *** Help System
@@ -3952,10 +4002,7 @@ How to add a latex package
                                  ("+" (:strike-through t))
                                  ("!" (:overline t) verbatim))'';
     };
-    generalTwo.local-leader.org-mode-map = {
-      "o" = '''(consult-org-heading :which-key "outline")'';
-      "a" = '''(avy-org-goto-heading-timer :which-key "avy")'';
-    };
+    generalTwo.local-leader.org-mode-map."a" = '''(avy-org-goto-heading-timer :which-key "avy")'';
 
     config = ''
       <<Emacs Org Config>>
@@ -4138,9 +4185,8 @@ No idea what the rest of this is for.
         "[h" = "'markdown-previous-visible-heading";
         "]h" = "'markdown-next-visible-heading";
       };  
-      local-leader.markdown-mode-map."o" = '''(consult-outline :which-key "go to heading")'';
     };
-    init = ''
+    preface = ''
       <<Emacs Markdown Init>>
     '';
   };
@@ -4840,7 +4886,7 @@ golden-ratio = {
   proced = {
     enable = true;
     command = ["proced"];
-    config = ''
+    extraConfig = ''
       <<Emacs Proced Config>>
     '';
   };
@@ -4848,9 +4894,9 @@ golden-ratio = {
 
 #+NAME: Emacs Proced Config
 #+begin_src emacs-lisp
-  (general-def 'normal proced-mode-map
-    "j" 'proced-unmark
-    "k" 'proced-send-signal)
+  :general-config ('normal proced-mode-map
+			   "j" 'proced-unmark
+			   "k" 'proced-send-signal)
 #+end_src
 
 *** i3status
