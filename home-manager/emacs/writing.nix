@@ -130,36 +130,43 @@
             };
           };
         
-          pdf-tools = {
-            enable = true;
-            defer = true;
-            generalOne.pdf-view-mode-map."C-s" = "'search-forward";
-            custom = {
-              # Makes PDFtools the default
-              TeX-view-program-selection = '''((output-pdf "PDF Tools"))'';
-              TeX-view-program-list = '''(("PDF Tools" TeX-pdf-tools-sync-view))'';
-              TeX-source-correlate-start-server = false;
-            };
-            config = ''
-                (pdf-tools-install)
-                (with-eval-after-load 'evil-collection-pdf
-                  (general-def 'normal pdf-view-mode-map
-                    "C-e" 'pdf-view-scroll-up-or-next-page
-                    "E" 'pdf-view-scroll-up-or-next-page
-                    "C-o" 'pdf-view-scroll-down-or-previous-page
-                    "O" 'pdf-view-scroll-down-or-previous-page))
-            '';
-            gfhook = [
-              "('TeX-after-compilation-finished-functions #'TeX-revert-document-beffer)"
-              "('pdf-view-mode-hook 'pdf-view-midnight-minor-mode)"];
-            init = ''(setq-default pdf-view-display-size 'fit-width)'';
-            extraConfig = '':magic ("%PDF" . pdf-view-mode)'';
+        pdf-tools = {
+          enable = true;
+          defer = true;
+          generalOne.pdf-view-mode-map."C-s" = "'search-forward";
+          custom = {
+            # Makes PDFtools the default
+            TeX-view-program-selection = '''((output-pdf "PDF Tools"))'';
+            TeX-view-program-list = '''(("PDF Tools" TeX-pdf-tools-sync-view))'';
+            TeX-source-correlate-start-server = false;
           };
+          config = ''
+            (pdf-tools-install)
+          '';
+          gfhook = [
+            "('TeX-after-compilation-finished-functions #'TeX-revert-document-beffer)"
+            "('pdf-view-mode-hook 'pdf-view-midnight-minor-mode)"];
+          init = ''(setq-default pdf-view-display-size 'fit-width)'';
+          extraConfig = '':magic ("%PDF" . pdf-view-mode)'';
+        };
         
-          cdlatex.generalTwo.":i" = {
-            cdlatex-mode-map."TAB" = "'cdlatex-tab";
-            org-cdlatex-mode-map."TAB" = "'cdlatex-tab";
-          };
+        evil-collection-pdf = {
+          defer = true;
+          enable = true;
+          extraConfig = ''
+            :general-config
+            ('normal pdf-view-mode-map
+              "C-e" 'pdf-view-scroll-up-or-next-page
+              "E" 'pdf-view-scroll-up-or-next-page
+              "C-o" 'pdf-view-scroll-down-or-previous-page
+              "O" 'pdf-view-scroll-down-or-previous-page)
+          '';
+        };
+        
+        cdlatex.generalTwo.":i" = {
+          cdlatex-mode-map."TAB" = "'cdlatex-tab";
+          org-cdlatex-mode-map."TAB" = "'cdlatex-tab";
+        };
         
           markdown = {
             generalOne.markdown-mode-map."C-c C-e" = "'markdown-do";

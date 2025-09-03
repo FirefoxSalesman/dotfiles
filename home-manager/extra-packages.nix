@@ -13,7 +13,7 @@
       # comms
       (config.lib.nixGL.wrap teams-for-linux)
       (config.lib.nixGL.wrap thunderbird)
-      vesktop
+      pkgs-stable.vesktop
       # things emacs appreciates
       xclip
       xsel

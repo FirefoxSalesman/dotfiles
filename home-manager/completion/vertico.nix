@@ -8,9 +8,8 @@ in
 {
   options.programs.emacs.init.completions.vertico = {
     enable = lib.mkEnableOption "Enables vertico as a completion system. Many things are borrowed from Doom";
-    orderless = lib.mkEnableOption "Enables orderless completion styles. Borrowed from David Wilson's config";
     embark = lib.mkEnableOption "Enables embark's completion actions. Borrowed from Karthink, the embark wiki, & Doom";
-    evilConsultLine = lib.mkEnableOption "Evil's / runs consult-line. Borrowed from Noctuid's config.";
+    evilConsultLine = lib.mkEnableOption "Evil's / runs consult-line. Borrowed from Noctuid's config. Only works with orderless";
   };
 
   config.programs.emacs.init = lib.mkIf completions.vertico.enable {
@@ -73,8 +72,8 @@ in
             "g" = lib.mkDefault "consult-goto-line";
             "M-g" = lib.mkDefault "consult-goto-line";
             "o" = lib.mkDefault "consult-outline";
-            "m" = lib.mkDefault "consult-mark";
-            "k" = lib.mkDefault "consult-global-mark";
+            "m" = lib.mkDefault (if keybinds.evil.enable then "evil-collection-consult-mark" else "consult-mark");
+            "k" = lib.mkDefault (if keybinds.evil.enable then "evil-collection-consult-jump-list" else "consult-global-mark");
             "i" = lib.mkDefault "consult-imenu";
             "I" = lib.mkDefault "consult-imenu-multi";
           };
@@ -91,14 +90,14 @@ in
           };
         };
         generalOne = {
-          ":nmvo" = lib.mkIf completions.vertico.evilConsultLine {
+          ":nmvo" = lib.mkIf (completions.vertico.evilConsultLine && completions.orderless) {
             "/" = lib.mkDefault "'consult-line";
             "?" = lib.mkDefault "'consult-line-multi";
           };
-          leader-key = lib.mkIf keybinds.leader-key.enable {
-            "b" = lib.mkDefault '''(consult-bookmark :which-key "bookmarks")'';
-            "i" = lib.mkDefault '''consult-imenu'';
-            "I" = lib.mkDefault '''consult-imenu-multi'';
+          global-leader = lib.mkIf keybinds.leader-key.enable {
+            "b" = lib.mkDefault "'consult-bookmark";
+            "i" = lib.mkDefault "'consult-imenu";
+            "I" = lib.mkDefault "'consult-imenu-multi";
           };
         };
         generalTwo.local-leader = {
@@ -112,7 +111,7 @@ in
           "M-y" = lib.mkDefault "consult-yank-pop";
         };
         custom.xref-show-xrefs-function = "#'consult-xref";
-        config = lib.mkIf keybinds.evil.enable ''
+        config = lib.mkIf (keybinds.evil.enable && completions.orderless) ''
           (defun nix-emacs-save-search-history (pattern)
             "Gets history from pattern, & saves it where evil mode can find it"
             (add-to-history 'evil-search-forward-history pattern)
@@ -150,23 +149,12 @@ in
         };
       };
 
-      # Borrowed from David Wilson
-      orderless = lib.mkIf completions.vertico.orderless {
-        enable = true;
-        custom = {
-          completion-styles = lib.mkDefault (if completions.prescient then "'(orderless prescient basic)" else "'(prescient basic)");
-          completion-category-defaults = lib.mkDefault false;
-          completion-category-overrides = lib.mkDefault "'((file (styles . (partial-completion))))";
-        };
-        afterCall = ["on-first-input-hook"];
-      };
-
       vertico-prescient = lib.mkIf completions.prescient {
         enable = true;
         hook = ["(minibuffer-mode . vertico-prescient-mode)"];
         custom = {
           vertico-prescient-enable-filtering = false;
-          vertico-prescient-completion-styles = lib.mkDefault (if completions.vertico.orderless then "'(orderless prescient basic)" else "'(prescient basic)");
+          vertico-prescient-completion-styles = lib.mkDefault (if completions.orderless then "'(orderless prescient basic)" else "'(prescient basic)");
           vertico-prescient-enable-sorting = true;
         };
       };
@@ -174,7 +162,7 @@ in
       embark = lib.mkIf completions.vertico.embark {
         enable = true;
         command = ["embark-act"];
-        bind."M-;" = "'embark-dwim";
+        bind."C-;" = "'embark-dwim";
         defer = true;
         bindLocal = {
           help-map."b" = "embark-bindings"; 

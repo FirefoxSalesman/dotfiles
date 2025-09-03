@@ -63,11 +63,18 @@
   programs.emacs.init = {
     completions = {
       prescient = true;
+      orderless = true;
       vertico = {
         enable = true;
-        orderless = true;
         evilConsultLine = true;
         embark = true;
+      };
+      corfu = {
+        enable = true;
+        wantTabComplete = false;
+        wantRetConfirm = false;
+        wantMinibuffer = true;
+        popupInfo = true;
       };
     };
 
@@ -91,41 +98,6 @@
         };
       };
       
-      corfu = {
-        enable = true;
-        ghook = [
-          "('minibuffer-setup-hook 'corfu-enable-in-minibuffer)"
-          "('on-first-buffer-hook 'global-corfu-mode)"
-        ];
-        custom = {
-          corfu-cycle = true;
-          corfu-autodelay = "0";
-          corfu-auto-prefix = "2";
-          corfu-auto = true;
-          corfu-on-exact-match = "'show";
-        };
-        general."M-/" = "'completion-at-point";
-        generalOne.corfu-map = {
-          "RET" = "nil";
-          "TAB" = "nil";
-          "S-<return>" = "'corfu-insert";
-          "[tab]" = "nil";
-        };
-        generalTwo.":ie".corfu-map = {
-          "S-SPC" = "'corfu-insert-separator";
-          "C-e" = "'corfu-next";
-          "C-p" = "nil";
-          "C-o" = "'corfu-previous";
-        };
-        config = ''
-            (defun corfu-enable-in-minibuffer ()
-              "Enable Corfu in the minibuffer."
-              (when (local-variable-p 'completion-at-point-functions)
-                (setq-local corfu-auto t) ;; Enable/disable auto completion
-                (corfu-mode 1)))
-          '';
-      };
-      
       nerd-icons-corfu = {
         enable = true;
         config = ''(add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter)'';
@@ -140,11 +112,6 @@
         };
       };
       
-      corfu-popupinfo = {
-        enable = true;
-        ghook = ["('corfu-mode-hook 'corfu-popupinfo-mode)"];
-      };
-      
       cape = {
         enable = true;
         after = ["corfu"];
@@ -152,13 +119,6 @@
             (dolist (src (list 'cape-dabbrev 'cape-file))
               (add-to-list 'completion-at-point-functions src))
           '';
-      };
-      
-      corfu-prescient = {
-        enable = true;
-        defer = true;
-        ghook = ["('corfu-mode-hook 'corfu-prescient-mode)"];
-        custom.corfu-prescient-completion-styles = "'(basic prescient)";
       };
 
       consult = {

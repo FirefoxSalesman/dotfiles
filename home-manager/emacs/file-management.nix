@@ -84,11 +84,6 @@
       ghook = [''
           ('dired-mode-hook (lambda () (general-def 'normal dired-mode-map
                "B" 'evil-goto-line
-               ;;"a" 'evil-ex
-               ;;"o" 'evil-previous-line
-               ;;"j" 'dired-unmark
-               ;;"m" 'evil-search-next
-               ;;"M" 'evil-search-previous
                "n" 'dired-single-prev
                "i" 'dired-single-next)))
         ''];

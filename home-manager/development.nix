@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ pkgs, lib, ... }:
 
 {
   programs.emacs.init = {
@@ -17,7 +17,10 @@
       languages = {
         bash.enable = true;
         gradle.enable = true;
-        java.enable = true;
+        java = {
+          enable = true;
+          moreEglot = true;
+        };
         json.enable = true;
         nix.enable = true;
         toml.enable = true;
@@ -91,27 +94,28 @@
         config = ''(projection-multi-embark-setup-command-map)'';
       };
 
-        eglot = {
-          gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
-          config = ''
-              (defun my/eglot-capf ()
-                (setq-local completion-at-point-functions
-                            (list (cape-capf-super
-                                   #'tempel-complete
-                                   #'eglot-completion-at-point
-                                   #'cape-file)
-                                  #'cape-dabbrev)))
-              (general-add-advice 'evil-collection-eglot-setup
-              		    :after '(lambda ()
-              			      (general-def 'normal eglot-mode-map "K" 'evil-substitute)))
-          '';
-        } ;
+      eglot = {
+        gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
+        config = ''
+            (defun my/eglot-capf ()
+              (setq-local completion-at-point-functions
+                          (list (cape-capf-super
+                                 #'tempel-complete
+                                 #'eglot-completion-at-point
+                                 #'cape-file)
+                                #'cape-dabbrev)))
+            (general-add-advice 'evil-collection-eglot-setup
+            		    :after '(lambda ()
+            			      (general-def 'normal eglot-mode-map "K" 'evil-substitute)))
+        '';
+        generalTwo.local-leader.eglot-mode-map."r" = "'eglot-rename";
+      };
       
-        eglot-tempel = {
-          enable = true;
-          after = ["eglot"];
-          config = ''(eglot-tempel-mode)'';
-        };
+      eglot-tempel = {
+        enable = true;
+        after = ["eglot"];
+        config = ''(eglot-tempel-mode)'';
+      };
       
       #   dape = {
       #     enable = true;
@@ -153,9 +157,9 @@
                         (message "Error: Decompiled file not found at %s" decompiled-file)))
                   (message "Error: This command can only be run on .class files"))))
         '';  
-        eglot = lib.mkForce ''("jdtls" "-data" "~/.cache/emacs/cache/java-workspace"
-                                       :initializationOptions (:java (:contentProvider (:preferred "fernflower"))
-                                                               :extendedClientCapabilities (:classFileContentsSupport t)))'';
+        # eglot = lib.mkForce ''("jdtls" "-data" "~/.cache/emacs/cache/java-workspace"
+        #                                :initializationOptions (:java (:contentProvider (:preferred "fernflower"))
+        #                                                        :extendedClientCapabilities (:classFileContentsSupport t)))'';
       };
 
     } ;

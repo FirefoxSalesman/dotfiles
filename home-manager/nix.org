@@ -1065,62 +1065,73 @@ Eshell is a command shell written in elisp, & duplicates many of the GNU coreuti
 Eat lets us get away with using eshell all the time. It can be used to get into a normal shell, but I doubt I'll be doing that too much.
 #+NAME: Eshell
 #+begin_src nix :noweb yes
-    eshell = {
-      enable = true;
-      babel = "eshell";
-      after = ["evil-collection"];
-      ghook = [
-        "('eshell-first-time-mode-hook 'efs/configure-eshell)"
-        #Save command history when commands are entered
-        "('eshell-precommand-hook 'eshell-save-some-history)"
-        #pfetch
-        ''('eshell-banner-load-hook  (lambda ()
+eshell = {
+  enable = true;
+  babel = "eshell";
+  after = ["evil-collection"];
+  ghook = [
+    "('eshell-first-time-mode-hook 'efs/configure-eshell)"
+    #Save command history when commands are entered
+    "('eshell-precommand-hook 'eshell-save-some-history)"
+    #pfetch
+    ''('eshell-banner-load-hook  (lambda ()
                                        (gsetq eshell-banner-message
                                           (shell-command-to-string "${pkgs.pfetch}/bin/pfetch"))))''
-      ];
-      general."s-<enter>" = "'efs/make-eshell";
-      generalOne.eshell-mode-map = {
-        "M-o" = "'eshell-previous-matching-input-from-input";
-        "M-e" = "'eshell-next-matching-input-from-input";
-      };
-      generalTwo.local-leader.eshell-mode-map = {
-        "e" = '''(eshell-insert-envvar :which-key "insert environment variable")'';
-        "b" = '''(eshell-insert-buffer-name :which-key "insert buffer name")'';
-      };
-      init = ''
+  ];
+  general."s-<enter>" = "'efs/make-eshell";
+  generalOne.eshell-mode-map = {
+    "M-o" = "'eshell-previous-matching-input-from-input";
+    "M-e" = "'eshell-next-matching-input-from-input";
+  };
+  generalTwo.local-leader.eshell-mode-map = {
+    "e" = '''(eshell-insert-envvar :which-key "insert environment variable")'';
+    "b" = '''(eshell-insert-buffer-name :which-key "insert buffer name")'';
+  };
+  init = ''
     <<Emacs Eshell Init>>
   '';
-      config = ''
+  config = ''
     <<Emacs Eshell Config>>
   '';
-    } ;
+};
 
-    eshell-syntax-highlighting = {
-      enable = true;
-      defer = true;
-      ghook = ["('eshell-mode-hook 'eshell-syntax-highlighting-global-mode)"];
-    };
+eshell-syntax-highlighting = {
+  enable = true;
+  defer = true;
+  ghook = ["('eshell-mode-hook 'eshell-syntax-highlighting-global-mode)"];
+};
 
-    fish-completion = {
-      enable = true;
-      defer = true;
-      ghook = ["('eshell-mode-hook 'fish-completion-mode)"];
-    };
+fish-completion = {
+  enable = true;
+  defer = true;
+  ghook = ["('eshell-mode-hook 'fish-completion-mode)"];
+};
 
-    eshell-git-prompt = {
-      enable = true;
-      afterCall = ["eshell-mode"];
-      config = ''(eshell-git-prompt-use-theme 'powerline)'';
-    };
+eshell-git-prompt = {
+  enable = true;
+  afterCall = ["eshell-mode"];
+  config = ''(eshell-git-prompt-use-theme 'powerline)'';
+};
 
-    eat = {
-      enable = true;
-      defer = true;
-      afterCall = ["eshell-mode"];
-      config = ''
-        <<Emacs Eat Config>>
-      '';
-    };
+eat = {
+  enable = true;
+  defer = true;
+  afterCall = ["eshell-mode"];
+  config = ''
+    <<Emacs Eat Config>>
+  '';
+};
+
+evil-collection-eshell = {
+  enable = true;
+  defer = true;
+  extraConfig = ''
+    <<Emacs Evil Eshell Extra Config>>
+  '';
+  config = ''
+    <<Emacs Evil Eshell Config>>
+  '';
+};
 #+end_src
 
 #+NAME: Emacs Eshell Init
@@ -1132,39 +1143,45 @@ Eat lets us get away with using eshell all the time. It can be used to get into 
 
 #+NAME: Emacs Eshell Config
 #+begin_src emacs-lisp
-  (defun efs/configure-eshell ()
-    ;; Truncate buffer for perforance
-    (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
+(defun efs/configure-eshell ()
+  ;; Truncate buffer for perforance
+  (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
 
-    ;; Bind some useful keys for evil-mode
-    (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
-    (evil-normalize-keymaps)
-    (setenv "TERM" "xterm")
-    (gsetq eshell-command-aliases-list '(("gc" "torsocks git clone")
-  					 ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
-  					 ("l" "ls $*")
-  					 ("halt" "doas shutdown -P now")
-  					 ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'"))
-  	   eshell-history-size 0
-           eshell-buffer-maximum-lines 100
-           eshell-hist-ignoredups t
-           eshell-scroll-to-bottom-on-input t))
+  ;; Bind some useful keys for evil-mode
+  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
+  (evil-normalize-keymaps)
+  (setenv "TERM" "xterm")
+  (gsetq eshell-command-aliases-list '(("gc" "torsocks git clone")
+  				       ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
+  				       ("l" "ls $*")
+  				       ("halt" "doas shutdown -P now")
+  				       ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'"))
+  	 eshell-history-size 0
+         eshell-buffer-maximum-lines 100
+         eshell-hist-ignoredups t
+         eshell-scroll-to-bottom-on-input t))
 
-  (with-eval-after-load 'esh-opt
-    (gsetq eshell-destroy-buffer-when-process-dies t))
+(with-eval-after-load 'esh-opt
+  (gsetq eshell-destroy-buffer-when-process-dies t))
+#+end_src
 
-  (with-eval-after-load 'evil-collection-eshell
-    (general-add-advice 'evil-collection-eshell-setup-keys
-  		:after
-  		'(lambda ()
-  		   (general-def 'normal eshell-mode-map
-  		     "v" 'evil-collection-eshell-evil-delete
-  		     "V" 'evil-collection-eshell-evil-change
-  		     "C-v" 'evil-collection-eshell-evil-delete-line
-  		     "d" 'evil-yank
-  		     "D" 'evil-yank-line
-  		     "c" 'evil-visual-state
-  		     "C" 'evil-visual-line))))
+#+NAME: Emacs Evil Eshell Config
+#+begin_src emacs-lisp
+(general-add-advice 'evil-collection-eshell-setup-keys :after
+		    (lambda () (general-def 'normal eshell-mode-map
+			    "d" 'evil-yank
+			    "D" 'evil-yank-line
+			    "c" 'evil-visual-state
+			    "C" 'evil-visual-line)))
+#+end_src
+
+#+NAME: Emacs Evil Eshell Extra Config
+#+begin_src emacs-lisp
+:general-config
+('normal eshell-mode-map
+	 "v" 'evil-collection-eshell-evil-delete
+	 "V" 'evil-collection-eshell-evil-change
+	 "C-v" 'evil-collection-eshell-evil-delete-line)
 #+end_src
 
 #+NAME: Emacs Eat Config
@@ -1851,7 +1868,7 @@ vertico-posframe = {
       # comms
       (config.lib.nixGL.wrap teams-for-linux)
       (config.lib.nixGL.wrap thunderbird)
-      vesktop
+      pkgs-stable.vesktop
       # things emacs appreciates
       xclip
       xsel
@@ -1906,7 +1923,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 https://github.com/joaotavora/eglot/discussions/888
 https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 #+begin_src nix :noweb yes :tangle development.nix
-{ lib, ... }:
+{ pkgs, lib, ... }:
 
 {
   programs.emacs.init = {
@@ -1925,7 +1942,10 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
       languages = {
         bash.enable = true;
         gradle.enable = true;
-        java.enable = true;
+        java = {
+          enable = true;
+          moreEglot = true;
+        };
         json.enable = true;
         nix.enable = true;
         toml.enable = true;
@@ -1961,9 +1981,9 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
         init = ''
           <<Java Config>>
         '';  
-        eglot = lib.mkForce ''("jdtls" "-data" "~/.cache/emacs/cache/java-workspace"
-                                       :initializationOptions (:java (:contentProvider (:preferred "fernflower"))
-                                                               :extendedClientCapabilities (:classFileContentsSupport t)))'';
+        # eglot = lib.mkForce ''("jdtls" "-data" "~/.cache/emacs/cache/java-workspace"
+        #                                :initializationOptions (:java (:contentProvider (:preferred "fernflower"))
+        #                                                        :extendedClientCapabilities (:classFileContentsSupport t)))'';
       };
 
     } ;
@@ -2076,18 +2096,19 @@ projection-multi-embark = {
 *** Eglot
 #+NAME: Development Eglot
 #+begin_src nix :noweb yes
-  eglot = {
-    gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
-    config = ''
-      <<Development Eglot Config>>
-    '';
-  } ;
+eglot = {
+  gfhook = ["('eglot-managed-mode-hook 'my/eglot-capf)"];
+  config = ''
+    <<Development Eglot Config>>
+  '';
+  generalTwo.local-leader.eglot-mode-map."r" = "'eglot-rename";
+};
 
-  eglot-tempel = {
-    enable = true;
-    after = ["eglot"];
-    config = ''(eglot-tempel-mode)'';
-  };
+eglot-tempel = {
+  enable = true;
+  after = ["eglot"];
+  config = ''(eglot-tempel-mode)'';
+};
 #+end_src
 
 #+NAME: Development Eglot Config
@@ -2179,11 +2200,6 @@ I'm running dired with a couple of small packages that improve on it
       ghook = [''
           ('dired-mode-hook (lambda () (general-def 'normal dired-mode-map
                "B" 'evil-goto-line
-               ;;"a" 'evil-ex
-               ;;"o" 'evil-previous-line
-               ;;"j" 'dired-unmark
-               ;;"m" 'evil-search-next
-               ;;"M" 'evil-search-previous
                "n" 'dired-single-prev
                "i" 'dired-single-next)))
         ''];
@@ -2836,7 +2852,7 @@ evil-surround = {
   deferIncrementally = true;
   config = "(global-evil-surround-mode)";
   extraConfig = ''
-    <<Emacs Evil Surround Config>>
+    <<Emacs Evil Surround Extra Config>>
   '';
 };
 
@@ -3196,11 +3212,18 @@ My completions system is based around vertico, because that's what all the cool 
   programs.emacs.init = {
     completions = {
       prescient = true;
+      orderless = true;
       vertico = {
         enable = true;
-        orderless = true;
         evilConsultLine = true;
         embark = true;
+      };
+      corfu = {
+        enable = true;
+        wantTabComplete = false;
+        wantRetConfirm = false;
+        wantMinibuffer = true;
+        popupInfo = true;
       };
     };
 
@@ -3253,37 +3276,6 @@ vertico-quick = {
 I took a lot of this from Gavin Freeborn's config
 #+NAME: Emacs Corfu
 #+begin_src nix :noweb yes
-corfu = {
-  enable = true;
-  ghook = [
-    "('minibuffer-setup-hook 'corfu-enable-in-minibuffer)"
-    "('on-first-buffer-hook 'global-corfu-mode)"
-  ];
-  custom = {
-    corfu-cycle = true;
-    corfu-autodelay = "0";
-    corfu-auto-prefix = "2";
-    corfu-auto = true;
-    corfu-on-exact-match = "'show";
-  };
-  general."M-/" = "'completion-at-point";
-  generalOne.corfu-map = {
-    "RET" = "nil";
-    "TAB" = "nil";
-    "S-<return>" = "'corfu-insert";
-    "[tab]" = "nil";
-  };
-  generalTwo.":ie".corfu-map = {
-    "S-SPC" = "'corfu-insert-separator";
-    "C-e" = "'corfu-next";
-    "C-p" = "nil";
-    "C-o" = "'corfu-previous";
-  };
-  config = ''
-      <<Emacs Corfu Config>>
-    '';
-};
-
 nerd-icons-corfu = {
   enable = true;
   config = ''(add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter)'';
@@ -3298,11 +3290,6 @@ corfu-quick = {
   };
 };
 
-corfu-popupinfo = {
-  enable = true;
-  ghook = ["('corfu-mode-hook 'corfu-popupinfo-mode)"];
-};
-
 cape = {
   enable = true;
   after = ["corfu"];
@@ -3310,22 +3297,6 @@ cape = {
       <<Emacs Cape Config>>
     '';
 };
-
-corfu-prescient = {
-  enable = true;
-  defer = true;
-  ghook = ["('corfu-mode-hook 'corfu-prescient-mode)"];
-  custom.corfu-prescient-completion-styles = "'(basic prescient)";
-};
-#+end_src
-
-#+NAME: Emacs Corfu Config
-#+begin_src emacs-lisp
-(defun corfu-enable-in-minibuffer ()
-  "Enable Corfu in the minibuffer."
-  (when (local-variable-p 'completion-at-point-functions)
-    (setq-local corfu-auto t) ;; Enable/disable auto completion
-    (corfu-mode 1)))
 #+end_src
 
 #+NAME: Emacs Cape Config
@@ -3562,12 +3533,13 @@ ezf = {
   imports = [
     ./vertico.nix
     ./prescient.nix
+    ./orderless.nix
+    ./corfu.nix
   ];
 }
 #+end_src
 
 ***** Vertico
-We need to set up avy 1^st
 #+begin_src nix :tangle completion/vertico.nix
 { pkgs, lib, config, ... }:
 
@@ -3579,9 +3551,8 @@ in
 {
   options.programs.emacs.init.completions.vertico = {
     enable = lib.mkEnableOption "Enables vertico as a completion system. Many things are borrowed from Doom";
-    orderless = lib.mkEnableOption "Enables orderless completion styles. Borrowed from David Wilson's config";
     embark = lib.mkEnableOption "Enables embark's completion actions. Borrowed from Karthink, the embark wiki, & Doom";
-    evilConsultLine = lib.mkEnableOption "Evil's / runs consult-line. Borrowed from Noctuid's config.";
+    evilConsultLine = lib.mkEnableOption "Evil's / runs consult-line. Borrowed from Noctuid's config. Only works with orderless";
   };
 
   config.programs.emacs.init = lib.mkIf completions.vertico.enable {
@@ -3644,8 +3615,8 @@ in
             "g" = lib.mkDefault "consult-goto-line";
             "M-g" = lib.mkDefault "consult-goto-line";
             "o" = lib.mkDefault "consult-outline";
-            "m" = lib.mkDefault "consult-mark";
-            "k" = lib.mkDefault "consult-global-mark";
+            "m" = lib.mkDefault (if keybinds.evil.enable then "evil-collection-consult-mark" else "consult-mark");
+            "k" = lib.mkDefault (if keybinds.evil.enable then "evil-collection-consult-jump-list" else "consult-global-mark");
             "i" = lib.mkDefault "consult-imenu";
             "I" = lib.mkDefault "consult-imenu-multi";
           };
@@ -3662,14 +3633,14 @@ in
           };
         };
         generalOne = {
-          ":nmvo" = lib.mkIf completions.vertico.evilConsultLine {
+          ":nmvo" = lib.mkIf (completions.vertico.evilConsultLine && completions.orderless) {
             "/" = lib.mkDefault "'consult-line";
             "?" = lib.mkDefault "'consult-line-multi";
           };
-          leader-key = lib.mkIf keybinds.leader-key.enable {
-            "b" = lib.mkDefault '''(consult-bookmark :which-key "bookmarks")'';
-            "i" = lib.mkDefault '''consult-imenu'';
-            "I" = lib.mkDefault '''consult-imenu-multi'';
+          global-leader = lib.mkIf keybinds.leader-key.enable {
+            "b" = lib.mkDefault "'consult-bookmark";
+            "i" = lib.mkDefault "'consult-imenu";
+            "I" = lib.mkDefault "'consult-imenu-multi";
           };
         };
         generalTwo.local-leader = {
@@ -3683,7 +3654,7 @@ in
           "M-y" = lib.mkDefault "consult-yank-pop";
         };
         custom.xref-show-xrefs-function = "#'consult-xref";
-        config = lib.mkIf keybinds.evil.enable ''
+        config = lib.mkIf (keybinds.evil.enable && completions.orderless) ''
           (defun nix-emacs-save-search-history (pattern)
             "Gets history from pattern, & saves it where evil mode can find it"
             (add-to-history 'evil-search-forward-history pattern)
@@ -3721,23 +3692,12 @@ in
         };
       };
 
-      # Borrowed from David Wilson
-      orderless = lib.mkIf completions.vertico.orderless {
-        enable = true;
-        custom = {
-          completion-styles = lib.mkDefault (if completions.prescient then "'(orderless prescient basic)" else "'(prescient basic)");
-          completion-category-defaults = lib.mkDefault false;
-          completion-category-overrides = lib.mkDefault "'((file (styles . (partial-completion))))";
-        };
-        afterCall = ["on-first-input-hook"];
-      };
-
       vertico-prescient = lib.mkIf completions.prescient {
         enable = true;
         hook = ["(minibuffer-mode . vertico-prescient-mode)"];
         custom = {
           vertico-prescient-enable-filtering = false;
-          vertico-prescient-completion-styles = lib.mkDefault (if completions.vertico.orderless then "'(orderless prescient basic)" else "'(prescient basic)");
+          vertico-prescient-completion-styles = lib.mkDefault (if completions.orderless then "'(orderless prescient basic)" else "'(prescient basic)");
           vertico-prescient-enable-sorting = true;
         };
       };
@@ -3745,7 +3705,7 @@ in
       embark = lib.mkIf completions.vertico.embark {
         enable = true;
         command = ["embark-act"];
-        bind."M-;" = "'embark-dwim";
+        bind."C-;" = "'embark-dwim";
         defer = true;
         bindLocal = {
           help-map."b" = "embark-bindings"; 
@@ -3829,6 +3789,112 @@ in
     };
   };
 }
+#+end_src
+
+***** Orderless
+#+begin_src nix :tangle completion/orderless.nix
+{ pkgs, lib, config, ... }:
+
+let
+  completions = config.programs.emacs.init.completions;
+in
+{
+    options.programs.emacs.init.completions.orderless = lib.mkEnableOption "Enables orderless completion styles. Borrowed from David Wilson's config";
+    
+    # Borrowed from David Wilson
+    config.programs.emacs.init = lib.mkIf completions.orderless {
+      hasOn = true;
+      usePackage.orderless = {
+        enable = true;
+        custom = {
+          completion-styles = lib.mkDefault (if completions.prescient then "'(orderless prescient basic)" else "'(orderless basic)");
+          completion-category-defaults = lib.mkDefault false;
+          completion-category-overrides = lib.mkDefault "'((file (styles . (partial-completion))))";
+        };
+        afterCall = ["on-first-input-hook"];
+      };
+    };
+}
+#+end_src
+
+***** Corfu
+#+begin_src nix :tangle completion/corfu.nix
+{ config, lib, ... }:
+
+let
+  completions = config.programs.emacs.init.completions;
+  keybinds = config.programs.emacs.init.keybinds;
+  mkDisableOption = desc: lib.mkOption {
+    type = lib.types.bool;
+    default = true;
+    description = desc;
+  };
+in
+{
+  options.programs.emacs.init.completions.corfu = {
+    enable = lib.mkEnableOption "Enables corfu for in-buffer completion. Much is borrowed from Doom & Gavin Freeborn's config.";
+    wantTabComplete = mkDisableOption "Enables tab completion. Defaults to true";
+    wantRetConfirm = mkDisableOption "Enables return completion. Defaults to true. If set to false, S-return will be used instead. Blatantly plagiarized from doom.";
+    wantMinibuffer = lib.mkEnableOption "Enables corfu in the minibuffer";
+    popupInfo = lib.mkEnableOption "Enables corfu-popupinfo";
+  };
+
+  config.programs.emacs.init = lib.mkIf completions.corfu.enable {
+    hasOn = true;
+    usePackage = {
+      corfu = {
+        enable = true;
+        hook = [
+          "(on-first-buffer . global-corfu-mode)"
+          (lib.mkIf completions.corfu.wantMinibuffer "(minibuffer-setup . corfu-enable-in-minibuffer)")
+        ];
+        custom = {
+          corfu-cycle = true;
+          corfu-autodelay = "0";
+          corfu-auto-prefix = "2";
+          corfu-auto = true;
+          corfu-on-exact-match = "'show";
+        };
+        bind."M-/" = "completion-at-point";
+        bindLocal.corfu-map = {
+          "RET" = lib.mkIf (!completions.corfu.wantRetConfirm) "nil";
+          "TAB" = lib.mkIf (!completions.corfu.wantTabComplete) "nil";
+          "S-<return>" = lib.mkIf (!completions.corfu.wantRetConfirm) "corfu-insert";
+          "S-SPC" = lib.mkIf (!keybinds.evil.enable) "corfu-insert-separator";
+          "C-e" = lib.mkIf (!keybinds.evil.enable) "corfu-next";
+          "C-p" = lib.mkIf (!keybinds.evil.enable) "nil";
+          "C-o" = lib.mkIf (!keybinds.evil.enable) "corfu-previous";
+        };
+        preface = lib.mkIf completions.corfu.wantMinibuffer ''
+          (defun corfu-enable-in-minibuffer ()
+            "Enable Corfu in the minibuffer."
+            (when (local-variable-p 'completion-at-point-functions)
+              (setq-local corfu-auto t) ;; Enable/disable auto completion
+              (corfu-mode 1)))
+        '';
+        generalTwo.":ie".corfu-map = lib.mkIf keybinds.evil.enable {
+          "S-SPC" = "'corfu-insert-separator";
+          "C-e" = "'corfu-next";
+          "C-p" = "nil";
+          "C-o" = "'corfu-previous";
+        };
+      };
+      
+      corfu-popupinfo = {
+        enable = true;
+        hook = ["(corfu-mode . corfu-popupinfo-mode)"];
+      };
+      
+      corfu-prescient = lib.mkIf completions.prescient {
+        enable = true;
+        defer = true;
+        hook = ["(corfu-mode . corfu-prescient-mode)"];
+        custom.corfu-prescient-completion-styles = lib.mkDefault (if completions.orderless then "'(orderless basic prescient)" else "'(basic prescient)");
+      };
+    };
+  };
+}
+
 #+end_src
 
 *** Help System
@@ -4133,41 +4199,48 @@ No idea what the rest of this is for.
 
 #+NAME: Emacs Latex
 #+begin_src nix :noweb yes
-  pdf-tools = {
-    enable = true;
-    defer = true;
-    generalOne.pdf-view-mode-map."C-s" = "'search-forward";
-    custom = {
-      # Makes PDFtools the default
-      TeX-view-program-selection = '''((output-pdf "PDF Tools"))'';
-      TeX-view-program-list = '''(("PDF Tools" TeX-pdf-tools-sync-view))'';
-      TeX-source-correlate-start-server = false;
-    };
-    config = ''
-      <<Emacs Pdf Tools Config>>
-    '';
-    gfhook = [
-      "('TeX-after-compilation-finished-functions #'TeX-revert-document-beffer)"
-      "('pdf-view-mode-hook 'pdf-view-midnight-minor-mode)"];
-    init = ''(setq-default pdf-view-display-size 'fit-width)'';
-    extraConfig = '':magic ("%PDF" . pdf-view-mode)'';
+pdf-tools = {
+  enable = true;
+  defer = true;
+  generalOne.pdf-view-mode-map."C-s" = "'search-forward";
+  custom = {
+    # Makes PDFtools the default
+    TeX-view-program-selection = '''((output-pdf "PDF Tools"))'';
+    TeX-view-program-list = '''(("PDF Tools" TeX-pdf-tools-sync-view))'';
+    TeX-source-correlate-start-server = false;
   };
+  config = ''
+    (pdf-tools-install)
+  '';
+  gfhook = [
+    "('TeX-after-compilation-finished-functions #'TeX-revert-document-beffer)"
+    "('pdf-view-mode-hook 'pdf-view-midnight-minor-mode)"];
+  init = ''(setq-default pdf-view-display-size 'fit-width)'';
+  extraConfig = '':magic ("%PDF" . pdf-view-mode)'';
+};
 
-  cdlatex.generalTwo.":i" = {
-    cdlatex-mode-map."TAB" = "'cdlatex-tab";
-    org-cdlatex-mode-map."TAB" = "'cdlatex-tab";
-  };
+evil-collection-pdf = {
+  defer = true;
+  enable = true;
+  extraConfig = ''
+    <<Emacs Pdf Tools Config>>
+  '';
+};
+
+cdlatex.generalTwo.":i" = {
+  cdlatex-mode-map."TAB" = "'cdlatex-tab";
+  org-cdlatex-mode-map."TAB" = "'cdlatex-tab";
+};
 #+end_src
 
 #+NAME: Emacs Pdf Tools Config
 #+begin_src emacs-lisp
-  (pdf-tools-install)
-  (with-eval-after-load 'evil-collection-pdf
-    (general-def 'normal pdf-view-mode-map
-      "C-e" 'pdf-view-scroll-up-or-next-page
-      "E" 'pdf-view-scroll-up-or-next-page
-      "C-o" 'pdf-view-scroll-down-or-previous-page
-      "O" 'pdf-view-scroll-down-or-previous-page))
+:general-config
+('normal pdf-view-mode-map
+  "C-e" 'pdf-view-scroll-up-or-next-page
+  "E" 'pdf-view-scroll-up-or-next-page
+  "C-o" 'pdf-view-scroll-down-or-previous-page
+  "O" 'pdf-view-scroll-down-or-previous-page)
 #+end_src
 
 **** Markdown
@@ -5746,8 +5819,11 @@ This is a very ugly way of doing things
         "('qutebrowser-exwm-mode-hook 'evil-normal-state)"
       ];
       config = ''
-      <<Emacs Internet Qutebrowser Config>>
-    '';
+        <<Emacs Internet Qutebrowser Config>>
+      '';
+      extraConfig = ''
+        <<Emacs Internet Qutebrowser Extra Config>>
+      '';
     };
     qutebrowser-evil = {
       enable = true;
@@ -5761,31 +5837,35 @@ This is a very ugly way of doing things
 
 #+NAME: Emacs Internet Qutebrowser Config
 #+begin_src emacs-lisp
-  (define-minor-mode qute-dired-mode
-    "Used for dired buffers qutebrowser is using as a file picker"
-    :keymap '())
+(define-minor-mode qute-dired-mode
+  "Used for dired buffers qutebrowser is using as a file picker"
+  :keymap '())
 
-  (general-def qute-dired-mode-map
-          "C-c C-c" #'qute/choose-file)
+(defun qute/choose-file ()
+  (interactive)
+  (let ((files (dired-get-marked-files)))
+    (with-temp-file qute-filename
+      (insert (s-join "\n" files)))
+    (remove-hook 'dired-mode-hook 'qute-dired-mode)
+    (dolist (buffer dired-buffers) (when qute-dired-mode (kill-buffer (cdr buffer))))))
 
-  (general-def 'normal qute-dired-mode-map
-    "i" 'dired-find-file
-    "n" 'dired-up-directory)
+(defun qute/dired-hook (&optional _)
+  (when (s-starts-with? "/tmp/qutebrowser-fileselect" buffer-file-name)
+    (setq qute-filename buffer-file-name)
+    (kill-buffer)
+    (add-hook 'dired-mode-hook 'qute-dired-mode)
+    (setq qute-dired-buffers (list (dired "~/")))))
+#+end_src
 
-  (defun qute/choose-file ()
-    (interactive)
-    (let ((files (dired-get-marked-files)))
-      (with-temp-file qute-filename
-        (insert (s-join "\n" files)))
-      (remove-hook 'dired-mode-hook 'qute-dired-mode)
-      (dolist (buffer dired-buffers) (when qute-dired-mode (kill-buffer (cdr buffer))))))
+#+NAME: Emacs Internet Qutebrowser Extra Config
+#+begin_src emacs-lisp
+:general-config
+(qute-dired-mode-map
+        "C-c C-c" #'qute/choose-file)
 
-  (defun qute/dired-hook (&optional _)
-    (when (s-starts-with? "/tmp/qutebrowser-fileselect" buffer-file-name)
-      (setq qute-filename buffer-file-name)
-      (kill-buffer)
-      (add-hook 'dired-mode-hook 'qute-dired-mode)
-      (setq qute-dired-buffers (list (dired "~/")))))
+('normal qute-dired-mode-map
+  "i" 'dired-find-file
+  "n" 'dired-up-directory)
 #+end_src
 
 ** Keyboard

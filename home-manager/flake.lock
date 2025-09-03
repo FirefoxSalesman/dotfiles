@@ -215,11 +215,11 @@
         "use-package-eglot": "use-package-eglot"
       },
       "locked": {
-        "lastModified": 1756732132,
-        "narHash": "sha256-Pjk8HKjfaofp/eKN9pqYRdnPpcG8SBUPnIQaFuvXTA8=",
+        "lastModified": 1756865618,
+        "narHash": "sha256-itp2pbq0QRndg0g9uZfI/2OdmVfBptmA+MFdwI4gcnw=",
         "owner": "firefoxsalesman",
         "repo": "NixEmacs",
-        "rev": "7f8f1a72ff7e1f1235417feee81495019de31b82",
+        "rev": "2f87e8f6c7603258a042e07d3f7be90b7753e61e",
         "type": "github"
       },
       "original": {

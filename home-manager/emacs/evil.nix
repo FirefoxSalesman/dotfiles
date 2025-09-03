@@ -213,7 +213,12 @@
           deferIncrementally = true;
           config = "(global-evil-surround-mode)";
           extraConfig = ''
-            
+            :general-config
+            ('visual evil-surround-mode-map "R" 'evil-surround-region)
+            ('operator evil-surround-mode-map
+              "s" nil
+              "r" 'evil-surround-edit
+              "R" 'evil-Surround-edit)
           '';
         };
         

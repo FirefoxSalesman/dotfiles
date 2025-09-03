@@ -319,14 +319,7 @@
               (define-minor-mode qute-dired-mode
                 "Used for dired buffers qutebrowser is using as a file picker"
                 :keymap '())
-            
-              (general-def qute-dired-mode-map
-                      "C-c C-c" #'qute/choose-file)
-            
-              (general-def 'normal qute-dired-mode-map
-                "i" 'dired-find-file
-                "n" 'dired-up-directory)
-            
+              
               (defun qute/choose-file ()
                 (interactive)
                 (let ((files (dired-get-marked-files)))
@@ -334,14 +327,23 @@
                     (insert (s-join "\n" files)))
                   (remove-hook 'dired-mode-hook 'qute-dired-mode)
                   (dolist (buffer dired-buffers) (when qute-dired-mode (kill-buffer (cdr buffer))))))
-            
+              
               (defun qute/dired-hook (&optional _)
                 (when (s-starts-with? "/tmp/qutebrowser-fileselect" buffer-file-name)
                   (setq qute-filename buffer-file-name)
                   (kill-buffer)
                   (add-hook 'dired-mode-hook 'qute-dired-mode)
                   (setq qute-dired-buffers (list (dired "~/")))))
-          '';
+            '';
+            extraConfig = ''
+              :general-config
+              (qute-dired-mode-map
+                      "C-c C-c" #'qute/choose-file)
+              
+              ('normal qute-dired-mode-map
+                "i" 'dired-find-file
+                "n" 'dired-up-directory)
+            '';
           };
           qutebrowser-evil = {
             enable = true;
