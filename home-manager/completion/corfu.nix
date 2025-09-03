@@ -53,9 +53,9 @@ in
         '';
         generalTwo.":ie".corfu-map = lib.mkIf keybinds.evil.enable {
           "S-SPC" = "'corfu-insert-separator";
-          "C-e" = "'corfu-next";
+          "C-${keybinds.evil.keys.down}" = "'corfu-next";
           "C-p" = "nil";
-          "C-o" = "'corfu-previous";
+          "C-${keybinds.evil.keys.up}" = "'corfu-previous";
         };
       };
       

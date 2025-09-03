@@ -168,21 +168,43 @@
         general."M-a" = "'embark-dwim";
         generalTwo.":n".vertico-map."a" = "'embark-act";
         generalOne = {
-          embark-file-map."2" = "(my/embark-split-action find-file elwm-split-window)";
-          embark-buffer-map."2" = "(my/embark-split-action switch-to-buffer elwm-split-window)";
-          embark-bookmark-map."2" = "(my/embark-split-action bookmark-jump elwm-split-window)";
+          embark-file-map = {
+            "2" = "(my/embark-split-action find-file elwm-split-window)";
+            "t" = "(my/embark-split-action find-file tab-new)";
+            "o" = "(my/embark-ace-action find-file)";
+          };
+          embark-buffer-map = {
+            "2" = "(my/embark-split-action switch-to-buffer elwm-split-window)";
+            "t" = "(my/embark-split-action switch-to-buffer tab-new)";
+            "o" = "(my/embark-ace-action switch-to-buffer)";
+          };
+          embark-bookmark-map = {
+            "2" = "(my/embark-split-action bookmark-jump elwm-split-window)";
+            "t" = "(my/embark-split-action bookmark-jump tab-new)";
+            "o" = "(my/embark-ace-action bookmark-jump)";
+          };
         };
-        init = ''
-            (eval-when-compile
-              (defmacro my/embark-split-action (fn split-type)
-                `(defun ,(intern (concat "my/embark-"
-                                         (symbol-name fn)
-                                         "-"
-                                         (car (last  (split-string
-                                                      (symbol-name split-type) "-"))))) ()
-                   (interactive)
-                   (funcall #',split-type)
-                   (call-interactively #',fn))))
+        preface = ''
+          (eval-when-compile
+            (defmacro my/embark-split-action (fn split-type)
+              `(defun ,(intern (concat "my/embark-"
+                                       (symbol-name fn)
+                                       "-"
+                                       (car (last  (split-string
+                                                    (symbol-name split-type) "-"))))) ()
+                 (interactive)
+                 (funcall #',split-type)
+                 (call-interactively #',fn))))
+          
+          (eval-when-compile
+            (defmacro my/embark-ace-action (fn)
+              `(defun ,(intern (concat "my/embark-ace-" (symbol-name fn))) ()
+                 (interactive)
+                 (with-demoted-errors "%s"
+          	 (require 'ace-window)
+          	 (let ((aw-dispatch-always t))
+                     (aw-switch-to-window (aw-select nil))
+                     (call-interactively (symbol-function ',fn)))))))
         '';
       };
 

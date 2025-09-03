@@ -3371,17 +3371,30 @@ embark = {
   general."M-a" = "'embark-dwim";
   generalTwo.":n".vertico-map."a" = "'embark-act";
   generalOne = {
-    embark-file-map."2" = "(my/embark-split-action find-file elwm-split-window)";
-    embark-buffer-map."2" = "(my/embark-split-action switch-to-buffer elwm-split-window)";
-    embark-bookmark-map."2" = "(my/embark-split-action bookmark-jump elwm-split-window)";
+    embark-file-map = {
+      "2" = "(my/embark-split-action find-file elwm-split-window)";
+      "t" = "(my/embark-split-action find-file tab-new)";
+      "o" = "(my/embark-ace-action find-file)";
+    };
+    embark-buffer-map = {
+      "2" = "(my/embark-split-action switch-to-buffer elwm-split-window)";
+      "t" = "(my/embark-split-action switch-to-buffer tab-new)";
+      "o" = "(my/embark-ace-action switch-to-buffer)";
+    };
+    embark-bookmark-map = {
+      "2" = "(my/embark-split-action bookmark-jump elwm-split-window)";
+      "t" = "(my/embark-split-action bookmark-jump tab-new)";
+      "o" = "(my/embark-ace-action bookmark-jump)";
+    };
   };
-  init = ''
-      <<Emacs Embark Init>>
+  preface = ''
+    <<Emacs Embark Preface>>
   '';
 };
 #+end_src
 
-#+NAME: Emacs Embark Init
+Borrowed from Karthinks
+#+NAME: Emacs Embark Preface
 #+begin_src emacs-lisp
 (eval-when-compile
   (defmacro my/embark-split-action (fn split-type)
@@ -3393,6 +3406,16 @@ embark = {
        (interactive)
        (funcall #',split-type)
        (call-interactively #',fn))))
+
+(eval-when-compile
+  (defmacro my/embark-ace-action (fn)
+    `(defun ,(intern (concat "my/embark-ace-" (symbol-name fn))) ()
+       (interactive)
+       (with-demoted-errors "%s"
+	 (require 'ace-window)
+	 (let ((aw-dispatch-always t))
+           (aw-switch-to-window (aw-select nil))
+           (call-interactively (symbol-function ',fn)))))))
 #+end_src
 
 **** App Launcher
@@ -3874,9 +3897,9 @@ in
         '';
         generalTwo.":ie".corfu-map = lib.mkIf keybinds.evil.enable {
           "S-SPC" = "'corfu-insert-separator";
-          "C-e" = "'corfu-next";
+          "C-${keybinds.evil.keys.down}" = "'corfu-next";
           "C-p" = "nil";
-          "C-o" = "'corfu-previous";
+          "C-${keybinds.evil.keys.up}" = "'corfu-previous";
         };
       };
       
