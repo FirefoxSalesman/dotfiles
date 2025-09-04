@@ -6,5 +6,6 @@
     ./prescient.nix
     ./orderless.nix
     ./corfu.nix
+    ./ivy.nix
   ];
 }

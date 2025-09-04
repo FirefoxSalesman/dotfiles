@@ -1926,6 +1926,8 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 { pkgs, lib, ... }:
 
 {
+  imports = [./language-support];
+
   programs.emacs.init = {
     ide = {
       project = true;
@@ -1954,6 +1956,7 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
         emacs-lisp.enable = true;
         javascript.enable = true;
         ledger.enable = true;
+        swift.enable = true;
       };
     };
 
@@ -1981,12 +1984,8 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
         init = ''
           <<Java Config>>
         '';  
-        # eglot = lib.mkForce ''("jdtls" "-data" "~/.cache/emacs/cache/java-workspace"
-        #                                :initializationOptions (:java (:contentProvider (:preferred "fernflower"))
-        #                                                        :extendedClientCapabilities (:classFileContentsSupport t)))'';
       };
-
-    } ;
+    };
   };
 }
 #+end_src
@@ -2146,6 +2145,49 @@ eglot-tempel = {
       python-shell-interpreter = ''"ipython"'';
       python-shell-interpreter-args = ''"-i --simple-prompt"'';
   };
+#+end_src
+
+*** Lang Support
+#+begin_src nix :tangle language-support/default.nix
+{ ... }:
+
+{
+  imports = [
+    ./swift.nix
+  ];
+}
+#+end_src
+
+**** Swift
+https://github.com/alex-pinkus/tree-sitter-swift
+#+begin_src nix :tangle language-support/swift.nix
+{ pkgs, config, lib, ... }:
+
+let
+  ide = config.programs.emacs.init.ide;
+in
+{
+  options.programs.emacs.init.ide.languages.swift.enable = lib.mkEnableOption "Enables swift support (stolen from doom)";
+
+  config.programs.emacs.init.usePackage = lib.mkIf ide.languages.swift.enable {
+    swift-ts-mode = {
+      enable = true;
+      mode = [''"\\.swift\\'"''];
+      extraPackages = lib.mkIf (ide.lsp-bridge.enable || ide.eglot.enable || ide.lsp.enable || ide.lspce.enable) [pkgs.sourcekit-lsp];
+      eglot = lib.mkIf ide.eglot.enable ''"sourcekit-lsp"'';
+      lsp = ide.lsp.enable;
+      lspce = ide.lspce.enable;
+      config = lib.mkIf ide.lspce.enable ''
+        (with-eval-after-load 'lspce (add-to-list 'lspce-server-programs '("swift" "sourcekit-lsp" "")))
+      '';
+    };
+
+    lsp-sourcekit = lib.mkIf ide.lsp.enable {
+      enable = true;
+      after = ["swift-ts-mode"];
+    };
+  };
+}
 #+end_src
 
 ** File Management
@@ -2597,10 +2639,12 @@ Evil mode provides vim-like keybinds.
   { lib, pkgs, inputs, config, ... }:
 
   {
+    imports = [../keybinds];
     programs.emacs.init = {
       keybinds = {
         evil = {
           enable = true;
+          surround = true;
           keys = {
             forward = "i";
             backward = "n";
@@ -2847,14 +2891,9 @@ Cursors hydra: https://hungyi.net/posts/hydra-for-evil-mc/
 #+begin_src nix :noweb yes
 evil-collection.custom.evil-collection-unimpaired-want-repeat-mode-integration = true;
 
-evil-surround = {
-  enable = true;
-  deferIncrementally = true;
-  config = "(global-evil-surround-mode)";
-  extraConfig = ''
-    <<Emacs Evil Surround Extra Config>>
-  '';
-};
+evil-surround.extraConfig = ''
+  <<Emacs Evil Surround Extra Config>>
+'';
 
 evil-easymotion = {
   enable = true;
@@ -3197,6 +3236,35 @@ ewal-evil-cursors = {
 (evil-define-key 'visual 'evil-org-mode
   "i" 'evil-forward-char
   "s" evil-inner-text-objects-map)
+#+end_src
+
+**** Modules
+#+begin_src nix :tangle keybinds/default.nix
+{ ... }:
+
+{
+  imports = [
+    ./evil-surround.nix
+  ];
+}
+#+end_src
+
+***** Evil-Surround
+#+begin_src nix :tangle keybinds/evil-surround.nix
+{ config, lib, ... }:
+
+let
+  keybinds = config.programs.emacs.init.keybinds;
+in
+{
+  options.programs.emacs.init.keybinds.evil.surround = lib.mkEnableOption "Enables evil-surround";
+
+  config.programs.emacs.init.usePackage.evil-surround = lib.mkIf keybinds.evil.surround {
+    enable = true;
+    deferIncrementally = true;
+    config = "(global-evil-surround-mode)";
+  };
+}
 #+end_src
 
 *** Completion System
@@ -3558,6 +3626,7 @@ ezf = {
     ./prescient.nix
     ./orderless.nix
     ./corfu.nix
+    ./ivy.nix
   ];
 }
 #+end_src
@@ -3920,6 +3989,184 @@ in
 
 #+end_src
 
+***** Ivy
++ [ ] Make it so that the mapping for find-file in leader keys is conditional
++ [ ] Move counsel-org-goto to org mode support
++ [ ] Bind ivy actions to =:=
++ [ ] Counsel should integrate with helpful if helpful is present
+#+begin_src nix :tangle completion/ivy.nix
+{ config, lib, ... }:
+
+let
+  completions = config.programs.emacs.init.completions;
+  keybinds = config.programs.emacs.init.keybinds;
+  ide = config.programs.emacs.init.ide;
+in
+{
+  options.programs.emacs.init.completions.ivy = {
+    enable = lib.mkEnableOption "Enables ivy completions. Largely borrowed from doom.";
+    swiperReplaceSearch = lib.mkEnableOption "Swiper replaces isearch/evil search. Some configuration stolen from noctuid";
+    posframe = lib.mkEnableOption "Ivy uses a posframe for its completions";
+  };
+
+  config.programs.emacs.init = lib.mkIf completions.ivy.enable {
+    hasOn = true;
+    usePackage = {
+      ivy = {
+        enable = true;
+        hook = ["(on-first-input . ivy-mode)"];
+        custom = {
+          ivy-sort-max-size = lib.mkDefault "7500";
+          ivy-height = lib.mkDefault "17";
+          ivy-fixed-height-minibuffer = lib.mkDefault (!completions.ivy.posframe);
+          ivy-read-action-function = lib.mkDefault "#'ivy-hydra-read-action";
+          ivy-read-action-format-function = lib.mkDefault "#'ivy-read-action-format-columns";
+          ivy-use-virtual-buffers = lib.mkDefault false;
+          ivy-virtual-abbreviate = lib.mkDefault "'full";
+          ivy-on-del-error-function = lib.mkDefault "#'ignore";
+          ivy-use-selectable-prompt = lib.mkDefault true;
+        };
+        generalOne.":nm".":" = lib.mkIf (keybinds.evil.enable && !completions.ivy.posframe) (lib.mkDefault "'ivy-posframe-dispatching-done");
+      };
+
+      ivy-rich = {
+        enable = true;
+        after = ["ivy"];
+        custom = {
+          ivy-rich-parse-remote-buffer = lib.mkDefault false;
+          ivy-rich-switch-buffer-faces-alist = lib.mkDefault false;
+        };
+        config = ''
+          (ivy-set-display-transformer 'internal-complete-buffer nil)
+          (ivy-rich-mode 1)
+          (ivy-rich-project-root-cache-mode 1)
+        '';
+      };
+
+      counsel = {
+        enable = true;
+        after = ["ivy"];
+        bindLocal = {
+          help-map = {
+            "C-a" = lib.mkDefault "counsel-apropos";
+            "b" = lib.mkDefault "counsel-descbinds";
+            "F" = lib.mkDefault "counsel-faces";
+            "f" = lib.mkDefault "counsel-describe-function";
+            "v" = lib.mkDefault "counsel-describe-variable";
+            "s" = lib.mkDefault "counsel-describe-symbol";
+            "i" = lib.mkDefault "counsel-info-lookup-symbol";
+          };
+          ctl-x-r-map."b" = lib.mkDefault "counsel-bookmark";
+          ctl-x-map = {
+            "C-f" = lib.mkDefault "counsel-find-file";
+            "8 RET" = lib.mkDefault "counsel-unicode-char";
+          };
+          goto-map = {
+            "i" = lib.mkDefault "counsel-imenu";
+          };
+          search-map = {
+            "c" = lib.mkDefault "counsel-locate";
+          };
+          org-mode-map = {
+            "C-c C-j" = lib.mkDefault "counsel-org-goto";
+            "C-c C-q" = lib.mkDefault "counsel-org-tag";
+          };
+        };
+        bind = {
+          "M-x" = lib.mkDefault "counsel-M-x";
+          "C-s" = lib.mkIf completions.ivy.swiperReplaceSearch (lib.mkDefault "counsel-grep-or-swiper");
+          "M-y" = lib.mkDefault "counsel-yank-pop";
+        };
+        generalOne = {
+          global-leader = lib.mkIf keybinds.leader-key.enable {
+            "f" = lib.mkDefault "'counsel-find-file";
+            "i" = lib.mkDefault "'counsel-imenu";
+          };
+          ":nm" = lib.mkIf (completions.ivy.swiperReplaceSearch && keybinds.evil.enable) {
+            "/" = lib.mkDefault "'counsel-grep-or-swiper";
+            "?" = lib.mkDefault "'counsel-grep-or-swiper";
+          };
+        };
+        custom = {
+          counsel-find-file-ignore-regexp = lib.mkDefault ''"\\(?:^[#.]\\)\\|\\(?:[#~]$\\)\\|\\(?:^Icon?\\)"'';
+        };
+        config = ''
+          (setq ivy-initial-inputs-alist nil)
+          ${if ide.projectile then "(add-to-list 'counsel-compile-root-functions #'projectile-project-root)" else ""}
+          (dolist (fn '(counsel-rg counsel-find-file))
+            (ivy-add-actions
+             fn '(("p" (lambda (path) (with-ivy-window (insert (file-relative-name path default-directory))))
+             "insert relative path")
+             ("P" (lambda (path) (with-ivy-window (insert path)))
+              "insert absolute path")
+             ("l" (lambda (path) (with-ivy-window (insert (format "[[./%s]]" (file-relative-name path default-directory)))))
+              "insert relative org-link")
+             ("L" (lambda (path) (with-ivy-window (insert (format "[[%s]]" path))))
+              "Insert absolute org-link"))))
+          (ivy-add-actions 'counsel-file-jump (plist-get ivy--actions-list 'counsel-find-file))
+          
+          ${if completions.ivy.swiperReplaceSearch && keybinds.evil.enable then
+               ''(defun nix-emacs-add-ivy-text-to-history ()
+                   "Add the last ivy search to `regexp-search-ring'."
+                   (add-to-history
+                    'regexp-search-ring
+                    (ivy--regex ivy-text)
+                    regexp-search-ring-max))
+               
+                 (defun nix-emacs-evil-search-action ()
+                   "Update evil search information based on last ivy search."
+                   (when (and (bound-and-true-p evil-mode)
+                              (eq evil-search-module 'evil-search))
+                     (add-to-history 'evil-ex-search-history ivy-text)
+                     (setq evil-ex-search-pattern (list ivy-text t t))
+                     (setq evil-ex-search-direction 'forward)
+                     (when evil-ex-search-persistent-highlight
+                       (evil-ex-search-activate-highlight evil-ex-search-pattern))))
+               
+               
+                 (general-add-hook 'counsel-grep-post-action-hook (list
+                                                                   #'nix-emacs-match-beginning
+                                                                   #'nix-emacs-add-ivy-text-to-history
+                                                                   #'nix-emacs-evil-search-action))''
+               else ""}
+        '';
+      };
+
+      ivy-prescient = lib.mkIf completions.prescient {
+        enable = true;
+        hook = ["(ivy-mode . ivy-prescient-mode)"];
+      };
+
+      ivy-posframe = lib.mkIf completions.ivy.posframe {
+        enable = true;
+        hook = ["(ivy-mode . ivy-posframe-mode)"];
+        custom = {
+          ivy-posframe-border-width = lib.mkDefault "10";
+          ivy-posframe-parameters = lib.mkDefault ''
+            `((min-width . 90)
+              (min-height . ,ivy-height))
+          '';
+        };
+        generalOne.":nm".":" = lib.mkIf keybinds.evil.enable (lib.mkDefault "'ivy-posframe-dispatching-done");
+      };
+
+      counsel-projectile = lib.mkIf ide.projectile {
+        enable = true;
+        after = ["projectile"];
+        config = ''
+          (define-key [remap projectile-find-file] #'counsel-projectile-find-file)
+          (define-key [remap projectile-find-dir] #'counsel-projectile-find-dir)
+          (define-key [remap projectile-switch-to-buffer] #'counsel-projectile-switch-to-buffer)
+          (define-key [remap projectile-grep] #'counsel-projectile-grep)
+          (define-key [remap projectile-ag] #'counsel-projectile-ag)
+          (define-key [remap projectile-switch-project] #'counsel-projectile-switch-project)
+        '';
+      };
+    };
+  };
+}
+#+end_src
+
 *** Help System
 An improved help system that I lifted from emacs from scratch.
 Helpful gives more information, & which-key tells what keybinds you have available
@@ -4236,7 +4483,7 @@ pdf-tools = {
     (pdf-tools-install)
   '';
   gfhook = [
-    "('TeX-after-compilation-finished-functions #'TeX-revert-document-beffer)"
+    "('TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)"
     "('pdf-view-mode-hook 'pdf-view-midnight-minor-mode)"];
   init = ''(setq-default pdf-view-display-size 'fit-width)'';
   extraConfig = '':magic ("%PDF" . pdf-view-mode)'';
@@ -4254,6 +4501,8 @@ cdlatex.generalTwo.":i" = {
   cdlatex-mode-map."TAB" = "'cdlatex-tab";
   org-cdlatex-mode-map."TAB" = "'cdlatex-tab";
 };
+
+tex.generalTwo.local-leader.LaTeX-mode-map."e" = "'TeX-command-run-all";
 #+end_src
 
 #+NAME: Emacs Pdf Tools Config

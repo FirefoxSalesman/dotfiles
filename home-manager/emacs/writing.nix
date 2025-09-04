@@ -144,7 +144,7 @@
             (pdf-tools-install)
           '';
           gfhook = [
-            "('TeX-after-compilation-finished-functions #'TeX-revert-document-beffer)"
+            "('TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)"
             "('pdf-view-mode-hook 'pdf-view-midnight-minor-mode)"];
           init = ''(setq-default pdf-view-display-size 'fit-width)'';
           extraConfig = '':magic ("%PDF" . pdf-view-mode)'';
@@ -167,6 +167,8 @@
           cdlatex-mode-map."TAB" = "'cdlatex-tab";
           org-cdlatex-mode-map."TAB" = "'cdlatex-tab";
         };
+        
+        tex.generalTwo.local-leader.LaTeX-mode-map."e" = "'TeX-command-run-all";
         
           markdown = {
             generalOne.markdown-mode-map."C-c C-e" = "'markdown-do";

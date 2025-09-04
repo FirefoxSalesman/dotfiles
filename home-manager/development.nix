@@ -1,6 +1,8 @@
 { pkgs, lib, ... }:
 
 {
+  imports = [./language-support];
+
   programs.emacs.init = {
     ide = {
       project = true;
@@ -29,6 +31,7 @@
         emacs-lisp.enable = true;
         javascript.enable = true;
         ledger.enable = true;
+        swift.enable = true;
       };
     };
 
@@ -157,11 +160,7 @@
                         (message "Error: Decompiled file not found at %s" decompiled-file)))
                   (message "Error: This command can only be run on .class files"))))
         '';  
-        # eglot = lib.mkForce ''("jdtls" "-data" "~/.cache/emacs/cache/java-workspace"
-        #                                :initializationOptions (:java (:contentProvider (:preferred "fernflower"))
-        #                                                        :extendedClientCapabilities (:classFileContentsSupport t)))'';
       };
-
-    } ;
+    };
   };
 }

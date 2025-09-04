@@ -1,10 +1,12 @@
   { lib, pkgs, inputs, config, ... }:
 
   {
+    imports = [../keybinds];
     programs.emacs.init = {
       keybinds = {
         evil = {
           enable = true;
+          surround = true;
           keys = {
             forward = "i";
             backward = "n";
@@ -208,19 +210,14 @@
       
         evil-collection.custom.evil-collection-unimpaired-want-repeat-mode-integration = true;
         
-        evil-surround = {
-          enable = true;
-          deferIncrementally = true;
-          config = "(global-evil-surround-mode)";
-          extraConfig = ''
-            :general-config
-            ('visual evil-surround-mode-map "R" 'evil-surround-region)
-            ('operator evil-surround-mode-map
-              "s" nil
-              "r" 'evil-surround-edit
-              "R" 'evil-Surround-edit)
-          '';
-        };
+        evil-surround.extraConfig = ''
+          :general-config
+          ('visual evil-surround-mode-map "R" 'evil-surround-region)
+          ('operator evil-surround-mode-map
+            "s" nil
+            "r" 'evil-surround-edit
+            "R" 'evil-Surround-edit)
+        '';
         
         evil-easymotion = {
           enable = true;
