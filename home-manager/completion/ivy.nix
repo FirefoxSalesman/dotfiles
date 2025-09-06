@@ -165,6 +165,22 @@ in
           (define-key [remap projectile-switch-project] #'counsel-projectile-switch-project)
         '';
       };
+
+      ivy-lsp = lib.mkIf ide.lsp.enable {
+        enable = true;
+        command = ["lsp-ivy-global-workspace-symbol"];
+        after = ["lsp-mode"];
+        bindLocal.lsp-mode-map."C-M-." = "lsp-ivy-workspace-symbol";
+      };
+
+      ivy-avy = lib.mkIf keybinds.avy.enable {
+        enable = true;
+        bindLocal.ivy-minibuffer-map."M-g f" = lib.mkIf (!keybinds.evil.enable) (lib.mkDefault "ivy-avy");
+        generalTwo.":nm".ivy-minibuffer-map = lib.mkIf keybinds.evil.enable {
+          "${keybinds.avy.evilModifierKey}-${keybinds.evil.keys.up}" = lib.mkDefault "'ivy-avy";
+          "${keybinds.avy.evilModifierKey}-${keybinds.evil.keys.down}" = lib.mkDefault "'ivy-avy";
+        };
+      };
     };
   };
 }

@@ -1,7 +1,10 @@
 { pkgs, lib, ... }:
 
 {
-  imports = [./language-support];
+  imports = [
+    ./language-support
+    ./direnv.nix
+  ];
 
   programs.emacs.init = {
     ide = {
@@ -16,6 +19,7 @@
         enable = true;
         preset = true;
       };
+      direnv = true;
       languages = {
         bash.enable = true;
         gradle.enable = true;

@@ -72,7 +72,7 @@
             gfhook = ["('dired-mode-hook 'denote-dired-mode-in-directories)"];
             custom = {
               denote-directory = ''(expand-file-name "~/doc/denote")'';
-              denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "databases" "scifi" "softwarerequirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics" "plp")'';
+              denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "databases" "scifi" "softwarerequirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics" "plp" "malwareanalysis" "bio")'';
               denote-file-type = false;
               denote-dired-directories = "(list denote-directory)";
               
@@ -153,14 +153,12 @@
         evil-collection-pdf = {
           defer = true;
           enable = true;
-          extraConfig = ''
-            :general-config
-            ('normal pdf-view-mode-map
-              "C-e" 'pdf-view-scroll-up-or-next-page
-              "E" 'pdf-view-scroll-up-or-next-page
-              "C-o" 'pdf-view-scroll-down-or-previous-page
-              "O" 'pdf-view-scroll-down-or-previous-page)
-          '';
+          generalTwoConfig.":n".pdf-view-mode-map = {
+            "C-e" = "'pdf-view-scroll-up-or-next-page";
+            "E" = "'pdf-view-scroll-up-or-next-page";
+            "C-o" = "'pdf-view-scroll-down-or-previous-page";
+            "O" = "'pdf-view-scroll-down-or-previous-page";
+          };
         };
         
         cdlatex.generalTwo.":i" = {

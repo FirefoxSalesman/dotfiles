@@ -7,5 +7,6 @@
     ./orderless.nix
     ./corfu.nix
     ./ivy.nix
+    ./company.nix
   ];
 }

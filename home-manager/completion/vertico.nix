@@ -25,6 +25,15 @@ in
           "${keybinds.evil.keys.up}" = "'vertico-previous";
         };
       };
+
+      vertico-quick = lib.mkIf keybinds.avy.enable {
+        enable = true;
+        generalTwo.":n".vertico-map = lib.mkIf keybinds.evil.enable {
+          "${keybinds.avy.evilModifierKey}-${keybinds.evil.keys.down}" = "'vertico-quick-jump";
+          "${keybinds.avy.evilModifierKey}-${keybinds.evil.keys.up}" = "'vertico-quick-jump";
+        };
+        bindLocal.vertico-map."M-g f" = lib.mkIf (!keybinds.evil.enable) "vertico-quick-jump";
+      };
       
       marginalia = {
         enable = true;
@@ -222,6 +231,18 @@ in
         enable = true;
         after = ["embark" "consult"];
         hook = ["(embark-collect-mode . consult-preview-at-point-mode)"];
+      };
+
+      consult-eglot = lib.mkIf ide.eglot.enable {
+        enable = true;
+        after = ["eglot"];
+        bindLocal.eglot-mode-map."C-M-." = "consult-eglot-symbols" ;
+      };
+      
+      consult-lsp = lib.mkIf ide.lsp.enable {
+        enable = true;
+        after = ["lsp-mode"];
+        bindLocal.lsp-mode-map."C-M-." = "consult-lsp-symbols" ;
       };
     };
   };

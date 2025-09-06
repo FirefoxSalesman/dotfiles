@@ -89,25 +89,6 @@
               ghook = ["('(org-mode-hook term-mode-hook dired-mode-hook eww-mode-hook eat-mode-hook markdown-mode-hook help-mode-hook helpful-mode-hook Info-mode-hook Man-mode-hook shell-mode-hook pdf-view-mode-hook elfeed-search-mode-hook elfeed-show-mode-hook eshell-mode-hook racket-repl-mode-hook sage-shell-mode-hook) (lambda () (display-line-numbers-mode 0)))"];
             } ;
           
-            elec-pair = {
-              enable = true;
-              ghook = ["('on-first-buffer-hook 'electric-pair-mode)"];
-              custom.electric-pair-pairs = ''
-               '((?\" . ?\")
-                 (?\[ . ?\])
-                 (?\( . ?\))
-                 (?\{ . ?\}))
-              '';
-              config = ''
-                  ;; < & > are not delimiters. Change my mind.
-                  ;; Courtesy of DT. https://gitlab.com/dwt1/configuring-emacs/-/tree/main/07-the-final-touches?ref_type=heads
-                  (gsetq electric-pair-inhibit-predicate `(lambda (c)
-                  					   (if (or (char-equal c ?<) (char-equal c ?>))
-                  					       t
-                  					       (,electric-pair-inhibit-predicate c))))
-              '';
-            };
-          
             server = {
               enable = true;
               deferIncrementally = true;
@@ -125,9 +106,9 @@
           async = {
             enable = true;
             config = ''
-                (autoload 'dired-async-mode "dired-async.el" nil t)
-                (dired-async-mode)
-              '';
+              (autoload 'dired-async-mode "dired-async.el" nil t)
+              (dired-async-mode)
+            '';
           };
 
             wgrep = {

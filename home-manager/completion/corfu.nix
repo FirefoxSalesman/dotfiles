@@ -70,6 +70,15 @@ in
         hook = ["(corfu-mode . corfu-prescient-mode)"];
         custom.corfu-prescient-completion-styles = lib.mkDefault (if completions.orderless then "'(orderless basic prescient)" else "'(basic prescient)");
       };
+
+      corfu-quick = lib.mkIf keybinds.avy.enable {
+        enable = true;
+        generalTwo.":ie".corfu-map = lib.mkIf keybinds.evil.enable {
+          "${keybinds.avy.evilModifierKey}-${keybinds.evil.keys.up}" = lib.mkDefault "'corfu-quick-insert";
+          "${keybinds.avy.evilModifierKey}-${keybinds.evil.keys.down}" = lib.mkDefault "'corfu-quick-insert";
+        };
+        bindLocal.corfu-map."M-g f" = lib.mkIf (!keybinds.evil.enable) "corfu-quick-insert";
+      };
     };
   };
 }

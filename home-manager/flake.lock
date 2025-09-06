@@ -215,11 +215,11 @@
         "use-package-eglot": "use-package-eglot"
       },
       "locked": {
-        "lastModified": 1756865618,
-        "narHash": "sha256-itp2pbq0QRndg0g9uZfI/2OdmVfBptmA+MFdwI4gcnw=",
+        "lastModified": 1757116159,
+        "narHash": "sha256-HFrPglBs760SGNSySYyUi3V0cTKPhVRGiELbVlhcSOQ=",
         "owner": "firefoxsalesman",
         "repo": "NixEmacs",
-        "rev": "2f87e8f6c7603258a042e07d3f7be90b7753e61e",
+        "rev": "23af1b0e4524dda43126f9fc4158947ce2cf9798",
         "type": "github"
       },
       "original": {
@@ -682,6 +682,7 @@
         "org-novelist": "org-novelist",
         "repeaters": "repeaters",
         "stylix": "stylix",
+        "svelte-ts-mode": "svelte-ts-mode",
         "treesitter-context": "treesitter-context"
       }
     },
@@ -798,6 +799,22 @@
       "original": {
         "owner": "danth",
         "repo": "stylix",
+        "type": "github"
+      }
+    },
+    "svelte-ts-mode": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1753004480,
+        "narHash": "sha256-1V389XqYCOlewqBglv//UkaZwHEc5pFqbt7nrLdgU6U=",
+        "owner": "leafOfTree",
+        "repo": "svelte-ts-mode",
+        "rev": "8a7b90358a79b7844a39ffa722eac2fd41eea2ca",
+        "type": "github"
+      },
+      "original": {
+        "owner": "leafOfTree",
+        "repo": "svelte-ts-mode",
         "type": "github"
       }
     },

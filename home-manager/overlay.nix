@@ -66,6 +66,10 @@
             inherit inputs;
             inherit (prev.emacsPackages) trivialBuild;
           });
+          svelte-ts-mode = (prev.emacsPackages.callPackage ./packages/emacs/svelte-ts-mode.nix {
+            inherit inputs;
+            inherit (prev.emacsPackages) trivialBuild;
+          });
           embark = prev.emacsPackages.callPackage (
             {
               org,

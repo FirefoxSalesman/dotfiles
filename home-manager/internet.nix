@@ -335,15 +335,11 @@
                   (add-hook 'dired-mode-hook 'qute-dired-mode)
                   (setq qute-dired-buffers (list (dired "~/")))))
             '';
-            extraConfig = ''
-              :general-config
-              (qute-dired-mode-map
-                      "C-c C-c" #'qute/choose-file)
-              
-              ('normal qute-dired-mode-map
-                "i" 'dired-find-file
-                "n" 'dired-up-directory)
-            '';
+            generalOneConfig.qute-dired-mode-map."C-c C-c" = "#'qute/choose-file";
+            generalTwoConfig.":n".qute-dired-mode-map = {
+              "i" = "'dired-find-file";
+              "n" = "'dired-up-directory";
+            };
           };
           qutebrowser-evil = {
             enable = true;

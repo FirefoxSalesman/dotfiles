@@ -69,12 +69,16 @@
         evilConsultLine = true;
         embark = true;
       };
-      corfu = {
+      # corfu = {
+      #   enable = true;
+      #   wantTabComplete = false;
+      #   wantRetConfirm = false;
+      #   wantMinibuffer = true;
+      #   popupInfo = true;
+      # };
+      company = {
         enable = true;
-        wantTabComplete = false;
-        wantRetConfirm = false;
-        wantMinibuffer = true;
-        popupInfo = true;
+        posframe = true;
       };
     };
 
@@ -89,13 +93,9 @@
         "bg" = "'vertico-first";
       };
       
-      vertico-quick = {
-        enable = true;
-        defer = true;
-        generalTwo.":n".vertico-map = {
-          "H-o" = "'vertico-quick-jump";
-          "H-e" = "'vertico-quick-jump";
-        };
+      vertico-quick.custom = {
+        vertico-quick1 = ''"crst"'';
+        vertico-quick2 = ''"neia"'';
       };
       
       nerd-icons-corfu = {
@@ -109,6 +109,10 @@
         generalTwo.":ie".corfu-map = {
           "M-o" = "'corfu-quick-insert";
           "M-e" = "'corfu-quick-insert";
+        };
+        custom = {
+          corfu-quick1 = ''"crst"'';
+          corfu-quick2 = ''"neia"'';
         };
       };
       

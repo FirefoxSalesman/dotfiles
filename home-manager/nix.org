@@ -113,6 +113,11 @@ exwm-qutebrowser = {
   url = "github:lrustand/qutebrowser.el/18f98f0";
   flake = false;
 };
+
+svelte-ts-mode = {
+  url = "github:leafOfTree/svelte-ts-mode";
+  flake = false;
+};
 #+end_src
 
 ** Outputs
@@ -222,6 +227,10 @@ exwm-qutebrowser = {
             inherit (prev.emacsPackages) trivialBuild gptel;
           });
           mpc-wrapper = (prev.emacsPackages.callPackage ./packages/emacs/mpc-wrapper.nix {
+            inherit inputs;
+            inherit (prev.emacsPackages) trivialBuild;
+          });
+          svelte-ts-mode = (prev.emacsPackages.callPackage ./packages/emacs/svelte-ts-mode.nix {
             inherit inputs;
             inherit (prev.emacsPackages) trivialBuild;
           });
@@ -426,6 +435,21 @@ exwm-qutebrowser = {
 
     buildInputs = propagatedUserEnvPkgs;
   }
+#+end_src
+
+*** Svelte ts mode
+#+begin_src nix :tangle packages/emacs/svelte-ts-mode.nix
+{ trivialBuild, inputs } :
+
+trivialBuild rec {
+  pname = "svelte-ts-mode";
+  version = "current";
+  src = inputs.svelte-ts-mode;
+
+  propagatedUserEnvPkgs = [];
+
+  buildInputs = propagatedUserEnvPkgs;
+}
 #+end_src
 
 * Notes to my future self
@@ -957,50 +981,50 @@ Stole it from Derek Taylor
 ** shells
 *** boilerplate
 #+begin_src nix :noweb yes :tangle shells.nix
-  { pkgs, ... }:
-  {
-    imports = [
-          ./dash.nix
-    ];
+{ pkgs, ... }:
+{
+  imports = [
+    ./dash.nix
+  ];
 
-    <<Shell Aliases>>
+  <<Shell Aliases>>
 
-    programs = {
-      <<Fish Shell>>
+  programs = {
+    <<Fish Shell>>
 
-      <<Bash Shell>>
+    <<Bash Shell>>
 
-      <<Starship>>
+    <<Starship>>
 
-      <<Direnv>>
+    direnv.enableBashIntegration = true;
 
-      <<Dash Shell>>
+    <<Dash Shell>>
 
-      emacs.init.usePackage = {
-        <<Eshell>>
-      };
+    emacs.init.usePackage = {
+      <<Eshell>>
     };
-  }
+  };
+}
 #+end_src
 
 *** aliases
 #+NAME: Shell Aliases
 #+begin_src nix
-  home.shellAliases = {
-    ffrecord = "ffmpeg -f sndio -i snd/0.mon -f x11grab -r 30 -s 1920x1080 -i :0 -c:v libx164 -preset ultrafast -acodec copy ~/test.mkv";
-    ffaud = "ffmpeg -f alsa -channels 1 -sample_rate 44100 -i default:CARD=Mic output.flac";
-    sx = "startx";
-    otp = "pass otp";
-    run = "cd /run/";
-    l = "ls";
-    ".." = "cd ..";
-    tortube = "yt-dlp --proxy socks://localhost:9050";
-    wget = "torsocks wget --hsts-file=$XDG_DATA_HOME/wget-hsts";
-    ga = "git add";
-    gc = "torsocks git clone";
-    gp = "git pull";
-    gP = "git push";
-  };
+home.shellAliases = {
+  ffrecord = "ffmpeg -f sndio -i snd/0.mon -f x11grab -r 30 -s 1920x1080 -i :0 -c:v libx164 -preset ultrafast -acodec copy ~/test.mkv";
+  ffaud = "ffmpeg -f alsa -channels 1 -sample_rate 44100 -i default:CARD=Mic output.flac";
+  sx = "startx";
+  otp = "pass otp";
+  run = "cd /run/";
+  l = "ls";
+  ".." = "cd ..";
+  tortube = "yt-dlp --proxy socks://localhost:9050";
+  wget = "torsocks wget --hsts-file=$XDG_DATA_HOME/wget-hsts";
+  ga = "git add";
+  gc = "torsocks git clone";
+  gp = "git pull";
+  gP = "git push";
+};
 #+end_src
 
 *** fish
@@ -1018,42 +1042,22 @@ This shell is mostly around for eshell to get completions from, but it can be us
 It's mostly here for eshell to get completions from, but it's a usable shell
 #+NAME: Bash Shell
 #+begin_src nix
-  bash = {
-    enable = true;
-    initExtra = ''${pkgs.pfetch}/bin/pfetch'';
-    shellAliases.z = "cd ./$(ls -d */ .*/ | ${pkgs.ezf}/bin/ezf)";
-  };
+bash = {
+  enable = true;
+  initExtra = ''${pkgs.pfetch}/bin/pfetch'';
+  shellAliases.z = "cd ./$(ls -d */ .*/ | ${pkgs.ezf}/bin/ezf)";
+};
 #+end_src
 
 *** starship
 a prompt for bash & fish
 #+NAME: Starship
 #+begin_src nix
-  starship = {
-    enable = true;
-    enableFishIntegration = true;
-    enableBashIntegration = true;
-  };
-#+end_src
-
-*** direnv
-#+NAME: Direnv
-#+begin_src nix
-  direnv = {
-    enable = true;
-    enableBashIntegration = true;
-    nix-direnv.enable = true;
-  };
-
-  emacs.init.usePackage.envrc = {
-      enable = true;
-      ghook = ["('after-init-hook 'envrc-global-mode)"];
-      generalOne.global-leader = {
-        "e" = '''(:ignore t :which-key "direnv")'';
-        "ea" = '''(envrc-allow :which-key "allow")'';
-        "eu" = '''(envrc-reload :which-key "update dir")'';
-      };
-  };
+starship = {
+  enable = true;
+  enableFishIntegration = true;
+  enableBashIntegration = true;
+};
 #+end_src
 
 *** Eshell
@@ -1125,9 +1129,11 @@ eat = {
 evil-collection-eshell = {
   enable = true;
   defer = true;
-  extraConfig = ''
-    <<Emacs Evil Eshell Extra Config>>
-  '';
+  generalTwoConfig.":n".eshell-mode-map = {
+    "v" = "'evil-collection-eshell-evil-delete";
+    "V" = "'evil-collection-eshell-evil-change";
+    "C-v" = "'evil-collection-eshell-evil-delete-line";
+  };
   config = ''
     <<Emacs Evil Eshell Config>>
   '';
@@ -1136,9 +1142,9 @@ evil-collection-eshell = {
 
 #+NAME: Emacs Eshell Init
 #+begin_src emacs-lisp
-  (defun efs/make-eshell ()
-    (interactive)
-    (eshell 'N))
+(defun efs/make-eshell ()
+  (interactive)
+  (eshell 'N))
 #+end_src
 
 #+NAME: Emacs Eshell Config
@@ -1169,38 +1175,29 @@ evil-collection-eshell = {
 #+begin_src emacs-lisp
 (general-add-advice 'evil-collection-eshell-setup-keys :after
 		    (lambda () (general-def 'normal eshell-mode-map
-			    "d" 'evil-yank
-			    "D" 'evil-yank-line
-			    "c" 'evil-visual-state
-			    "C" 'evil-visual-line)))
-#+end_src
-
-#+NAME: Emacs Evil Eshell Extra Config
-#+begin_src emacs-lisp
-:general-config
-('normal eshell-mode-map
-	 "v" 'evil-collection-eshell-evil-delete
-	 "V" 'evil-collection-eshell-evil-change
-	 "C-v" 'evil-collection-eshell-evil-delete-line)
+				 "d" 'evil-yank
+				 "D" 'evil-yank-line
+				 "c" 'evil-visual-state
+				 "C" 'evil-visual-line)))
 #+end_src
 
 #+NAME: Emacs Eat Config
 #+begin_src emacs-lisp
-  (eat-eshell-mode)
-  (evil-ex-define-cmd "term" 'eat)
-  (defun eat-term-get-suitable-term-name (&optional display)
-    "Return the most suitable value for `TERM' for DISPLAY.
+(eat-eshell-mode)
+(evil-ex-define-cmd "term" 'eat)
+(defun eat-term-get-suitable-term-name (&optional display)
+  "Return the most suitable value for `TERM' for DISPLAY.
 
     If the number of colors supported by display (as returned by
     `display-color-cells') is more than 256, return \"eat-truecolor\", if
     it is more than 8 but less than or equal to 256, return
     \"eat-256color\", if is more than 1 but less than or equal to 8,
     return \"eat-color\", otherwise return \"eat-mono\"."
-    (let ((colors (display-color-cells display)))
-      (cond ((> colors 256) "xterm")
-            ((> colors 8) "xterm")
-            ((> colors 1) "xterm")
-            (t "xterm"))))
+  (let ((colors (display-color-cells display)))
+    (cond ((> colors 256) "xterm")
+          ((> colors 8) "xterm")
+          ((> colors 1) "xterm")
+          (t "xterm"))))
 
 #+end_src
 
@@ -1926,7 +1923,10 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 { pkgs, lib, ... }:
 
 {
-  imports = [./language-support];
+  imports = [
+    ./language-support
+    ./direnv.nix
+  ];
 
   programs.emacs.init = {
     ide = {
@@ -1941,6 +1941,7 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
         enable = true;
         preset = true;
       };
+      direnv = true;
       languages = {
         bash.enable = true;
         gradle.enable = true;
@@ -2154,12 +2155,12 @@ eglot-tempel = {
 {
   imports = [
     ./swift.nix
+    ./svelte.nix
   ];
 }
 #+end_src
 
 **** Swift
-https://github.com/alex-pinkus/tree-sitter-swift
 #+begin_src nix :tangle language-support/swift.nix
 { pkgs, config, lib, ... }:
 
@@ -2169,22 +2170,87 @@ in
 {
   options.programs.emacs.init.ide.languages.swift.enable = lib.mkEnableOption "Enables swift support (stolen from doom)";
 
-  config.programs.emacs.init.usePackage = lib.mkIf ide.languages.swift.enable {
-    swift-ts-mode = {
+  config.programs.emacs.init = {
+    ide.treesitterGrammars.swift = "https://github.com/alex-pinkus/tree-sitter-swift";
+    usePackage = lib.mkIf ide.languages.swift.enable {
+      swift-ts-mode = {
+        enable = true;
+        mode = [''"\\.swift\\'"''];
+        extraPackages = lib.mkIf (ide.lsp-bridge.enable || ide.eglot.enable || ide.lsp.enable || ide.lspce.enable) [pkgs.sourcekit-lsp];
+        eglot = lib.mkIf ide.eglot.enable ''"sourcekit-lsp"'';
+        lsp = ide.lsp.enable;
+        lspce = ide.lspce.enable;
+        config = lib.mkIf ide.lspce.enable ''
+          (defmacro nix-emacs-lspce-add-server-program (langs program &optional args)
+            "Takes a list of languages (as per lspce's spec for adding server programs), the command for a language server,
+             & optionally any arguments. The server will be registered for all relevant modes."
+            `(with-eval-after-load 'lspce
+                                   (dolist (mode ,langs)
+                                           (add-to-list 'lspce-server-programs
+                                                        (list mode ,program ,(if args args ""))))))
+          (nix-emacs-lspce-add-server-program '("swift") "sourcekit-lsp")
+          ;;(with-eval-after-load 'lspce (add-to-list 'lspce-server-programs '("swift" "sourcekit-lsp" "")))
+        '';
+      };
+
+      lsp-sourcekit = lib.mkIf ide.lsp.enable {
+        enable = true;
+        after = ["swift-ts-mode"];
+      };
+    };
+  } ;
+}
+#+end_src
+
+**** Svelte
+#+begin_src nix :tangle language-support/svelte.nix
+{ pkgs, lib, config, ... }:
+
+let
+  ide = config.programs.emacs.init.ide;
+in
+{
+  options.programs.emacs.init.ide.languages.svelte.enable = lib.mkEnableOption "Enables svelte support";
+
+  config.programs.emacs.init = {
+    ide.treesitterGrammars.svelte = "https://github.com/Himujjal/tree-sitter-svelte";
+    usePackage.svelte-ts-mode = lib.mkIf ide.languages.svelte.enable {
       enable = true;
-      mode = [''"\\.swift\\'"''];
-      extraPackages = lib.mkIf (ide.lsp-bridge.enable || ide.eglot.enable || ide.lsp.enable || ide.lspce.enable) [pkgs.sourcekit-lsp];
-      eglot = lib.mkIf ide.eglot.enable ''"sourcekit-lsp"'';
+      extraPackages = lib.mkIf (ide.eglot.enable || ide.lsp.enable || ide.lspce.enable || ide.lsp-bridge.enable) [pkgs.svelte-language-server];
+      mode = [''"\\.svelte\\'"''];
+      eglot = ''("svelteserver" "--stdio")'';
       lsp = ide.lsp.enable;
       lspce = ide.lspce.enable;
       config = lib.mkIf ide.lspce.enable ''
-        (with-eval-after-load 'lspce (add-to-list 'lspce-server-programs '("swift" "sourcekit-lsp" "")))
+        (with-eval-after-load 'lspce (add-to-list 'lspce-server-programs '("svelte" "svelteserver" "--stdio")))
       '';
     };
+  };
+}
+#+end_src
 
-    lsp-sourcekit = lib.mkIf ide.lsp.enable {
+*** Direnv
+#+begin_src nix :tangle direnv.nix
+{ config, lib, ... }:
+
+{
+  options.programs.emacs.init.ide.direnv = lib.mkEnableOption "Enable direnv support";
+
+  config.programs = lib.mkIf config.programs.emacs.init.ide.direnv {
+    direnv = {
       enable = true;
-      after = ["swift-ts-mode"];
+      nix-direnv.enable = true;
+    };
+    
+    emacs.init.usePackage.envrc = {
+      enable = true;
+      hook = ["(after-init . envrc-global-mode)"];
+      generalOne.global-leader = lib.mkIf config.programs.emacs.init.keybinds.leader-key.enable {
+        "e" = lib.mkDefault '''(:ignore t :which-key "direnv")'';
+        "ea" = lib.mkDefault "'envrc-allow";
+        "eu" = lib.mkDefault "'envrc-reload";
+        "ed" = lib.mkDefault "'envrc-deny";
+      };
     };
   };
 }
@@ -2229,7 +2295,7 @@ I'm running dired with a couple of small packages that improve on it
       enable = true;
       defer = true;
       ghook = ["('dired-mode-hook 'dired-hide-dotfiles-mode)"];
-      extraConfig = '':general-config ('normal dired-mode-map "H" 'dired-hide-dotfiles-mode)'';
+      generalTwoConfig.":n".dired-mode-map."H" = "'dired-hide-dotfiles-mode";
     };
 
     all-the-icons-dired = {
@@ -2432,7 +2498,7 @@ Most of this was shamelessly lifted from Emacs from Scratch.
 Display buffer rules were taken from noctuid's config.
 https://emacs.stackexchange.com/questions/75528/how-to-define-display-buffer-alist-to-keep-every-buffer-in-the-frame-it-is-curr
 #+NAME: Emacs UI Improvements
-#+begin_src nix :noweb yes
+#+begin_src nix
   tooltip = {
     enable = true;
     config = ''
@@ -2460,35 +2526,11 @@ https://emacs.stackexchange.com/questions/75528/how-to-define-display-buffer-ali
     ghook = ["('(org-mode-hook term-mode-hook dired-mode-hook eww-mode-hook eat-mode-hook markdown-mode-hook help-mode-hook helpful-mode-hook Info-mode-hook Man-mode-hook shell-mode-hook pdf-view-mode-hook elfeed-search-mode-hook elfeed-show-mode-hook eshell-mode-hook racket-repl-mode-hook sage-shell-mode-hook) (lambda () (display-line-numbers-mode 0)))"];
   } ;
 
-  elec-pair = {
-    enable = true;
-    ghook = ["('on-first-buffer-hook 'electric-pair-mode)"];
-    custom.electric-pair-pairs = ''
-     '((?\" . ?\")
-       (?\[ . ?\])
-       (?\( . ?\))
-       (?\{ . ?\}))
-    '';
-    config = ''
-      <<Emacs Electric Pair Config>>
-    '';
-  };
-
   server = {
     enable = true;
     deferIncrementally = true;
     config = "(server-start)";
   };
-#+end_src
-
-#+NAME: Emacs Electric Pair Config
-#+begin_src emacs-lisp
-  ;; < & > are not delimiters. Change my mind.
-  ;; Courtesy of DT. https://gitlab.com/dwt1/configuring-emacs/-/tree/main/07-the-final-touches?ref_type=heads
-  (gsetq electric-pair-inhibit-predicate `(lambda (c)
-  					   (if (or (char-equal c ?<) (char-equal c ?>))
-  					       t
-  					       (,electric-pair-inhibit-predicate c))))
 #+end_src
 
 ***** Cleanup
@@ -2512,8 +2554,8 @@ Async lets emacs create other instances of itself to run functions. It still has
 async = {
   enable = true;
   config = ''
-      <<Emacs Async Config>>
-    '';
+    <<Emacs Async Config>>
+  '';
 };
 #+end_src
 
@@ -2679,6 +2721,12 @@ Evil mode provides vim-like keybinds.
           };
         };
         god.enable = true;
+        electricPair.enable = true;
+        evilNerdCommenter.enable = true;
+        avy = {
+          enable = true;
+          evilModifierKey = "H";
+        };
       };
       usePackage = {
         <<Emacs Evil Main>>
@@ -2723,6 +2771,109 @@ evil = {
   extraConfig = ''
     <<Evil Extra Config>>
   '';
+  generalOneConfig = {
+    ":n" = {
+      "I" = "'evil-window-top";
+      "C-i" = "'evil-goto-line";
+      "N" = "'evil-window-bottom";
+      "C-n" = "'evil-goto-first-line";
+      "E" = "'evil-scroll-down";
+      "O" = "'evil-scroll-up";
+      "x" = "'evil-backward-WORD-begin";
+      "X" = "'evil-backward-word-begin";
+      "C-x" = "'evil-backward-WORD-end";
+      "j" = "'evil-undo";
+      "J" = "'evil-redo";
+      "a" = "'evil-ex";
+      "r" = "'evil-insert-line";
+      "R" = "'evil-open-above";
+      "s" = "'evil-append-line";
+      "S" = "'evil-open-below";
+      "t" = "'evil-insert";
+      "T" = "'evil-append";
+      "C-t" = "'evil-replace-state";
+      "u" = "'evil-forward-WORD-begin";
+      "U" = "'evil-forward-word-begin";
+      "C-u" = "'evil-forward-WORD-end";
+      "-" = "'evil-jump-backward";
+      "_" = "'evil-jump-forward";
+      "m" = "'evil-search-next";
+      "M" = "'evil-search-previous";
+      "k" = "'evil-delete-char";
+      "K" = "'evil-substitute";
+      "c" = "'evil-visual-char";
+      "C" = "'evil-visual-line";
+      "C-c" = "'evil-visual-block";
+      "v" = "'evil-delete";
+      "V" = "'evil-change";
+      "C-v" = "'evil-delete-line";
+      "d" = "'evil-yank";
+      "D" = "'evil-yank-line";
+      "G" = "'evil-paste-after";
+      ";" = "'evil-end-of-visual-line";
+      ":" = "'evil-end-of-line";
+      "C-;" = "'evil-end-of-line";
+      "p" = "'ergo-word-delete";
+      "P" = "'ergo-word-change";
+      "C-p" = "'ergo-word-change";
+      "$" = "'evil-execute-macro";
+      "~" = "'evil-record-macro";
+      "C-z" = "'evil-goto-last-change-reverse";
+      "w" = "'evil-repeat";
+      "W" = "'evil-ex-repeat";
+      "C-w" = "'evil-ex-repeat";
+      "l" = "'evil-shift-right-line";
+      "L" = "'evil-shift-left-line";
+      "C-l" = "'evil-shift-left-line";
+      "/" = "'isearch-forward-regexp";
+      "?" = "'isearch-backward-regexp";
+      "y" = "'evil-shift-right";
+      "Y" = "'evil-shift-left";
+    };
+    ":m" = {
+      "I" = "'evil-window-top";
+      "C-i" = "'evil-goto-line";
+      "N" = "'evil-window-bottom";
+      "C-n" = "'evil-goto-first-line";
+      "C-e" = "'evil-scroll-page-down";
+      "C-o" = "'evil-scroll-page-up";
+      "a" = "'evil-ex";
+      "h" = "'evil-set-marker";
+      "m" = "'evil-search-next";
+      "M" = "'evil-search-previous";
+      "-" = "'evil-jump-backward";
+      "_" = "'evil-jump-forward";
+      "/" = "'isearch-forward-regexp";
+      "?" = "'isearch-backward-regexp";
+      "f" = "'evil-first-non-blank-of-visual-line";
+      "F" = "'evil-beginning-of-visual-line";
+      "C-f" = "'evil-first-non-blank";
+      "B" = "'evil-goto-line";
+    };
+    ":v" = {
+      "U" = "'evil-forward-word-begin";
+      "u" = "'evil-forward-WORD-begin";
+      "X" = "'evil-backward-word-begin";
+      "x" = "'evil-backward-WORD-begin";
+      "v" = "'evil-delete-char";
+      "V" = "'evil-substitute";
+      "C-v" = "'evil-substitute";
+      "t" = "evil-outer-text-objects-map";
+      "s" = "evil-inner-text-objects-map";
+      "l" = "'evil-invert-case";
+      "y" = "'evil-shift-right";
+      "Y" = "'evil-shift-left";
+      "C-t" = "'evil-replace";
+      "R" = "'evil-insert-line";
+      "C-r" = "'evil-append-line";
+      "d" = "'evil-yank-line";
+      "D" = "'evil-yank-line";
+      "C-d" = "'evil-yank-line";
+      "/" = "'isearch-forward-regexp";
+      "?" = "'isearch-backward-regexp";
+      "G" = "'evil-paste";
+    };
+  };
 };
 
 emacs.generalOne = {
@@ -2760,86 +2911,6 @@ emacs.generalOne = {
 #+NAME: Evil Extra Config
 #+begin_src emacs-lisp
 :general-config
-('normal
- "I" 'evil-window-top
- "C-i" 'evil-goto-line
- "N" 'evil-window-bottom
- "C-n" 'evil-goto-first-line
- "E" 'evil-scroll-down
- "O" 'evil-scroll-up
- "x" 'evil-backward-WORD-begin
- "X" 'evil-backward-word-begin
- "C-x" 'evil-backward-WORD-end
- "j" 'evil-undo
- "J" 'evil-redo
- "a" 'evil-ex
- "r" 'evil-insert-line
- "R" 'evil-open-above
- "s" 'evil-append-line
- "S" 'evil-open-below
- "t" 'evil-insert
- "T" 'evil-append
- "C-t" 'evil-replace-state
- "u" 'evil-forward-WORD-begin
- "U" 'evil-forward-word-begin
- "C-u" 'evil-forward-WORD-end
- "-" 'evil-jump-backward
- "_" 'evil-jump-forward
- "m" 'evil-search-next
- "M" 'evil-search-previous
- "k" 'evil-delete-char
- "K" 'evil-substitute
- "l" 'evil-invert-char
- "L" 'evil-invert-case
- "c" 'evil-visual-char
- "C" 'evil-visual-line
- "C-c" 'evil-visual-block
- "v" 'evil-delete
- "V" 'evil-change
- "C-v" 'evil-delete-line
- "d" 'evil-yank
- "D" 'evil-yank-line
- "G" 'evil-paste-after
- ";" 'evil-end-of-visual-line
- ":" 'evil-end-of-line
- "C-;" 'evil-end-of-line
- "p" 'ergo-word-delete
- "P" 'ergo-word-change
- "C-p" 'ergo-word-change
- "$" 'evil-execute-macro
- "~" 'evil-record-macro
- "C-z" 'evil-goto-last-change-reverse
- "w" 'evil-repeat
- "W" 'evil-ex-repeat
- "C-w" 'evil-ex-repeat
- "l" 'evil-shift-right-line
- "L" 'evil-shift-left-line
- "C-l" 'evil-shift-left-line
- "/" 'isearch-forward-regexp
- "?" 'isearch-backward-regexp
- "y" 'evil-shift-right
- "Y" 'evil-shift-left)
-
-('motion
- "I" 'evil-window-top
- "C-i" 'evil-goto-line
- "N" 'evil-window-bottom
- "C-n" 'evil-goto-first-line
- "C-e" 'evil-scroll-page-down
- "C-o" 'evil-scroll-page-up
- "a" 'evil-ex
- "h" 'evil-set-marker
- "m" 'evil-search-next
- "M" 'evil-search-previous
- "-" 'evil-jump-backward
- "_" 'evil-jump-forward
- "/" 'isearch-forward-regexp
- "?" 'isearch-backward-regexp
- "f" 'evil-first-non-blank-of-visual-line
- "F" 'evil-beginning-of-visual-line
- "C-f" 'evil-first-non-blank
- "B" 'evil-goto-line)
-
 (general-swap-key nil '(motion normal visual)
   "g" "b"
   "z" "q"
@@ -2857,29 +2928,6 @@ emacs.generalOne = {
 	  "s" evil-inner-text-objects-map
 	  "t" evil-outer-text-objects-map)
 
-('visual
- "U" 'evil-forward-word-begin
- "u" 'evil-forward-WORD-begin
- "X" 'evil-backward-word-begin
- "x" 'evil-backward-WORD-begin
- "v" 'evil-delete-char
- "V" 'evil-substitute
- "C-v" 'evil-substitute
- "t" evil-outer-text-objects-map
- "s" evil-inner-text-objects-map
- "l" 'evil-invert-case
- "y" 'evil-shift-right
- "Y" 'evil-shift-left
- "C-t" 'evil-replace
- "R" 'evil-insert-line
- "C-r" 'evil-append-line
- "d" 'evil-yank-line
- "D" 'evil-yank-line
- "C-d" 'evil-yank-line
- "/" 'isearch-forward-regexp
- "?" 'isearch-backward-regexp
- "G" 'evil-paste)
-
 ('normal "bl" 'consult-goto-line
 	 "b/" 'consult-keep-lines)
 #+end_src
@@ -2891,59 +2939,36 @@ Cursors hydra: https://hungyi.net/posts/hydra-for-evil-mc/
 #+begin_src nix :noweb yes
 evil-collection.custom.evil-collection-unimpaired-want-repeat-mode-integration = true;
 
-evil-surround.extraConfig = ''
-  <<Emacs Evil Surround Extra Config>>
-'';
+evil-surround.generalTwoConfig = {
+  ":v".evil-surround-mode-map."R" = "'evil-surround-region";
+  ":o".evil-surround-mode-map = {
+    "s" = "nil";
+    "r" = "'evil-surround-edit";
+    "R" = "'evil-Surround-edit";
+  };
+};
 
 evil-easymotion = {
-  enable = true;
-  generalOne = {
-    ":o" = {
-      "/" = "'evil-avy-goto-char-2"; 
-      "?" = "'evil-avy-goto-char-2"; 
-    };
-    ":nvo" = {
-      "H-m" = "'evilem-motion-search-next";
-      "H-U" = "'evilem-motion-forward-word-begin";
-      "H-u" = "'evilem-motion-forward-WORD-begin";
-      "H-X" = "'evilem-motion-backward-word-begin";
-      "H-x" = "'evilem-motion-backward-WORD-begin";
-      "H-M" = "'evilem-motion-search-previous";
-      "H-e" = "'evilem-motion-next-visual-line";
-      "H-o" = "'evilem-motion-previous-visual-line";
-    };
+  generalOne.":nvo" = {
+    "H-m" = "'evilem-motion-search-next";
+    "H-U" = "'evilem-motion-forward-word-begin";
+    "H-u" = "'evilem-motion-forward-WORD-begin";
+    "H-X" = "'evilem-motion-backward-word-begin";
+    "H-x" = "'evilem-motion-backward-WORD-begin";
+    "H-M" = "'evilem-motion-search-previous";
   };
   custom = {
+    avy-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
     avy-dispatch-alist = ''
-      '((?m . avy-action-cursor)
-			  (?l . avy-action-ispell)
-			  (?o . avy-action-embark)
+      '((?l . avy-action-ispell)
+			  (?o . nix-emacs-avy-action-embark)
 			  (?h . avy-action-helpful)
 			  (?g . avy-action-yank)
 			  (?p . avy-action-teleport)
-			  (?q . avy-action-fold))
+			  (?q . nix-emacs-avy-action-fold))
     '';
-    avy-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
   };
-  config = ''
-    <<Emacs Evil Easymotion Config>>
-  '';
-};
-
-evil-nerd-commenter = {
-  enable = true;
-  defer = true;
-  generalOne.global-leader = {
-    "c" = '''(:ignore t :which-key "comment")'';
-    "ci" = '''(evilnc-comment-or-uncomment-lines :which-key "comment line")'';
-    "cl" = '''(evilnc-quick-comment-or-uncomment-paragraphs :which-key "comment paragraph")'';
-    "cc" = '''(evilnc-copy-and-comment-lines :which-key "copy & comment lines")'';
-    "cp" = '''(evilnc-comment-or-uncomment-paragraphs :which-key comment paragraph)'';
-    "cr" = '''(comment-or-uncomment-region :which-key "comment region")'';
-    "cv" = '''(evilnc-toggle-invert-comment-line-by-line :which-key "invert comments")'';
-    "cy" = '''(evilnc-copy-and-comment-operator :which-key "copy & comment operator")'';
-    "co" = '''(evilnc-comment-operator :which-key "copy operator")'';
-  };
+  config = "(defun avy-action-helpful (pt) (nix-emacs-base-avy-action 'helpful-at-point pt))";
 };
 
 evil-mc = {
@@ -2981,53 +3006,6 @@ evil-mc = {
 };
 #+end_src
 
-#+NAME: Emacs Evil Surround Extra Config
-#+begin_src emacs-lisp
-:general-config
-('visual evil-surround-mode-map "R" 'evil-surround-region)
-('operator evil-surround-mode-map
-  "s" nil
-  "r" 'evil-surround-edit
-  "R" 'evil-Surround-edit)
-#+end_src
-
-#+NAME: Emacs Evil Easymotion Config
-#+begin_src emacs-lisp
-;; Stolen from karthink
-(defun avy-action-cursor (pt)
-  (save-excursion
-    (goto-char pt)
-    (evil-mc-make-cursor-here))
-  (select-window
-   (cdr (ring-ref avy-ring 0)))
-  t)
-
-(defun avy-action-helpful (pt)
-  (save-excursion
-    (goto-char pt)
-    (helpful-at-point))
-  (select-window
-   (cdr (ring-ref avy-ring 0)))
-  t)
-
-(defun avy-action-fold (pt)
-  (save-excursion
-    (goto-char pt)
-    (evil-toggle-fold))
-  (select-window
-   (cdr (ring-ref avy-ring 0)))
-  t)
-
-(defun avy-action-embark (pt)
-  (unwind-protect
-      (save-excursion
-        (goto-char pt)
-        (embark-act))
-    (select-window
-     (cdr (ring-ref avy-ring 0))))
-  t)
-#+end_src
-
 #+NAME: Emacs Evil-MC Config
 #+begin_src emacs-lisp
 (global-evil-mc-mode)
@@ -3038,13 +3016,18 @@ evil-mc = {
 
 ;; Don't mess with my macros.
 ;; https://github.com/gabesoft/evil-mc/issues/83
-(gsetq evil-mc-cursor-variables
-       (mapcar
-  	(lambda (s)
-  	  (remove 'register-alist
-  		  (remove 'evil-markers-alist
-  			  (remove evil-was-yanked-without-register s))))
-  	evil-mc-cursor-variables))
+(defun ~+multiple-cursors-evil-mc-write-cursor-state-a (state)
+  "Write the state of the real cursor with values from STATE."
+  (let ((names (evil-mc-get-cursor-variables)))
+    (dolist (name names)
+      (when (boundp name)
+        (let ((p (evil-mc-get-cursor-property state name)))
+          (when (not
+                 (or
+                  (eq name 'register-alist)
+                  (eq name 'evil-markers-alist)))
+            (set name p)))))))
+(advice-add #'evil-mc-write-cursor-state :override #'~+multiple-cursors-evil-mc-write-cursor-state-a)
 #+end_src
 
 **** Symex
@@ -3245,6 +3228,9 @@ ewal-evil-cursors = {
 {
   imports = [
     ./evil-surround.nix
+    ./electric-pair.nix
+    ./evil-nerd-commenter.nix
+    ./avy.nix
   ];
 }
 #+end_src
@@ -3263,6 +3249,170 @@ in
     enable = true;
     deferIncrementally = true;
     config = "(global-evil-surround-mode)";
+  };
+}
+#+end_src
+
+***** Electric Pair
+#+begin_src nix :tangle keybinds/electric-pair.nix
+{ config, lib, ... }:
+
+let
+  keybinds = config.programs.emacs.init.keybinds;
+in
+{
+  options.programs.emacs.init.keybinds.electricPair.enable = lib.mkEnableOption "Enables electric-pair-mode. Borrowed from Derek Taylor.";
+
+  config.programs.emacs.init = {
+    hasOn = true;
+    usePackage.elec-pair = {
+      enable = true;
+      hook = ["(on-first-buffer . electric-pair-mode)"];
+      custom.electric-pair-pairs = ''
+        '((?\" . ?\")
+          (?\[ . ?\])
+          (?\( . ?\))
+          (?\{ . ?\}))
+      '';
+      config = ''
+        ;; < & > are not delimiters. Change my mind.
+        ;; Courtesy of DT. https://gitlab.com/dwt1/configuring-emacs/-/tree/main/07-the-final-touches?ref_type=heads
+        (gsetq electric-pair-inhibit-predicate `(lambda (c)
+        					   (if (or (char-equal c ?<) (char-equal c ?>))
+        					       t
+        					       (,electric-pair-inhibit-predicate c))))
+      '';
+    };
+  };
+}
+#+end_src
+
+***** Nerd Commenter
+#+begin_src nix :tangle keybinds/evil-nerd-commenter.nix
+{ config, lib, ... }:
+
+let
+  keybinds = config.programs.emacs.init.keybinds;
+in
+{
+  options.programs.emacs.init.keybinds.evilNerdCommenter.enable = lib.mkEnableOption "Enables evil-nerd-commenter. Enabling leader keys is enabled.";
+
+  config.programs.emacs.init.usePackage.evil-nerd-commenter = lib.mkIf keybinds.evilNerdCommenter.enable {
+    enable = true;
+    generalOne.global-leader = lib.mkIf keybinds.leader-key.enable {
+      "c" = lib.mkDefault '''(:ignore t :which-key "comment")'';
+      "ci" = lib.mkDefault "'evilnc-comment-or-uncomment-lines";
+      "cl" = lib.mkDefault "'evilnc-quick-comment-or-uncomment-paragraphs";
+      "cc" = lib.mkDefault "'evilnc-copy-and-comment-lines";
+      "cp" = lib.mkDefault "'evilnc-comment-or-uncomment-paragraphs";
+      "cr" = lib.mkDefault "'comment-or-uncomment-region";
+      "cv" = lib.mkDefault "'evilnc-toggle-invert-comment-line-by-line";
+      "cy" = lib.mkDefault "'evilnc-copy-and-comment-operator";
+      "co" = lib.mkDefault "'evilnc-comment-operator";
+    };
+    config = lib.mkIf (!keybinds.evilNerdCommenter.enable) "(evilnc-default-hotkeys)";
+  };
+}
+#+end_src
+
+***** Avy
+#+begin_src nix :tangle keybinds/avy.nix
+{ config, lib, ... }:
+
+let
+  keybinds = config.programs.emacs.init.keybinds;
+  completions = config.programs.emacs.init.completions;
+in
+{
+  options.programs.emacs.init.keybinds.avy = {
+    enable = lib.mkEnableOption "Enables avy support. Many actions borrowed from Karthink.";
+    evilModifierKey = lib.mkOption {
+      type = lib.types.string;
+      default = "M";
+      description = "The modifier key to use for evil easymotions";
+    };
+  };
+
+  config.programs.emacs.init.usePackage = lib.mkIf keybinds.avy.enable {
+    avy = {
+      enable = true;
+      defer = true;
+      after = ["isearch"];
+      bind = lib.mkIf (!keybinds.evil.enable) {
+        "C-:" = lib.mkDefault "avy-goto-char";
+        "C-'" = lib.mkDefault "avy-goto-char-2";
+      };
+      bindLocal = lib.mkIf (!keybinds.evil.enable) {
+        goto-map = {
+          "f" = lib.mkIf (!completions.vertico.enable) (lib.mkDefault "avy-goto-line");
+          "w" = lib.mkDefault "avy-goto-word-1";
+          "e" = lib.mkDefault "avy-goto-word-0";
+        };
+        mode-specific-map."C-j" = lib.mkDefault "avy-resume";
+      };
+      config = ''
+        (avy-setup-default)
+
+        ;; Stolen from karthink
+        (defun nix-emacs-base-avy-action (action pt)
+          "Runs the function ACTION at PT. Meant to be used for making avy actions."
+          (unwind-protect
+              (save-excursion
+	        (goto-char pt)
+	        (funcall action)))
+          (select-window
+           (cdr (ring-ref avy-ring 0)))
+          t)
+        
+        ${if keybinds.evil.enable then ''
+          (defun nix-emacs-avy-action-fold (pt)
+                 (nix-emacs-base-avy-action 'evil-toggle-fold pt))
+          '' else ""}
+
+        ${if completions.vertico.embark then ''
+          (defun nix-emacs-avy-action-embark (pt)
+                 (nix-emacs-base-avy-action 'embark-act pt))
+          '' else ""}
+      '';
+      custom.avy-dispatch-alist = lib.mkIf (!keybinds.evil.enable) (lib.mkDefault ''
+        '((?x . avy-action-kill-move)
+          (?X . avy-action-kill-stay)
+          (?t . avy-action-teleport)
+          (?m . avy-action-mark)
+          (?n . avy-action-copy)
+          (?y . avy-action-yank-line)
+          (?i . avy-action-ispell)
+          (?z . avy-action-zap-to-char)
+          ${if completions.vertico.embark then "(?o . nix-emacs-avy-action-embark)" else ""})
+      '');
+    };
+
+    evil-easymotion = lib.mkIf keybinds.evil.enable {
+      enable = true;
+      generalOne = {
+        ":o" = {
+          "/" = "'evil-avy-goto-char-2"; 
+          "?" = "'evil-avy-goto-char-2"; 
+        };
+        ":nvo" = {
+          "${keybinds.avy.evilModifierKey}-n" = lib.mkDefault "'evilem-motion-search-next";
+          "${keybinds.avy.evilModifierKey}-w" = lib.mkDefault "'evilem-motion-forward-word-begin";
+          "${keybinds.avy.evilModifierKey}-W" = lib.mkDefault "'evilem-motion-forward-WORD-begin";
+          "${keybinds.avy.evilModifierKey}-b" = lib.mkDefault "'evilem-motion-backward-word-begin";
+          "${keybinds.avy.evilModifierKey}-B" = lib.mkDefault "'evilem-motion-backward-WORD-begin";
+          "${keybinds.avy.evilModifierKey}-N" = lib.mkDefault "'evilem-motion-search-previous";
+          "${keybinds.avy.evilModifierKey}-${keybinds.evil.keys.down}" = lib.mkDefault "'evilem-motion-next-visual-line";
+          "${keybinds.avy.evilModifierKey}-${keybinds.evil.keys.up}" = lib.mkDefault "'evilem-motion-previous-visual-line";
+        };
+      };
+      custom.avy-dispatch-alist = lib.mkDefault ''
+        '((?t . avy-action-teleport)
+          (?y . avy-action-yank)
+          (?i . avy-action-ispell)
+          (?z . nix-emacs-avy-action-fold)
+          ${if completions.vertico.embark then "(?o . nix-emacs-avy-action-embark)" else ""})
+      '';
+    };
   };
 }
 #+end_src
@@ -3286,12 +3436,16 @@ My completions system is based around vertico, because that's what all the cool 
         evilConsultLine = true;
         embark = true;
       };
-      corfu = {
+      # corfu = {
+      #   enable = true;
+      #   wantTabComplete = false;
+      #   wantRetConfirm = false;
+      #   wantMinibuffer = true;
+      #   popupInfo = true;
+      # };
+      company = {
         enable = true;
-        wantTabComplete = false;
-        wantRetConfirm = false;
-        wantMinibuffer = true;
-        popupInfo = true;
+        posframe = true;
       };
     };
 
@@ -3330,13 +3484,9 @@ vertico.generalTwo.":n".vertico-map = {
   "bg" = "'vertico-first";
 };
 
-vertico-quick = {
-  enable = true;
-  defer = true;
-  generalTwo.":n".vertico-map = {
-    "H-o" = "'vertico-quick-jump";
-    "H-e" = "'vertico-quick-jump";
-  };
+vertico-quick.custom = {
+  vertico-quick1 = ''"crst"'';
+  vertico-quick2 = ''"neia"'';
 };
 #+end_src
 
@@ -3355,6 +3505,10 @@ corfu-quick = {
   generalTwo.":ie".corfu-map = {
     "M-o" = "'corfu-quick-insert";
     "M-e" = "'corfu-quick-insert";
+  };
+  custom = {
+    corfu-quick1 = ''"crst"'';
+    corfu-quick2 = ''"neia"'';
   };
 };
 
@@ -3627,6 +3781,7 @@ ezf = {
     ./orderless.nix
     ./corfu.nix
     ./ivy.nix
+    ./company.nix
   ];
 }
 #+end_src
@@ -3659,6 +3814,15 @@ in
           "${keybinds.evil.keys.down}" = "'vertico-next";
           "${keybinds.evil.keys.up}" = "'vertico-previous";
         };
+      };
+
+      vertico-quick = lib.mkIf keybinds.avy.enable {
+        enable = true;
+        generalTwo.":n".vertico-map = lib.mkIf keybinds.evil.enable {
+          "${keybinds.avy.evilModifierKey}-${keybinds.evil.keys.down}" = "'vertico-quick-jump";
+          "${keybinds.avy.evilModifierKey}-${keybinds.evil.keys.up}" = "'vertico-quick-jump";
+        };
+        bindLocal.vertico-map."M-g f" = lib.mkIf (!keybinds.evil.enable) "vertico-quick-jump";
       };
       
       marginalia = {
@@ -3858,6 +4022,18 @@ in
         after = ["embark" "consult"];
         hook = ["(embark-collect-mode . consult-preview-at-point-mode)"];
       };
+
+      consult-eglot = lib.mkIf ide.eglot.enable {
+        enable = true;
+        after = ["eglot"];
+        bindLocal.eglot-mode-map."C-M-." = "consult-eglot-symbols" ;
+      };
+      
+      consult-lsp = lib.mkIf ide.lsp.enable {
+        enable = true;
+        after = ["lsp-mode"];
+        bindLocal.lsp-mode-map."C-M-." = "consult-lsp-symbols" ;
+      };
     };
   };
 }
@@ -3983,6 +4159,15 @@ in
         hook = ["(corfu-mode . corfu-prescient-mode)"];
         custom.corfu-prescient-completion-styles = lib.mkDefault (if completions.orderless then "'(orderless basic prescient)" else "'(basic prescient)");
       };
+
+      corfu-quick = lib.mkIf keybinds.avy.enable {
+        enable = true;
+        generalTwo.":ie".corfu-map = lib.mkIf keybinds.evil.enable {
+          "${keybinds.avy.evilModifierKey}-${keybinds.evil.keys.up}" = lib.mkDefault "'corfu-quick-insert";
+          "${keybinds.avy.evilModifierKey}-${keybinds.evil.keys.down}" = lib.mkDefault "'corfu-quick-insert";
+        };
+        bindLocal.corfu-map."M-g f" = lib.mkIf (!keybinds.evil.enable) "corfu-quick-insert";
+      };
     };
   };
 }
@@ -3992,7 +4177,6 @@ in
 ***** Ivy
 + [ ] Make it so that the mapping for find-file in leader keys is conditional
 + [ ] Move counsel-org-goto to org mode support
-+ [ ] Bind ivy actions to =:=
 + [ ] Counsel should integrate with helpful if helpful is present
 #+begin_src nix :tangle completion/ivy.nix
 { config, lib, ... }:
@@ -4161,6 +4345,110 @@ in
           (define-key [remap projectile-ag] #'counsel-projectile-ag)
           (define-key [remap projectile-switch-project] #'counsel-projectile-switch-project)
         '';
+      };
+
+      ivy-lsp = lib.mkIf ide.lsp.enable {
+        enable = true;
+        command = ["lsp-ivy-global-workspace-symbol"];
+        after = ["lsp-mode"];
+        bindLocal.lsp-mode-map."C-M-." = "lsp-ivy-workspace-symbol";
+      };
+
+      ivy-avy = lib.mkIf keybinds.avy.enable {
+        enable = true;
+        bindLocal.ivy-minibuffer-map."M-g f" = lib.mkIf (!keybinds.evil.enable) (lib.mkDefault "ivy-avy");
+        generalTwo.":nm".ivy-minibuffer-map = lib.mkIf keybinds.evil.enable {
+          "${keybinds.avy.evilModifierKey}-${keybinds.evil.keys.up}" = lib.mkDefault "'ivy-avy";
+          "${keybinds.avy.evilModifierKey}-${keybinds.evil.keys.down}" = lib.mkDefault "'ivy-avy";
+        };
+      };
+    };
+  };
+}
+#+end_src
+
+***** Company
++ [ ] Move ledger stuff to ledger
+#+begin_src nix :tangle completion/company.nix
+{ config, lib, ... }:
+
+let
+  completions = config.programs.emacs.init.completions;
+  keybinds = config.programs.emacs.init.keybinds;
+  ide = config.programs.emacs.init.ide;
+in
+{
+  options.programs.emacs.init.completions.company = {
+    enable = lib.mkEnableOption "Enables company. Largely borrowed from Doom";
+    posframe = lib.mkEnableOption "Company uses a posframe for its completions";
+  };
+
+  config.programs.emacs.init = lib.mkIf completions.company.enable {
+    hasOn = true;
+    usePackage = {
+      company = {
+        enable = true;
+        hook = ["(on-first-input . global-company-mode)"];
+        custom = {
+          company-minimum-prefix-length = lib.mkDefault "2";
+          company-tooltip-limit = lib.mkDefault "14";
+          company-tooltip-align-annotations = lib.mkDefault true;
+          company-require-match = lib.mkDefault "'never";
+          company-global-modes = lib.mkDefault '''(not erc-mode
+                                                       circe-mode
+                                                       message-mode
+                                                       help-mode
+                                                       gud-mode
+                                                       vterm-mode)
+          '';
+          company-frontends =  lib.mkDefault '''(company-pseudo-tooltip-frontend
+                                                 company-echo-metadata-frontend)
+          '';
+
+          company-backends = lib.mkDefault "'(company-capf)";
+          company-auto-commit = lib.mkDefault false;
+          company-dabbrev-other-buffers = lib.mkDefault false;
+          company-dabbrev-ignore-case = lib.mkDefault false;
+          company-dabbrev-downcase = lib.mkDefault false;
+        };
+        gfhook = lib.mkIf keybinds.evil.enable ["('(evil-insert-state-exit-hook evil-emacs-state-exit-hook) 'company-abort)"];
+        config = ''(with-eval-after-load 'eldoc
+                                         (eldoc-add-command 'company-complete-selection
+                                                            'company-complete-common
+                                                            'company-capf
+                                                            'company-abort))
+                    ${if keybinds.evil.enable then ''
+                      (with-eval-after-load 'evil-collection-company
+                                            (evil-collection-define-key nil 'company-active-map
+                                                                        (kbd "C-${keybinds.evil.keys.up}") 'company-select-previous-or-abort
+                                                                        (kbd "C-${keybinds.evil.keys.down}") 'company-select-next-or-abort
+                                            ))
+                    '' else ""}
+        '' ;
+      };
+
+      company-files = {
+        enable = true;
+        after = ["company"];
+        config = ''(add-to-list 'company-files--regexps "file:\\(\\(?:\\.\\{1,2\\}/\\|~/\\|/\\)[^\]\n]*\\)")'';
+      };
+
+      company-box = lib.mkIf completions.company.posframe {
+        enable = true;
+        hook = ["(company-mode . company-box-mode)"];
+      };
+
+      evil-collection.custom.evil-collection-want-company-extended-keybinds = lib.mkIf keybinds.evil.enable (lib.mkDefault true);
+
+      company-prescient = lib.mkIf completions.prescient {
+        enable = true;
+        hook = ["(global-company-mode . company-prescient-mode)"];
+      };
+
+      company-ledger = lib.mkIf ide.languages.ledger.enable {
+        enable = true;
+        after = ["company"];
+        config = "(add-to-list 'company-backends 'company-ledger)";
       };
     };
   };
@@ -4383,7 +4671,7 @@ How to add a latex package
     gfhook = ["('dired-mode-hook 'denote-dired-mode-in-directories)"];
     custom = {
       denote-directory = ''(expand-file-name "~/doc/denote")'';
-      denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "databases" "scifi" "softwarerequirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics" "plp")'';
+      denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "databases" "scifi" "softwarerequirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics" "plp" "malwareanalysis" "bio")'';
       denote-file-type = false;
       denote-dired-directories = "(list denote-directory)";
       
@@ -4468,7 +4756,7 @@ No idea what the rest of this is for.
 | beg | becomes an environment after tab  |
 
 #+NAME: Emacs Latex
-#+begin_src nix :noweb yes
+#+begin_src nix
 pdf-tools = {
   enable = true;
   defer = true;
@@ -4492,9 +4780,12 @@ pdf-tools = {
 evil-collection-pdf = {
   defer = true;
   enable = true;
-  extraConfig = ''
-    <<Emacs Pdf Tools Config>>
-  '';
+  generalTwoConfig.":n".pdf-view-mode-map = {
+    "C-e" = "'pdf-view-scroll-up-or-next-page";
+    "E" = "'pdf-view-scroll-up-or-next-page";
+    "C-o" = "'pdf-view-scroll-down-or-previous-page";
+    "O" = "'pdf-view-scroll-down-or-previous-page";
+  };
 };
 
 cdlatex.generalTwo.":i" = {
@@ -4503,16 +4794,6 @@ cdlatex.generalTwo.":i" = {
 };
 
 tex.generalTwo.local-leader.LaTeX-mode-map."e" = "'TeX-command-run-all";
-#+end_src
-
-#+NAME: Emacs Pdf Tools Config
-#+begin_src emacs-lisp
-:general-config
-('normal pdf-view-mode-map
-  "C-e" 'pdf-view-scroll-up-or-next-page
-  "E" 'pdf-view-scroll-up-or-next-page
-  "C-o" 'pdf-view-scroll-down-or-previous-page
-  "O" 'pdf-view-scroll-down-or-previous-page)
 #+end_src
 
 **** Markdown
@@ -5195,7 +5476,7 @@ golden-ratio = {
 
 *** Popper & Proced
 #+NAME: Emacs Window Management Popper & Proced
-#+begin_src nix :noweb yes
+#+begin_src nix
   popper = {
     enable = true;
     ghook = ["('on-first-buffer-hook 'popper-mode)"];
@@ -5231,17 +5512,11 @@ golden-ratio = {
   proced = {
     enable = true;
     command = ["proced"];
-    extraConfig = ''
-      <<Emacs Proced Config>>
-    '';
+    generalTwoConfig.":n".proced-mode-map = {
+      "j" = "'proced-unmark";
+      "k" = "'proced-send-signal";
+    };
   };
-#+end_src
-
-#+NAME: Emacs Proced Config
-#+begin_src emacs-lisp
-  :general-config ('normal proced-mode-map
-			   "j" 'proced-unmark
-			   "k" 'proced-send-signal)
 #+end_src
 
 *** i3status
@@ -6093,9 +6368,11 @@ This is a very ugly way of doing things
       config = ''
         <<Emacs Internet Qutebrowser Config>>
       '';
-      extraConfig = ''
-        <<Emacs Internet Qutebrowser Extra Config>>
-      '';
+      generalOneConfig.qute-dired-mode-map."C-c C-c" = "#'qute/choose-file";
+      generalTwoConfig.":n".qute-dired-mode-map = {
+        "i" = "'dired-find-file";
+        "n" = "'dired-up-directory";
+      };
     };
     qutebrowser-evil = {
       enable = true;
@@ -6127,17 +6404,6 @@ This is a very ugly way of doing things
     (kill-buffer)
     (add-hook 'dired-mode-hook 'qute-dired-mode)
     (setq qute-dired-buffers (list (dired "~/")))))
-#+end_src
-
-#+NAME: Emacs Internet Qutebrowser Extra Config
-#+begin_src emacs-lisp
-:general-config
-(qute-dired-mode-map
-        "C-c C-c" #'qute/choose-file)
-
-('normal qute-dired-mode-map
-  "i" 'dired-find-file
-  "n" 'dired-up-directory)
 #+end_src
 
 ** Keyboard

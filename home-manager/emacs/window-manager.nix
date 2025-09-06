@@ -518,11 +518,10 @@
           proced = {
             enable = true;
             command = ["proced"];
-            extraConfig = ''
-                :general-config ('normal proced-mode-map
-              			   "j" 'proced-unmark
-              			   "k" 'proced-send-signal)
-            '';
+            generalTwoConfig.":n".proced-mode-map = {
+              "j" = "'proced-unmark";
+              "k" = "'proced-send-signal";
+            };
           };
         
         ace-window = {
