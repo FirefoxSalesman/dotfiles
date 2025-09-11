@@ -1,7 +1,7 @@
-  { pkgs }:
+{ pkgs }:
 
   pkgs.writeShellScriptBin "ezf" ''
-  set -o nounset -o errexit -o pipefail
+    set -o nounset -o errexit -o pipefail
 
   field=0-
   # the elisp function to use for completing read

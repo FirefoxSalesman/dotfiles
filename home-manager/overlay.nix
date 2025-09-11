@@ -62,11 +62,7 @@
             inherit inputs;
             inherit (prev.emacsPackages) trivialBuild gptel;
           });
-          mpc-wrapper = (prev.emacsPackages.callPackage ./packages/emacs/mpc-wrapper.nix {
-            inherit inputs;
-            inherit (prev.emacsPackages) trivialBuild;
-          });
-          svelte-ts-mode = (prev.emacsPackages.callPackage ./packages/emacs/svelte-ts-mode.nix {
+	  mpc-wrapper = (prev.emacsPackages.callPackage ./packages/emacs/mpc-wrapper.nix {
             inherit inputs;
             inherit (prev.emacsPackages) trivialBuild;
           });

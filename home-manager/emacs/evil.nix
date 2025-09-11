@@ -1,7 +1,6 @@
   { lib, pkgs, inputs, config, ... }:
 
   {
-    imports = [../keybinds];
     programs.emacs.init = {
       keybinds = {
         evil = {
@@ -59,7 +58,18 @@
             
             (evil-set-initial-state 'dashboard-mode 'normal)
             
-            (evil-add-command-properties #'consult-grep :jump t)
+            (dolist (command '(consult-grep
+            		   consult-line
+            		   isearch-forward-regexp
+            		   evilem-motion-previous-visual-line
+            		   evilem-motion-next-line
+            		   evilem-motion-forward-WORD-begin
+            		   evilem-motion-backward-WORD-begin
+            		   evilem-motion-search-next
+            		   evilem-motion-search-previous
+            		   find-file
+            		   consult-fd))
+              (evil-add-command-properties command :jump t))
             
             (evil-define-operator ergo-word-delete (beg end type register yank-handler)
               "Delete word."
@@ -70,6 +80,11 @@
               "Delete word."
               :motion evil-inner-word
               (evil-change beg end type register yank-handler))
+            
+            (repeaters-define-maps
+             '(("flyspell"
+                evil-prev-flyspell-error "S"
+                evil-next-flyspell-error "s")))
           '';
           generalOne = {
             ":i" = {
@@ -244,6 +259,7 @@
         			  (?p . avy-action-teleport)
         			  (?q . nix-emacs-avy-action-fold))
             '';
+            avy-all-windows = false;
           };
           config = "(defun avy-action-helpful (pt) (nix-emacs-base-avy-action 'helpful-at-point pt))";
         };
@@ -312,129 +328,55 @@
                   (evilem-make-motion-plain evilem-symex-next-visual-line 'symex-next-visual-line :post-hook 'symex-select-nearest-in-line)
                   (evilem-make-motion-plain evilem-symex-previous-visual-line 'symex-previous-visual-line :post-hook 'symex-select-nearest-in-line)
                   (evilem-make-motion-plain evilem-symex-go-forward 'symex-go-forward :post-hook 'symex-select-nearest-in-line)
-                  (evilem-make-motion-plain evilem-symex-go-backward 'symex-go-backward :post-hook 'symex-select-nearest-in-line))
-                (gsetq symex--evil-keyspec
-                       '(("n" . symex-go-backward)
-                         ("e" . symex-go-down)
-                         ("o" . symex-go-up)
-                         ("i" . symex-go-forward)
-                         ("be" . symex-next-visual-line)
-                         ("bE" . evilem-symex-next-visual-line)
-                         ("bO" . evilem-symex-previous-visual-line)
-                         ("bo" . symex-previous-visual-line)
-                         ("(" . symex-create-round)
-                         ("[" . symex-create-square)
-                         (")" . symex-wrap-round)
-                         ("]" . symex-wrap-square)
-                         ("C-'" . symex-cycle-quote)
-                         ("C-," . symex-cycle-unquote)
-                         ("`" . symex-add-quoting-level)
-                         ("C-`" . symex-remove-quoting-level)
-                         ("u" . symex-traverse-forward)
-                         ("x" . symex-traverse-backward)
-                         ("C-u" . evilem-symex-forward)
-                         ("C-x" . evilem-symex-backward)
-                         ("U" . symex-traverse-forward-skip)
-                         ("X" . symex-traverse-backward-skip)
-                         ("{" . symex-leap-backward)
-                         ("}" . symex-leap-forward)
-                         ("M-{" . symex-soar-backward)
-                         ("M-}" . symex-soar-forward)
-                         ("C-o" . symex-climb-branch)
-                         ("C-e" . symex-descend-branch)
-                         ("C-n" . evilem-symex-go-backward)
-                         ("C-i" . evilem-symex-go-forward)
-                         ("d" . symex-yank)
-                         ("D" . symex-yank-remaining)
-                         ("G" . symex-paste-after)
-                         ("g" . symex-paste-before)
-                         ("k" . symex-delete)
-                         ("v" . symex-delete-backwards)
-                         ("V" . symex-delete-remaining)
-                         ("K" . symex-change)
-                         ("C-v" . symex-change-remaining)
-                         ("C--" . symex-clear)
-                         ("s" . symex-replace)
-                         ;; ("S" . symex-change-delimiter)
-                         ("N" . symex-shift-backward)
-                         ("I" . symex-shift-forward)
-                         ("M-N" . symex-shift-backward-most)
-                         ("M-I" . symex-shift-forward-most)
-                         ("O" . paredit-raise-sexp)	; revisit kb
-                         ("C-S-e" . symex-emit-backward)
-                         ("C-(" . symex-capture-backward)
-                         ("C-S-n" . symex-capture-backward)
-                         ("C-{" . symex-emit-backward)
-                         ("C-S-i" . symex-capture-forward)
-                         ("C-}" . symex-emit-forward)
-                         ("C-S-o" . symex-emit-forward)
-                         ("C-)" . symex-capture-forward)
-                         ("z" . symex-swallow)
-                         ("Z" . symex-swallow-tail)
-                         ("p" . symex-evaluate)
-                         ("B" . symex-evaluate-remaining)
-                         ("C-M-j" . symex-evaluate-pretty)
-                         ("d" . symex-evaluate-definition)
-                         ("M-j" . symex-eval-recursive)
-                         ;; ("T". symex-evaluate-thunk)
-                         ;; ("t" . symex-switch-to-scratch-buffer)
-                         ("H" . symex-switch-to-messages-buffer)
-                         ("l" . symex-repl)
-                         ("L" . symex-run)
-                         ("|" . symex-split)
-                         ("&" . symex-join)
-                         ("-" . symex-splice)
-                         ("S" . symex-open-line-after)
-                         ("R" . symex-open-line-before)
-                         (">" . symex-insert-newline)
-                         ("<" . symex-join-lines-backwards)
-                         ("C->" . symex-append-newline)
-                         ("C-<" . symex-join-lines)
-                         ("C-S" . symex-append-newline)
-                         ("E" . symex-join-lines)
-                         ("M-E" . symex-collapse)
-                         ("M-<" . symex-collapse)
-                         ("M->" . symex-unfurl)
-                         ("C-M-<" . symex-collapse-remaining)
-                         ("C-M->" . symex-unfurl-remaining)
-                         ("0" . symex-goto-first)
-                         ("M-n" . symex-goto-first)
-                         ("$" . symex-goto-last)
-                         ("M-i" . symex-goto-last)
-                         ("M-e" . symex-goto-lowest)
-                         ("M-o" . symex-goto-highest)
-                         ("=" . symex-tidy)
-                         ("<tab>" . symex-tidy)
-                         ("C-=" . symex-tidy-remaining)
-                         ("C-<tab>" . symex-tidy-remaining)
-                         ("M-=" . symex-tidy-proper)
-                         ("M-<tab>" . symex-tidy-proper)
-                         ("s" . symex-append-after)
-                         ("T" . symex-insert-at-end)
-                         ("t" . symex-insert-at-beginning)
-                         ("r" . symex-insert-before)
-                         ("w" . symex-wrap)
-                         ("W" . symex-wrap-and-append)
-                         ("C-d" . symex--evil-scroll-down)
-                         (";" . symex-comment)
-                         ("M-;" . symex-comment-remaining)
-                         ("C-;" . symex-eval-print)	; weird pre-offset (in both)
-                         ("s-;" . symex-evaluate)
-                         ("H-h" . symex--toggle-highlight) ; treats visual as distinct mode
-                         ("C-?" . symex-describe)
-                         ("<return>" . symex-enter-lower)
-                         ("<escape>" . symex-escape-higher)))    
+                  (evilem-make-motion-plain evilem-symex-go-backward 'symex-go-backward :post-hook 'symex-select-nearest-in-line))    
             '';
             config = ''
-                (gsetq symex-modal-backend 'evil)
-                (symex-initialize)
-                (repeaters-define-maps
-                 '(("symex-visual-line"
-                    symex-next-visual-line "e"
-                    symex-previous-visual-line "o")))
-                  
+              (symex-mode)
+              (repeaters-define-maps
+               '(("symex-visual-line"
+                  symex-next-visual-line "e"
+                  symex-previous-visual-line "o")))    
             '';
-          } ;
+            generalOneConfig.evil-symex-state-map = {
+              "n" = "'symex-go-backward";
+              "e" = "'symex-go-down";
+              "o" = "'symex-go-up";
+              "i" = "'symex-go-forward";
+              "bn" = "'evil-backward-char";
+              "bi" = "'evil-forward-char";
+              "C-e" = "'symex-climb-branch";
+              "C-o" = "'symex-descend-branch";
+              "d" = "'symex-yank";
+              "D" = "'symex-yank-remaining";
+              "G" = "'symex-paste-after";
+              "g" = "'symex-paste-before";
+              "k" = "'symex-delete";
+              "C-k" = "'symex-delete-backward";
+              "p" = "'symex-delete-remaining";
+              "K" = "'symex-change";
+              "P" = "'symex-change-remaining";
+              "N" = "'symex-shift-backward";
+              "I" = "'symex-shift-forward";
+              "M-N" = "'symex-shift-backward-most";
+              "M-I" = "'symex-shift-forward-most";
+              "M-n" = "'symex-goto-first";
+              "M-i" = "'symex-goto-last";
+              "t" = "'symex-insert-at-beginning";
+              "T" = "'symex-append-at-end";
+              "S" = "'symex-open-line-after";
+              "R" = "'symex-open-line-before";
+              "j" = "'evil-undo";
+              "J" = "'evil-redo";
+              "s" = "'symex-append-after";
+              "r" = "'symex-insert-before";
+              "w" = "'evil-repeat";
+              "C-w" = "'evil-repeat-pop";
+              "W" = "'evil-ex-repeat";
+              "a" = "'evil-ex";
+              "~" = "'evil-record-macro";
+              "$" = "'evil-execute-macro";
+            };
+          };
  
         evil-org.config = ''
           (evil-define-key 'operator 'evil-org-mode

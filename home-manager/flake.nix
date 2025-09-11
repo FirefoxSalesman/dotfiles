@@ -88,10 +88,6 @@
         flake = false;
       };
       
-      svelte-ts-mode = {
-        url = "github:leafOfTree/svelte-ts-mode";
-        flake = false;
-      };
     };
 
     outputs = { self, home-manager, nixgl, nixpkgs, nixpkgs-stable, stylix, emacs-init, ... }@inputs:
@@ -121,7 +117,7 @@
                 inherit self;
                 inherit inputs;
                 inherit system;
-                inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline symex2 treesitter-context gptel-quick org-novelist mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
+                inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline treesitter-context gptel-quick org-novelist mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
                 inherit pkgs-stable;
               };
               modules = [

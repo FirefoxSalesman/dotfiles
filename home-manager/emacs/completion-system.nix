@@ -1,8 +1,6 @@
 { inputs, pkgs, ... }:
 
 {
-  imports = [../completion];
-
   home.file.".config/emacs/templates.eld".text = ''
       nix-mode
       (upackage p "= {" n "  enable = true;" q "  }")
@@ -69,16 +67,12 @@
         evilConsultLine = true;
         embark = true;
       };
-      # corfu = {
-      #   enable = true;
-      #   wantTabComplete = false;
-      #   wantRetConfirm = false;
-      #   wantMinibuffer = true;
-      #   popupInfo = true;
-      # };
-      company = {
+      corfu = {
         enable = true;
-        posframe = true;
+        wantTabComplete = false;
+        wantRetConfirm = false;
+        wantMinibuffer = true;
+        popupInfo = true;
       };
     };
 
@@ -226,7 +220,7 @@
         config = "(global-ace-isearch-mode)";
         custom = {
           ace-isearch-on-evil-mode = true;
-          ace-isearch-input-length = "5";
+          ace-isearch-input-length = 5;
           ace-isearch-jump-based-on-one-char = false;
         };
       };

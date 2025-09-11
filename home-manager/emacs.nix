@@ -82,7 +82,7 @@
               enable = true;
               custom = {
                 display-line-numbers-type = "'relative";
-                display-line-numbers-width = "3";
+                display-line-numbers-width = 3;
               }; 
               config = "(global-display-line-numbers-mode)";
               #Disable line numbers for some modes

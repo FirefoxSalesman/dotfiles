@@ -327,7 +327,7 @@
               exwm-manage-force-tiling = true;
               # Emacs everywhere
               exwm-input-simulation-keys = '''(([?\C-h] . [backspace]))'';
-              exwm-workspace-number = "1";
+              exwm-workspace-number = 1;
               # Automatically move EXWM buffer to current workspace when selected
               exwm-layout-show-all-buffers = true;
               # Display all EXWM buffers in every workspace buffer list
@@ -378,7 +378,7 @@
                                               ;;Movement
                                               ([?\s-e] . elwm-next)
                                               ([?\s-o] . elwm-prev)
-              
+        
                                               ;; Arrangement
                                               ([?\s-E] . elwm-rotate-window)
                                               ([?\s-O] . elwm-derotate-window)
@@ -492,7 +492,7 @@
               "C-s-'" = "'popper-toggle-type";
             };
             custom = {
-              popper-window-height = "30";
+              popper-window-height = 30;
               popper-group-function = "'popper-group-by-project";
               popper-reference-buffers = '''(help-mode
                                                helpful-mode

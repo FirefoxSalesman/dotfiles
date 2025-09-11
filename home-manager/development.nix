@@ -1,11 +1,6 @@
-{ pkgs, lib, ... }:
+{ config, pkgs, lib, ... }:
 
 {
-  imports = [
-    ./language-support
-    ./direnv.nix
-  ];
-
   programs.emacs.init = {
     ide = {
       project = true;
@@ -35,7 +30,7 @@
         emacs-lisp.enable = true;
         javascript.enable = true;
         ledger.enable = true;
-        swift.enable = true;
+	r.enable = true;
       };
     };
 
@@ -51,15 +46,13 @@
           ghook = ["('prog-mode-hook 'rainbow-delimiters-mode)"];
         };
       
-      # lsp-mode.gfhook = ["('lsp-mode-hook (lambda () (company-mode -1)))"];
       # lsp-java.custom.lsp-java-content-provider-preferred = ''"fernflower"'';
-
       
 
         treesitter-context = {
           enable = true;
           ghook = ["('(js-ts-mode-hook haskell-mode java-ts-mode-hook rustic-mode-hook c-ts-mode-hook python-mode-hook json-ts-mode-hook) 'treesitter-context-mode)"];
-          custom.treesitter-context-frame-min-width = "30";
+          custom.treesitter-context-frame-min-width = 30;
           config = ''
             (dolist (treesit-support '(treesitter-context--supported-mode treesitter-context--focus-supported-mode  treesitter-context--fold-supported-mode))
                     (add-to-list treesit-support 'rustic-mode)

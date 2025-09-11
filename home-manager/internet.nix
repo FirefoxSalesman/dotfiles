@@ -30,7 +30,7 @@
             eww-header-line-format = false;
             eww-desktop-remove-duplicates = true;
             eww-download-directory = ''(expand-file-name "~/dwn")'';
-            eww-history-limit = "10";
+            eww-history-limit = 10;
             # External Browser
             eww-use-external-browser-for-content-type = ''"\\`\\(video/\\|audio\\)"''; # On GNU/Linux check your mimeapps.list
             eww-browse-url-new-windowis-tab = false;

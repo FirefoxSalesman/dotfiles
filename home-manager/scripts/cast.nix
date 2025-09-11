@@ -1,4 +1,4 @@
-  { pkgs }:
+{ pkgs }:
 
   pkgs.writeShellScriptBin "cast" ''
     #Exit on fail

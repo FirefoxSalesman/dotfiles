@@ -31,7 +31,6 @@
             custom = {
               org-export-with-toc = false;
               org-export-with-section-numbers = false;
-              # org-agenda-files = '''("~/doc/tasks.org")'';
               org-directory = ''"~/doc"'';
               org-emphasis-alist = '''(("*" bold)
                                          ("/" italic)
@@ -49,8 +48,8 @@
                                      #'tempel-complete
                                      #'cape-file)
                 		    #'pcomplete-completions-at-point
-                		    #'cape-dabbrev
-                		    #'cape-dict)))
+                		    #'cape-dict
+                		    #'cape-dabbrev)))
             '';
           };
 
@@ -72,7 +71,7 @@
             gfhook = ["('dired-mode-hook 'denote-dired-mode-in-directories)"];
             custom = {
               denote-directory = ''(expand-file-name "~/doc/denote")'';
-              denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "databases" "scifi" "softwarerequirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics" "plp" "malwareanalysis" "bio")'';
+              denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "databases" "scifi" "softwarerequirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics" "plp" "malwareanalysis" "bio" "ai")'';
               denote-file-type = false;
               denote-dired-directories = "(list denote-directory)";
               
