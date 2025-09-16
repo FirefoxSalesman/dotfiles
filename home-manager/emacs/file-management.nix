@@ -4,8 +4,8 @@
   programs.emacs.init.usePackage = {
     dired = {
       enable = true;
-      gfhook = ["('dired-mode-hook (list 'dired-omit-mode 'hl-line-mode (lambda () (setq-local
-        visible-cursor nil))))"];
+      gfhook = ["('dired-mode-hook (list 'dired-omit-mode 'hl-line-mode (local!
+        visible-cursor nil)))"];
       general = {
         "C-x C-j" = "'dired-jump";
         "C-x d" = "'consult-dir";

@@ -1,12 +1,12 @@
-{ inputs, trivialBuild, posframe } :
+{ inputs, trivialBuild, gptel } :
 
 trivialBuild rec {
-  pname = "treesitter-context";
+  pname = "macher";
   version = "current";
-  src = inputs.treesitter-context;
+  src = inputs.macher;
 
   propagatedUserEnvPkgs = [
-    posframe
+    gptel
   ];
 
   buildInputs = propagatedUserEnvPkgs;

@@ -133,6 +133,7 @@
           };
           ctl-x-map."C-f" = "'consult-fd";
         };
+        bindLocal.help-map."M" = "man";
         config = ''
             (defvar consult--bufler-workspace+
               `(:name "Workspace"

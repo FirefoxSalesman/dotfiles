@@ -1,13 +1,13 @@
-  { inputs, trivialBuild, org }:
+{ inputs, trivialBuild, org }:
 
-  trivialBuild rec {
-    pname = "org-novelist";
-    version = "current";
-    src = inputs.org-novelist;
+trivialBuild rec {
+  pname = "org-novelist";
+  version = "current";
+  src = inputs.org-novelist;
 
-    propogatedUserEnvPkgs = [
-      org
-    ];
+  propogatedUserEnvPkgs = [
+    org
+  ];
 
-    buildInputs = propogatedUserEnvPkgs;
-  }
+  buildInputs = propogatedUserEnvPkgs;
+}

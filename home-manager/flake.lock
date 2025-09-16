@@ -443,6 +443,22 @@
         "type": "github"
       }
     },
+    "macher": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1755742522,
+        "narHash": "sha256-Ngwocb5k+d8FPQNoWNIxFxImnGqPaTzKz0YX8O+7ugU=",
+        "owner": "kmontag",
+        "repo": "macher",
+        "rev": "4fa8fbb6b250b207723d380931a463bcbc8da9ca",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kmontag",
+        "repo": "macher",
+        "type": "github"
+      }
+    },
     "mpc-wrapper": {
       "flake": false,
       "locked": {
@@ -676,6 +692,7 @@
         "gptel-quick": "gptel-quick",
         "home-manager": "home-manager",
         "kmonad": "kmonad",
+        "macher": "macher",
         "mpc-wrapper": "mpc-wrapper",
         "nixgl": "nixgl",
         "nixpkgs": "nixpkgs_3",
