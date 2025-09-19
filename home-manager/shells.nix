@@ -130,7 +130,7 @@
         enable = true;
         defer = true;
         ghook = ["('eshell-mode-hook 'fish-completion-mode)"];
-        gfhook = ["('fish-completion-mode-hook (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'pcomplete-completions-at-point))))"];
+        gfhook = ["('fish-completion-mode-hook (local! completion-at-point-functions '(tempel-complete pcomplete-completions-at-point)))"];
       };
       
       eshell-git-prompt = {

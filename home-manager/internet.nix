@@ -1,8 +1,8 @@
-{ inputs, config, pkgs, pkgs-stable, lib, ... }:
+{ inputs, config, pkgs, lib, ... }:
 
 {
   home.packages = with pkgs; [
-    pkgs-stable.python39Packages.adblock
+    python313Packages.adblock
   ];
 
   programs.emacs.init.usePackage = {
@@ -54,17 +54,17 @@
       '';
     };
 
-    yeetube = {
-      enable = true;
-      custom.yeetube-play-function = "'mpv-play-url";
-      generalOne.global-leader."y" = '''(yeetube-search :which-key "search")'';
-      generalTwo.":n"."yeetube-mode-map" = {
-        "RET" = "'yeetube-play";
-        "r" = "'yeetube-channel-videos";
-        "s" = "'yeetube-channel-search";
-        "d" = "'yeetube-download-video";
-      };
-    };
+    # yeetube = {
+    #   enable = true;
+    #   custom.yeetube-play-function = "'mpv-play-url";
+    #   generalOne.global-leader."y" = '''(yeetube-search :which-key "search")'';
+    #   generalTwo.":n"."yeetube-mode-map" = {
+    #     "RET" = "'yeetube-play";
+    #     "r" = "'yeetube-channel-videos";
+    #     "s" = "'yeetube-channel-search";
+    #     "d" = "'yeetube-download-video";
+    #   };
+    # };
 
     # ement = {
     #   enable = true;
@@ -125,7 +125,7 @@
   programs.qutebrowser = {
     enable = true;
     enableDefaultBindings = true;
-    package = (config.lib.nixGL.wrap pkgs-stable.qutebrowser);
+    package = (config.lib.nixGL.wrap pkgs.qutebrowser);
   
     keyBindings = {
       normal = {

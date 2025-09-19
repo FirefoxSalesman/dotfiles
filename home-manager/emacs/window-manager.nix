@@ -1,4 +1,4 @@
-{ inputs, pkgs, pkgs-stable, config, ... }:
+{ inputs, pkgs, config, ... }:
 
 {
   programs = {
@@ -388,7 +388,7 @@
           
                                           ;; Shell bindings
                                           ([?\s-s] . (lambda () (interactive) (shell-command "slock")))
-                                          ([?\s-y] . (lambda () (interactive) (start-process-shell-command "maim" nil  "${pkgs-stable.maim}/bin/maim ~/pic/screenshot.png"))))'';
+                                          ([?\s-y] . (lambda () (interactive) (start-process-shell-command "maim" nil  "${pkgs.maim}/bin/maim ~/pic/screenshot.png"))))'';
           
         };
         afterCall = ["on-init-ui-hook"];

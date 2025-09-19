@@ -320,7 +320,7 @@
         symex = {
           enable = true;
           defer = true;
-          generalTwo.":n"."(racket-repl-mode-map makefile-mode-map lisp-interaction-mode-map lisp-mode-map emacs-lisp-mode-map)"."RET" = "'symex-mode-interface";
+          generalTwo.":n"."(racket-repl-mode-map lisp-interaction-mode-map lisp-mode-map)"."RET" = "'symex-mode-interface";
           init = ''
               (with-eval-after-load 'evil-easymotion
                 (evilem-make-motion-plain evilem-symex-forward 'symex-traverse-forward :post-hook 'symex-select-nearest-in-line)

@@ -30,7 +30,7 @@
       ./emacs.nix
       ./shells.nix
       ./gptel.nix
-      # ./sage.nix
+      ./sage.nix
       ./keyboard.nix
     ];
 

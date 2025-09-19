@@ -62,11 +62,15 @@ final: prev: pkgs: inputs: {
           inherit inputs;
           inherit (prev.emacsPackages) trivialBuild gptel;
         });
-  macher = (prev.emacsPackages.callPackage ./packages/emacs/macher.nix {
+	macher = (prev.emacsPackages.callPackage ./packages/emacs/macher.nix {
           inherit inputs;
           inherit (prev.emacsPackages) trivialBuild gptel;
         });
-  mpc-wrapper = (prev.emacsPackages.callPackage ./packages/emacs/mpc-wrapper.nix {
+	ragmacs = (prev.emacsPackages.callPackage ./packages/emacs/ragmacs.nix {
+          inherit inputs;
+          inherit (prev.emacsPackages) trivialBuild gptel orderless;
+        });
+	mpc-wrapper = (prev.emacsPackages.callPackage ./packages/emacs/mpc-wrapper.nix {
           inherit inputs;
           inherit (prev.emacsPackages) trivialBuild;
         });

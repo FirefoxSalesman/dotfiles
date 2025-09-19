@@ -33,6 +33,11 @@
       flake = false;
     };
     
+    ragmacs = {
+      url = "github:positron-solutions/ragmacs";
+      flake = false;
+    };
+    
     macher = {
       url = "github:kmontag/macher";
       flake = false;

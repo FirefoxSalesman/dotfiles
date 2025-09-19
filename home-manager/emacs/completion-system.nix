@@ -2,61 +2,68 @@
 
 {
   home.file.".config/emacs/templates.eld".text = ''
-      nix-mode
-      (upackage p "= {" n "  enable = true;" q "  }")
+    nix-mode
+    (upackage p "= {" n "  enable = true;" q "  }")
   
-      js-ts-mode
-      (clg "console.log(" p ");")
-      (doc "/**" n> " * " q n " */")
-      (anfn "(" p ") => {" n> q n "};")
-      (qs "document.querySelector(\"" q "\");")
-      (if "if (" p ") {" n> q n "}")
+    js-ts-mode
+    (clg "console.log(" p ");")
+    (doc "/**" n> " * " q n " */")
+    (anfn "(" p ") => {" n> q n "};")
+    (qs "document.querySelector(\"" q "\");")
+    (if "if (" p ") {" n> q n "}")
   
-      c-ts-mode
-      (doc "/**" n> " * " q n " */")
-      (if "if (" p ") {" n> q n "}")
-      (for "for (int i = " p "; i < " p "; i++) {" n> q n "}")
-      (while "while (" p ") {" n> q n "}")
-      (stdio "#include <stdio.h>")
-      (stdlib "#include <stdlib.h>")
-      (string "#include <string.h>")
-      (unistd "#include <unistd.h>")
-      (mpi "#include <mpi.h>")
-      (math "#include <math.h>")
-      (define "#define " p)
-      (function p " " p " (" p ") {" n> q n "}" ) 
-      (main "int main (int argc, char **argv) {" n> q n "}" ) 
+    c-ts-mode
+    (doc "/**" n> " * " q n " */")
+    (if "if (" p ") {" n> q n "}")
+    (for "for (int i = " p "; i < " p "; i++) {" n> q n "}")
+    (while "while (" p ") {" n> q n "}")
+    (stdio "#include <stdio.h>")
+    (stdlib "#include <stdlib.h>")
+    (string "#include <string.h>")
+    (unistd "#include <unistd.h>")
+    (mpi "#include <mpi.h>")
+    (math "#include <math.h>")
+    (define "#define " p)
+    (function p " " p " (" p ") {" n> q n "}" ) 
+    (main "int main (int argc, char **argv) {" n> q n "}" ) 
   
-      org-mode
-      (au "#+author: " q)
-      (ti "#+title: " q)
-      (ci "* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q)
-      (pdf "#+auto-export-pandoc: to-latex-pdf")
-      (odt "#+auto-export-pandoc: to-odt")
+    org-mode
+    (au "#+author: " q)
+    (ti "#+title: " q)
+    (ci "* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q)
+    (pdf "#+auto-export-pandoc: to-latex-pdf")
+    (odt "#+auto-export-pandoc: to-odt")
   
-      java-ts-mode
-      (doc "/**" n> " * " q n " */")
-      (if "if (" p ") {" n> q n "}")
-      (class "public class " (p (file-name-base (or (buffer-file-name) (buffer-name)))) " {" n> r> n "}")
-      (method p " " p " " p "(" p ") {" n> q n "}")
-      (while "while (" p ") {" n> q n "}")
-      (for "for (int i = " p "; i < " p "; i++) {" n> q n "}")
+    java-ts-mode
+    (doc "/**" n> " * " q n " */")
+    (if "if (" p ") {" n> q n "}")
+    (class "public class " (p (file-name-base (or (buffer-file-name) (buffer-name)))) " {" n> r> n "}")
+    (method p " " p " " p "(" p ") {" n> q n "}")
+    (while "while (" p ") {" n> q n "}")
+    (for "for (int i = " p "; i < " p "; i++) {" n> q n "}")
   
-      bash-ts-mode
-      (bang "#!/bin/sh" n q)
-      (safebang "#!/bin/sh" n "set -euo pipefail" n q)
+    bash-ts-mode
+    (bang "#!/bin/sh" n q)
+    (safebang "#!/bin/sh" n "set -euo pipefail" n q)
   
-      ledger-mode
-      (payroll p "Rose-Hulman Payroll" n> "Income:TeachingAssistant" > "-" p n> "*Assets:Checking")
-      (checking "Assets:Checking")
+    ledger-mode
+    (payroll p "Rose-Hulman Payroll" n> "Income:TeachingAssistant" > "-" p n> "*Assets:Checking")
+    (checking "Assets:Checking")
   
-      racket-mode
-      (let "(let [(" p ")]" n q ")")
-      (letrec "(letrec [(" p ")]" n q ")")
-      (letstar "(let* [(" p ")]" n q ")")
-      (namelet "(let " p " [(" p ")]" n q ")")
-      (defun "(define " p " (lambda (" p ")" n q "))")
-    '';
+    racket-mode
+    (let "(let [(" p ")]" n q ")")
+    (letrec "(letrec [(" p ")]" n q ")")
+    (letstar "(let* [(" p ")]" n q ")")
+    (namelet "(let " p " [(" p ")]" n q ")")
+    (defun "(define " p " (lambda (" p ")" n q "))")
+  
+    emacs-lisp-mode
+    (wcd "(with-current-buffer " "q)")
+    (gbc "(get-buffer-create " "q)")
+  
+    eshell-mode
+    (gbc "(get-buffer-create \"" q "\")")
+  '';
 
   programs.emacs.init = {
     completions = {

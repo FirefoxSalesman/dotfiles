@@ -52,12 +52,11 @@
 
       treesitter-context = {
         enable = true;
-        ghook = ["('(js-ts-mode-hook haskell-mode java-ts-mode-hook rustic-mode-hook c-ts-mode-hook python-mode-hook json-ts-mode-hook) 'treesitter-context-mode)"];
+        ghook = ["('(js-ts-mode-hook haskell-ts-mode-hook java-ts-mode-hook rustic-mode-hook c-ts-mode-hook python-mode-hook json-ts-mode-hook) 'treesitter-context-mode)"];
         custom.treesitter-context-frame-min-width = 30;
         config = ''
           (dolist (treesit-support '(treesitter-context--supported-mode treesitter-context--focus-supported-mode  treesitter-context--fold-supported-mode))
-                  (add-to-list treesit-support 'rustic-mode)
-                  (add-to-list treesit-support 'haskell-mode))
+                  (add-to-list treesit-support 'rustic-mode))
         '';
       };
       
@@ -93,6 +92,8 @@
         enable = true;
         generalOne.project-prefix-map.i = "(cmd! () (ibuffer) (ibuffer-filter-by-projection-root (project-current)))";
       };
+      
+      projection-multi.custom.projection-gradle-use-daemon = false;
       
       projection-multi-embark = {
         enable = true;
@@ -135,6 +136,12 @@
       python-ts-mode.custom = {
           python-shell-interpreter = ''"ipython"'';
           python-shell-interpreter-args = ''"-i --simple-prompt"'';
+      };
+      
+      make-mode = {
+        enable = true;
+        symex = true;
+        ghook = ["('makefile-mode-hook (treesit! 'make))"];
       };
       
       racket-mode.gfhook = ["('racket-mode-hook 'hs-minor-mode)"];

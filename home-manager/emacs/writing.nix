@@ -71,37 +71,24 @@
         gfhook = ["('dired-mode-hook 'denote-dired-mode-in-directories)"];
         custom = {
           denote-directory = ''(expand-file-name "~/doc/denote")'';
-          denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "databases" "scifi" "softwarerequirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics" "plp" "malwareanalysis" "bio" "ai")'';
+          denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "databases" "scifi" "softwarerequirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics" "plp" "malwareanalysis" "bio" "ai" "resolve")'';
           denote-file-type = false;
           denote-dired-directories = "(list denote-directory)";
           
         };
         generalOne.global-leader = {
-          "oc" = '''(denote :which-key "create note")'';
+          "of" = "'denote-open-or-create";
           "or" = '''(denote-rename-file :whick-key "denote rename")'';
           "oi" = '''(denote-link :which-key "link to note")'';
         };
+        config = "(consult-denote-mode)";
       };
       
-      consult-notes = {
+      consult-denote = {
         enable = true;
-        defer = true;
-        config = ''
-          (with-eval-after-load 'embark
-            (defvar-keymap consult-notes-map
-              :doc "Keymap for Embark notes actions."
-              :parent embark-file-map)
-            (add-to-list 'embark-keymap-alist `(,consult-notes-category . consult-notes-map))
-            ;; make embark-export use dired for notes
-            (setf (alist-get consult-notes-category embark-exporters-alist) #'embark-export-dired))
-          
-          (when (locate-library "denote")
-            (consult-notes-denote-mode))
-        '';
-        generalOne.global-leader = {
-          "of" = '''(consult-notes :which-key "find note")'';
-          "os" = '''(consult-notes-search-in-all-notes :which-key "search notes")'';
-        };
+        command = ["consult-denote-mode"];
+        generalOne.global-leader."os" = "'consult-denote-grep";
+        custom.consult-denote-grep-command = "'consult-ripgrep";
       };
       
       org-novelist = {
