@@ -42,7 +42,7 @@
         							     :parent-frame nil
         							     :poshandler posframe-poshandler-frame-bottom-center
         							     :refposhandler posframe-refposhandler-xwininfo))
-          :gfhook ('doom-escape-hook 'hydra-keyboard-quit))
+          :gfhookf ('doom-escape 'hydra-keyboard-quit))
         
         (use-package repeaters
           :demand t

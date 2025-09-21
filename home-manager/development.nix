@@ -82,12 +82,12 @@
       };
 
       eglot = {
-        gfhook = [
-          ''('eglot-managed-mode-hook (local! completion-at-point-functions (list (cape-capf-super #'tempel-complete
+        gfhookf = [
+          ''('eglot-managed-mode (local! completion-at-point-functions (list (cape-capf-super #'tempel-complete
                                                                                                    #'eglot-completion-at-point
       											     #'cape-file)
                                                                                   #'cape-dabbrev)))''
-          "('before-save-hook (lambda () (when eglot--managed-mode (eglot-format-buffer))))"
+          "('before-save (lambda () (when eglot--managed-mode (eglot-format-buffer))))"
         ];
         config = ''
           (general-add-advice 'evil-collection-eglot-setup
@@ -106,7 +106,7 @@
       # dape = {
       #   enable = true;
       #   after = ["eglot"];
-      #   gfhook = ["('dape-on-stopped-hooks (list 'dape-info 'dape-repl))"];
+      #   gfhookf = ["('dape-on-stopped (list 'dape-info 'dape-repl))"];
       #   custom = {
       #     dape-window-arrangement = "gud";
       #     dape-key-prefix = ''"\C-x\C-a"'';
@@ -132,9 +132,9 @@
         eglot = ''("yaml-language-server" "--stdio")'';
       };
       
-      racket-mode.gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
+      racket-mode.gfhookf = ["('racket-mode 'hs-minor-mode)"];
 
-      elisp-mode.gfhook = ["('emacs-lisp-mode-hook (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"];
+      elisp-mode.gfhookf = ["('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"];
       java-ts-mode = {
         init = ''
           (defun tkj/java-decompile-class ()

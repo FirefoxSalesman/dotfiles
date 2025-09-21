@@ -4,7 +4,7 @@
   programs.emacs.init.usePackage = {
     dired = {
       enable = true;
-      gfhook = ["('dired-mode-hook (list 'dired-omit-mode 'hl-line-mode (local!
+      gfhookf = ["('dired-mode (list 'dired-omit-mode 'hl-line-mode (local!
         visible-cursor nil)))"];
       general = {
         "C-x C-j" = "'dired-jump";
@@ -111,7 +111,7 @@
     
     image = {
       enable = true;
-      gfhook = ["('image-mode-hook 'image-transform-fit-to-window)"];
+      gfhookf = ["('image-mode 'image-transform-fit-to-window)"];
       generalTwo.":n".image-map = {
         "E" = "'image-next-file";
         "O" = "'image-previous-file";

@@ -309,9 +309,9 @@
       ghookf = [
         "('exwm-init 'global-qutebrowser-exwm-mode)"
       ];
-      gfhook = [
-        "('server-visit-hook 'qute/dired-hook)"
-        "('qutebrowser-exwm-mode-hook 'evil-normal-state)"
+      gfhookf = [
+        "('server-visit 'qute/dired-hook)"
+        "('qutebrowser-exwm-mode 'evil-normal-state)"
       ];
       config = ''
         (define-minor-mode qute-dired-mode

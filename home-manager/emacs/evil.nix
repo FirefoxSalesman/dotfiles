@@ -49,7 +49,7 @@
     };
     usePackage = {
       evil = {
-        gfhook = ["('doom-escape-hook 'evil-normal-state)"];
+        gfhookf = ["('doom-escape 'evil-normal-state)"];
         config = ''
           (evil-ex-define-cmd "q" (cmd! () (prescient--save) (save-buffers-kill-emacs)))
           (evil-ex-define-cmd "Undotree" 'vundo)

@@ -239,7 +239,7 @@
       bufler-workspace-tabs = {
         enable = true;
         ghookf = ["('bufler-mode 'bufler-workspace-workspaces-as-tabs-mode)"];
-        gfhook = ["('bufler-workspace-workspaces-as-tabs-mode-hook '(global-tab-line-mode burly-tabs-mode))"];
+        gfhookf = ["('bufler-workspace-workspaces-as-tabs-mode '(global-tab-line-mode burly-tabs-mode))"];
       };
 
       elwm = {
@@ -305,14 +305,14 @@
       
       exwm = {
         enable = true;
-        gfhook = [
+        gfhookf = [
           # When window "class" updates, use it to set the buffer name
-          "('exwm-update-class-hook 'efs/exwm-update-class)"
+          "('exwm-update-class 'efs/exwm-update-class)"
           # When EXWM starts up, do some extra configuration
-          "('exwm-init-hook 'efs/exwm-init-hook)"
-          "('exwm-mode-hook 'evil-motion-state)"
+          "('exwm-init 'efs/exwm-init-hook)"
+          "('exwm-mode 'evil-motion-state)"
           # When window title updates, use it to set the buffer name
-          "('exwm-update-title-hook 'efs/exwm-update-title)"
+          "('exwm-update-title 'efs/exwm-update-title)"
         ];
         # Ctrl+q will enable the next key to be sent directly
         generalOne.exwm-mode-map."C-q" = "'exwm-input-send-next-key";

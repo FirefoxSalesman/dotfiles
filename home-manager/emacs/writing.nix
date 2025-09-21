@@ -28,7 +28,7 @@
 
     usePackage = {
       org = {
-        gfhook = [''('org-mode-hook (list 'ispell-minor-mode
+        gfhookf = [''('org-mode (list 'ispell-minor-mode
           (local! completion-at-point-functions (list (cape-capf-super
                                                        #'tempel-complete
       						 #'cape-file)
@@ -68,7 +68,7 @@
       denote = {
         enable = true;
         defer = true;
-        gfhook = ["('dired-mode-hook 'denote-dired-mode-in-directories)"];
+        gfhookf = ["('dired-mode 'denote-dired-mode-in-directories)"];
         custom = {
           denote-directory = ''(expand-file-name "~/doc/denote")'';
           denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "databases" "scifi" "softwarerequirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics" "plp" "malwareanalysis" "bio" "ai" "resolve")'';
@@ -128,9 +128,8 @@
         config = ''
           (pdf-tools-install)
         '';
-        gfhook = [
-          "('TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)"
-          "('pdf-view-mode-hook 'pdf-view-midnight-minor-mode)"];
+        gfhook = ["('TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)"];
+        gfhookf = ["('pdf-view-mode-hook 'pdf-view-midnight-minor-mode)"];
         init = ''(setq-default pdf-view-display-size 'fit-width)'';
         extraConfig = '':magic ("%PDF" . pdf-view-mode)'';
       };
@@ -155,7 +154,7 @@
       
       markdown = {
         generalOne.markdown-mode-map."C-c C-e" = "'markdown-do";
-        gfhook = ["('markdown-mode-hook 'efs/markdown-font-setup)"];
+        gfhookf = ["('markdown-mode 'efs/markdown-font-setup)"];
         custom = {
           markdown-command = ''"multimarkdown"'';
           markdown-hide-markup = true;
@@ -182,7 +181,7 @@
       writeroom-mode = {
         enable = true;
         ghookf = ["((gen-mode-hooks '(Man org-agenda org Info markdown)) 'writeroom-mode)"];
-        gfhook = ["('writeroom-mode-hook 'visual-line-mode)"];
+        gfhookf = ["('writeroom-mode 'visual-line-mode)"];
         custom = {
           writeroom-mode-line = true;
           writeroom-maximize-window = false;
@@ -203,7 +202,7 @@
       citar = {
         enable = true;
         config = ''(citar-denote-mode)'';
-        ghookf = ["((gen-mode-hooks '(LaTeX org)) 'citar-capf-setup)"];
+        ghookf = ["('(LaTeX-mode org-mode) 'citar-capf-setup)"];
         custom = {
           org-cite-insert-processor = "'citar";
           org-cite-follow-processor = "'citar";

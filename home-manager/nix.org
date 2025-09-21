@@ -1076,7 +1076,7 @@ fish-completion = {
   enable = true;
   defer = true;
   ghookf = ["('eshell-mode 'fish-completion-mode)"];
-  gfhook = ["('fish-completion-mode-hook (local! completion-at-point-functions '(tempel-complete pcomplete-completions-at-point)))"];
+  gfhookf = ["('fish-completion-mode (local! completion-at-point-functions '(tempel-complete pcomplete-completions-at-point)))"];
 };
 
 eshell-git-prompt = {
@@ -1946,9 +1946,9 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 
       <<Development Yaml>>
       
-      racket-mode.gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
+      racket-mode.gfhookf = ["('racket-mode 'hs-minor-mode)"];
 
-      elisp-mode.gfhook = ["('emacs-lisp-mode-hook (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"];
+      elisp-mode.gfhookf = ["('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"];
       java-ts-mode = {
         init = ''
           <<Java Config>>
@@ -2051,12 +2051,12 @@ projection-multi-embark = {
 #+NAME: Development Eglot
 #+begin_src nix-ts :noweb yes
 eglot = {
-  gfhook = [
-    ''('eglot-managed-mode-hook (local! completion-at-point-functions (list (cape-capf-super #'tempel-complete
+  gfhookf = [
+    ''('eglot-managed-mode (local! completion-at-point-functions (list (cape-capf-super #'tempel-complete
                                                                                              #'eglot-completion-at-point
 											     #'cape-file)
                                                                             #'cape-dabbrev)))''
-    "('before-save-hook (lambda () (when eglot--managed-mode (eglot-format-buffer))))"
+    "('before-save (lambda () (when eglot--managed-mode (eglot-format-buffer))))"
   ];
   config = ''
     <<Development Eglot Config>>
@@ -2084,7 +2084,7 @@ eglot-tempel = {
 dape = {
   enable = true;
   after = ["eglot"];
-  gfhook = ["('dape-on-stopped-hooks (list 'dape-info 'dape-repl))"];
+  gfhookf = ["('dape-on-stopped (list 'dape-info 'dape-repl))"];
   custom = {
     dape-window-arrangement = "gud";
     dape-key-prefix = ''"\C-x\C-a"'';
@@ -2132,7 +2132,7 @@ I'm running dired with a couple of small packages that improve on it
   programs.emacs.init.usePackage = {
     dired = {
       enable = true;
-      gfhook = ["('dired-mode-hook (list 'dired-omit-mode 'hl-line-mode (local!
+      gfhookf = ["('dired-mode (list 'dired-omit-mode 'hl-line-mode (local!
         visible-cursor nil)))"];
       general = {
         "C-x C-j" = "'dired-jump";
@@ -2202,7 +2202,7 @@ I'm running dired with a couple of small packages that improve on it
     
     image = {
       enable = true;
-      gfhook = ["('image-mode-hook 'image-transform-fit-to-window)"];
+      gfhookf = ["('image-mode 'image-transform-fit-to-window)"];
       generalTwo.":n".image-map = {
         "E" = "'image-next-file";
         "O" = "'image-previous-file";
@@ -2338,7 +2338,7 @@ prelude =''
 							     :parent-frame nil
 							     :poshandler posframe-poshandler-frame-bottom-center
 							     :refposhandler posframe-refposhandler-xwininfo))
-  :gfhook ('doom-escape-hook 'hydra-keyboard-quit))
+  :gfhookf ('doom-escape 'hydra-keyboard-quit))
 
 (use-package repeaters
   :demand t
@@ -2637,7 +2637,7 @@ Differences from the spec:
 #+NAME: Emacs Evil Main
 #+begin_src nix-ts :noweb yes
 evil = {
-  gfhook = ["('doom-escape-hook 'evil-normal-state)"];
+  gfhookf = ["('doom-escape 'evil-normal-state)"];
   config = ''
     <<Evil Config>>
   '';
@@ -3278,7 +3278,7 @@ app-launcher = {
 ace-isearch = {
   enable = true;
   demand = true;
-  gfhook = ["('pdf-view-mode-hook (lambda () (ace-isearch-mode -1)))"];
+  gfhookf = ["('pdf-view-mode (lambda () (ace-isearch-mode -1)))"];
   generalOne.isearch-mode-map."C-a" = "'avy-isearch";
   config = "(global-ace-isearch-mode)";
   custom = {
@@ -3558,7 +3558,7 @@ How to add a latex package
 #+NAME: Emacs Org Main
 #+begin_src nix-ts
 org = {
-  gfhook = [''('org-mode-hook (list 'ispell-minor-mode
+  gfhookf = [''('org-mode (list 'ispell-minor-mode
     (local! completion-at-point-functions (list (cape-capf-super
                                                  #'tempel-complete
 						 #'cape-file)
@@ -3606,7 +3606,7 @@ org-auto-export-pandoc = {
 denote = {
   enable = true;
   defer = true;
-  gfhook = ["('dired-mode-hook 'denote-dired-mode-in-directories)"];
+  gfhookf = ["('dired-mode 'denote-dired-mode-in-directories)"];
   custom = {
     denote-directory = ''(expand-file-name "~/doc/denote")'';
     denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "databases" "scifi" "softwarerequirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics" "plp" "malwareanalysis" "bio" "ai" "resolve")'';
@@ -3689,9 +3689,8 @@ pdf-tools = {
   config = ''
     (pdf-tools-install)
   '';
-  gfhook = [
-    "('TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)"
-    "('pdf-view-mode-hook 'pdf-view-midnight-minor-mode)"];
+  gfhook = ["('TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)"];
+  gfhookf = ["('pdf-view-mode-hook 'pdf-view-midnight-minor-mode)"];
   init = ''(setq-default pdf-view-display-size 'fit-width)'';
   extraConfig = '':magic ("%PDF" . pdf-view-mode)'';
 };
@@ -3720,7 +3719,7 @@ tex.generalTwo.local-leader.LaTeX-mode-map."e" = "'TeX-command-run-all";
 #+begin_src nix-ts :noweb yes
 markdown = {
   generalOne.markdown-mode-map."C-c C-e" = "'markdown-do";
-  gfhook = ["('markdown-mode-hook 'efs/markdown-font-setup)"];
+  gfhookf = ["('markdown-mode 'efs/markdown-font-setup)"];
   custom = {
     markdown-command = ''"multimarkdown"'';
     markdown-hide-markup = true;
@@ -3757,7 +3756,7 @@ I couldn't get olivetti to work.
 writeroom-mode = {
   enable = true;
   ghookf = ["((gen-mode-hooks '(Man org-agenda org Info markdown)) 'writeroom-mode)"];
-  gfhook = ["('writeroom-mode-hook 'visual-line-mode)"];
+  gfhookf = ["('writeroom-mode 'visual-line-mode)"];
   custom = {
     writeroom-mode-line = true;
     writeroom-maximize-window = false;
@@ -3786,7 +3785,7 @@ flyspell = {
 citar = {
   enable = true;
   config = ''(citar-denote-mode)'';
-  ghookf = ["((gen-mode-hooks '(LaTeX org)) 'citar-capf-setup)"];
+  ghookf = ["('(LaTeX-mode org-mode) 'citar-capf-setup)"];
   custom = {
     org-cite-insert-processor = "'citar";
     org-cite-follow-processor = "'citar";
@@ -4007,7 +4006,7 @@ bufler = {
 bufler-workspace-tabs = {
   enable = true;
   ghookf = ["('bufler-mode 'bufler-workspace-workspaces-as-tabs-mode)"];
-  gfhook = ["('bufler-workspace-workspaces-as-tabs-mode-hook '(global-tab-line-mode burly-tabs-mode))"];
+  gfhookf = ["('bufler-workspace-workspaces-as-tabs-mode '(global-tab-line-mode burly-tabs-mode))"];
 };
 #+end_src
 
@@ -4204,14 +4203,14 @@ golden-ratio = {
 #+begin_src nix-ts :noweb yes
 exwm = {
   enable = true;
-  gfhook = [
+  gfhookf = [
     # When window "class" updates, use it to set the buffer name
-    "('exwm-update-class-hook 'efs/exwm-update-class)"
+    "('exwm-update-class 'efs/exwm-update-class)"
     # When EXWM starts up, do some extra configuration
-    "('exwm-init-hook 'efs/exwm-init-hook)"
-    "('exwm-mode-hook 'evil-motion-state)"
+    "('exwm-init 'efs/exwm-init-hook)"
+    "('exwm-mode 'evil-motion-state)"
     # When window title updates, use it to set the buffer name
-    "('exwm-update-title-hook 'efs/exwm-update-title)"
+    "('exwm-update-title 'efs/exwm-update-title)"
   ];
   # Ctrl+q will enable the next key to be sent directly
   generalOne.exwm-mode-map."C-q" = "'exwm-input-send-next-key";
@@ -5350,9 +5349,9 @@ programs.emacs.init.usePackage = {
     ghookf = [
       "('exwm-init 'global-qutebrowser-exwm-mode)"
     ];
-    gfhook = [
-      "('server-visit-hook 'qute/dired-hook)"
-      "('qutebrowser-exwm-mode-hook 'evil-normal-state)"
+    gfhookf = [
+      "('server-visit 'qute/dired-hook)"
+      "('qutebrowser-exwm-mode 'evil-normal-state)"
     ];
     config = ''
       <<Emacs Internet Qutebrowser Config>>

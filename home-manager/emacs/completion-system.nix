@@ -223,7 +223,7 @@
       ace-isearch = {
         enable = true;
         demand = true;
-        gfhook = ["('pdf-view-mode-hook (lambda () (ace-isearch-mode -1)))"];
+        gfhookf = ["('pdf-view-mode (lambda () (ace-isearch-mode -1)))"];
         generalOne.isearch-mode-map."C-a" = "'avy-isearch";
         config = "(global-ace-isearch-mode)";
         custom = {
