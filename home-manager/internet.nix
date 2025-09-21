@@ -306,8 +306,8 @@
   programs.emacs.init.usePackage = {
     qutebrowser = {
       enable = true;
-      ghook = [
-        "('exwm-init-hook 'global-qutebrowser-exwm-mode)"
+      ghookf = [
+        "('exwm-init 'global-qutebrowser-exwm-mode)"
       ];
       gfhook = [
         "('server-visit-hook 'qute/dired-hook)"
@@ -342,8 +342,8 @@
     qutebrowser-evil = {
       enable = true;
       package = epkgs: epkgs.qutebrowser;
-      ghook = [
-        "('global-qutebrowser-exwm-mode-hook 'qutebrowser-evil-state-mode)"
+      ghookf = [
+        "('global-qutebrowser-exwm-mode 'qutebrowser-evil-state-mode)"
       ];
     };
   };

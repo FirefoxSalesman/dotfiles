@@ -44,7 +44,7 @@
       
       rainbow-delimiters = {
         enable = true;
-        ghook = ["('prog-mode-hook 'rainbow-delimiters-mode)"];
+        ghookf = ["('prog-mode 'rainbow-delimiters-mode)"];
       };
       
       # lsp-java.custom.lsp-java-content-provider-preferred = ''"fernflower"'';
@@ -52,7 +52,7 @@
 
       treesit-fold = {
         enable = true;
-        ghook = ["((gen-mode-hooks '(bash-ts c-ts css-ts emacs-lisp erlang-ts go-ts haskell-ts html-ts java-ts js-ts json-ts json5-ts julia-ts kotlin-ts lua-ts make nix-ts python-ts ess-r rustic scala-ts svelte-ts swift-ts toml-ts typescript-ts vimscript-ts yaml-ts zig-ts)) 'treesit-fold-mode)"];
+        ghookf = ["((gen-mode-hooks '(bash-ts c-ts css-ts emacs-lisp erlang-ts go-ts haskell-ts html-ts java-ts js-ts json-ts json5-ts julia-ts kotlin-ts lua-ts make nix-ts python-ts ess-r rustic scala-ts svelte-ts swift-ts toml-ts typescript-ts vimscript-ts yaml-ts zig-ts)) 'treesit-fold-mode)"];
       };
 
       magit = {
@@ -121,7 +121,7 @@
       make-mode = {
         enable = true;
         symex = true;
-        ghook = ["('makefile-mode-hook (treesit! 'make))"];
+        ghookf = ["('makefile-mode (treesit! 'make))"];
       };
 
       yaml-ts-mode = {

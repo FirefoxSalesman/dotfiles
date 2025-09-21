@@ -24,7 +24,7 @@
     openwith = {
       enable = true;
       defer = true;
-      ghook = ["('dired-mode-hook 'openwith-mode)"];
+      ghookf = ["('dired-mode 'openwith-mode)"];
       config = ''
           (gsetq openwith-associations
                  (list
@@ -70,19 +70,19 @@
     dired-hide-dotfiles = {
       enable = true;
       defer = true;
-      ghook = ["('dired-mode-hook 'dired-hide-dotfiles-mode)"];
+      ghookf = ["('dired-mode 'dired-hide-dotfiles-mode)"];
       generalTwoConfig.":n".dired-mode-map."H" = "'dired-hide-dotfiles-mode";
     };
 
     all-the-icons-dired = {
       enable = true;
-      ghook = ["('dired-mode-hook 'all-the-icons-dired-mode)"];
+      ghookf = ["('dired-mode 'all-the-icons-dired-mode)"];
     };
 
     dired-single = {
       enable = true;
-      ghook = [''
-          ('dired-mode-hook (lambda () (general-def 'normal dired-mode-map
+      ghookf = [''
+          ('dired-mode (lambda () (general-def 'normal dired-mode-map
                "B" 'evil-goto-line
                "n" 'dired-single-prev
                "i" 'dired-single-next)))
@@ -91,8 +91,8 @@
 
     dired-ranger = {
       enable = true;
-      ghook = [''
-          ('dired-mode-hook (lambda () (general-def 'normal dired-mode-map
+      ghookf = [''
+          ('dired-mode (lambda () (general-def 'normal dired-mode-map
                "d" 'dired-ranger-copy
                "O" 'dired-ranger-move
                "G" 'dired-ranger-paste)))
@@ -101,7 +101,7 @@
 
     diredfl = {
       enable = true;
-      ghook = ["('dired-mode-hook 'diredfl-mode)"];
+      ghookf = ["('dired-mode 'diredfl-mode)"];
     };
 
     dired-posframe = {

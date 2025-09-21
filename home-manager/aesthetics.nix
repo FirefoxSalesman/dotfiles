@@ -72,7 +72,7 @@
     programs.emacs.init.usePackage = {
         prettify-symbols = {
           enable = true;
-          ghook = ["('prog-mode-hook 'prettify-symbols-mode)"];
+          ghookf = ["('prog-mode 'prettify-symbols-mode)"];
         };
 
         nerd-icons = {
@@ -97,12 +97,12 @@
       
         nerd-icons-completion = {
           enable = true;
-          ghook = ["('marginalia-mode-hook 'nerd-icons-completion-marginalia-setup)"];
+          ghookf = ["('marginalia-mode 'nerd-icons-completion-marginalia-setup)"];
         };
       
         dashboard = {
           enable = true;
-          ghook = ["('on-init-ui-hook '(dashboard-insert-startupify-lists dashboard-initialize))"];
+          ghookf = ["('on-init-ui '(dashboard-insert-startupify-lists dashboard-initialize))"];
           config = ''
               (dashboard-setup-startup-hook)
               (dashboard-open)
@@ -343,7 +343,7 @@
       vertico-posframe = {
         enable = true;
         defer = true;
-        ghook = ["('vertico-mode-hook 'vertico-posframe-mode)"];
+        ghookf = ["('vertico-mode 'vertico-posframe-mode)"];
         config = ''(set-face-attribute 'vertico-posframe-face nil :family 'variable-pitch)'';
       };
     };

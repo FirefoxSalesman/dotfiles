@@ -127,7 +127,7 @@
       };
 
       consult = {
-        ghook = ["('minibuffer-setup-hook 'consult-initial-narrow)"];
+        ghookf = ["('minibuffer-setup 'consult-initial-narrow)"];
         command = ["consult-goto-line" "consult-keep-lines"];
         custom.consult-buffer-sources = "'(consult--source-buffer)";
         generalOne = {

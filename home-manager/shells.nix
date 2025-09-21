@@ -73,12 +73,12 @@
         enable = true;
         babel = "eshell";
         after = ["evil-collection"];
-        ghook = [
-          "('eshell-first-time-mode-hook 'efs/configure-eshell)"
+        ghookf = [
+          "('eshell-first-time-mode 'efs/configure-eshell)"
           #Save command history when commands are entered
-          "('eshell-precommand-hook 'eshell-save-some-history)"
+          "('eshell-precommand 'eshell-save-some-history)"
           #pfetch
-          ''('eshell-banner-load-hook  (lambda ()
+          ''('eshell-banner-load (lambda ()
                                              (gsetq eshell-banner-message
                                                 (shell-command-to-string "${pkgs.pfetch}/bin/pfetch"))))''
         ];
@@ -124,13 +124,13 @@
       eshell-syntax-highlighting = {
         enable = true;
         defer = true;
-        ghook = ["('eshell-mode-hook 'eshell-syntax-highlighting-global-mode)"];
+        ghookf = ["('eshell-mode 'eshell-syntax-highlighting-global-mode)"];
       };
       
       fish-completion = {
         enable = true;
         defer = true;
-        ghook = ["('eshell-mode-hook 'fish-completion-mode)"];
+        ghookf = ["('eshell-mode 'fish-completion-mode)"];
         gfhook = ["('fish-completion-mode-hook (local! completion-at-point-functions '(tempel-complete pcomplete-completions-at-point)))"];
       };
       

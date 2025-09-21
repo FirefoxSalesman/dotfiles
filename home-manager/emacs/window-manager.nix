@@ -42,7 +42,7 @@
     
     emacs.init.usePackage.i3bar = {
       enable = true;
-      ghook = ["('tab-bar-mode-hook 'i3bar-mode)"];
+      ghookf = ["('tab-bar-mode 'i3bar-mode)"];
       
       custom = {
         i3bar-command = ''"${(import ../scripts/i3status-rust.nix {inherit pkgs;})}/bin/i3status-rust"'';
@@ -60,7 +60,7 @@
              (tab-bar-select-tab (string-to-number (read-string "Tab Number: ")))
              (setq tab-bar-tab-hints nil))
         '';
-        ghook = ["('exwm-init-hook 'tab-bar-mode)"];
+        ghookf = ["('exwm-init 'tab-bar-mode)"];
         general."s-u" = "'tab-bar-hydra/body";
         custom = {
           tab-bar-format = "'(tab-bar-format-tabs-groups tab-bar-separator doom-nano-tabline tab-bar-format-align-right tab-bar-format-global)";
@@ -107,7 +107,7 @@
       
       bufler = {
         enable = true;
-        ghook = ["('tab-bar-mode-hook 'bufler-mode)"];
+        ghookf = ["('tab-bar-mode 'bufler-mode)"];
         general = {
           "s-b" = "'bufler-hydra/body";
           "s-f" = "'bufler-workspace-focus-buffer";
@@ -238,7 +238,7 @@
       
       bufler-workspace-tabs = {
         enable = true;
-        ghook = ["('bufler-mode-hook 'bufler-workspace-workspaces-as-tabs-mode)"];
+        ghookf = ["('bufler-mode 'bufler-workspace-workspaces-as-tabs-mode)"];
         gfhook = ["('bufler-workspace-workspaces-as-tabs-mode-hook '(global-tab-line-mode burly-tabs-mode))"];
       };
 
@@ -299,7 +299,7 @@
       golden-ratio = {
         enable = true;
         defer = true;
-        ghook = ["('on-first-input-hook 'golden-ratio-mode)"];
+        ghookf = ["('on-first-input 'golden-ratio-mode)"];
         config = "(general-add-advice 'golden-ratio :after 'exwm-mff-warp-to-selected)";
       };
       
@@ -478,7 +478,7 @@
       
       popper = {
         enable = true;
-        ghook = ["('on-first-buffer-hook 'popper-mode)"];
+        ghookf = ["('on-first-buffer 'popper-mode)"];
         general = {
           "s-'" = "'popper-toggle";
           "s-\\\"" = "'popper-cycle";

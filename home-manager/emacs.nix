@@ -71,9 +71,9 @@
           `(lambda () (setq-local ,var ,body)))
         
         (defun gen-mode-hooks (modes)
-          "Takes a list of symbols, MODES, & appends -mode-hook to them."
+          "Takes a list of symbols, MODES, & appends -mode to them."
           (mapcar (lambda (mode)
-        	    (intern (concat (symbol-name mode) "-mode-hook")))
+        	    (intern (concat (symbol-name mode) "-mode")))
         	  modes))
       '';
 
@@ -103,7 +103,7 @@
           }; 
           config = "(global-display-line-numbers-mode)";
           #Disable line numbers for some modes
-          ghook = ["((gen-mode-hooks '(org term dired eww eat markdown help helpful Info Man shell pdf-view elfeed-search elfeed-show eshell racket-repl sage-shell)) (lambda () (display-line-numbers-mode 0)))"];
+          ghookf = ["((gen-mode-hooks '(org term dired eww eat markdown help helpful Info Man shell pdf-view elfeed-search elfeed-show eshell racket-repl sage-shell)) (lambda () (display-line-numbers-mode 0)))"];
         } ;
         
         server = {

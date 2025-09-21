@@ -1040,12 +1040,12 @@ eshell = {
   enable = true;
   babel = "eshell";
   after = ["evil-collection"];
-  ghook = [
-    "('eshell-first-time-mode-hook 'efs/configure-eshell)"
+  ghookf = [
+    "('eshell-first-time-mode 'efs/configure-eshell)"
     #Save command history when commands are entered
-    "('eshell-precommand-hook 'eshell-save-some-history)"
+    "('eshell-precommand 'eshell-save-some-history)"
     #pfetch
-    ''('eshell-banner-load-hook  (lambda ()
+    ''('eshell-banner-load (lambda ()
                                        (gsetq eshell-banner-message
                                           (shell-command-to-string "${pkgs.pfetch}/bin/pfetch"))))''
   ];
@@ -1069,13 +1069,13 @@ eshell = {
 eshell-syntax-highlighting = {
   enable = true;
   defer = true;
-  ghook = ["('eshell-mode-hook 'eshell-syntax-highlighting-global-mode)"];
+  ghookf = ["('eshell-mode 'eshell-syntax-highlighting-global-mode)"];
 };
 
 fish-completion = {
   enable = true;
   defer = true;
-  ghook = ["('eshell-mode-hook 'fish-completion-mode)"];
+  ghookf = ["('eshell-mode 'fish-completion-mode)"];
   gfhook = ["('fish-completion-mode-hook (local! completion-at-point-functions '(tempel-complete pcomplete-completions-at-point)))"];
 };
 
@@ -1483,7 +1483,7 @@ Use =M-x all-the-icons-install-fonts=
 
   nerd-icons-completion = {
     enable = true;
-    ghook = ["('marginalia-mode-hook 'nerd-icons-completion-marginalia-setup)"];
+    ghookf = ["('marginalia-mode 'nerd-icons-completion-marginalia-setup)"];
   };
 #+end_src
 
@@ -1492,7 +1492,7 @@ Use =M-x all-the-icons-install-fonts=
 #+begin_src nix-ts
   prettify-symbols = {
     enable = true;
-    ghook = ["('prog-mode-hook 'prettify-symbols-mode)"];
+    ghookf = ["('prog-mode 'prettify-symbols-mode)"];
   };
 #+end_src
 
@@ -1501,7 +1501,7 @@ Use =M-x all-the-icons-install-fonts=
 #+begin_src nix-ts :noweb yes
   dashboard = {
     enable = true;
-    ghook = ["('on-init-ui-hook '(dashboard-insert-startupify-lists dashboard-initialize))"];
+    ghookf = ["('on-init-ui '(dashboard-insert-startupify-lists dashboard-initialize))"];
     config = ''
       <<Emacs Dashboard Config>>  
     '' ;
@@ -1782,7 +1782,7 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
 vertico-posframe = {
   enable = true;
   defer = true;
-  ghook = ["('vertico-mode-hook 'vertico-posframe-mode)"];
+  ghookf = ["('vertico-mode 'vertico-posframe-mode)"];
   config = ''(set-face-attribute 'vertico-posframe-face nil :family 'variable-pitch)'';
 };
 #+end_src
@@ -1970,7 +1970,7 @@ editorconfig = {
 
 rainbow-delimiters = {
   enable = true;
-  ghook = ["('prog-mode-hook 'rainbow-delimiters-mode)"];
+  ghookf = ["('prog-mode 'rainbow-delimiters-mode)"];
 };
 #+end_src
 
@@ -1979,7 +1979,7 @@ rainbow-delimiters = {
 #+begin_src nix-ts
 treesit-fold = {
   enable = true;
-  ghook = ["((gen-mode-hooks '(bash-ts c-ts css-ts emacs-lisp erlang-ts go-ts haskell-ts html-ts java-ts js-ts json-ts json5-ts julia-ts kotlin-ts lua-ts make nix-ts python-ts ess-r rustic scala-ts svelte-ts swift-ts toml-ts typescript-ts vimscript-ts yaml-ts zig-ts)) 'treesit-fold-mode)"];
+  ghookf = ["((gen-mode-hooks '(bash-ts c-ts css-ts emacs-lisp erlang-ts go-ts haskell-ts html-ts java-ts js-ts json-ts json5-ts julia-ts kotlin-ts lua-ts make nix-ts python-ts ess-r rustic scala-ts svelte-ts swift-ts toml-ts typescript-ts vimscript-ts yaml-ts zig-ts)) 'treesit-fold-mode)"];
 };
 #+end_src
 
@@ -2107,7 +2107,7 @@ python-ts-mode.custom = {
 make-mode = {
   enable = true;
   symex = true;
-  ghook = ["('makefile-mode-hook (treesit! 'make))"];
+  ghookf = ["('makefile-mode (treesit! 'make))"];
 };
 #+end_src
 
@@ -2152,7 +2152,7 @@ I'm running dired with a couple of small packages that improve on it
     openwith = {
       enable = true;
       defer = true;
-      ghook = ["('dired-mode-hook 'openwith-mode)"];
+      ghookf = ["('dired-mode 'openwith-mode)"];
       config = ''
           <<Emacs Openwith Config>>
         '';
@@ -2161,19 +2161,19 @@ I'm running dired with a couple of small packages that improve on it
     dired-hide-dotfiles = {
       enable = true;
       defer = true;
-      ghook = ["('dired-mode-hook 'dired-hide-dotfiles-mode)"];
+      ghookf = ["('dired-mode 'dired-hide-dotfiles-mode)"];
       generalTwoConfig.":n".dired-mode-map."H" = "'dired-hide-dotfiles-mode";
     };
 
     all-the-icons-dired = {
       enable = true;
-      ghook = ["('dired-mode-hook 'all-the-icons-dired-mode)"];
+      ghookf = ["('dired-mode 'all-the-icons-dired-mode)"];
     };
 
     dired-single = {
       enable = true;
-      ghook = [''
-          ('dired-mode-hook (lambda () (general-def 'normal dired-mode-map
+      ghookf = [''
+          ('dired-mode (lambda () (general-def 'normal dired-mode-map
                "B" 'evil-goto-line
                "n" 'dired-single-prev
                "i" 'dired-single-next)))
@@ -2182,8 +2182,8 @@ I'm running dired with a couple of small packages that improve on it
 
     dired-ranger = {
       enable = true;
-      ghook = [''
-          ('dired-mode-hook (lambda () (general-def 'normal dired-mode-map
+      ghookf = [''
+          ('dired-mode (lambda () (general-def 'normal dired-mode-map
                "d" 'dired-ranger-copy
                "O" 'dired-ranger-move
                "G" 'dired-ranger-paste)))
@@ -2192,7 +2192,7 @@ I'm running dired with a couple of small packages that improve on it
 
     diredfl = {
       enable = true;
-      ghook = ["('dired-mode-hook 'diredfl-mode)"];
+      ghookf = ["('dired-mode 'diredfl-mode)"];
     };
 
     dired-posframe = {
@@ -2367,9 +2367,9 @@ or aliases. Stolen from Doom."
   `(lambda () (setq-local ,var ,body)))
 
 (defun gen-mode-hooks (modes)
-  "Takes a list of symbols, MODES, & appends -mode-hook to them."
+  "Takes a list of symbols, MODES, & appends -mode to them."
   (mapcar (lambda (mode)
-	    (intern (concat (symbol-name mode) "-mode-hook")))
+	    (intern (concat (symbol-name mode) "-mode")))
 	  modes))
 #+end_src
 
@@ -2404,7 +2404,7 @@ display-line-numbers = {
   }; 
   config = "(global-display-line-numbers-mode)";
   #Disable line numbers for some modes
-  ghook = ["((gen-mode-hooks '(org term dired eww eat markdown help helpful Info Man shell pdf-view elfeed-search elfeed-show eshell racket-repl sage-shell)) (lambda () (display-line-numbers-mode 0)))"];
+  ghookf = ["((gen-mode-hooks '(org term dired eww eat markdown help helpful Info Man shell pdf-view elfeed-search elfeed-show eshell racket-repl sage-shell)) (lambda () (display-line-numbers-mode 0)))"];
 } ;
 
 server = {
@@ -3154,7 +3154,7 @@ Evil integration is from noctuid & minad
 #+NAME: Emacs Consult
 #+begin_src nix-ts :noweb yes
 consult = {
-  ghook = ["('minibuffer-setup-hook 'consult-initial-narrow)"];
+  ghookf = ["('minibuffer-setup 'consult-initial-narrow)"];
   command = ["consult-goto-line" "consult-keep-lines"];
   custom.consult-buffer-sources = "'(consult--source-buffer)";
   generalOne = {
@@ -3590,13 +3590,13 @@ org = {
 #+begin_src nix-ts :noweb yes
 org-auto-tangle = {
   enable = true;
-  ghook = ["('org-mode-hook 'org-auto-tangle-mode)"];
+  ghookf = ["('org-mode 'org-auto-tangle-mode)"];
 };
 
 org-auto-export-pandoc = {
   enable = true;
   extraPackages = with pkgs; [pandoc];
-  ghook = ["('after-save-hook (lambda () (when (equal major-mode 'org-mode) (org-auto-export-pandoc))))"];
+  ghookf = ["('after-save (lambda () (when (equal major-mode 'org-mode) (org-auto-export-pandoc))))"];
 };
 #+end_src
 
@@ -3756,7 +3756,7 @@ I couldn't get olivetti to work.
 #+begin_src nix-ts
 writeroom-mode = {
   enable = true;
-  ghook = ["((gen-mode-hooks '(Man org-agenda org Info markdown)) 'writeroom-mode)"];
+  ghookf = ["((gen-mode-hooks '(Man org-agenda org Info markdown)) 'writeroom-mode)"];
   gfhook = ["('writeroom-mode-hook 'visual-line-mode)"];
   custom = {
     writeroom-mode-line = true;
@@ -3773,7 +3773,7 @@ writeroom-mode = {
 flyspell = {
   enable = true;
   custom.ispell-personal-dictionary = "~/.config/emacs/ispell.txt";
-  ghook = [
+  ghookf = [
     "('text-mode-hook 'flyspell-mode)"
     "('prog-mode-hook 'flyspell-prog-mode)"
   ];
@@ -3786,7 +3786,7 @@ flyspell = {
 citar = {
   enable = true;
   config = ''(citar-denote-mode)'';
-  ghook = ["((gen-mode-hooks '(LaTeX org)) 'citar-capf-setup)"];
+  ghookf = ["((gen-mode-hooks '(LaTeX org)) 'citar-capf-setup)"];
   custom = {
     org-cite-insert-processor = "'citar";
     org-cite-follow-processor = "'citar";
@@ -3917,7 +3917,7 @@ tab-bar = {
        (tab-bar-select-tab (string-to-number (read-string "Tab Number: ")))
        (setq tab-bar-tab-hints nil))
   '';
-  ghook = ["('exwm-init-hook 'tab-bar-mode)"];
+  ghookf = ["('exwm-init 'tab-bar-mode)"];
   general."s-u" = "'tab-bar-hydra/body";
   custom = {
     tab-bar-format = "'(tab-bar-format-tabs-groups tab-bar-separator doom-nano-tabline tab-bar-format-align-right tab-bar-format-global)";
@@ -3969,7 +3969,7 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 #+begin_src nix-ts :noweb yes
 bufler = {
   enable = true;
-  ghook = ["('tab-bar-mode-hook 'bufler-mode)"];
+  ghookf = ["('tab-bar-mode 'bufler-mode)"];
   general = {
     "s-b" = "'bufler-hydra/body";
     "s-f" = "'bufler-workspace-focus-buffer";
@@ -4006,7 +4006,7 @@ bufler = {
 
 bufler-workspace-tabs = {
   enable = true;
-  ghook = ["('bufler-mode-hook 'bufler-workspace-workspaces-as-tabs-mode)"];
+  ghookf = ["('bufler-mode 'bufler-workspace-workspaces-as-tabs-mode)"];
   gfhook = ["('bufler-workspace-workspaces-as-tabs-mode-hook '(global-tab-line-mode burly-tabs-mode))"];
 };
 #+end_src
@@ -4194,7 +4194,7 @@ elwm = {
 golden-ratio = {
   enable = true;
   defer = true;
-  ghook = ["('on-first-input-hook 'golden-ratio-mode)"];
+  ghookf = ["('on-first-input 'golden-ratio-mode)"];
   config = "(general-add-advice 'golden-ratio :after 'exwm-mff-warp-to-selected)";
 };
 #+end_src
@@ -4391,7 +4391,7 @@ exwm-outer-gaps = {
 #+begin_src nix-ts
 popper = {
   enable = true;
-  ghook = ["('on-first-buffer-hook 'popper-mode)"];
+  ghookf = ["('on-first-buffer 'popper-mode)"];
   general = {
     "s-'" = "'popper-toggle";
     "s-\\\"" = "'popper-cycle";
@@ -4474,7 +4474,7 @@ i3status-rust = {
 
 emacs.init.usePackage.i3bar = {
   enable = true;
-  ghook = ["('tab-bar-mode-hook 'i3bar-mode)"];
+  ghookf = ["('tab-bar-mode 'i3bar-mode)"];
   
   custom = {
     i3bar-command = ''"${(import ../scripts/i3status-rust.nix {inherit pkgs;})}/bin/i3status-rust"'';
@@ -5347,8 +5347,8 @@ extraConfig = ''
 programs.emacs.init.usePackage = {
   qutebrowser = {
     enable = true;
-    ghook = [
-      "('exwm-init-hook 'global-qutebrowser-exwm-mode)"
+    ghookf = [
+      "('exwm-init 'global-qutebrowser-exwm-mode)"
     ];
     gfhook = [
       "('server-visit-hook 'qute/dired-hook)"
@@ -5366,8 +5366,8 @@ programs.emacs.init.usePackage = {
   qutebrowser-evil = {
     enable = true;
     package = epkgs: epkgs.qutebrowser;
-    ghook = [
-      "('global-qutebrowser-exwm-mode-hook 'qutebrowser-evil-state-mode)"
+    ghookf = [
+      "('global-qutebrowser-exwm-mode 'qutebrowser-evil-state-mode)"
     ];
   };
 };

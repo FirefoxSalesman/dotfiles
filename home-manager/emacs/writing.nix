@@ -56,13 +56,13 @@
 
       org-auto-tangle = {
         enable = true;
-        ghook = ["('org-mode-hook 'org-auto-tangle-mode)"];
+        ghookf = ["('org-mode 'org-auto-tangle-mode)"];
       };
       
       org-auto-export-pandoc = {
         enable = true;
         extraPackages = with pkgs; [pandoc];
-        ghook = ["('after-save-hook (lambda () (when (equal major-mode 'org-mode) (org-auto-export-pandoc))))"];
+        ghookf = ["('after-save (lambda () (when (equal major-mode 'org-mode) (org-auto-export-pandoc))))"];
       };
       
       denote = {
@@ -181,7 +181,7 @@
       
       writeroom-mode = {
         enable = true;
-        ghook = ["((gen-mode-hooks '(Man org-agenda org Info markdown)) 'writeroom-mode)"];
+        ghookf = ["((gen-mode-hooks '(Man org-agenda org Info markdown)) 'writeroom-mode)"];
         gfhook = ["('writeroom-mode-hook 'visual-line-mode)"];
         custom = {
           writeroom-mode-line = true;
@@ -194,7 +194,7 @@
       flyspell = {
         enable = true;
         custom.ispell-personal-dictionary = "~/.config/emacs/ispell.txt";
-        ghook = [
+        ghookf = [
           "('text-mode-hook 'flyspell-mode)"
           "('prog-mode-hook 'flyspell-prog-mode)"
         ];
@@ -203,7 +203,7 @@
       citar = {
         enable = true;
         config = ''(citar-denote-mode)'';
-        ghook = ["((gen-mode-hooks '(LaTeX org)) 'citar-capf-setup)"];
+        ghookf = ["((gen-mode-hooks '(LaTeX org)) 'citar-capf-setup)"];
         custom = {
           org-cite-insert-processor = "'citar";
           org-cite-follow-processor = "'citar";
