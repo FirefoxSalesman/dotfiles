@@ -181,7 +181,7 @@
       
       writeroom-mode = {
         enable = true;
-        ghook = ["('(Man-mode-hook org-agenda-mode-hook org-mode-hook Info-mode-hook markdown-mode-hook) 'writeroom-mode)"];
+        ghook = ["((gen-mode-hooks '(Man org-agenda org Info markdown)) 'writeroom-mode)"];
         gfhook = ["('writeroom-mode-hook 'visual-line-mode)"];
         custom = {
           writeroom-mode-line = true;
@@ -203,7 +203,7 @@
       citar = {
         enable = true;
         config = ''(citar-denote-mode)'';
-        ghook = ["('(LaTeX-mode-hook org-mode-hook) 'citar-capf-setup)"];
+        ghook = ["((gen-mode-hooks '(LaTeX org)) 'citar-capf-setup)"];
         custom = {
           org-cite-insert-processor = "'citar";
           org-cite-follow-processor = "'citar";

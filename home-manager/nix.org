@@ -98,11 +98,6 @@ doom-nano-modeline = {
   flake = false;
 };
 
-treesitter-context = {
-  url = "github:zbelial/treesitter-context.el";
-  flake = false;
-};
-
 org-novelist = {
   url = "github:sympodius/org-novelist";
   flake = false;
@@ -154,7 +149,7 @@ extraSpecialArgs = {
   inherit self;
   inherit inputs;
   inherit system;
-  inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline treesitter-context gptel-quick org-novelist mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
+  inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline gptel-quick org-novelist mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
   inherit pkgs-stable;
 };
 modules = [
@@ -198,10 +193,6 @@ final: prev: pkgs: inputs: {
         doom-nano-modeline = (prev.emacsPackages.callPackage ./packages/emacs/doom-nano-modeline.nix {
           inherit inputs;
           inherit (prev.emacsPackages) trivialBuild doom-themes;
-        });
-        treesitter-context = (prev.emacsPackages.callPackage ./packages/emacs/treesitter-context.nix {
-          inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild posframe;
         });
         dired-single = (prev.emacsPackages.callPackage ./packages/emacs/dired-single.nix {
           inherit inputs;
@@ -290,23 +281,6 @@ trivialBuild rec {
 
   propagatedUserEnvPkgs = [
     doom-themes
-  ];
-
-  buildInputs = propagatedUserEnvPkgs;
-}
-#+end_src
-
-*** Treesitter Context
-#+begin_src nix-ts :tangle packages/emacs/treesitter-context.nix
-{ inputs, trivialBuild, posframe } :
-
-trivialBuild rec {
-  pname = "treesitter-context";
-  version = "current";
-  src = inputs.treesitter-context;
-
-  propagatedUserEnvPkgs = [
-    posframe
   ];
 
   buildInputs = propagatedUserEnvPkgs;
@@ -1155,6 +1129,7 @@ evil-collection-eshell = {
   				       ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
   				       ("l" "ls $*")
   				       ("halt" "doas shutdown -P now")
+				       ("reboot" "doas reboot")
   				       ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'"))
   	 eshell-history-size 0
          eshell-buffer-maximum-lines 100
@@ -1958,7 +1933,7 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
       <<Development Direnv>>
 
       <<Development Treesitter>>
-      
+
       <<Development Project>>
 
       <<Development Eglot>>
@@ -1968,6 +1943,8 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
       <<Development Python>>
       
       <<Development Makefile>>
+
+      <<Development Yaml>>
       
       racket-mode.gfhook = ["('racket-mode-hook 'hs-minor-mode)"];
 
@@ -2000,29 +1977,9 @@ rainbow-delimiters = {
 *** Treesitter
 #+NAME: Development Treesitter
 #+begin_src nix-ts
-treesitter-context = {
+treesit-fold = {
   enable = true;
-  ghook = ["('(js-ts-mode-hook haskell-ts-mode-hook java-ts-mode-hook rustic-mode-hook c-ts-mode-hook python-mode-hook json-ts-mode-hook) 'treesitter-context-mode)"];
-  custom.treesitter-context-frame-min-width = 30;
-  config = ''
-    (dolist (treesit-support '(treesitter-context--supported-mode treesitter-context--focus-supported-mode  treesitter-context--fold-supported-mode))
-            (add-to-list treesit-support 'rustic-mode))
-  '';
-};
-
-treesitter-context-fold = {
-  enable = true;
-  ghook = ["('treesitter-context-mode-hook 'treesitter-context-fold-mode)"];
-  generalTwo.":n".treesitter-context-fold-mode-map = {
-    "zm" = "'treesitter-context-fold-hide";
-    "zo" = "'treesitter-context-fold-show";
-    "za" = "'treesitter-context-fold-toggle";
-  };
-};
-
-treesitter-context-focus = {
-  enable = true;
-  command = ["treesitter-context-focus-mode"];
+  ghook = ["((gen-mode-hooks '(bash-ts c-ts css-ts emacs-lisp erlang-ts go-ts haskell-ts html-ts java-ts js-ts json-ts json5-ts julia-ts kotlin-ts lua-ts make nix-ts python-ts ess-r rustic scala-ts svelte-ts swift-ts toml-ts typescript-ts vimscript-ts yaml-ts zig-ts)) 'treesit-fold-mode)"];
 };
 #+end_src
 
@@ -2151,6 +2108,18 @@ make-mode = {
   enable = true;
   symex = true;
   ghook = ["('makefile-mode-hook (treesit! 'make))"];
+};
+#+end_src
+
+*** Yaml
+#+NAME: Development Yaml
+#+begin_src nix-ts
+yaml-ts-mode = {
+  enable = true;
+  mode = [''"\\.yaml\\'"''];
+  extraPackages = [pkgs.yaml-language-server];
+  symex = true;
+  eglot = ''("yaml-language-server" "--stdio")'';
 };
 #+end_src
 
@@ -2337,10 +2306,7 @@ I'm running dired with a couple of small packages that improve on it
 
         <<Emacs Wgrep>>
 
-        doom-escape.gfhook = ["('doom-escape-hook (lambda () (setq efs/vertico-active nil)))"];
-
         <<Emacs Notifications>>
-        
       };
 
       <<Emacs Postlude>>
@@ -2399,6 +2365,12 @@ or aliases. Stolen from Doom."
 (defmacro local! (var body)
   "Creates a lambda that runs setq-local on the variable VAR with the value provided by BODY."
   `(lambda () (setq-local ,var ,body)))
+
+(defun gen-mode-hooks (modes)
+  "Takes a list of symbols, MODES, & appends -mode-hook to them."
+  (mapcar (lambda (mode)
+	    (intern (concat (symbol-name mode) "-mode-hook")))
+	  modes))
 #+end_src
 
 **** Sensible Defaults
@@ -2432,7 +2404,7 @@ display-line-numbers = {
   }; 
   config = "(global-display-line-numbers-mode)";
   #Disable line numbers for some modes
-  ghook = ["('(org-mode-hook term-mode-hook dired-mode-hook eww-mode-hook eat-mode-hook markdown-mode-hook help-mode-hook helpful-mode-hook Info-mode-hook Man-mode-hook shell-mode-hook pdf-view-mode-hook elfeed-search-mode-hook elfeed-show-mode-hook eshell-mode-hook racket-repl-mode-hook sage-shell-mode-hook) (lambda () (display-line-numbers-mode 0)))"];
+  ghook = ["((gen-mode-hooks '(org term dired eww eat markdown help helpful Info Man shell pdf-view elfeed-search elfeed-show eshell racket-repl sage-shell)) (lambda () (display-line-numbers-mode 0)))"];
 } ;
 
 server = {
@@ -3784,7 +3756,7 @@ I couldn't get olivetti to work.
 #+begin_src nix-ts
 writeroom-mode = {
   enable = true;
-  ghook = ["('(Man-mode-hook org-agenda-mode-hook org-mode-hook Info-mode-hook markdown-mode-hook) 'writeroom-mode)"];
+  ghook = ["((gen-mode-hooks '(Man org-agenda org Info markdown)) 'writeroom-mode)"];
   gfhook = ["('writeroom-mode-hook 'visual-line-mode)"];
   custom = {
     writeroom-mode-line = true;
@@ -3814,7 +3786,7 @@ flyspell = {
 citar = {
   enable = true;
   config = ''(citar-denote-mode)'';
-  ghook = ["('(LaTeX-mode-hook org-mode-hook) 'citar-capf-setup)"];
+  ghook = ["((gen-mode-hooks '(LaTeX org)) 'citar-capf-setup)"];
   custom = {
     org-cite-insert-processor = "'citar";
     org-cite-follow-processor = "'citar";
@@ -4607,10 +4579,7 @@ ace-window = {
 	"gs" = '''(start-ollama :which-key "start")'';
 	"gp" = '''(gptel :which-key "prompt")'';
       };
-      generalTwo."local-leader".gptel-mode-map = {
-	"d" = '''(gptel-send :which-key "send")'';
-	"m" = '''(gptel-menu :which-key "menu")'';
-      };
+      generalTwo.":n".gptel-mode-map."S-RET" = "'gptel-menu";
       preface = ''
 	<<Emacs Gptel Preface>>
       '';
@@ -4670,28 +4639,28 @@ ace-window = {
 
 #+NAME: Emacs Gpt4all Tools
 #+begin_src emacs-lisp
-(gsetq gptel-tools '(ragmacs-eval
-		     ragmacs-symbolp
-		     ragmacs-load-paths
-		     ragmacs-features
-		     ragmacs-manuals
-		     ragmacs-manual-nodes
-		     ragmacs-manual-node-contents
-		     ragmacs-featurep
-		     ragmacs-library-source
-		     ragmacs-symbol-manual-node
-		     ragmacs-function-source
-		     ragmacs-variable-source
-		     ragmacs-variable-value
-		     ragmacs-function-docstring
-		     ragmacs-variable-docstring
-		     ragmacs-function-completions
-		     ragmacs-command-completions
-		     ragmacs-variable-completions
-		     ragmacs-simulate-error
-		     ragmacs-coerce-nil
-		     ragmacs-all-arg-types
-		     ragmacs-async))
+(gsetq gptel-tools (list ragmacs-eval
+			 ragmacs-symbolp
+			 ragmacs-load-paths
+			 ragmacs-features
+			 ragmacs-manuals
+			 ragmacs-manual-nodes
+			 ragmacs-manual-node-contents
+			 ragmacs-featurep
+			 ragmacs-library-source
+			 ragmacs-symbol-manual-node
+			 ragmacs-function-source
+			 ragmacs-variable-source
+			 ragmacs-variable-value
+			 ragmacs-function-docstring
+			 ragmacs-variable-docstring
+			 ragmacs-function-completions
+			 ragmacs-command-completions
+			 ragmacs-variable-completions
+			 ragmacs-simulate-error
+			 ragmacs-coerce-nil
+			 ragmacs-all-arg-types
+			 ragmacs-async))
 #+end_src
 
 #+NAME: Emacs Gpt4all Config
@@ -4938,7 +4907,7 @@ programs.emacs.init.usePackage = {
 
     <<Emacs Internet EWW>>
 
-    # <<Emacs Internet Yeetube>>
+    <<Emacs Internet Yeetube>>
 
     # <<Emacs Internet Ement>>
 

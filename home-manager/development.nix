@@ -50,31 +50,11 @@
       # lsp-java.custom.lsp-java-content-provider-preferred = ''"fernflower"'';
       
 
-      treesitter-context = {
+      treesit-fold = {
         enable = true;
-        ghook = ["('(js-ts-mode-hook haskell-ts-mode-hook java-ts-mode-hook rustic-mode-hook c-ts-mode-hook python-mode-hook json-ts-mode-hook) 'treesitter-context-mode)"];
-        custom.treesitter-context-frame-min-width = 30;
-        config = ''
-          (dolist (treesit-support '(treesitter-context--supported-mode treesitter-context--focus-supported-mode  treesitter-context--fold-supported-mode))
-                  (add-to-list treesit-support 'rustic-mode))
-        '';
+        ghook = ["((gen-mode-hooks '(bash-ts c-ts css-ts emacs-lisp erlang-ts go-ts haskell-ts html-ts java-ts js-ts json-ts json5-ts julia-ts kotlin-ts lua-ts make nix-ts python-ts ess-r rustic scala-ts svelte-ts swift-ts toml-ts typescript-ts vimscript-ts yaml-ts zig-ts)) 'treesit-fold-mode)"];
       };
-      
-      treesitter-context-fold = {
-        enable = true;
-        ghook = ["('treesitter-context-mode-hook 'treesitter-context-fold-mode)"];
-        generalTwo.":n".treesitter-context-fold-mode-map = {
-          "zm" = "'treesitter-context-fold-hide";
-          "zo" = "'treesitter-context-fold-show";
-          "za" = "'treesitter-context-fold-toggle";
-        };
-      };
-      
-      treesitter-context-focus = {
-        enable = true;
-        command = ["treesitter-context-focus-mode"];
-      };
-      
+
       magit = {
         enable = true;
         custom.magit-display-buffer-function = "#'magit-display-buffer-same-window-except-diff-v1";
@@ -142,6 +122,14 @@
         enable = true;
         symex = true;
         ghook = ["('makefile-mode-hook (treesit! 'make))"];
+      };
+
+      yaml-ts-mode = {
+        enable = true;
+        mode = [''"\\.yaml\\'"''];
+        extraPackages = [pkgs.yaml-language-server];
+        symex = true;
+        eglot = ''("yaml-language-server" "--stdio")'';
       };
       
       racket-mode.gfhook = ["('racket-mode-hook 'hs-minor-mode)"];

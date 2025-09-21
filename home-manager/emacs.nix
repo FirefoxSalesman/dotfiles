@@ -69,6 +69,12 @@
         (defmacro local! (var body)
           "Creates a lambda that runs setq-local on the variable VAR with the value provided by BODY."
           `(lambda () (setq-local ,var ,body)))
+        
+        (defun gen-mode-hooks (modes)
+          "Takes a list of symbols, MODES, & appends -mode-hook to them."
+          (mapcar (lambda (mode)
+        	    (intern (concat (symbol-name mode) "-mode-hook")))
+        	  modes))
       '';
 
       usePackage = {
@@ -97,7 +103,7 @@
           }; 
           config = "(global-display-line-numbers-mode)";
           #Disable line numbers for some modes
-          ghook = ["('(org-mode-hook term-mode-hook dired-mode-hook eww-mode-hook eat-mode-hook markdown-mode-hook help-mode-hook helpful-mode-hook Info-mode-hook Man-mode-hook shell-mode-hook pdf-view-mode-hook elfeed-search-mode-hook elfeed-show-mode-hook eshell-mode-hook racket-repl-mode-hook sage-shell-mode-hook) (lambda () (display-line-numbers-mode 0)))"];
+          ghook = ["((gen-mode-hooks '(org term dired eww eat markdown help helpful Info Man shell pdf-view elfeed-search elfeed-show eshell racket-repl sage-shell)) (lambda () (display-line-numbers-mode 0)))"];
         } ;
         
         server = {
@@ -128,8 +134,6 @@
           generalTwo.":n".grep-mode-map."w" = "'wgrep-change-to-wgrep-mode";
         };
 
-        doom-escape.gfhook = ["('doom-escape-hook (lambda () (setq efs/vertico-active nil)))"];
-
         ednc = {
           enable = true;
           gfhook = [
@@ -142,7 +146,6 @@
               (when new (message (ednc-format-notification new t))))
           '';
         };
-        
       };
 
       postlude = ''

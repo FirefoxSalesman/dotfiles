@@ -109,6 +109,7 @@
             				       ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
             				       ("l" "ls $*")
             				       ("halt" "doas shutdown -P now")
+          				       ("reboot" "doas reboot")
             				       ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'"))
             	 eshell-history-size 0
                    eshell-buffer-maximum-lines 100

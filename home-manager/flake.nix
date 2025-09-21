@@ -73,11 +73,6 @@
       flake = false;
     };
     
-    treesitter-context = {
-      url = "github:zbelial/treesitter-context.el";
-      flake = false;
-    };
-    
     org-novelist = {
       url = "github:sympodius/org-novelist";
       flake = false;
@@ -127,7 +122,7 @@
             inherit self;
             inherit inputs;
             inherit system;
-            inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline treesitter-context gptel-quick org-novelist mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
+            inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline gptel-quick org-novelist mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
             inherit pkgs-stable;
           };
           modules = [

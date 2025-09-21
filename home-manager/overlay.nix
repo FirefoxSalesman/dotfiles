@@ -30,10 +30,6 @@ final: prev: pkgs: inputs: {
           inherit inputs;
           inherit (prev.emacsPackages) trivialBuild doom-themes;
         });
-        treesitter-context = (prev.emacsPackages.callPackage ./packages/emacs/treesitter-context.nix {
-          inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild posframe;
-        });
         dired-single = (prev.emacsPackages.callPackage ./packages/emacs/dired-single.nix {
           inherit inputs;
           inherit (prev.emacsPackages) trivialBuild;
