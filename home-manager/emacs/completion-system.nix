@@ -1,6 +1,8 @@
 { inputs, pkgs, ... }:
 
 {
+  imports = [../completion];
+
   home.file.".config/emacs/templates.eld".text = ''
     nix-mode
     (upackage p "= {" n "  enable = true;" q "  }")
@@ -84,7 +86,7 @@
     };
 
     usePackage = {
-      vertico.generalTwo.":n".vertico-map = {
+      vertico.generalTwoConfig.":n".vertico-map = {
         "C-o" = "'vertico-scroll-down";
         "C-e" = "'vertico-scroll-up";
         "j" = "'evil-undo";
@@ -92,6 +94,7 @@
         "N" = "'vertico-first";
         "B" = "'vertico-last";
         "bg" = "'vertico-first";
+        "k" = "'evil-delete-char";
       };
       
       vertico-quick.custom = {
@@ -107,10 +110,6 @@
       
       corfu-quick = {
         enable = true;
-        generalTwo.":ie".corfu-map = {
-          "M-o" = "'corfu-quick-insert";
-          "M-e" = "'corfu-quick-insert";
-        };
         custom = {
           corfu-quick1 = ''"crst"'';
           corfu-quick2 = ''"neia"'';
@@ -121,9 +120,9 @@
         enable = true;
         after = ["corfu"];
         config = ''
-            (dolist (src (list 'cape-dabbrev 'cape-file))
-              (add-to-list 'completion-at-point-functions src))
-          '';
+          (dolist (src (list 'cape-dabbrev 'cape-file))
+            (add-to-list 'completion-at-point-functions src))
+        '';
       };
 
       consult = {
@@ -173,7 +172,7 @@
       embark = {
         general."M-a" = "'embark-dwim";
         generalTwo.":n".vertico-map."a" = "'embark-act";
-        generalOne = {
+        generalOneConfig = {
           embark-file-map = {
             "2" = "(my/embark-split-action find-file elwm-split-window)";
             "t" = "(my/embark-split-action find-file tab-new)";
@@ -224,7 +223,7 @@
         enable = true;
         demand = true;
         gfhookf = ["('pdf-view-mode (lambda () (ace-isearch-mode -1)))"];
-        generalOne.isearch-mode-map."C-a" = "'avy-isearch";
+        generalOneConfig.isearch-mode-map."C-a" = "'avy-isearch";
         config = "(global-ace-isearch-mode)";
         custom = {
           ace-isearch-on-evil-mode = true;

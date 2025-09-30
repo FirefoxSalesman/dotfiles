@@ -21,5 +21,6 @@
     # scripts
     ezf
     pkg
+    updatefix
   ];
 }

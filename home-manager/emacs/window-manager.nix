@@ -315,7 +315,7 @@
           "('exwm-update-title 'efs/exwm-update-title)"
         ];
         # Ctrl+q will enable the next key to be sent directly
-        generalOne.exwm-mode-map."C-q" = "'exwm-input-send-next-key";
+        generalOneConfig.exwm-mode-map."C-q" = "'exwm-input-send-next-key";
         custom = {
           exwm-manage-force-tiling = true;
           # Emacs everywhere
@@ -388,7 +388,9 @@
           
                                           ;; Shell bindings
                                           ([?\s-s] . (lambda () (interactive) (shell-command "slock")))
-                                          ([?\s-y] . (lambda () (interactive) (start-process-shell-command "maim" nil  "${pkgs.maim}/bin/maim ~/pic/screenshot.png"))))'';
+                                          ([?\s-y] . (lambda () (interactive) (start-process-shell-command "maim" nil  "${pkgs.maim}/bin/maim ~/pic/screenshot.png")))
+      				    ([XF86MonBrightnessDown] . (lambda () (interactive) (efs/alter-monitor-brightness 5 t)))
+      				    ([XF86MonBrightnessUp] . (lambda () (interactive) (efs/alter-monitor-brightness 5))))'';
           
         };
         afterCall = ["on-init-ui-hook"];
@@ -444,6 +446,15 @@
               (progn (follow-mode -1)
           	   (delete-other-windows)
           	   (setq elwm-current-layout 'tile-vertical-left))))
+          
+          (defvar efs/monitor-brightness 27 "The percent brightness of the monitor.")
+          
+          (defun efs/alter-monitor-brightness (inc &optional neg)
+            "Alters the monitor's brightness.
+          INC is the percent to increment the volume by.
+          NEG subtracts if it is true."
+            (setopt efs/monitor-brightness (funcall (if neg '- '+) efs/monitor-brightness inc))
+            (async-shell-command (concat "brightnessctl -d intel_backlight set " (int-to-string efs/monitor-brightness) "%")))
         '';
         config = ''
           ;; Set the screen resolution (update this to be the correct resolution for your screen!)
@@ -497,12 +508,13 @@
                                            "^\\*eat\\*"
                                            "^\\*Sage\\*"
                                            "^\\*prolog\\*"
+      				     xref--xref-buffer-mode
                                            flymake-diagnostics-buffer-mode
                                            rustic-cargo-test-mode
                                            rustic-cargo-run-mode
-        			                             geiser-repl-mode
+      				     geiser-repl-mode
                                            dape-repl-mode
-        			                             racket-repl-mode
+      				     racket-repl-mode
                                            inferior-ess-r-mode
                                            cider-repl-mode)'';
         };

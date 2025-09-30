@@ -171,6 +171,7 @@ final: prev: pkgs: inputs: {
   masstube = (import ./scripts/masstube.nix { inherit pkgs; });
   pkg = (import ./scripts/pkg.nix { inherit pkgs; });
   udisksmenu = (import ./scripts/udisksmenu.nix { inherit pkgs; });
+  updatefix = (import ./scripts/updatefix.nix { inherit pkgs; });
   wiki = (import ./scripts/wiki.nix { inherit pkgs; });
 
   # overrides
@@ -450,12 +451,8 @@ trivialBuild rec {
 }
 #+end_src
 
-* Notes to my future self
-+ To get eduroam working, you need ppp & pptclient
-+ Don't let xorg use the nvidia card. It breaks everything
-
-* Scripts
-** Cast
+** Scripts
+*** Cast
 For moving massive quantities of Jordan Peterson's podcast into my mp3 player
 #+begin_src nix-ts :tangle scripts/cast.nix
 { pkgs }:
@@ -483,8 +480,19 @@ For moving massive quantities of Jordan Peterson's podcast into my mp3 player
     ${pkgs.coreutils}/bin/rm ~/*.$out
   ''
 #+end_src
+*** Updatefix
+Script to automate fixing my setup after an update breaks certain parts.
+Meant to be run with doas
+#+begin_src nix-ts :tangle scripts/updatefix.nix
+{ pkgs, ... }:
 
-** Doomer
+pkgs.writeShellScriptBin "updatefix" ''
+  dracut -f --regenerate-all
+  cp /usr/lib/systemd/system/getty@.bak /usr/lib/systemd/system/getty@.service
+''
+#+end_src
+
+*** Doomer
 #+begin_src nix-ts :tangle scripts/doomer.nix
 { pkgs }:
 
@@ -493,7 +501,7 @@ For moving massive quantities of Jordan Peterson's podcast into my mp3 player
   ''
 #+end_src
 
-** Ezf
+*** Ezf
 Borrowed from here: https://github.com/mickeynp/ezf
 #+begin_src nix-ts :tangle scripts/ezf.nix
 { pkgs }:
@@ -536,7 +544,7 @@ Borrowed from here: https://github.com/mickeynp/ezf
   ''
 #+end_src
 
-** Ffmpeg-bulk
+*** Ffmpeg-bulk
 I stole this from this git repo https://github.com/sylsau/ffmpeg-bulk
 #+begin_src nix-ts :tangle scripts/ffmpeg-bulk.nix
 { pkgs }:
@@ -693,7 +701,7 @@ exit
 ''
 #+end_src
 
-** Masstube
+*** Masstube
 #+begin_src nix-ts :tangle scripts/masstube.nix
 { pkgs }:
 
@@ -705,7 +713,7 @@ pkgs.writeShellScriptBin "masstube" ''
 ''
 #+end_src
 
-** Start-ollama
+*** Start-ollama
 #+begin_src nix-ts :tangle scripts/start-ollama.nix
 { config, pkgs }:
 
@@ -718,7 +726,7 @@ pkgs.writeShellScriptBin "start-ollama" ''
 ''
 #+end_src
 
-** Pkg
+*** Pkg
 A package manager manager
 
 Dev templates: https://github.com/the-nix-way/dev-templates
@@ -773,7 +781,7 @@ pkgs.writeShellScriptBin "pkg" ''
   esac
 ''
 #+end_src
-** i3status-rust
+*** i3status-rust
 #+begin_src nix-ts :tangle scripts/i3status-rust.nix
 { pkgs }:
 
@@ -782,7 +790,7 @@ ${pkgs.i3status-rust}/bin/i3status-rs config-default.toml
 ''
 #+end_src
 
-** Udisksmenu
+*** Udisksmenu
 #+begin_src nix-ts :tangle scripts/udisksmenu.nix
 { pkgs }:
 
@@ -794,7 +802,7 @@ ${pkgs.udisks}/bin/udisksctl $action -b /dev/$disk
 ''
 #+end_src
 
-** Wiki
+*** Wiki
 Requires arch-wiki-docs to be installed
 
 Stole it from Derek Taylor
@@ -814,6 +822,10 @@ else
 fi
 ''
 #+end_src
+
+* Notes to my future self
++ To get eduroam working, you need ppp & pptclient
++ Don't let xorg use the nvidia card. It breaks everything
 
 * Home Manager
 ** Main Config
@@ -1050,11 +1062,11 @@ eshell = {
                                           (shell-command-to-string "${pkgs.pfetch}/bin/pfetch"))))''
   ];
   general."s-<enter>" = "'efs/make-eshell";
-  generalOne.eshell-mode-map = {
+  generalOneConfig.eshell-mode-map = {
     "M-o" = "'eshell-previous-matching-input-from-input";
     "M-e" = "'eshell-next-matching-input-from-input";
   };
-  generalTwo.local-leader.eshell-mode-map = {
+  generalTwoConfig.local-leader.eshell-mode-map = {
     "e" = '''(eshell-insert-envvar :which-key "insert environment variable")'';
     "b" = '''(eshell-insert-buffer-name :which-key "insert buffer name")'';
   };
@@ -1371,6 +1383,8 @@ in mkIf cfg.enable {
       <<Emacs Ricing Solaire>>
       
       <<Emacs Ricing Posframes>>
+
+      <<Emacs Ricing Shrface>>
     };
   }
 #+end_src
@@ -1787,6 +1801,161 @@ vertico-posframe = {
 };
 #+end_src
 
+*** Shrface
+Shrface is an extension to shr that lets eww, elfeed, & nov do their rendering a little more like org mode.
+A great deal was borrowed from:
++ https://github.com/chenyanming/shrface/blob/master/config.el
++ https://github.com/Panadestein/emacsd/
+#+NAME: Emacs Ricing Shrface
+#+begin_src nix-ts :noweb yes
+shr-tag-pre-highlight = {
+  enable = true;
+  after = ["shrface"];
+  preface = ''
+    <<Emacs Ricing Shr Tag Pre Highlight Preface>>
+  '';
+  config = ''
+    <<Emacs Ricing Shr Tag Pre Highlight Config>>
+  '';
+};
+
+shrface = {
+  enable = true;    
+  ghookf = ["('(eww-mode elfeed-show-mode nov-mode) 'shrface-mode)"];
+  custom.shrface-header-line-max-level = 0;
+  config = ''
+    <<Emacs Ricing Shrface Config>>
+  '';
+  generalOneConfig.shr-map."RET" = "(cmd! (if (eq major-mode 'eww-mode) (eww-follow-link) (shr-browse-url)))";
+  generalTwoConfig.local-leader.shrface-mode-map = {
+    "l" = "'shrface-links-consult";
+    "o" = "'shrface-headline-consult";
+  };
+};
+#+end_src
+
+#+NAME: Emacs Ricing Shr Tag Pre Highlight Preface
+#+begin_src emacs-lisp
+(defun shrface-shr-tag-pre-highlight (pre)
+      "Highlighting code in PRE."
+      (let* ((shr-folding-mode 'none)
+             (shr-current-font 'default)
+             (code (with-temp-buffer
+                     (shr-generic pre)
+                     (buffer-string)))
+             (lang (or (shr-tag-pre-highlight-guess-language-attr pre)
+                       (let ((sym (language-detection-string code)))
+                         (and sym (symbol-name sym)))))
+             (mode (and lang
+                        (shr-tag-pre-highlight--get-lang-mode lang))))
+        (shr-ensure-newline)
+        (shr-ensure-newline)
+        (setq start (point))
+        (insert
+         (propertize (concat "#+BEGIN_SRC " lang "\n") 'face 'org-block-begin-line)
+         (or (and (fboundp mode)
+                  (with-demoted-errors "Error while fontifying: %S"
+                    (shr-tag-pre-highlight-fontify code mode)))
+             code)
+         (propertize "\n#+END_SRC" 'face 'org-block-end-line ))
+        (shr-ensure-newline)
+        (setq end (point))
+        (add-face-text-property start end '(:background "#1f2329" :extend t))
+        (shr-ensure-newline)
+        (insert "\n")))
+#+end_src
+
+#+NAME: Emacs Ricing Shr Tag Pre Highlight Config
+#+begin_src emacs-lisp
+(add-to-list 'shr-external-rendering-functions
+                 '(pre . shrface-shr-tag-pre-highlight))
+#+end_src
+
+#+NAME: Emacs Ricing Shrface Config
+#+begin_src emacs-lisp
+(defvar shrface-general-rendering-functions
+  (append '((title . eww-tag-title)
+            (form . eww-tag-form)
+            (input . eww-tag-input)
+            (button . eww-form-submit)
+            (textarea . eww-tag-textarea)
+            (select . eww-tag-select)
+            (link . eww-tag-link)
+            (meta . eww-tag-meta)
+            (code . shrface-tag-code))
+          shrface-supported-faces-alist))
+
+(defvar shrface-nov-rendering-functions
+  (append '((img . nov-render-img)
+            (svg . nov-render-svg)
+            (title . nov-render-title)
+            (code . shrface-tag-code)
+            (form . eww-tag-form)
+            (input . eww-tag-input)
+            (button . eww-form-submit)
+            (textarea . eww-tag-textarea)
+            (select . eww-tag-select)
+            (link . eww-tag-link)
+            (meta . eww-tag-meta))
+          shrface-supported-faces-alist))
+
+(defun shrface-render-advice (orig-fun &rest args)
+  (require 'eww)
+  (let ((shrface-org nil)
+        (shr-bullet (concat (char-to-string shrface-item-bullet) " "))
+        (shr-width 7000)
+        (shr-max-width 7000)
+        (shr-indentation 0)
+        (shr-external-rendering-functions shrface-general-rendering-functions)
+        (shrface-toggle-bullets nil)
+        (shrface-href-versatile t))
+    ;; workaround, need a delay to update the header line
+    (run-with-timer 0.01 nil 'shrface-update-header-line)
+    (apply orig-fun args)))
+
+(defun shrface-elfeed-advice (orig-fun &rest args)
+  (require 'eww)
+  (let ((shrface-org nil)
+        ;; make it large enough, it would not fill the column
+        ;; I uses visual-line-mode, writeroom-mode for improving the reading experience instead
+        (shr-width 7000)
+        (shr-indentation 0)
+        (shr-external-rendering-functions shrface-general-rendering-functions)
+        (shrface-toggle-bullets nil)
+        (shrface-href-versatile t))
+    (apply orig-fun args)))
+
+(defun shrface-nov-render-html ()
+  (require 'eww)
+  (let ((shrface-org nil)
+        (shr-width 7000) ;; make it large enough, it would not fill the column (use visual-line-mode/writeroom-mode instead)
+        (shr-indentation 0) ;; remove all unnecessary indentation
+        (tab-width 8)
+        (shr-external-rendering-functions shrface-nov-rendering-functions)
+        (shrface-href-versatile t)
+        (shr-use-fonts nil)           ; nil to use default font
+        (shr-map nov-mode-map))
+
+    ;; HACK: `shr-external-rendering-functions' doesn't cover
+    ;; every usage of `shr-tag-img'
+    (cl-letf (((symbol-function 'shr-tag-img) 'nov-render-img))
+      (shr-render-region (point-min) (point-max)))))
+
+(with-eval-after-load 'eww (general-advice-add 'eww-display-html :around #'shrface-render-advice))
+(with-eval-after-load 'elfeed (general-advice-add 'elfeed-insert-html :around #'shrface-elfeed-advice))
+(with-eval-after-load (gsetq nov-render-html-function 'shrface-nov-render-html))
+
+(add-to-list 'evil-fold-list
+             `((shrface-mode)
+               :open shrface-outline-cycle
+               :open-all nil
+               :close shrface-outline-cycle
+               :close-all nil
+               :toggle shrface-outline-cycle
+               :delete nil
+               :open-rec nil))
+#+end_src
+
 *** Mustache File
 #+begin_src json-ts :tangle pywal.json.mustache
   {
@@ -1842,6 +2011,7 @@ vertico-posframe = {
     # scripts
     ezf
     pkg
+    updatefix
   ];
 }
 #+end_src
@@ -1892,6 +2062,7 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 { config, pkgs, lib, ... }:
 
 {
+  imports = [./language-support];
   programs.emacs.init = {
     ide = {
       project = true;
@@ -1923,6 +2094,8 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
         ledger.enable = true;
 	c.enable = true;
 	r.enable = true;
+	makefile.enable = true;
+	yaml.enable = true;
       };
     };
 
@@ -1942,13 +2115,15 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 
       <<Development Python>>
       
-      <<Development Makefile>>
-
       <<Development Yaml>>
       
       racket-mode.gfhookf = ["('racket-mode 'hs-minor-mode)"];
 
       elisp-mode.gfhookf = ["('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"];
+
+      flymake-popon.custom.flymake-popon-posframe-extra-arguments = '''(:poshandler posframe-poshandler-point-bottom-left-corner-upward
+	                                                                :parent-frame nil
+                                                                        :refposhandler posframe-refposhandler-xwininfo)'';
       java-ts-mode = {
         init = ''
           <<Java Config>>
@@ -2028,7 +2203,7 @@ magit = {
 
 projection-ibuffer = {
   enable = true;
-  generalOne.project-prefix-map.i = "(cmd! () (ibuffer) (ibuffer-filter-by-projection-root (project-current)))";
+  generalOne.project-prefix-map.i = "(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current)))";
 };
 
 projection-multi.custom.projection-gradle-use-daemon = false;
@@ -2061,7 +2236,7 @@ eglot = {
   config = ''
     <<Development Eglot Config>>
   '';
-  generalTwo.local-leader.eglot-mode-map."r" = "'eglot-rename";
+  generalTwoConfig.local-leader.eglot-mode-map."r" = "'eglot-rename";
 };
 
 eglot-tempel = {
@@ -2101,26 +2276,54 @@ python-ts-mode.custom = {
 };
 #+end_src
 
-*** Makefile
-#+NAME: Development Makefile
-#+begin_src nix-ts
-make-mode = {
-  enable = true;
-  symex = true;
-  ghookf = ["('makefile-mode (treesit! 'make))"];
-};
+*** Language Support
+#+begin_src nix-ts :tangle language-support/default.nix
+{ ... }:
+
+{
+  imports = [
+    ./makefile.nix
+    ./yaml.nix
+  ];
+}
 #+end_src
 
-*** Yaml
-#+NAME: Development Yaml
-#+begin_src nix-ts
-yaml-ts-mode = {
-  enable = true;
-  mode = [''"\\.yaml\\'"''];
-  extraPackages = [pkgs.yaml-language-server];
-  symex = true;
-  eglot = ''("yaml-language-server" "--stdio")'';
-};
+**** Makefile
+#+begin_src nix-ts :tangle language-support/makefile.nix
+{ config, lib, ... }:
+
+let
+  ide = config.programs.emacs.init.ide;
+in
+{
+  options.programs.emacs.init.ide.languages.makefile.enable = lib.mkEnableOption "Enables Makefile support";
+  config.programs.emacs.init.usePackage.make-mode = lib.mkIf ide.languages.makefile.enable {
+    enable = true;
+    symex = ide.symex;
+    ghookf = lib.mkIf ide.symex ["('makefile-mode (treesit! 'make))"];
+  };
+}
+#+end_src
+
+**** Yaml
+#+begin_src nix-ts :tangle language-support/yaml.nix
+{ config, lib, pkgs, ... }:
+
+let
+  ide = config.programs.emacs.init.ide;
+in
+{
+  options.programs.emacs.init.ide.languages.yaml.enable = lib.mkEnableOption "Enables Yaml support";
+  config.programs.emacs.init.usePackage.yaml-ts-mode = lib.mkIf ide.languages.yaml.enable {
+    enable = true;
+    mode = [''"\\.yaml\\'"''];
+    extraPackages = lib.mkIf (ide.eglot.enable || ide.lsp.enable || ide.lspce.enable || ide.lsp-bridge.enable) [pkgs.yaml-language-server];
+    symex = ide.symex;
+    eglot = lib.mkIf ide.eglot.enable ''("yaml-language-server" "--stdio")'';
+    lsp = ide.lsp.enable;
+    lspce = lib.mkIf ide.lspce.enable ''"yaml" "yaml-language-server" "--stdio"'';
+  };
+}
 #+end_src
 
 ** File Management
@@ -2139,7 +2342,7 @@ I'm running dired with a couple of small packages that improve on it
         "C-x d" = "'consult-dir";
       };
       generalOne.global-leader."d" = '''(dired :which-key "dired")'';
-      generalTwo.":n".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
+      generalTwoConfig.":n".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
       custom = {
         dired-recursive-deletes = "'always";
         dired-listing-switches = ''"-agho --group-directories-first"'';
@@ -2203,7 +2406,7 @@ I'm running dired with a couple of small packages that improve on it
     image = {
       enable = true;
       gfhookf = ["('image-mode 'image-transform-fit-to-window)"];
-      generalTwo.":n".image-map = {
+      generalTwoConfig.":n".image-map = {
         "E" = "'image-next-file";
         "O" = "'image-previous-file";
       };
@@ -2404,7 +2607,7 @@ display-line-numbers = {
   }; 
   config = "(global-display-line-numbers-mode)";
   #Disable line numbers for some modes
-  ghookf = ["((gen-mode-hooks '(org term dired eww eat markdown help helpful Info Man shell pdf-view elfeed-search elfeed-show eshell racket-repl sage-shell)) (lambda () (display-line-numbers-mode 0)))"];
+  ghookf = ["((gen-mode-hooks '(org term dired eww eat markdown help helpful Info Man shell pdf-view elfeed-search elfeed-show eshell racket-repl sage-shell nov)) (lambda () (display-line-numbers-mode 0)))"];
 } ;
 
 server = {
@@ -2641,13 +2844,6 @@ evil = {
   config = ''
     <<Evil Config>>
   '';
-  generalOne = {
-    ":i" = {
-      "C-s" = "'insert-char";
-      "C-k" = "'kill-line";
-    };
-    ":n"."C-s" = "'evil-write";
-  };
   extraConfig = ''
     <<Evil Extra Config>>
   '';
@@ -2709,7 +2905,8 @@ evil = {
       "?" = "'isearch-backward-regexp";
       "y" = "'evil-shift-right";
       "Y" = "'evil-shift-left";
-    };
+      "C-s" = "'evil-write";
+    } ;
     ":m" = {
       "I" = "'evil-window-top";
       "C-i" = "'evil-goto-line";
@@ -2753,25 +2950,29 @@ evil = {
       "?" = "'isearch-backward-regexp";
       "G" = "'evil-paste";
     };
+    ":i" = {
+      "C-s" = "'insert-char";
+      "C-k" = "'kill-line";
+    };
   };
 };
 
-emacs.generalOne = {
-  help-map."A" = ''(cmd! () (async-shell-command "${pkgs.wiki}/bin/wiki"))'';
+emacs.generalOneConfig = {
+  help-map."A" = ''(cmd! (async-shell-command "${pkgs.wiki}/bin/wiki"))'';
   global-leader = {
-    "l" = ''(cmd! () (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k"))))'';
-    "L" = ''(cmd! () (if (project-current) (project-recompile) (recompile)))'';
-    "u" = ''(cmd! () (start-process-shell-command "udisksmenu" nil "${pkgs.udisksmenu}/bin/udisksmenu"))'';
+    "l" = ''(cmd! (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k"))))'';
+    "L" = ''(cmd! (if (project-current) (project-recompile) (recompile)))'';
+    "u" = ''(cmd! (start-process-shell-command "udisksmenu" nil "${pkgs.udisksmenu}/bin/udisksmenu"))'';
   };
 };
 #+end_src
 
 #+NAME: Evil Config
 #+begin_src emacs-lisp
-(evil-ex-define-cmd "q" (cmd! () (prescient--save) (save-buffers-kill-emacs)))
+(evil-ex-define-cmd "q" (cmd! (prescient--save) (save-buffers-kill-emacs)))
 (evil-ex-define-cmd "Undotree" 'vundo)
 (evil-ex-define-cmd "k[ill]" 'kill-current-buffer)
-(evil-ex-define-cmd "trash" (cmd! () (start-process-shell-command "rm" nil "rm -rf ~/.local/Trash")))
+(evil-ex-define-cmd "trash" (cmd! (start-process-shell-command "rm" nil "rm -rf ~/.local/Trash")))
 
 (evil-set-initial-state 'dashboard-mode 'normal)
 
@@ -3011,7 +3212,7 @@ evil-org.config = ''
 '';
 
 evil-org-agenda = {
-  generalTwo.":m".evil-org-agenda-mode-map = {
+  generalTwoConfig.":m".evil-org-agenda-mode-map = {
     "bn" = "'org-agenda-next-item";
     "bI" = "'evil-window-bottom";
     "I" = "'org-agenda-do-date-later";
@@ -3044,12 +3245,14 @@ ewal-evil-cursors = {
   "s" evil-inner-text-objects-map)
 #+end_src
 
-*** Completion System
+*** TODO Completion System
 My completions system is based around vertico, because that's what all the cool kids use nowadays.
 #+begin_src nix-ts :noweb yes :tangle emacs/completion-system.nix
 { inputs, pkgs, ... }:
 
 {
+  imports = [../completion];
+
   <<Emacs Templates File>>
 
   programs.emacs.init = {
@@ -3095,7 +3298,7 @@ My completions system is based around vertico, because that's what all the cool 
 Vertico is basically dmenu for emacs. It lists out all the options in a command menu.
 #+NAME: Emacs Vertico
 #+begin_src nix-ts :noweb yes
-vertico.generalTwo.":n".vertico-map = {
+vertico.generalTwoConfig.":n".vertico-map = {
   "C-o" = "'vertico-scroll-down";
   "C-e" = "'vertico-scroll-up";
   "j" = "'evil-undo";
@@ -3103,6 +3306,7 @@ vertico.generalTwo.":n".vertico-map = {
   "N" = "'vertico-first";
   "B" = "'vertico-last";
   "bg" = "'vertico-first";
+  "k" = "'evil-delete-char";
 };
 
 vertico-quick.custom = {
@@ -3123,10 +3327,6 @@ nerd-icons-corfu = {
 
 corfu-quick = {
   enable = true;
-  generalTwo.":ie".corfu-map = {
-    "M-o" = "'corfu-quick-insert";
-    "M-e" = "'corfu-quick-insert";
-  };
   custom = {
     corfu-quick1 = ''"crst"'';
     corfu-quick2 = ''"neia"'';
@@ -3137,8 +3337,8 @@ cape = {
   enable = true;
   after = ["corfu"];
   config = ''
-      <<Emacs Cape Config>>
-    '';
+    <<Emacs Cape Config>>
+  '';
 };
 #+end_src
 
@@ -3214,7 +3414,7 @@ avy actions from karthink
 embark = {
   general."M-a" = "'embark-dwim";
   generalTwo.":n".vertico-map."a" = "'embark-act";
-  generalOne = {
+  generalOneConfig = {
     embark-file-map = {
       "2" = "(my/embark-split-action find-file elwm-split-window)";
       "t" = "(my/embark-split-action find-file tab-new)";
@@ -3279,7 +3479,7 @@ ace-isearch = {
   enable = true;
   demand = true;
   gfhookf = ["('pdf-view-mode (lambda () (ace-isearch-mode -1)))"];
-  generalOne.isearch-mode-map."C-a" = "'avy-isearch";
+  generalOneConfig.isearch-mode-map."C-a" = "'avy-isearch";
   config = "(global-ace-isearch-mode)";
   custom = {
     ace-isearch-on-evil-mode = true;
@@ -3397,6 +3597,157 @@ ezf = {
   enable = true;
   deferIncrementally = true;
 };
+#+end_src
+
+**** TODO Modules
+#+begin_src nix-ts :tangle completion/default.nix
+{ ... }:
+
+{
+  imports = [
+    ./helm.nix
+  ];
+}
+#+end_src
+
+***** Helm
+#+begin_src nix-ts :tangle completion/helm.nix
+{ pkgs, lib, config, ... }:
+
+let
+  completions = config.programs.emacs.init.completions;
+  keybinds = config.programs.emacs.init.keybinds;
+  ide = config.programs.emacs.init.ide;
+in
+{
+  options.programs.emacs.init.completions.helm = {
+    enable = lib.mkEnableOption "Enables helm as your completion system. Largely borrowed from doom.";
+    fuzzy = lib.mkEnableOption "Enables fuzzy search. Largely borrowed from doom.";
+    swiperReplaceSearch = lib.mkEnableOption "Swiper replaces isearch/evil search. Some configuration stolen from noctuid.";
+  };
+
+  config.programs.emacs.init = lib.mkIf completions.helm.enable {
+    hasOn = true;
+    usePackage = {
+      helm-mode = {
+	enable = true;
+	hook = ["(on-first-input . helm-mode)"];
+	config = "(add-to-list 'helm-completing-read-handlers-alist (cons #'find-file-at-point nil))";
+      };
+
+      helm = {
+	enable = true;
+	after = ["helm-mode"];
+	custom = {
+	  helm-candidate-number-limit = lib.mkDefault 150;
+	  helm-display-header-line = lib.mkDefault false;
+	  helm-ff-auto-update-initial-value = lib.mkDefault false;
+	  helm-find-files-doc-header = lib.mkDefault false;
+	  helm-display-buffer-default-width = lib.mkDefault false;
+	  helm-display-buffer-default-height = lib.mkDefault 0.25;
+	  helm-imenu-execute-action-at-once-if-one = lib.mkDefault false;
+	  helm-ff-lynx-style-map = lib.mkDefault false;
+	  helm-apropos-fuzzy-match = lib.mkDefault completions.helm.fuzzy;
+	  helm-bookmark-show-location = lib.mkDefault completions.helm.fuzzy;
+	  helm-buffers-fuzzy-matching = lib.mkDefault completions.helm.fuzzy;
+	  helm-ff-fuzzy-matching = lib.mkDefault completions.helm.fuzzy;
+	  helm-file-cache-fuzzy-match = lib.mkDefault completions.helm.fuzzy;
+	  helm-flx-for-helm-locate = lib.mkDefault completions.helm.fuzzy;
+	  helm-imenu-fuzzy-match = lib.mkDefault completions.helm.fuzzy;
+	  helm-lisp-fuzzy-completion = lib.mkDefault completions.helm.fuzzy;
+	  helm-locate-fuzzy-match = lib.mkDefault completions.helm.fuzzy;
+	  helm-projectile-fuzzy-match = lib.mkDefault completions.helm.fuzzy;
+	  helm-recentf-fuzzy-match = lib.mkDefault completions.helm.fuzzy;
+	  helm-semantic-fuzzy-match = lib.mkDefault completions.helm.fuzzy;
+	  helm-completion-style = lib.mkDefault "'emacs";
+	};
+	bindLocal = {
+	  help-map = {
+	    "C-a" = lib.mkDefault "helm-apropos";
+	  };
+	  ctl-x-r-map = {
+	    "b" = lib.mkDefault "helm-bookmarks";
+	  };
+	  ctl-x-map = {
+	    "C-f" = lib.mkDefault "helm-find-files";
+	    "b" = lib.mkDefault "helm-buffers-list";
+	  };
+	  ibuffer-mode-map = {
+	    "C-x C-f" = lib.mkDefault "helm-find-files";
+	  };
+	  goto-map = {
+	    "i" = lib.mkDefault "helm-imenu";
+	  };
+	};
+	bind = {
+	  "M-y" = lib.mkDefault "helm-show-kill-ring";
+	  "M-x" = lib.mkDefault "helm-M-x";
+	};
+	config = ''(add-to-list 'completion-styles ${if completions.helm.fuzzy then "'flex" else "'helm"})'';
+	generalTwoConfig.":nm".helm-map = lib.mkIf keybinds.evil.enable {
+	  "${keybinds.evil.keys.up}" = "'helm-previous-line";
+	  "${keybinds.evil.keys.down}" = "'helm-next-line";
+	};
+      };
+
+      helm-rg = {
+	enable = true;
+	extraPackages = [pkgs.ripgrep];
+	custom.helm-rg-display-buffer-normal-method = lib.mkDefault "#'pop-to-buffer";
+	bindLocal = {
+	  helm-rg-map."C-c C-e" = lib.mkDefault "helm-rg--bounce";
+	  helm-rg--bounce-mode-map = {
+	    "q" = lib.mkDefault "kill-current-buffer";
+	    "C-c C-c" = lib.mkDefault "(lambda () (interactive) (helm-rg--bounce-dump) (kill-current-buffer))";
+	    "C-x C-c" = lib.mkDefault "helm-rg--bounce-dump-current-file";
+	    "C-c C-k" = lib.mkDefault "kill-current-buffer";
+	  };
+	};
+      };
+
+      helm-flx = lib.mkIf completions.helm.fuzzy {
+	enable = true;
+	hook = ["(helm-mode . helm-flx-mode)"];
+      };
+
+      swiper-helm = lib.mkIf completions.helm.swiperReplaceSearch {
+	enable = true;
+	bind."C-s" = lib.mkDefault "swiper-helm";
+	generalOne.":nm" = lib.mkIf keybinds.evil.enable {
+          "/" = lib.mkDefault "'swiper-helm";
+          "?" = lib.mkDefault "'swiper-helm";
+        };
+      };
+
+      helm-project = lib.mkIf ide.project {
+	enable = true;
+	extraPackages = [pkgs.silver-searcher];
+	bindLocal = {
+	  project-prefix-map = {
+	    "C-p" = lib.mkDefault "helm-project";
+	    "g" = lib.mkDefault "helm-project-grep-ag";
+	    "b" = lib.mkDefault "helm-project-buffers";
+	    "f" = lib.mkDefault "helm-project-files";
+	    "S" = lib.mkDefault "helm-project-list-projects";
+	  };
+	  helm-project-map = {
+	    "C-c s" = lib.mkDefault "helm-project-ag";
+	  };
+	};
+      };
+
+      helm-projectile = lib.mkIf ide.projectile {
+	enable = true;
+	command = ["helm-projectile-find-file" "helm-projectile-recentf" "helm-projectile-switch-project" "helm-projectile-switch-to-buffer"];
+      };
+
+      helm-lsp = lib.mkIf ide.lsp.preset {
+	enable = true;
+	command = ["helm-lsp-workspace-symbol" "helm-lsp-global-workspace-symbol"];
+      };
+    };
+  };
+}
 #+end_src
 
 *** Help System
@@ -3577,7 +3928,7 @@ org = {
                                  ("+" (:strike-through t))
                                  ("!" (:overline t) verbatim))'';
   };
-  generalTwo.local-leader.org-mode-map."a" = '''(avy-org-goto-heading-timer :which-key "avy")'';
+  generalTwoConfig.local-leader.org-mode-map."a" = '''(avy-org-goto-heading-timer :which-key "avy")'';
 
   config = ''
     (require 'ol-man)
@@ -3636,7 +3987,7 @@ consult-denote = {
 org-novelist = {
   enable = true;
   command = ["org-novelist-mode" "org-novelist-new-story"];
-  generalTwo.local-leader.org-novelist-mode-map = {
+  generalTwoConfig.local-leader.org-novelist-mode-map = {
     "c" = '''(:ignore t :which-key "character")'';
     "cn" = '''(org-novelist-new-character :which-key "new")'';
     "cr" = '''(org-novelist-rename-character :which-key "rename")'';
@@ -3679,7 +4030,7 @@ No idea what the rest of this is for.
 pdf-tools = {
   enable = true;
   defer = true;
-  generalOne.pdf-view-mode-map."C-s" = "'search-forward";
+  generalOneConfig.pdf-view-mode-map."C-s" = "'search-forward";
   custom = {
     # Makes PDFtools the default
     TeX-view-program-selection = '''((output-pdf "PDF Tools"))'';
@@ -3690,7 +4041,7 @@ pdf-tools = {
     (pdf-tools-install)
   '';
   gfhook = ["('TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)"];
-  gfhookf = ["('pdf-view-mode-hook 'pdf-view-midnight-minor-mode)"];
+  gfhookf = ["('pdf-view-mode 'pdf-view-midnight-minor-mode)"];
   init = ''(setq-default pdf-view-display-size 'fit-width)'';
   extraConfig = '':magic ("%PDF" . pdf-view-mode)'';
 };
@@ -3706,25 +4057,34 @@ evil-collection-pdf = {
   };
 };
 
-cdlatex.generalTwo.":i" = {
+cdlatex.generalTwoConfig.":i" = {
   cdlatex-mode-map."TAB" = "'cdlatex-tab";
   org-cdlatex-mode-map."TAB" = "'cdlatex-tab";
 };
 
-tex.generalTwo.local-leader.LaTeX-mode-map."e" = "'TeX-command-run-all";
+tex.generalTwoConfig.local-leader.LaTeX-mode-map."e" = "'TeX-command-run-all";
+
+evil-tex = {
+  enable = true;
+  ghookf = ["('LaTeX-mode 'evil-tex-mode)"];
+  generalOneConfig.":ov" = {
+    "t" = "evil-tex-outer-text-objects-map";
+    "s" = "evil-tex-inner-text-objects-map";
+  };
+};
 #+end_src
 
 **** Markdown
 #+NAME: Emacs Markdown
 #+begin_src nix-ts :noweb yes
 markdown = {
-  generalOne.markdown-mode-map."C-c C-e" = "'markdown-do";
+  generalOneConfig.markdown-mode-map."C-c C-e" = "'markdown-do";
   gfhookf = ["('markdown-mode 'efs/markdown-font-setup)"];
   custom = {
     markdown-command = ''"multimarkdown"'';
     markdown-hide-markup = true;
   };
-  generalTwo = {
+  generalTwoConfig = {
     ":n".markdown-mode-map = {
       "[h" = "'markdown-previous-visible-heading";
       "]h" = "'markdown-next-visible-heading";
@@ -3755,7 +4115,7 @@ I couldn't get olivetti to work.
 #+begin_src nix-ts
 writeroom-mode = {
   enable = true;
-  ghookf = ["((gen-mode-hooks '(Man org-agenda org Info markdown)) 'writeroom-mode)"];
+  ghookf = ["((gen-mode-hooks '(Man org-agenda org Info markdown shrface)) 'writeroom-mode)"];
   gfhookf = ["('writeroom-mode 'visual-line-mode)"];
   custom = {
     writeroom-mode-line = true;
@@ -3773,8 +4133,8 @@ flyspell = {
   enable = true;
   custom.ispell-personal-dictionary = "~/.config/emacs/ispell.txt";
   ghookf = [
-    "('text-mode-hook 'flyspell-mode)"
-    "('prog-mode-hook 'flyspell-prog-mode)"
+    "('text-mode 'flyspell-mode)"
+    "('prog-mode 'flyspell-prog-mode)"
   ];
 };
 #+end_src
@@ -4213,7 +4573,7 @@ exwm = {
     "('exwm-update-title 'efs/exwm-update-title)"
   ];
   # Ctrl+q will enable the next key to be sent directly
-  generalOne.exwm-mode-map."C-q" = "'exwm-input-send-next-key";
+  generalOneConfig.exwm-mode-map."C-q" = "'exwm-input-send-next-key";
   custom = {
     exwm-manage-force-tiling = true;
     # Emacs everywhere
@@ -4286,7 +4646,9 @@ exwm = {
     
                                     ;; Shell bindings
                                     ([?\s-s] . (lambda () (interactive) (shell-command "slock")))
-                                    ([?\s-y] . (lambda () (interactive) (start-process-shell-command "maim" nil  "${pkgs.maim}/bin/maim ~/pic/screenshot.png"))))'';
+                                    ([?\s-y] . (lambda () (interactive) (start-process-shell-command "maim" nil  "${pkgs.maim}/bin/maim ~/pic/screenshot.png")))
+				    ([XF86MonBrightnessDown] . (lambda () (interactive) (efs/alter-monitor-brightness 5 t)))
+				    ([XF86MonBrightnessUp] . (lambda () (interactive) (efs/alter-monitor-brightness 5))))'';
     
   };
   afterCall = ["on-init-ui-hook"];
@@ -4365,6 +4727,15 @@ exwm-outer-gaps = {
     (progn (follow-mode -1)
 	   (delete-other-windows)
 	   (setq elwm-current-layout 'tile-vertical-left))))
+
+(defvar efs/monitor-brightness 27 "The percent brightness of the monitor.")
+
+(defun efs/alter-monitor-brightness (inc &optional neg)
+  "Alters the monitor's brightness.
+INC is the percent to increment the volume by.
+NEG subtracts if it is true."
+  (setopt efs/monitor-brightness (funcall (if neg '- '+) efs/monitor-brightness inc))
+  (async-shell-command (concat "brightnessctl -d intel_backlight set " (int-to-string efs/monitor-brightness) "%")))
 #+end_src
 
 #+NAME: Emacs Exwm Config
@@ -4409,12 +4780,13 @@ popper = {
                                      "^\\*eat\\*"
                                      "^\\*Sage\\*"
                                      "^\\*prolog\\*"
+				     xref--xref-buffer-mode
                                      flymake-diagnostics-buffer-mode
                                      rustic-cargo-test-mode
                                      rustic-cargo-run-mode
-  			                             geiser-repl-mode
+				     geiser-repl-mode
                                      dape-repl-mode
-  			                             racket-repl-mode
+				     racket-repl-mode
                                      inferior-ess-r-mode
                                      cider-repl-mode)'';
   };
@@ -4578,7 +4950,7 @@ ace-window = {
 	"gs" = '''(start-ollama :which-key "start")'';
 	"gp" = '''(gptel :which-key "prompt")'';
       };
-      generalTwo.":n".gptel-mode-map."S-RET" = "'gptel-menu";
+      generalTwoConfig.":n".gptel-mode-map."S-RET" = "'gptel-menu";
       preface = ''
 	<<Emacs Gptel Preface>>
       '';
@@ -4619,7 +4991,7 @@ ace-window = {
     };
 
     ragmacs = {
-      enable = true;
+      enable = false;
       after = ["gptel"];
       config = ''
 	<<Emacs Gpt4all Tools>>
@@ -4681,8 +5053,8 @@ ace-window = {
 			      :stream t
 			      :protocol "http"
 			      :host "localhost:11434"
-			      :models '(llama3.2:3b))
-	gptel-quick-model 'llama3.2:3b)
+			      :models '(qwen3:latest))
+	gptel-quick-model 'qwen3:latest)
 #+end_src
 
 ** Multimedia
@@ -4694,7 +5066,6 @@ This is where all the audio/video stuff goes
   home.packages = with pkgs; [
     yt-dlp
     (config.lib.nixGL.wrap obs-studio)
-    (config.lib.nixGL.wrap kdePackages.kdenlive)
     lmms
     audacity
     mpc-cli
@@ -4882,7 +5253,7 @@ programs.emacs.init.usePackage = {
     custom."sage-shell-edit:display-function" = ''"display-buffer"'';
     config = ''(sage-shell:define-alias)'';
     generalOne.global-leader."S" = '''(run-sage :which-key "sage")'';
-    generalTwo."local-leader"."sage-shell-mode-map"."h" = "'sage-shell:help";
+    generalTwoConfig."local-leader"."sage-shell-mode-map"."h" = "'sage-shell:help";
   };
 
   ob-sagemath = {
@@ -4961,7 +5332,7 @@ eww = {
     eww-form-checkbox-symbol = ''"[ ]"'';
     eww-auto-rename-buffer = "'title";
   };
-  generalTwo.":n".eww-mode-map = {
+  generalTwoConfig.":n".eww-mode-map = {
     "N" = "#'eww-back-url";
     "I" = "#'eww-forward-url";
     "P" = "#'eww-copy-page-url";
@@ -4991,7 +5362,7 @@ yeetube = {
   enable = true;
   custom.yeetube-play-function = "'mpv-play-url";
   generalOne.global-leader."y" = '''(yeetube-search :which-key "search")'';
-  generalTwo.":n"."yeetube-mode-map" = {
+  generalTwoConfig.":n"."yeetube-mode-map" = {
     "RET" = "'yeetube-play";
     "r" = "'yeetube-channel-videos";
     "s" = "'yeetube-channel-search";
@@ -5075,7 +5446,7 @@ elfeed = {
                             "https://youtube.com/feeds/videos.xml?channel_id=UCUQs6rEz6lRGHn6DWqss0hA"
                             "https://notrelated.xyz/rss")
     '';
-  generalOne.global-leader."r" = "(cmd! () (elfeed) (elfeed-update))";
+  generalOne.global-leader."r" = "(cmd! (elfeed) (elfeed-update))";
 };
 #+end_src
 
@@ -5180,7 +5551,7 @@ aliases = {
 #+begin_src nix-ts
 loadAutoconfig = false;
 searchEngines = {
-  "DEFAULT" = "https://search.inetol.net/search?q={}";
+  "DEFAULT" = "https://duckduckgo.com/?q={}";
 };
 #+end_src
 

@@ -83,11 +83,11 @@
                                                 (shell-command-to-string "${pkgs.pfetch}/bin/pfetch"))))''
         ];
         general."s-<enter>" = "'efs/make-eshell";
-        generalOne.eshell-mode-map = {
+        generalOneConfig.eshell-mode-map = {
           "M-o" = "'eshell-previous-matching-input-from-input";
           "M-e" = "'eshell-next-matching-input-from-input";
         };
-        generalTwo.local-leader.eshell-mode-map = {
+        generalTwoConfig.local-leader.eshell-mode-map = {
           "e" = '''(eshell-insert-envvar :which-key "insert environment variable")'';
           "b" = '''(eshell-insert-buffer-name :which-key "insert buffer name")'';
         };

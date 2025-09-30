@@ -25,7 +25,7 @@
 	"gs" = '''(start-ollama :which-key "start")'';
 	"gp" = '''(gptel :which-key "prompt")'';
       };
-      generalTwo.":n".gptel-mode-map."S-RET" = "'gptel-menu";
+      generalTwoConfig.":n".gptel-mode-map."S-RET" = "'gptel-menu";
       preface = ''
 	(defun start-ollama ()
 	  (interactive)
@@ -56,8 +56,8 @@
 				      :stream t
 				      :protocol "http"
 				      :host "localhost:11434"
-				      :models '(llama3.2:3b))
-		gptel-quick-model 'llama3.2:3b)
+				      :models '(qwen3:latest))
+		gptel-quick-model 'qwen3:latest)
       '';
     };
 
@@ -81,7 +81,7 @@
     };
 
     ragmacs = {
-      enable = true;
+      enable = false;
       after = ["gptel"];
       config = ''
 	(gsetq gptel-tools (list ragmacs-eval

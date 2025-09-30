@@ -9,7 +9,7 @@
       custom."sage-shell-edit:display-function" = ''"display-buffer"'';
       config = ''(sage-shell:define-alias)'';
       generalOne.global-leader."S" = '''(run-sage :which-key "sage")'';
-      generalTwo."local-leader"."sage-shell-mode-map"."h" = "'sage-shell:help";
+      generalTwoConfig."local-leader"."sage-shell-mode-map"."h" = "'sage-shell:help";
     };
   
     ob-sagemath = {

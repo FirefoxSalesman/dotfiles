@@ -11,7 +11,7 @@
         "C-x d" = "'consult-dir";
       };
       generalOne.global-leader."d" = '''(dired :which-key "dired")'';
-      generalTwo.":n".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
+      generalTwoConfig.":n".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
       custom = {
         dired-recursive-deletes = "'always";
         dired-listing-switches = ''"-agho --group-directories-first"'';
@@ -112,7 +112,7 @@
     image = {
       enable = true;
       gfhookf = ["('image-mode 'image-transform-fit-to-window)"];
-      generalTwo.":n".image-map = {
+      generalTwoConfig.":n".image-map = {
         "E" = "'image-next-file";
         "O" = "'image-previous-file";
       };

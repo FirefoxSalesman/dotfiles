@@ -1,6 +1,7 @@
 { config, pkgs, lib, ... }:
 
 {
+  imports = [./language-support];
   programs.emacs.init = {
     ide = {
       project = true;
@@ -32,6 +33,8 @@
         ledger.enable = true;
 	c.enable = true;
 	r.enable = true;
+	makefile.enable = true;
+	yaml.enable = true;
       };
     };
 
@@ -70,7 +73,7 @@
       
       projection-ibuffer = {
         enable = true;
-        generalOne.project-prefix-map.i = "(cmd! () (ibuffer) (ibuffer-filter-by-projection-root (project-current)))";
+        generalOne.project-prefix-map.i = "(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current)))";
       };
       
       projection-multi.custom.projection-gradle-use-daemon = false;
@@ -94,7 +97,7 @@
           		    :after '(lambda ()
           			      (general-def 'normal eglot-mode-map "K" 'evil-substitute)))
         '';
-        generalTwo.local-leader.eglot-mode-map."r" = "'eglot-rename";
+        generalTwoConfig.local-leader.eglot-mode-map."r" = "'eglot-rename";
       };
       
       eglot-tempel = {
@@ -118,23 +121,15 @@
           python-shell-interpreter-args = ''"-i --simple-prompt"'';
       };
       
-      make-mode = {
-        enable = true;
-        symex = true;
-        ghookf = ["('makefile-mode (treesit! 'make))"];
-      };
-
-      yaml-ts-mode = {
-        enable = true;
-        mode = [''"\\.yaml\\'"''];
-        extraPackages = [pkgs.yaml-language-server];
-        symex = true;
-        eglot = ''("yaml-language-server" "--stdio")'';
-      };
+      
       
       racket-mode.gfhookf = ["('racket-mode 'hs-minor-mode)"];
 
       elisp-mode.gfhookf = ["('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"];
+
+      flymake-popon.custom.flymake-popon-posframe-extra-arguments = '''(:poshandler posframe-poshandler-point-bottom-left-corner-upward
+	                                                                :parent-frame nil
+                                                                        :refposhandler posframe-refposhandler-xwininfo)'';
       java-ts-mode = {
         init = ''
           (defun tkj/java-decompile-class ()

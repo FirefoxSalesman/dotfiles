@@ -103,7 +103,7 @@
           }; 
           config = "(global-display-line-numbers-mode)";
           #Disable line numbers for some modes
-          ghookf = ["((gen-mode-hooks '(org term dired eww eat markdown help helpful Info Man shell pdf-view elfeed-search elfeed-show eshell racket-repl sage-shell)) (lambda () (display-line-numbers-mode 0)))"];
+          ghookf = ["((gen-mode-hooks '(org term dired eww eat markdown help helpful Info Man shell pdf-view elfeed-search elfeed-show eshell racket-repl sage-shell nov)) (lambda () (display-line-numbers-mode 0)))"];
         } ;
         
         server = {

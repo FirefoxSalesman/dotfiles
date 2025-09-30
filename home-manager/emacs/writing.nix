@@ -47,7 +47,7 @@
                                        ("+" (:strike-through t))
                                        ("!" (:overline t) verbatim))'';
         };
-        generalTwo.local-leader.org-mode-map."a" = '''(avy-org-goto-heading-timer :which-key "avy")'';
+        generalTwoConfig.local-leader.org-mode-map."a" = '''(avy-org-goto-heading-timer :which-key "avy")'';
       
         config = ''
           (require 'ol-man)
@@ -94,7 +94,7 @@
       org-novelist = {
         enable = true;
         command = ["org-novelist-mode" "org-novelist-new-story"];
-        generalTwo.local-leader.org-novelist-mode-map = {
+        generalTwoConfig.local-leader.org-novelist-mode-map = {
           "c" = '''(:ignore t :which-key "character")'';
           "cn" = '''(org-novelist-new-character :which-key "new")'';
           "cr" = '''(org-novelist-rename-character :which-key "rename")'';
@@ -118,7 +118,7 @@
       pdf-tools = {
         enable = true;
         defer = true;
-        generalOne.pdf-view-mode-map."C-s" = "'search-forward";
+        generalOneConfig.pdf-view-mode-map."C-s" = "'search-forward";
         custom = {
           # Makes PDFtools the default
           TeX-view-program-selection = '''((output-pdf "PDF Tools"))'';
@@ -129,7 +129,7 @@
           (pdf-tools-install)
         '';
         gfhook = ["('TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)"];
-        gfhookf = ["('pdf-view-mode-hook 'pdf-view-midnight-minor-mode)"];
+        gfhookf = ["('pdf-view-mode 'pdf-view-midnight-minor-mode)"];
         init = ''(setq-default pdf-view-display-size 'fit-width)'';
         extraConfig = '':magic ("%PDF" . pdf-view-mode)'';
       };
@@ -145,21 +145,30 @@
         };
       };
       
-      cdlatex.generalTwo.":i" = {
+      cdlatex.generalTwoConfig.":i" = {
         cdlatex-mode-map."TAB" = "'cdlatex-tab";
         org-cdlatex-mode-map."TAB" = "'cdlatex-tab";
       };
       
-      tex.generalTwo.local-leader.LaTeX-mode-map."e" = "'TeX-command-run-all";
+      tex.generalTwoConfig.local-leader.LaTeX-mode-map."e" = "'TeX-command-run-all";
+      
+      evil-tex = {
+        enable = true;
+        ghookf = ["('LaTeX-mode 'evil-tex-mode)"];
+        generalOneConfig.":ov" = {
+          "t" = "evil-tex-outer-text-objects-map";
+          "s" = "evil-tex-inner-text-objects-map";
+        };
+      };
       
       markdown = {
-        generalOne.markdown-mode-map."C-c C-e" = "'markdown-do";
+        generalOneConfig.markdown-mode-map."C-c C-e" = "'markdown-do";
         gfhookf = ["('markdown-mode 'efs/markdown-font-setup)"];
         custom = {
           markdown-command = ''"multimarkdown"'';
           markdown-hide-markup = true;
         };
-        generalTwo = {
+        generalTwoConfig = {
           ":n".markdown-mode-map = {
             "[h" = "'markdown-previous-visible-heading";
             "]h" = "'markdown-next-visible-heading";
@@ -180,7 +189,7 @@
       
       writeroom-mode = {
         enable = true;
-        ghookf = ["((gen-mode-hooks '(Man org-agenda org Info markdown)) 'writeroom-mode)"];
+        ghookf = ["((gen-mode-hooks '(Man org-agenda org Info markdown shrface)) 'writeroom-mode)"];
         gfhookf = ["('writeroom-mode 'visual-line-mode)"];
         custom = {
           writeroom-mode-line = true;
@@ -194,8 +203,8 @@
         enable = true;
         custom.ispell-personal-dictionary = "~/.config/emacs/ispell.txt";
         ghookf = [
-          "('text-mode-hook 'flyspell-mode)"
-          "('prog-mode-hook 'flyspell-prog-mode)"
+          "('text-mode 'flyspell-mode)"
+          "('prog-mode 'flyspell-prog-mode)"
         ];
       };
       

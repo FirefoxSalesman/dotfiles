@@ -51,10 +51,10 @@
       evil = {
         gfhookf = ["('doom-escape 'evil-normal-state)"];
         config = ''
-          (evil-ex-define-cmd "q" (cmd! () (prescient--save) (save-buffers-kill-emacs)))
+          (evil-ex-define-cmd "q" (cmd! (prescient--save) (save-buffers-kill-emacs)))
           (evil-ex-define-cmd "Undotree" 'vundo)
           (evil-ex-define-cmd "k[ill]" 'kill-current-buffer)
-          (evil-ex-define-cmd "trash" (cmd! () (start-process-shell-command "rm" nil "rm -rf ~/.local/Trash")))
+          (evil-ex-define-cmd "trash" (cmd! (start-process-shell-command "rm" nil "rm -rf ~/.local/Trash")))
           
           (evil-set-initial-state 'dashboard-mode 'normal)
           
@@ -86,13 +86,6 @@
               evil-prev-flyspell-error "S"
               evil-next-flyspell-error "s")))
         '';
-        generalOne = {
-          ":i" = {
-            "C-s" = "'insert-char";
-            "C-k" = "'kill-line";
-          };
-          ":n"."C-s" = "'evil-write";
-        };
         extraConfig = ''
           :general-config
           (general-swap-key nil '(motion normal visual)
@@ -173,7 +166,8 @@
             "?" = "'isearch-backward-regexp";
             "y" = "'evil-shift-right";
             "Y" = "'evil-shift-left";
-          };
+            "C-s" = "'evil-write";
+          } ;
           ":m" = {
             "I" = "'evil-window-top";
             "C-i" = "'evil-goto-line";
@@ -217,15 +211,19 @@
             "?" = "'isearch-backward-regexp";
             "G" = "'evil-paste";
           };
+          ":i" = {
+            "C-s" = "'insert-char";
+            "C-k" = "'kill-line";
+          };
         };
       };
       
-      emacs.generalOne = {
-        help-map."A" = ''(cmd! () (async-shell-command "${pkgs.wiki}/bin/wiki"))'';
+      emacs.generalOneConfig = {
+        help-map."A" = ''(cmd! (async-shell-command "${pkgs.wiki}/bin/wiki"))'';
         global-leader = {
-          "l" = ''(cmd! () (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k"))))'';
-          "L" = ''(cmd! () (if (project-current) (project-recompile) (recompile)))'';
-          "u" = ''(cmd! () (start-process-shell-command "udisksmenu" nil "${pkgs.udisksmenu}/bin/udisksmenu"))'';
+          "l" = ''(cmd! (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k"))))'';
+          "L" = ''(cmd! (if (project-current) (project-recompile) (recompile)))'';
+          "u" = ''(cmd! (start-process-shell-command "udisksmenu" nil "${pkgs.udisksmenu}/bin/udisksmenu"))'';
         };
       };
     
@@ -395,7 +393,7 @@
       '';
       
       evil-org-agenda = {
-        generalTwo.":m".evil-org-agenda-mode-map = {
+        generalTwoConfig.":m".evil-org-agenda-mode-map = {
           "bn" = "'org-agenda-next-item";
           "bI" = "'evil-window-bottom";
           "I" = "'org-agenda-do-date-later";

@@ -7,6 +7,7 @@ final: prev: pkgs: inputs: {
   masstube = (import ./scripts/masstube.nix { inherit pkgs; });
   pkg = (import ./scripts/pkg.nix { inherit pkgs; });
   udisksmenu = (import ./scripts/udisksmenu.nix { inherit pkgs; });
+  updatefix = (import ./scripts/updatefix.nix { inherit pkgs; });
   wiki = (import ./scripts/wiki.nix { inherit pkgs; });
 
   # overrides

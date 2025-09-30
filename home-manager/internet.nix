@@ -37,7 +37,7 @@
         eww-form-checkbox-symbol = ''"[ ]"'';
         eww-auto-rename-buffer = "'title";
       };
-      generalTwo.":n".eww-mode-map = {
+      generalTwoConfig.":n".eww-mode-map = {
         "N" = "#'eww-back-url";
         "I" = "#'eww-forward-url";
         "P" = "#'eww-copy-page-url";
@@ -58,7 +58,7 @@
       enable = true;
       custom.yeetube-play-function = "'mpv-play-url";
       generalOne.global-leader."y" = '''(yeetube-search :which-key "search")'';
-      generalTwo.":n"."yeetube-mode-map" = {
+      generalTwoConfig.":n"."yeetube-mode-map" = {
         "RET" = "'yeetube-play";
         "r" = "'yeetube-channel-videos";
         "s" = "'yeetube-channel-search";
@@ -118,7 +118,7 @@
                                 "https://youtube.com/feeds/videos.xml?channel_id=UCUQs6rEz6lRGHn6DWqss0hA"
                                 "https://notrelated.xyz/rss")
         '';
-      generalOne.global-leader."r" = "(cmd! () (elfeed) (elfeed-update))";
+      generalOne.global-leader."r" = "(cmd! (elfeed) (elfeed-update))";
     };
   };
 
@@ -174,7 +174,7 @@
   
     loadAutoconfig = false;
     searchEngines = {
-      "DEFAULT" = "https://search.inetol.net/search?q={}";
+      "DEFAULT" = "https://duckduckgo.com/?q={}";
     };
     
     settings = {
