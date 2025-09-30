@@ -152,13 +152,9 @@
       
       tex.generalTwoConfig.local-leader.LaTeX-mode-map."e" = "'TeX-command-run-all";
       
-      evil-tex = {
-        enable = true;
-        ghookf = ["('LaTeX-mode 'evil-tex-mode)"];
-        generalOneConfig.":ov" = {
-          "t" = "evil-tex-outer-text-objects-map";
-          "s" = "evil-tex-inner-text-objects-map";
-        };
+      evil-tex.generalOneConfig.":ov" = {
+        "t" = "evil-tex-outer-text-objects-map";
+        "s" = "evil-tex-inner-text-objects-map";
       };
       
       markdown = {

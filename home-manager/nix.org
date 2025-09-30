@@ -962,10 +962,7 @@ xdg.userDirs = {
 #+begin_src nix-ts :noweb yes :tangle shells.nix
 { pkgs, ... }:
 {
-  imports = [
-    ./dash.nix
-    ./term
-  ];
+  imports = [./dash.nix];
 
   <<Shell Aliases>>
 
@@ -1287,197 +1284,6 @@ in mkIf cfg.enable {
 
   home.sessionVariables.ENV = "$HOME/.dashrc";
 };
-#+end_src
-
-*** modules
-#+begin_src nix-ts :tangle term/default.nix
-{ ... }:
-
-{
-  imports = [
-    ./eat.nix
-    ./eshell.nix
-    ./term.nix
-    ./coterm.nix
-    ./vterm.nix
-  ];
-}
-#+end_src
-
-**** Eat
-#+begin_src nix-ts :tangle term/eat.nix
-{ lib, config, ... }:
-
-let
-  terminals = config.programs.emacs.init.terminals;
-in
-{
-  options.programs.emacs.init.terminals.eat = lib.mkEnableOption "Enables eat as your terminal.";
-
-  config.programs.emacs.init.usePackage.eat = lib.mkIf terminals.eat {
-    enable = true;
-    command = ["eat"];
-    hook = ["(eshell-mode . eat-eshell-mode)"];
-    generalOne.global-leader."t" = lib.mkIf (config.programs.emacs.init.keybinds.leader-key.enable && !terminals.eshell) "'eat";
-    config = ''
-      ${if config.programs.emacs.init.keybinds.evil.enable then ''(evil-ex-define-cmd "term" 'eat)'' else ""}
-      (defun eat-term-get-suitable-term-name (&optional display)
-        "Return the most suitable value for `TERM' for DISPLAY.
-      
-          If the number of colors supported by display (as returned by
-          `display-color-cells') is more than 256, return \"eat-truecolor\", if
-          it is more than 8 but less than or equal to 256, return
-          \"eat-256color\", if is more than 1 but less than or equal to 8,
-          return \"eat-color\", otherwise return \"eat-mono\"."
-        (let ((colors (display-color-cells display)))
-          (cond ((> colors 256) "xterm")
-                ((> colors 8) "xterm")
-                ((> colors 1) "xterm")
-                (t "xterm"))))
-    '';
-  };
-}
-#+end_src
-
-**** Eshell
-#+begin_src nix-ts :tangle term/eshell.nix
-{ pkgs, config, lib, ... }:
-
-let
-  terminals = config.programs.emacs.init.terminals;
-  keybinds = config.programs.emacs.init.keybinds;
-in
-  {
-    options.programs.emacs.init.terminals.eshell = lib.mkEnableOption "Enables eshell. Eat & some kind of in-buffer completion are also recommended.";
-
-    config.programs.emacs.init.usePackage = lib.mkIf terminals.eshell {
-      eshell = {
-	enable = true;
-	babel = "eshell";
-	after = lib.mkIf keybinds.evil.enable ["evil-collection"];
-	custom = {
-	  eshell-buffer-maximum-lines = lib.mkDefault 100;
-	  eshell-hist-ignoredups = lib.mkDefault true;
-	  eshell-scroll-to-bottom-on-input = lib.mkDefault true;
-	};
-	hook = [
-	  #Save command history when commands are entered
-	  "(eshell-precommand . eshell-save-some-history)"
-	  #pfetch
-	  ''(eshell-banner-load . (lambda () (setopt eshell-banner-message (shell-command-to-string "${pkgs.pfetch}/bin/pfetch"))))''
-	  ''(eshell-first-time-mode . (lambda () (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
-	    (setenv "TERM" "xterm")))''
-	];
-	generalOne.global-leader."t" = lib.mkIf keybinds.leader-key.enable "'eshell";
-	generalOneConfig.eshell-mode-map = lib.mkIf keybinds.evil.enable {
-	  "M-${keybinds.evil.keys.up}" = lib.mkDefault "'eshell-previous-matching-input-from-input";
-	  "M-${keybinds.evil.keys.down}" = lib.mkDefault "'eshell-next-matching-input-from-input";
-	};
-	generalTwoConfig.local-leader.eshell-mode-map = lib.mkIf keybinds.evil.enable {
-	  "e" = lib.mkDefault '''(eshell-insert-envvar :which-key "insert environment variable")'';
-	  "b" = lib.mkDefault '''(eshell-insert-buffer-name :which-key "insert buffer name")'';
-	};
-	config = ''
-	  (with-eval-after-load 'esh-opt
-          (setopt eshell-destroy-buffer-when-process-dies t))
-	'';
-      };
-
-      eshell-syntax-highlighting = {
-	enable = true;
-	hook = ["(eshell-mode . eshell-syntax-highlighting-global-mode)"];
-      };
-
-      fish-completion = {
-	enable = true;
-	extraPackages = [pkgs.fish pkgs.bash];
-	hook = ["(eshell-mode . fish-completion-mode)"];
-      };
-
-      eshell-git-prompt = {
-	enable = true;
-	afterCall = ["eshell-mode"];
-	config = ''(eshell-git-prompt-use-theme 'powerline)'';
-      };
-    } ;
-  }
-#+end_src
-
-**** Term
-#+begin_src nix-ts :tangle term/term.nix
-{ config, lib, ... }:
-
-let
-  terminals = config.programs.emacs.init.terminals;
-in
-{
-  options.programs.emacs.init.terminals.term = lib.mkEnableOption "Largely just installs multi-term. Largely stolen from doom.";
-
-  config.programs.emacs.init.usePackage.multi-term = lib.mkIf terminals.term {
-    enable = true;
-    command = ["multi-term"];
-    custom = {
-      multi-term-dedicated-window-height = lib.mkDefault 20;
-      multi-term-switch-after-close = lib.mkDefault "'PREVIOUS";
-    };
-    hook = ["(term-mode . (lambda () (setq-local hscroll-margin 0)))"];
-    generalOne.global-leader."t" = lib.mkIf config.programs.emacs.init.keybinds.leader-key.enable "'multi-term";
-  };
-}
-#+end_src
-
-**** Coterm
-#+begin_src nix-ts :tangle term/coterm.nix
-{ config, lib, ... }:
-
-let
-  terminals = config.programs.emacs.init.terminals;
-in
-{
-  options.programs.emacs.init.terminals.coterm = {
-    enable = lib.mkEnableOption "Improves comint buffers by enabling comint-mode.";
-    coterm-program = lib.mkOption {
-      type = lib.types.str;
-      default = "bash";
-      description = ''
-	The program to run when opening a comint terminal with run-coterm.
-      '';
-    };
-  };
-
-  config.programs.emacs.init.usePackage.coterm = lib.mkIf terminals.coterm.enable {
-    enable = true;
-    command = ["run-coterm"];
-    preface = ''
-      (defun run-coterm ()
-        "Opens a comint terminal with coterm-program."
-        (interactive)
-	(comint-run "${terminals.coterm.coterm-program}"))
-    '';
-    generalOne.global-leader."t" = "'run-coterm";
-    after = ["comint"];
-    config = "(coterm-mode)";
-    bindLocal.comint-mode-map."C-;" = lib.mkDefault "coterm-char-mode-cycle";
-  };
-}
-#+end_src
-
-**** Vterm
-#+begin_src nix-ts :tangle term/vterm.nix
-{ config, lib, ... }:
-
-let
-  terminals = config.programs.emacs.init.terminals;
-in
-{
-  options.programs.emacs.init.terminals.vterm = lib.mkEnableOption "Enables vterm.";
-
-  config.programs.emacs.init.usePackage.vterm = lib.mkIf terminals.vterm {
-    enable = true;
-    command = ["vterm"];
-    generalOne.global-leader."t" = lib.mkIf config.programs.emacs.init.keybinds.leader-key.enable "'vterm";
-  };
-}
 #+end_src
 
 ** Aesthetics
@@ -2183,7 +1989,6 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 { config, pkgs, lib, ... }:
 
 {
-  imports = [./language-support];
   programs.emacs.init = {
     ide = {
       project = true;
@@ -2235,8 +2040,6 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
       # <<Development Dape>>
 
       <<Development Python>>
-      
-      <<Development Yaml>>
       
       racket-mode.gfhookf = ["('racket-mode 'hs-minor-mode)"];
 
@@ -2394,56 +2197,6 @@ python-ts-mode.custom = {
     python-shell-interpreter = ''"ipython"'';
     python-shell-interpreter-args = ''"-i --simple-prompt"'';
 };
-#+end_src
-
-*** Language Support
-#+begin_src nix-ts :tangle language-support/default.nix
-{ ... }:
-
-{
-  imports = [
-    ./makefile.nix
-    ./yaml.nix
-  ];
-}
-#+end_src
-
-**** Makefile
-#+begin_src nix-ts :tangle language-support/makefile.nix
-{ config, lib, ... }:
-
-let
-  ide = config.programs.emacs.init.ide;
-in
-{
-  options.programs.emacs.init.ide.languages.makefile.enable = lib.mkEnableOption "Enables Makefile support";
-  config.programs.emacs.init.usePackage.make-mode = lib.mkIf ide.languages.makefile.enable {
-    enable = true;
-    symex = ide.symex;
-    ghookf = lib.mkIf ide.symex ["('makefile-mode (treesit! 'make))"];
-  };
-}
-#+end_src
-
-**** Yaml
-#+begin_src nix-ts :tangle language-support/yaml.nix
-{ config, lib, pkgs, ... }:
-
-let
-  ide = config.programs.emacs.init.ide;
-in
-{
-  options.programs.emacs.init.ide.languages.yaml.enable = lib.mkEnableOption "Enables Yaml support";
-  config.programs.emacs.init.usePackage.yaml-ts-mode = lib.mkIf ide.languages.yaml.enable {
-    enable = true;
-    mode = [''"\\.yaml\\'"''];
-    extraPackages = lib.mkIf (ide.eglot.enable || ide.lsp.enable || ide.lspce.enable || ide.lsp-bridge.enable) [pkgs.yaml-language-server];
-    symex = ide.symex;
-    eglot = lib.mkIf ide.eglot.enable ''("yaml-language-server" "--stdio")'';
-    lsp = ide.lsp.enable;
-    lspce = lib.mkIf ide.lspce.enable ''"yaml" "yaml-language-server" "--stdio"'';
-  };
-}
 #+end_src
 
 ** File Management
@@ -3380,8 +3133,6 @@ My completions system is based around vertico, because that's what all the cool 
 { inputs, pkgs, ... }:
 
 {
-  imports = [../completion];
-
   <<Emacs Templates File>>
 
   programs.emacs.init = {
@@ -3740,212 +3491,6 @@ ezf = {
 };
 #+end_src
 
-**** Modules
-#+begin_src nix-ts :tangle completion/default.nix
-{ ... }:
-
-{
-  imports = [
-    ./helm.nix
-    ./mct.nix
-  ];
-}
-#+end_src
-
-***** Helm
-#+begin_src nix-ts :tangle completion/helm.nix
-{ pkgs, lib, config, ... }:
-
-let
-  completions = config.programs.emacs.init.completions;
-  keybinds = config.programs.emacs.init.keybinds;
-  ide = config.programs.emacs.init.ide;
-in
-{
-  options.programs.emacs.init.completions.helm = {
-    enable = lib.mkEnableOption "Enables helm as your completion system. Largely borrowed from doom.";
-    fuzzy = lib.mkEnableOption "Enables fuzzy search. Largely borrowed from doom.";
-    swiperReplaceSearch = lib.mkEnableOption "Swiper replaces isearch/evil search. Some configuration stolen from noctuid.";
-  };
-
-  config.programs.emacs.init = lib.mkIf completions.helm.enable {
-    hasOn = true;
-    usePackage = {
-      helm-mode = {
-	enable = true;
-	hook = ["(on-first-input . helm-mode)"];
-	config = "(add-to-list 'helm-completing-read-handlers-alist (cons #'find-file-at-point nil))";
-      };
-
-      helm = {
-	enable = true;
-	after = ["helm-mode"];
-	custom = {
-	  helm-candidate-number-limit = lib.mkDefault 150;
-	  helm-display-header-line = lib.mkDefault false;
-	  helm-ff-auto-update-initial-value = lib.mkDefault false;
-	  helm-find-files-doc-header = lib.mkDefault false;
-	  helm-display-buffer-default-width = lib.mkDefault false;
-	  helm-display-buffer-default-height = lib.mkDefault 0.25;
-	  helm-imenu-execute-action-at-once-if-one = lib.mkDefault false;
-	  helm-ff-lynx-style-map = lib.mkDefault false;
-	  helm-apropos-fuzzy-match = lib.mkDefault completions.helm.fuzzy;
-	  helm-bookmark-show-location = lib.mkDefault completions.helm.fuzzy;
-	  helm-buffers-fuzzy-matching = lib.mkDefault completions.helm.fuzzy;
-	  helm-ff-fuzzy-matching = lib.mkDefault completions.helm.fuzzy;
-	  helm-file-cache-fuzzy-match = lib.mkDefault completions.helm.fuzzy;
-	  helm-flx-for-helm-locate = lib.mkDefault completions.helm.fuzzy;
-	  helm-imenu-fuzzy-match = lib.mkDefault completions.helm.fuzzy;
-	  helm-lisp-fuzzy-completion = lib.mkDefault completions.helm.fuzzy;
-	  helm-locate-fuzzy-match = lib.mkDefault completions.helm.fuzzy;
-	  helm-projectile-fuzzy-match = lib.mkDefault completions.helm.fuzzy;
-	  helm-recentf-fuzzy-match = lib.mkDefault completions.helm.fuzzy;
-	  helm-semantic-fuzzy-match = lib.mkDefault completions.helm.fuzzy;
-	  helm-completion-style = lib.mkDefault "'emacs";
-	};
-	bindLocal = {
-	  help-map = {
-	    "C-a" = lib.mkDefault "helm-apropos";
-	  };
-	  ctl-x-r-map = {
-	    "b" = lib.mkDefault "helm-bookmarks";
-	  };
-	  ctl-x-map = {
-	    "C-f" = lib.mkDefault "helm-find-files";
-	    "b" = lib.mkDefault "helm-buffers-list";
-	  };
-	  ibuffer-mode-map = {
-	    "C-x C-f" = lib.mkDefault "helm-find-files";
-	  };
-	  goto-map = {
-	    "i" = lib.mkDefault "helm-imenu";
-	  };
-	};
-	bind = {
-	  "M-y" = lib.mkDefault "helm-show-kill-ring";
-	  "M-x" = lib.mkDefault "helm-M-x";
-	};
-	config = ''(add-to-list 'completion-styles ${if completions.helm.fuzzy then "'flex" else "'helm"})'';
-	generalTwoConfig.":nm".helm-map = lib.mkIf keybinds.evil.enable {
-	  "${keybinds.evil.keys.up}" = "'helm-previous-line";
-	  "${keybinds.evil.keys.down}" = "'helm-next-line";
-	};
-      };
-
-      helm-rg = {
-	enable = true;
-	extraPackages = [pkgs.ripgrep];
-	custom.helm-rg-display-buffer-normal-method = lib.mkDefault "#'pop-to-buffer";
-	bindLocal = {
-	  helm-rg-map."C-c C-e" = lib.mkDefault "helm-rg--bounce";
-	  helm-rg--bounce-mode-map = {
-	    "q" = lib.mkDefault "kill-current-buffer";
-	    "C-c C-c" = lib.mkDefault "(lambda () (interactive) (helm-rg--bounce-dump) (kill-current-buffer))";
-	    "C-x C-c" = lib.mkDefault "helm-rg--bounce-dump-current-file";
-	    "C-c C-k" = lib.mkDefault "kill-current-buffer";
-	  };
-	};
-      };
-
-      helm-flx = lib.mkIf completions.helm.fuzzy {
-	enable = true;
-	hook = ["(helm-mode . helm-flx-mode)"];
-      };
-
-      swiper-helm = lib.mkIf completions.helm.swiperReplaceSearch {
-	enable = true;
-	bind."C-s" = lib.mkDefault "swiper-helm";
-	generalOne.":nm" = lib.mkIf keybinds.evil.enable {
-          "/" = lib.mkDefault "'swiper-helm";
-          "?" = lib.mkDefault "'swiper-helm";
-        };
-      };
-
-      helm-project = lib.mkIf ide.project {
-	enable = true;
-	extraPackages = [pkgs.silver-searcher];
-	bindLocal = {
-	  project-prefix-map = {
-	    "C-p" = lib.mkDefault "helm-project";
-	    "g" = lib.mkDefault "helm-project-grep-ag";
-	    "b" = lib.mkDefault "helm-project-buffers";
-	    "f" = lib.mkDefault "helm-project-files";
-	    "S" = lib.mkDefault "helm-project-list-projects";
-	  };
-	  helm-project-map = {
-	    "C-c s" = lib.mkDefault "helm-project-ag";
-	  };
-	};
-      };
-
-      helm-projectile = lib.mkIf ide.projectile {
-	enable = true;
-	command = ["helm-projectile-find-file" "helm-projectile-recentf" "helm-projectile-switch-project" "helm-projectile-switch-to-buffer"];
-      };
-
-      helm-lsp = lib.mkIf ide.lsp.preset {
-	enable = true;
-	command = ["helm-lsp-workspace-symbol" "helm-lsp-global-workspace-symbol"];
-      };
-    };
-  };
-}
-#+end_src
-
-***** Mct
-#+begin_src nix-ts :tangle completion/mct.nix
-{ config, lib, ... }:
-
-let
-  completions = config.programs.emacs.init.completions;
-  keybinds = config.programs.emacs.init.keybinds;
-in
-{
-  options.programs.emacs.init.completions.mct.enable = lib.mkEnableOption "Enables mct. Stolen from Prot.";
-
-  config.programs.emacs.init = lib.mkIf completions.mct.enable {
-    hasOn = true;
-    usePackage.mct = {
-      enable = true;
-      hook = ["(on-first-input . mct-mode)"];
-      custom = {
-	mct-hide-completion-mode-line = lib.mkDefault true;
-	mct-completing-read-multiple-indicator = lib.mkDefault true;
-	mct-live-completion = lib.mkDefault "'visible";
-	mct-completion-passlist = lib.mkDefault ''
-	'(select-frame-by-name
-          Info-goto-node
-          Info-index
-          Info-menu
-          vc-retrieve-tag
-          ;; Some completion categories
-          consult-buffer
-          consult-location
-          embark-keybinding
-          imenu
-          file
-          project-file
-          buffer
-          kill-ring)
-	'';
-      };
-      generalTwoConfig.":mnei" = lib.mkIf keybinds.evil.enable {
-	mct-minibuffer-local-completion-map = {
-	  "C-${keybinds.evil.keys.up}" = lib.mkDefault "'mct-switch-to-completions-bottom";
-	  "C-${keybinds.evil.keys.down}" = lib.mkDefault "'mct-switch-to-completions-top";
-	};
-	mct-minibuffer-completion-list-map = {
-	  "C-${keybinds.evil.keys.down}" = lib.mkDefault "'mct-next-completion-or-mini";
-	  "C-${keybinds.evil.keys.up}" = lib.mkDefault "'mct-previous-completion-or-mini";
-	  "${keybinds.evil.keys.down}" = lib.mkDefault "'mct-next-completion-or-mini";
-	  "${keybinds.evil.keys.up}" = lib.mkDefault "'mct-previous-completion-or-mini";
-	};
-      };
-    };
-  };
-}
-#+end_src
-
 *** Help System
 An improved help system that I lifted from emacs from scratch.
 Helpful gives more information, & which-key tells what keybinds you have available
@@ -4274,13 +3819,9 @@ cdlatex.generalTwoConfig.":i" = {
 
 tex.generalTwoConfig.local-leader.LaTeX-mode-map."e" = "'TeX-command-run-all";
 
-evil-tex = {
-  enable = true;
-  ghookf = ["('LaTeX-mode 'evil-tex-mode)"];
-  generalOneConfig.":ov" = {
-    "t" = "evil-tex-outer-text-objects-map";
-    "s" = "evil-tex-inner-text-objects-map";
-  };
+evil-tex.generalOneConfig.":ov" = {
+  "t" = "evil-tex-outer-text-objects-map";
+  "s" = "evil-tex-inner-text-objects-map";
 };
 #+end_src
 
@@ -5169,26 +4710,6 @@ ace-window = {
       '';
     };
 
-    gptel-quick = {
-      enable = true;
-      defer = true;
-      generalOne = {
-	embark-general-map."?" = '''(gptel-quick :which-key "summarize")''; 
-	global-leader."gq" = '''(gptel-quick :which-key "summarize")'';
-      };
-      config = ''
-	<<Emacs Gptel Quick Config>>
-      '';
-    };
-
-    gptel-aibo = {
-      enable = true;
-      generalOne.":ie" = {
-	"M-/" = "'gptel-aibo-complete-at-point";
-	"M-?" = "'gptel-aibo-apply-last-suggestions";
-      };
-    };
-
     macher = {
       enable = true;
       command = ["macher-install"];
@@ -5255,16 +4776,6 @@ ace-window = {
 			:models '(qwen3:latest llama3.2:3b)))
 
 ;; (setopt gptel-backend (gptel-make-gh-copilot "Copilot"))
-#+end_src
-
-#+NAME: Emacs Gptel Quick Config
-#+begin_src emacs-lisp
-(setopt gptel-quick-backend (gptel-make-ollama "Ollama"
-			      :stream t
-			      :protocol "http"
-			      :host "localhost:11434"
-			      :models '(qwen3:latest))
-	gptel-quick-model 'qwen3:latest)
 #+end_src
 
 ** Multimedia

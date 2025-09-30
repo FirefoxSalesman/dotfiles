@@ -1,9 +1,6 @@
 { pkgs, ... }:
 {
-  imports = [
-    ./dash.nix
-    ./term
-  ];
+  imports = [./dash.nix];
 
   home.shellAliases = {
     ffrecord = "ffmpeg -f sndio -i snd/0.mon -f x11grab -r 30 -s 1920x1080 -i :0 -c:v libx164 -preset ultrafast -acodec copy ~/test.mkv";

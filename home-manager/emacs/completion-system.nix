@@ -1,8 +1,6 @@
 { inputs, pkgs, ... }:
 
 {
-  imports = [../completion];
-
   home.file.".config/emacs/templates.eld".text = ''
     nix-mode
     (upackage p "= {" n "  enable = true;" q "  }")

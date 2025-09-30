@@ -1,7 +1,6 @@
 { config, pkgs, lib, ... }:
 
 {
-  imports = [./language-support];
   programs.emacs.init = {
     ide = {
       project = true;
@@ -119,8 +118,6 @@
           python-shell-interpreter = ''"ipython"'';
           python-shell-interpreter-args = ''"-i --simple-prompt"'';
       };
-      
-      
       
       racket-mode.gfhookf = ["('racket-mode 'hs-minor-mode)"];
 

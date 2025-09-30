@@ -44,31 +44,6 @@
       '';
     };
 
-    gptel-quick = {
-      enable = true;
-      defer = true;
-      generalOne = {
-	embark-general-map."?" = '''(gptel-quick :which-key "summarize")''; 
-	global-leader."gq" = '''(gptel-quick :which-key "summarize")'';
-      };
-      config = ''
-	(setopt gptel-quick-backend (gptel-make-ollama "Ollama"
-				      :stream t
-				      :protocol "http"
-				      :host "localhost:11434"
-				      :models '(qwen3:latest))
-		gptel-quick-model 'qwen3:latest)
-      '';
-    };
-
-    gptel-aibo = {
-      enable = true;
-      generalOne.":ie" = {
-	"M-/" = "'gptel-aibo-complete-at-point";
-	"M-?" = "'gptel-aibo-apply-last-suggestions";
-      };
-    };
-
     macher = {
       enable = true;
       command = ["macher-install"];
