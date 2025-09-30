@@ -71,8 +71,7 @@
     completions = {
       prescient = true;
       orderless = true;
-      # vertico.enable = true;
-      mct.enable = true;
+      vertico.enable = true;
       smallExtras.evilConsultLine = true;
       corfu = {
         enable = true;
