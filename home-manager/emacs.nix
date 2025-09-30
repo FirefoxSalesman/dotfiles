@@ -75,6 +75,15 @@
           (mapcar (lambda (mode)
         	    (intern (concat (symbol-name mode) "-mode")))
         	  modes))
+        
+        (defmacro efs/evil-collection-remap (fun state map &rest args)
+          "Adds more key definitions directly after running some evil-collection setup function.
+        `FUN` is the evil-collection function to advise.
+        `STATE` is the evil state to bind the keys in.
+        `MAP` is the keymap to bind the keys to.
+        `ARGS` is the actual key definitions."
+          `(general-add-advice ,fun :after
+        		       (lambda () (general-def ,state ,map ,@args))))
       '';
 
       usePackage = {

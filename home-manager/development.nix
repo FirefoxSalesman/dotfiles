@@ -93,9 +93,8 @@
           "('before-save (lambda () (when eglot--managed-mode (eglot-format-buffer))))"
         ];
         config = ''
-          (general-add-advice 'evil-collection-eglot-setup
-          		    :after '(lambda ()
-          			      (general-def 'normal eglot-mode-map "K" 'evil-substitute)))
+          (efs/evil-collection-remap 'evil-collection-eglot-setup 'normal eglot-mode-map 
+          			   "K" 'evil-substitute)
         '';
         generalTwoConfig.local-leader.eglot-mode-map."r" = "'eglot-rename";
       };

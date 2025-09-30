@@ -964,6 +964,7 @@ xdg.userDirs = {
 {
   imports = [
     ./dash.nix
+    ./term
   ];
 
   <<Shell Aliases>>
@@ -979,8 +980,14 @@ xdg.userDirs = {
 
     <<Dash Shell>>
 
-    emacs.init.usePackage = {
-      <<Eshell>>
+    emacs.init = {
+      terminals = {
+	eshell = true;
+	eat = true;
+      };
+      usePackage = {
+        <<Eshell>>
+      };
     };
   };
 }
@@ -1049,27 +1056,8 @@ Eat lets us get away with using eshell all the time. It can be used to get into 
 #+NAME: Eshell
 #+begin_src nix-ts :noweb yes
 eshell = {
-  enable = true;
-  babel = "eshell";
-  after = ["evil-collection"];
-  ghookf = [
-    "('eshell-first-time-mode 'efs/configure-eshell)"
-    #Save command history when commands are entered
-    "('eshell-precommand 'eshell-save-some-history)"
-    #pfetch
-    ''('eshell-banner-load (lambda ()
-                                       (gsetq eshell-banner-message
-                                          (shell-command-to-string "${pkgs.pfetch}/bin/pfetch"))))''
-  ];
+  ghookf = ["('eshell-first-time-mode 'efs/configure-eshell)"];
   general."s-<enter>" = "'efs/make-eshell";
-  generalOneConfig.eshell-mode-map = {
-    "M-o" = "'eshell-previous-matching-input-from-input";
-    "M-e" = "'eshell-next-matching-input-from-input";
-  };
-  generalTwoConfig.local-leader.eshell-mode-map = {
-    "e" = '''(eshell-insert-envvar :which-key "insert environment variable")'';
-    "b" = '''(eshell-insert-buffer-name :which-key "insert buffer name")'';
-  };
   init = ''
     <<Emacs Eshell Init>>
   '';
@@ -1078,33 +1066,7 @@ eshell = {
   '';
 };
 
-eshell-syntax-highlighting = {
-  enable = true;
-  defer = true;
-  ghookf = ["('eshell-mode 'eshell-syntax-highlighting-global-mode)"];
-};
-
-fish-completion = {
-  enable = true;
-  defer = true;
-  ghookf = ["('eshell-mode 'fish-completion-mode)"];
-  gfhookf = ["('fish-completion-mode (local! completion-at-point-functions '(tempel-complete pcomplete-completions-at-point)))"];
-};
-
-eshell-git-prompt = {
-  enable = true;
-  afterCall = ["eshell-mode"];
-  config = ''(eshell-git-prompt-use-theme 'powerline)'';
-};
-
-eat = {
-  enable = true;
-  defer = true;
-  afterCall = ["eshell-mode"];
-  config = ''
-    <<Emacs Eat Config>>
-  '';
-};
+fish-completion.gfhookf = ["('fish-completion-mode (local! completion-at-point-functions '(tempel-complete pcomplete-completions-at-point)))"];
 
 evil-collection-eshell = {
   enable = true;
@@ -1130,56 +1092,24 @@ evil-collection-eshell = {
 #+NAME: Emacs Eshell Config
 #+begin_src emacs-lisp
 (defun efs/configure-eshell ()
-  ;; Truncate buffer for perforance
-  (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
-
   ;; Bind some useful keys for evil-mode
   (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
   (evil-normalize-keymaps)
-  (setenv "TERM" "xterm")
   (gsetq eshell-command-aliases-list '(("gc" "torsocks git clone")
   				       ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
   				       ("l" "ls $*")
   				       ("halt" "doas shutdown -P now")
 				       ("reboot" "doas reboot")
-  				       ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'"))
-  	 eshell-history-size 0
-         eshell-buffer-maximum-lines 100
-         eshell-hist-ignoredups t
-         eshell-scroll-to-bottom-on-input t))
-
-(with-eval-after-load 'esh-opt
-  (gsetq eshell-destroy-buffer-when-process-dies t))
+  				       ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'"))))
 #+end_src
 
 #+NAME: Emacs Evil Eshell Config
 #+begin_src emacs-lisp
-(general-add-advice 'evil-collection-eshell-setup-keys :after
-		    (lambda () (general-def 'normal eshell-mode-map
-				 "d" 'evil-yank
-				 "D" 'evil-yank-line
-				 "c" 'evil-visual-state
-				 "C" 'evil-visual-line)))
-#+end_src
-
-#+NAME: Emacs Eat Config
-#+begin_src emacs-lisp
-(eat-eshell-mode)
-(evil-ex-define-cmd "term" 'eat)
-(defun eat-term-get-suitable-term-name (&optional display)
-  "Return the most suitable value for `TERM' for DISPLAY.
-
-    If the number of colors supported by display (as returned by
-    `display-color-cells') is more than 256, return \"eat-truecolor\", if
-    it is more than 8 but less than or equal to 256, return
-    \"eat-256color\", if is more than 1 but less than or equal to 8,
-    return \"eat-color\", otherwise return \"eat-mono\"."
-  (let ((colors (display-color-cells display)))
-    (cond ((> colors 256) "xterm")
-          ((> colors 8) "xterm")
-          ((> colors 1) "xterm")
-          (t "xterm"))))
-
+(efs/evil-collection-remap 'evil-collection-eshell-setup-keys 'normal eshell-mode-map
+			   "d" 'evil-yank
+			   "D" 'evil-yank-line
+			   "c" 'evil-visual-state
+			   "C" 'evil-visual-line)
 #+end_src
 
 *** dash
@@ -1357,6 +1287,115 @@ in mkIf cfg.enable {
 
   home.sessionVariables.ENV = "$HOME/.dashrc";
 };
+#+end_src
+
+*** modules
+#+begin_src nix-ts :tangle term/default.nix
+{ ... }:
+
+{
+  imports = [
+    ./eat.nix
+    ./eshell.nix
+  ];
+}
+#+end_src
+
+**** Eat
+#+begin_src nix-ts :tangle term/eat.nix
+{ lib, config, ... }:
+
+let
+  terminals = config.programs.emacs.init.terminals;
+in
+{
+  options.programs.emacs.init.terminals.eat = lib.mkEnableOption "Enables eat as your terminal.";
+
+  config.programs.emacs.init.usePackage.eat = lib.mkIf terminals.eat {
+    enable = true;
+    command = ["eat"];
+    hook = ["(eshell-mode . eat-eshell-mode)"];
+    config = ''
+      ${if config.programs.emacs.init.keybinds.evil.enable then ''(evil-ex-define-cmd "term" 'eat)'' else ""}
+      (defun eat-term-get-suitable-term-name (&optional display)
+        "Return the most suitable value for `TERM' for DISPLAY.
+      
+          If the number of colors supported by display (as returned by
+          `display-color-cells') is more than 256, return \"eat-truecolor\", if
+          it is more than 8 but less than or equal to 256, return
+          \"eat-256color\", if is more than 1 but less than or equal to 8,
+          return \"eat-color\", otherwise return \"eat-mono\"."
+        (let ((colors (display-color-cells display)))
+          (cond ((> colors 256) "xterm")
+                ((> colors 8) "xterm")
+                ((> colors 1) "xterm")
+                (t "xterm"))))
+    '';
+  };
+}
+#+end_src
+
+**** Eshell
+#+begin_src nix-ts :tangle term/eshell.nix
+{ pkgs, config, lib, ... }:
+
+let
+  terminals = config.programs.emacs.init.terminals;
+  keybinds = config.programs.emacs.init.keybinds;
+in
+  {
+    options.programs.emacs.init.terminals.eshell = lib.mkEnableOption "Enables eshell. Eat & some kind of in-buffer completion are also recommended.";
+
+    config.programs.emacs.init.usePackage = lib.mkIf terminals.eshell {
+      eshell = {
+	enable = true;
+	babel = "eshell";
+	after = lib.mkIf keybinds.evil.enable ["evil-collection"];
+	custom = {
+	  eshell-buffer-maximum-lines = lib.mkDefault 100;
+	  eshell-hist-ignoredups = lib.mkDefault true;
+	  eshell-scroll-to-bottom-on-input = lib.mkDefault true;
+	};
+	hook = [
+	  #Save command history when commands are entered
+	  "(eshell-precommand . eshell-save-some-history)"
+	  #pfetch
+	  ''(eshell-banner-load . (lambda () (setopt eshell-banner-message (shell-command-to-string "${pkgs.pfetch}/bin/pfetch"))))''
+	  ''(eshell-first-time-mode . (lambda () (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
+	    (setenv "TERM" "xterm")))''
+	];
+	generalOneConfig.eshell-mode-map = lib.mkIf keybinds.evil.enable {
+	  "M-${keybinds.evil.keys.up}" = lib.mkDefault "'eshell-previous-matching-input-from-input";
+	  "M-${keybinds.evil.keys.down}" = lib.mkDefault "'eshell-next-matching-input-from-input";
+	};
+	generalTwoConfig.local-leader.eshell-mode-map = lib.mkIf keybinds.evil.enable {
+	  "e" = lib.mkDefault '''(eshell-insert-envvar :which-key "insert environment variable")'';
+	  "b" = lib.mkDefault '''(eshell-insert-buffer-name :which-key "insert buffer name")'';
+	};
+	config = ''
+	  (with-eval-after-load 'esh-opt
+          (setopt eshell-destroy-buffer-when-process-dies t))
+	'';
+      };
+
+      eshell-syntax-highlighting = {
+	enable = true;
+	hook = ["(eshell-mode . eshell-syntax-highlighting-global-mode)"];
+      };
+
+      fish-completion = {
+	enable = true;
+	extraPackages = [pkgs.fish pkgs.bash];
+	hook = ["(eshell-mode . fish-completion-mode)"];
+      };
+
+      eshell-git-prompt = {
+	enable = true;
+	afterCall = ["eshell-mode"];
+	config = ''(eshell-git-prompt-use-theme 'powerline)'';
+      };
+    } ;
+  }
 #+end_src
 
 ** Aesthetics
@@ -2248,9 +2287,8 @@ eglot-tempel = {
 
 #+NAME: Development Eglot Config
 #+begin_src emacs-lisp
-(general-add-advice 'evil-collection-eglot-setup
-		    :after '(lambda ()
-			      (general-def 'normal eglot-mode-map "K" 'evil-substitute)))
+(efs/evil-collection-remap 'evil-collection-eglot-setup 'normal eglot-mode-map 
+			   "K" 'evil-substitute)
 #+end_src
 
 *** Dape
@@ -2574,6 +2612,15 @@ or aliases. Stolen from Doom."
   (mapcar (lambda (mode)
 	    (intern (concat (symbol-name mode) "-mode")))
 	  modes))
+
+(defmacro efs/evil-collection-remap (fun state map &rest args)
+  "Adds more key definitions directly after running some evil-collection setup function.
+`FUN` is the evil-collection function to advise.
+`STATE` is the evil state to bind the keys in.
+`MAP` is the keymap to bind the keys to.
+`ARGS` is the actual key definitions."
+  `(general-add-advice ,fun :after
+		       (lambda () (general-def ,state ,map ,@args))))
 #+end_src
 
 **** Sensible Defaults
@@ -3260,7 +3307,11 @@ My completions system is based around vertico, because that's what all the cool 
       prescient = true;
       orderless = true;
       vertico.enable = true;
-      smallExtras.evilConsultLine = true;
+      smallExtras = {
+	enable = true;
+	embark = true;
+	evilConsultLine = true;
+      };
       corfu = {
         enable = true;
         wantTabComplete = false;
@@ -3295,21 +3346,32 @@ My completions system is based around vertico, because that's what all the cool 
 Vertico is basically dmenu for emacs. It lists out all the options in a command menu.
 #+NAME: Emacs Vertico
 #+begin_src nix-ts :noweb yes
-vertico.generalTwoConfig.":n".vertico-map = {
-  "C-o" = "'vertico-scroll-down";
-  "C-e" = "'vertico-scroll-up";
-  "j" = "'evil-undo";
-  "I" = "'vertico-last";
-  "N" = "'vertico-first";
-  "B" = "'vertico-last";
-  "bg" = "'vertico-first";
-  "k" = "'evil-delete-char";
+vertico = {
+  generalTwoConfig.":n".vertico-map = {
+    "C-o" = "'vertico-scroll-down";
+    "C-e" = "'vertico-scroll-up";
+    "j" = "'evil-undo";
+    "I" = "'vertico-last";
+    "N" = "'vertico-first";
+    "B" = "'vertico-last";
+    "bg" = "'vertico-first";
+  };
+  config = ''
+    <<Emacs Vertico Config>>
+  '';
 };
 
 vertico-quick.custom = {
   vertico-quick1 = ''"crst"'';
   vertico-quick2 = ''"neia"'';
 };
+#+end_src
+
+#+NAME: Emacs Vertico Config
+#+begin_src emacs-lisp
+(with-eval-after-load 'evil-collection-vertico
+  (efs/evil-collection-remap 'evil-collection-vertico-setup 'normal vertico-map
+			     "k" 'evil-delete-char))
 #+end_src
 
 **** Corfu
@@ -3761,10 +3823,6 @@ in
 
   config.programs.emacs.init = lib.mkIf completions.mct.enable {
     hasOn = true;
-    completions.smallExtras = {
-      enable = true;
-      embark = true;
-    };
     usePackage.mct = {
       enable = true;
       hook = ["(on-first-input . mct-mode)"];
@@ -3789,6 +3847,18 @@ in
           kill-ring)
 	'';
       };
+      generalTwoConfig.":mnei" = lib.mkIf keybinds.evil.enable {
+	mct-minibuffer-local-completion-map = {
+	  "C-${keybinds.evil.keys.up}" = lib.mkDefault "'mct-switch-to-completions-bottom";
+	  "C-${keybinds.evil.keys.down}" = lib.mkDefault "'mct-switch-to-completions-top";
+	};
+	mct-minibuffer-completion-list-map = {
+	  "C-${keybinds.evil.keys.down}" = lib.mkDefault "'mct-next-completion-or-mini";
+	  "C-${keybinds.evil.keys.up}" = lib.mkDefault "'mct-previous-completion-or-mini";
+	  "${keybinds.evil.keys.down}" = lib.mkDefault "'mct-next-completion-or-mini";
+	  "${keybinds.evil.keys.up}" = lib.mkDefault "'mct-previous-completion-or-mini";
+	};
+      };
     };
   };
 }
@@ -3797,7 +3867,7 @@ in
 *** Help System
 An improved help system that I lifted from emacs from scratch.
 Helpful gives more information, & which-key tells what keybinds you have available
-#+begin_src nix-ts :tangle emacs/help-system.nix
+#+begin_src nix-ts :noweb yes :tangle emacs/help-system.nix
 { ... }:
 
 {
@@ -3822,8 +3892,22 @@ Helpful gives more information, & which-key tells what keybinds you have availab
         embark-symbol-map."h" = "'helpful-symbol";
       };
     };
+
+    info = {
+      enable = true;
+      config = ''
+	<<Emacs Info Config>>
+      '';
+    };
   };
 }
+#+end_src
+
+#+NAME: Emacs Info Config
+#+begin_src emacs-lisp
+(with-eval-after-load 'evil-collection-info
+  (efs/evil-collection-remap 'evil-collection-info-setup '(normal motion) Info-mode-map
+			     "C-o" 'evil-scroll-page-up))
 #+end_src
 
 *** Password Management
@@ -5391,12 +5475,9 @@ eww = {
 #+NAME: Emacs Internet Eww Config
 #+begin_src emacs-lisp
 (with-eval-after-load 'evil-collection-eww
-  (general-add-advice 'evil-collection-eww-setup
-		      :after
-		      '(lambda ()
-			 (general-def 'normal eww-mode-map
-			   "d" 'evil-yank
-			   "p" 'efs/mpv-eww-url))))
+  (efs/evil-collection-remap 'evil-collection-eww-setup 'normal eww-mode-map
+			     "d" 'evil-yank
+			     "p" 'efs/mpv-eww-url))
 #+end_src
 
 *** Yeetube

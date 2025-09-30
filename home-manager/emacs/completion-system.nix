@@ -72,7 +72,11 @@
       prescient = true;
       orderless = true;
       vertico.enable = true;
-      smallExtras.evilConsultLine = true;
+      smallExtras = {
+	enable = true;
+	embark = true;
+	evilConsultLine = true;
+      };
       corfu = {
         enable = true;
         wantTabComplete = false;
@@ -83,15 +87,21 @@
     };
 
     usePackage = {
-      vertico.generalTwoConfig.":n".vertico-map = {
-        "C-o" = "'vertico-scroll-down";
-        "C-e" = "'vertico-scroll-up";
-        "j" = "'evil-undo";
-        "I" = "'vertico-last";
-        "N" = "'vertico-first";
-        "B" = "'vertico-last";
-        "bg" = "'vertico-first";
-        "k" = "'evil-delete-char";
+      vertico = {
+        generalTwoConfig.":n".vertico-map = {
+          "C-o" = "'vertico-scroll-down";
+          "C-e" = "'vertico-scroll-up";
+          "j" = "'evil-undo";
+          "I" = "'vertico-last";
+          "N" = "'vertico-first";
+          "B" = "'vertico-last";
+          "bg" = "'vertico-first";
+        };
+        config = ''
+          (with-eval-after-load 'evil-collection-vertico
+            (efs/evil-collection-remap 'evil-collection-vertico-setup 'normal vertico-map
+          			     "k" 'evil-delete-char))
+        '';
       };
       
       vertico-quick.custom = {

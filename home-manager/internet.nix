@@ -45,12 +45,9 @@
       };
       init = ''
         (with-eval-after-load 'evil-collection-eww
-          (general-add-advice 'evil-collection-eww-setup
-        		      :after
-        		      '(lambda ()
-        			 (general-def 'normal eww-mode-map
-        			   "d" 'evil-yank
-        			   "p" 'efs/mpv-eww-url))))
+          (efs/evil-collection-remap 'evil-collection-eww-setup 'normal eww-mode-map
+        			     "d" 'evil-yank
+        			     "p" 'efs/mpv-eww-url))
       '';
     };
 

@@ -9,10 +9,6 @@ in
 
   config.programs.emacs.init = lib.mkIf completions.mct.enable {
     hasOn = true;
-    completions.smallExtras = {
-      enable = true;
-      embark = true;
-    };
     usePackage.mct = {
       enable = true;
       hook = ["(on-first-input . mct-mode)"];
@@ -36,6 +32,18 @@ in
           buffer
           kill-ring)
 	'';
+      };
+      generalTwoConfig.":mnei" = lib.mkIf keybinds.evil.enable {
+	mct-minibuffer-local-completion-map = {
+	  "C-${keybinds.evil.keys.up}" = lib.mkDefault "'mct-switch-to-completions-bottom";
+	  "C-${keybinds.evil.keys.down}" = lib.mkDefault "'mct-switch-to-completions-top";
+	};
+	mct-minibuffer-completion-list-map = {
+	  "C-${keybinds.evil.keys.down}" = lib.mkDefault "'mct-next-completion-or-mini";
+	  "C-${keybinds.evil.keys.up}" = lib.mkDefault "'mct-previous-completion-or-mini";
+	  "${keybinds.evil.keys.down}" = lib.mkDefault "'mct-next-completion-or-mini";
+	  "${keybinds.evil.keys.up}" = lib.mkDefault "'mct-previous-completion-or-mini";
+	};
       };
     };
   };

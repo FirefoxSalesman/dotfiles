@@ -2,6 +2,7 @@
 {
   imports = [
     ./dash.nix
+    ./term
   ];
 
   home.shellAliases = {
@@ -68,118 +69,52 @@
       '';
     };
 
-    emacs.init.usePackage = {
-      eshell = {
-        enable = true;
-        babel = "eshell";
-        after = ["evil-collection"];
-        ghookf = [
-          "('eshell-first-time-mode 'efs/configure-eshell)"
-          #Save command history when commands are entered
-          "('eshell-precommand 'eshell-save-some-history)"
-          #pfetch
-          ''('eshell-banner-load (lambda ()
-                                             (gsetq eshell-banner-message
-                                                (shell-command-to-string "${pkgs.pfetch}/bin/pfetch"))))''
-        ];
-        general."s-<enter>" = "'efs/make-eshell";
-        generalOneConfig.eshell-mode-map = {
-          "M-o" = "'eshell-previous-matching-input-from-input";
-          "M-e" = "'eshell-next-matching-input-from-input";
+    emacs.init = {
+      terminals = {
+	eshell = true;
+	eat = true;
+      };
+      usePackage = {
+        eshell = {
+          ghookf = ["('eshell-first-time-mode 'efs/configure-eshell)"];
+          general."s-<enter>" = "'efs/make-eshell";
+          init = ''
+            (defun efs/make-eshell ()
+              (interactive)
+              (eshell 'N))
+          '';
+          config = ''
+            (defun efs/configure-eshell ()
+              ;; Bind some useful keys for evil-mode
+              (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
+              (evil-normalize-keymaps)
+              (gsetq eshell-command-aliases-list '(("gc" "torsocks git clone")
+              				       ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
+              				       ("l" "ls $*")
+              				       ("halt" "doas shutdown -P now")
+            				       ("reboot" "doas reboot")
+              				       ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'"))))
+          '';
         };
-        generalTwoConfig.local-leader.eshell-mode-map = {
-          "e" = '''(eshell-insert-envvar :which-key "insert environment variable")'';
-          "b" = '''(eshell-insert-buffer-name :which-key "insert buffer name")'';
+        
+        fish-completion.gfhookf = ["('fish-completion-mode (local! completion-at-point-functions '(tempel-complete pcomplete-completions-at-point)))"];
+        
+        evil-collection-eshell = {
+          enable = true;
+          defer = true;
+          generalTwoConfig.":n".eshell-mode-map = {
+            "v" = "'evil-collection-eshell-evil-delete";
+            "V" = "'evil-collection-eshell-evil-change";
+            "C-v" = "'evil-collection-eshell-evil-delete-line";
+          };
+          config = ''
+            (efs/evil-collection-remap 'evil-collection-eshell-setup-keys 'normal eshell-mode-map
+            			   "d" 'evil-yank
+            			   "D" 'evil-yank-line
+            			   "c" 'evil-visual-state
+            			   "C" 'evil-visual-line)
+          '';
         };
-        init = ''
-          (defun efs/make-eshell ()
-            (interactive)
-            (eshell 'N))
-        '';
-        config = ''
-          (defun efs/configure-eshell ()
-            ;; Truncate buffer for perforance
-            (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
-          
-            ;; Bind some useful keys for evil-mode
-            (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
-            (evil-normalize-keymaps)
-            (setenv "TERM" "xterm")
-            (gsetq eshell-command-aliases-list '(("gc" "torsocks git clone")
-            				       ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
-            				       ("l" "ls $*")
-            				       ("halt" "doas shutdown -P now")
-          				       ("reboot" "doas reboot")
-            				       ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'"))
-            	 eshell-history-size 0
-                   eshell-buffer-maximum-lines 100
-                   eshell-hist-ignoredups t
-                   eshell-scroll-to-bottom-on-input t))
-          
-          (with-eval-after-load 'esh-opt
-            (gsetq eshell-destroy-buffer-when-process-dies t))
-        '';
-      };
-      
-      eshell-syntax-highlighting = {
-        enable = true;
-        defer = true;
-        ghookf = ["('eshell-mode 'eshell-syntax-highlighting-global-mode)"];
-      };
-      
-      fish-completion = {
-        enable = true;
-        defer = true;
-        ghookf = ["('eshell-mode 'fish-completion-mode)"];
-        gfhookf = ["('fish-completion-mode (local! completion-at-point-functions '(tempel-complete pcomplete-completions-at-point)))"];
-      };
-      
-      eshell-git-prompt = {
-        enable = true;
-        afterCall = ["eshell-mode"];
-        config = ''(eshell-git-prompt-use-theme 'powerline)'';
-      };
-      
-      eat = {
-        enable = true;
-        defer = true;
-        afterCall = ["eshell-mode"];
-        config = ''
-          (eat-eshell-mode)
-          (evil-ex-define-cmd "term" 'eat)
-          (defun eat-term-get-suitable-term-name (&optional display)
-            "Return the most suitable value for `TERM' for DISPLAY.
-          
-              If the number of colors supported by display (as returned by
-              `display-color-cells') is more than 256, return \"eat-truecolor\", if
-              it is more than 8 but less than or equal to 256, return
-              \"eat-256color\", if is more than 1 but less than or equal to 8,
-              return \"eat-color\", otherwise return \"eat-mono\"."
-            (let ((colors (display-color-cells display)))
-              (cond ((> colors 256) "xterm")
-                    ((> colors 8) "xterm")
-                    ((> colors 1) "xterm")
-                    (t "xterm"))))
-          
-        '';
-      };
-      
-      evil-collection-eshell = {
-        enable = true;
-        defer = true;
-        generalTwoConfig.":n".eshell-mode-map = {
-          "v" = "'evil-collection-eshell-evil-delete";
-          "V" = "'evil-collection-eshell-evil-change";
-          "C-v" = "'evil-collection-eshell-evil-delete-line";
-        };
-        config = ''
-          (general-add-advice 'evil-collection-eshell-setup-keys :after
-          		    (lambda () (general-def 'normal eshell-mode-map
-          				 "d" 'evil-yank
-          				 "D" 'evil-yank-line
-          				 "c" 'evil-visual-state
-          				 "C" 'evil-visual-line)))
-        '';
       };
     };
   };
