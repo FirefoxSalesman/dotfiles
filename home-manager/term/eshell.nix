@@ -25,6 +25,7 @@ in
 	  ''(eshell-first-time-mode . (lambda () (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
 	    (setenv "TERM" "xterm")))''
 	];
+	generalOne.global-leader."t" = lib.mkIf keybinds.leader-key.enable "'eshell";
 	generalOneConfig.eshell-mode-map = lib.mkIf keybinds.evil.enable {
 	  "M-${keybinds.evil.keys.up}" = lib.mkDefault "'eshell-previous-matching-input-from-input";
 	  "M-${keybinds.evil.keys.down}" = lib.mkDefault "'eshell-next-matching-input-from-input";

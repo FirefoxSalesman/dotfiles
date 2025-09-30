@@ -10,6 +10,7 @@ in
     enable = true;
     command = ["eat"];
     hook = ["(eshell-mode . eat-eshell-mode)"];
+    generalOne.global-leader."t" = lib.mkIf (config.programs.emacs.init.keybinds.leader-key.enable && !terminals.eshell) "'eat";
     config = ''
       ${if config.programs.emacs.init.keybinds.evil.enable then ''(evil-ex-define-cmd "term" 'eat)'' else ""}
       (defun eat-term-get-suitable-term-name (&optional display)

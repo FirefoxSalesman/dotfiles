@@ -1298,6 +1298,8 @@ in mkIf cfg.enable {
     ./eat.nix
     ./eshell.nix
     ./term.nix
+    ./coterm.nix
+    ./vterm.nix
   ];
 }
 #+end_src
@@ -1316,6 +1318,7 @@ in
     enable = true;
     command = ["eat"];
     hook = ["(eshell-mode . eat-eshell-mode)"];
+    generalOne.global-leader."t" = lib.mkIf (config.programs.emacs.init.keybinds.leader-key.enable && !terminals.eshell) "'eat";
     config = ''
       ${if config.programs.emacs.init.keybinds.evil.enable then ''(evil-ex-define-cmd "term" 'eat)'' else ""}
       (defun eat-term-get-suitable-term-name (&optional display)
@@ -1365,6 +1368,7 @@ in
 	  ''(eshell-first-time-mode . (lambda () (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
 	    (setenv "TERM" "xterm")))''
 	];
+	generalOne.global-leader."t" = lib.mkIf keybinds.leader-key.enable "'eshell";
 	generalOneConfig.eshell-mode-map = lib.mkIf keybinds.evil.enable {
 	  "M-${keybinds.evil.keys.up}" = lib.mkDefault "'eshell-previous-matching-input-from-input";
 	  "M-${keybinds.evil.keys.down}" = lib.mkDefault "'eshell-next-matching-input-from-input";
@@ -1400,7 +1404,7 @@ in
 #+end_src
 
 **** Term
-#+begin_src nix-ts :noweb yes :tangle term/term.nix
+#+begin_src nix-ts :tangle term/term.nix
 { config, lib, ... }:
 
 let
@@ -1411,11 +1415,67 @@ in
 
   config.programs.emacs.init.usePackage.multi-term = lib.mkIf terminals.term {
     enable = true;
+    command = ["multi-term"];
     custom = {
       multi-term-dedicated-window-height = lib.mkDefault 20;
       multi-term-switch-after-close = lib.mkDefault "'PREVIOUS";
     };
     hook = ["(term-mode . (lambda () (setq-local hscroll-margin 0)))"];
+    generalOne.global-leader."t" = lib.mkIf config.programs.emacs.init.keybinds.leader-key.enable "'multi-term";
+  };
+}
+#+end_src
+
+**** Coterm
+#+begin_src nix-ts :tangle term/coterm.nix
+{ config, lib, ... }:
+
+let
+  terminals = config.programs.emacs.init.terminals;
+in
+{
+  options.programs.emacs.init.terminals.coterm = {
+    enable = lib.mkEnableOption "Improves comint buffers by enabling comint-mode.";
+    coterm-program = lib.mkOption {
+      type = lib.types.str;
+      default = "bash";
+      description = ''
+	The program to run when opening a comint terminal with run-coterm.
+      '';
+    };
+  };
+
+  config.programs.emacs.init.usePackage.coterm = lib.mkIf terminals.coterm.enable {
+    enable = true;
+    command = ["run-coterm"];
+    preface = ''
+      (defun run-coterm ()
+        "Opens a comint terminal with coterm-program."
+        (interactive)
+	(comint-run "${terminals.coterm.coterm-program}"))
+    '';
+    generalOne.global-leader."t" = "'run-coterm";
+    after = ["comint"];
+    config = "(coterm-mode)";
+    bindLocal.comint-mode-map."C-;" = lib.mkDefault "coterm-char-mode-cycle";
+  };
+}
+#+end_src
+
+**** Vterm
+#+begin_src nix-ts :tangle term/vterm.nix
+{ config, lib, ... }:
+
+let
+  terminals = config.programs.emacs.init.terminals;
+in
+{
+  options.programs.emacs.init.terminals.vterm = lib.mkEnableOption "Enables vterm.";
+
+  config.programs.emacs.init.usePackage.vterm = lib.mkIf terminals.vterm {
+    enable = true;
+    command = ["vterm"];
+    generalOne.global-leader."t" = lib.mkIf config.programs.emacs.init.keybinds.leader-key.enable "'vterm";
   };
 }
 #+end_src
