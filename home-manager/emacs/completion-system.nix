@@ -71,11 +71,9 @@
     completions = {
       prescient = true;
       orderless = true;
-      vertico = {
-        enable = true;
-        evilConsultLine = true;
-        embark = true;
-      };
+      # vertico.enable = true;
+      mct.enable = true;
+      smallExtras.evilConsultLine = true;
       corfu = {
         enable = true;
         wantTabComplete = false;
