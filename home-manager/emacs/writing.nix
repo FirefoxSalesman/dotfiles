@@ -1,6 +1,8 @@
 { config, inputs, pkgs, ... }:
 
 {
+  imports = [../writing];
+
   home.packages = with pkgs; [
     libreoffice-fresh
     hunspell
@@ -9,6 +11,10 @@
   ];
 
   programs.emacs.init = {
+    tools = {
+      nov = true;
+      pdf = true;
+    };
     ide.languages = {
       markdown.enable = true;
       latex = {
@@ -36,16 +42,10 @@
       						#'cape-dict
                                                       #'cape-dabbrev))))''
         ];
-        custom = {
-          org-export-with-toc = false;
+        custom.org-directory = ''"~/doc"'';
+        setopt = {
           org-export-with-section-numbers = false;
-          org-directory = ''"~/doc"'';
-          org-emphasis-alist = '''(("*" bold)
-            ("/" italic)
-                                       ("=" org-verbatim verbatim)
-                                       ("~" org-code verbatim)
-                                       ("+" (:strike-through t))
-                                       ("!" (:overline t) verbatim))'';
+          org-export-with-toc = false;
         };
         generalTwoConfig.local-leader.org-mode-map."a" = '''(avy-org-goto-heading-timer :which-key "avy")'';
       
@@ -69,11 +69,11 @@
         enable = true;
         defer = true;
         gfhookf = ["('dired-mode 'denote-dired-mode-in-directories)"];
-        custom = {
+        setopt = {
           denote-directory = ''(expand-file-name "~/doc/denote")'';
-          denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "databases" "scifi" "softwarerequirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics" "plp" "malwareanalysis" "bio" "ai" "resolve")'';
+          denote-known-keywords = [ ''"quotes"'' ''"chem"'' ''"emacs"'' ''"java"'' ''"physics"'' ''"calculus"'' ''"minecraft"'' ''"de"'' ''"proofs"'' ''"csse230"'' ''"os"'' ''"databases"'' ''"scifi"'' ''"softwarerequirements"'' ''"anthropology"'' ''"theoryofcomputation"'' ''"parallelcomp"'' ''"cybersecurity"'' ''"probstats"'' ''"scheme"'' ''"dreams"'' ''"softwaredevelopment"'' ''"ethics"'' ''"plp"'' ''"malwareanalysis"'' ''"bio"'' ''"ai"'' ''"resolve"'' ];
           denote-file-type = false;
-          denote-dired-directories = "(list denote-directory)";
+          denote-dired-directories = ["denote-directory"];
           
         };
         generalOne.global-leader = {
@@ -88,50 +88,12 @@
         enable = true;
         command = ["consult-denote-mode"];
         generalOne.global-leader."os" = "'consult-denote-grep";
-        custom.consult-denote-grep-command = "'consult-ripgrep";
-      };
-      
-      org-novelist = {
-        enable = true;
-        command = ["org-novelist-mode" "org-novelist-new-story"];
-        generalTwoConfig.local-leader.org-novelist-mode-map = {
-          "c" = '''(:ignore t :which-key "character")'';
-          "cn" = '''(org-novelist-new-character :which-key "new")'';
-          "cr" = '''(org-novelist-rename-character :which-key "rename")'';
-          "cd" = '''(org-novelist-destroy-character :which-key "destroy")'';
-          "h" = '''(:ignore t :which-key "chapter")'';
-          "hn" = '''(org-novelist-new-chapter :which-key "new")'';
-          "hr" = '''(org-novelist-rename-chapter :which-key "rename")'';
-          "hd" = '''(org-novelist-destroy-chapter :which-key "destroy")'';
-          "p" = '''(:ignore t :which-key "place")'';
-          "pn" = '''(org-novelist-new-place :which-key "new")'';
-          "pr" = '''(org-novelist-rename-place :which-key "rename")'';
-          "pd" = '''(org-novelist-destroy-place :which-key "destroy")'';
-          "r" = '''(:ignore t :which-key "prop")'';
-          "rn" = '''(org-novelist-new-prop :which-key "new")'';
-          "rr" = '''(org-novelist-rename-prop :which-key "rename")'';
-          "rd" = '''(org-novelist-destroy-prop :which-key "destroy")'';
-          "e" = '''(org-novelist-export-story :which-key "export")'';
-        };
+        setopt.consult-denote-grep-command = "'consult-ripgrep";
       };
       
       pdf-tools = {
-        enable = true;
-        defer = true;
         generalOneConfig.pdf-view-mode-map."C-s" = "'search-forward";
-        custom = {
-          # Makes PDFtools the default
-          TeX-view-program-selection = '''((output-pdf "PDF Tools"))'';
-          TeX-view-program-list = '''(("PDF Tools" TeX-pdf-tools-sync-view))'';
-          TeX-source-correlate-start-server = false;
-        };
-        config = ''
-          (pdf-tools-install)
-        '';
-        gfhook = ["('TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)"];
         gfhookf = ["('pdf-view-mode 'pdf-view-midnight-minor-mode)"];
-        init = ''(setq-default pdf-view-display-size 'fit-width)'';
-        extraConfig = '':magic ("%PDF" . pdf-view-mode)'';
       };
       
       evil-collection-pdf = {
@@ -160,7 +122,7 @@
       markdown = {
         generalOneConfig.markdown-mode-map."C-c C-e" = "'markdown-do";
         gfhookf = ["('markdown-mode 'efs/markdown-font-setup)"];
-        custom = {
+        setopt = {
           markdown-command = ''"multimarkdown"'';
           markdown-hide-markup = true;
         };
@@ -187,7 +149,7 @@
         enable = true;
         ghookf = ["((gen-mode-hooks '(Man org-agenda org Info markdown shrface)) 'writeroom-mode)"];
         gfhookf = ["('writeroom-mode 'visual-line-mode)"];
-        custom = {
+        setopt = {
           writeroom-mode-line = true;
           writeroom-maximize-window = false;
           writeroom-global-effects = false;
@@ -197,7 +159,6 @@
 
       flyspell = {
         enable = true;
-        custom.ispell-personal-dictionary = "~/.config/emacs/ispell.txt";
         ghookf = [
           "('text-mode 'flyspell-mode)"
           "('prog-mode 'flyspell-prog-mode)"
@@ -208,12 +169,12 @@
         enable = true;
         config = ''(citar-denote-mode)'';
         ghookf = ["('(LaTeX-mode org-mode) 'citar-capf-setup)"];
-        custom = {
+        setopt = {
           org-cite-insert-processor = "'citar";
           org-cite-follow-processor = "'citar";
           org-cite-activate-processor = "'citar";
-          citar-bibliography = '''("~/doc/uni.bib")'';
-          org-cite-global-bibliography = '''("~/doc/uni.bib")'';
+          citar-bibliography = [''"~/doc/uni.bib"''];
+          org-cite-global-bibliography = [''"~/doc/uni.bib"''];
         };
       };
       
@@ -221,7 +182,7 @@
         enable = true;
         after = ["citar" "embark"];
         config = ''(citar-embark-mode)'';
-        custom.citar-at-point-function = "'embark-act";
+        setopt.citar-at-point-function = "'embark-act";
       };
       
       citar-denote = {
@@ -276,12 +237,7 @@
         afterCall = ["citar"];
       };
 
-      nov = {
-        enable = true;
-        defer = true;
-        extraPackages = with pkgs; [unzip];
-        mode = [''("\\.epub\\'" . nov-mode)''];
-      };
+      
     };
   };
 }

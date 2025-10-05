@@ -102,7 +102,7 @@
         '';
       };
       
-      vertico-quick.custom = {
+      vertico-quick.setopt = {
         vertico-quick1 = ''"crst"'';
         vertico-quick2 = ''"neia"'';
       };
@@ -115,7 +115,7 @@
       
       corfu-quick = {
         enable = true;
-        custom = {
+        setopt = {
           corfu-quick1 = ''"crst"'';
           corfu-quick2 = ''"neia"'';
         };
@@ -133,7 +133,7 @@
       consult = {
         ghookf = ["('minibuffer-setup 'consult-initial-narrow)"];
         command = ["consult-goto-line" "consult-keep-lines"];
-        custom.consult-buffer-sources = "'(consult--source-buffer)";
+        setopt.consult-buffer-sources = "'(consult--source-buffer)";
         generalOne = {
           ":n" = {
             "M-g" = "'consult-yank-pop"; # orig. evil-paste-pop
@@ -230,17 +230,24 @@
         gfhookf = ["('pdf-view-mode (lambda () (ace-isearch-mode -1)))"];
         generalOneConfig.isearch-mode-map."C-a" = "'avy-isearch";
         config = "(global-ace-isearch-mode)";
-        custom = {
+        setopt = {
           ace-isearch-on-evil-mode = true;
           ace-isearch-input-length = 5;
           ace-isearch-jump-based-on-one-char = false;
+          isearch-wrap-pause = "'no-ding";
         };
+      };
+      
+      replace = {
+        enable = true;  
+        defer = true;
+        generalTwoConfig.":n".occur-mode-map."w" = "'occur-edit-mode";
       };
 
       tempel = {
         enable = true;
         command = ["tempel-complete"];
-        custom.tempel-path = ''"~/.config/emacs/templates.eld"'';
+        setopt.tempel-path = ''"~/.config/emacs/templates.eld"'';
         init = ''
             (defun tempel-setup-capf ()
               " Add the Tempel Capf to `completion-at-point-functions'.

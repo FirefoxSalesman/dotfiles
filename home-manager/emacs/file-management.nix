@@ -12,7 +12,7 @@
       };
       generalOne.global-leader."d" = '''(dired :which-key "dired")'';
       generalTwoConfig.":n".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
-      custom = {
+      setopt = {
         dired-recursive-deletes = "'always";
         dired-listing-switches = ''"-agho --group-directories-first"'';
         # We're doing our best to get rid of that 1st extraneous line
@@ -116,7 +116,7 @@
         "E" = "'image-next-file";
         "O" = "'image-previous-file";
       };
-      custom.image-animate-loop = true;
+      setopt.image-animate-loop = true;
     };
 
     dired-narrow = {

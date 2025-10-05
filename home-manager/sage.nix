@@ -6,7 +6,7 @@
     sage-shell-mode = {
       enable = true;
       defer = true;
-      custom."sage-shell-edit:display-function" = ''"display-buffer"'';
+      setopt."sage-shell-edit:display-function" = ''"display-buffer"'';
       config = ''(sage-shell:define-alias)'';
       generalOne.global-leader."S" = '''(run-sage :which-key "sage")'';
       generalTwoConfig."local-leader"."sage-shell-mode-map"."h" = "'sage-shell:help";

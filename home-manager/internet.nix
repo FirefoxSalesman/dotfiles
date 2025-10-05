@@ -9,22 +9,20 @@
     browse-url = {
       enable = true;
       config = "(defun qutebrowser-browse-url (url &rest args) (qutebrowser-open-url url 'tab))";
-      custom = {
-        browse-url-handlers = ''
-          '(("https:\\/\\/www\\.youtu\\.*be." . efs/mpv-browse-url)
-            ("https:\\/\\/yewtu\\.*be." . efs/mpv-browse-url)
-            ("https:\\/\\/inv\\.*nadeko\\.*net\\/watch." . efs/mpv-browse-url)
-            ("search\\.nixos\\.org[^z-a]*" . qutebrowser-browse-url)
-            ("melpa\.org\.*" . qutebrowser-browse-url)
-            ("." . (lambda (url &rest args) (eww url (prefix-numeric-value 4)))))
-        '';
-        browse-url-secondary-browser-function = "'browse-url-default-browser";
-      };
+      custom.browse-url-handlers = [
+        '''("https:\\/\\/www\\.youtu\\.*be." . efs/mpv-browse-url)''
+        '''("https:\\/\\/yewtu\\.*be." . efs/mpv-browse-url)''
+        '''("https:\\/\\/inv\\.*nadeko\\.*net\\/watch." . efs/mpv-browse-url)''
+        '''("search\\.nixos\\.org[^z-a]*" . qutebrowser-browse-url)''
+        '''("melpa\.org\.*" . qutebrowser-browse-url)''
+        '''("." . (lambda (url &rest args) (eww url (prefix-numeric-value 4))))''
+      ];
+      setopt.browse-url-secondary-browser-function = "'browse-url-default-browser";
     };
 
     eww = {
       enable = true;
-      custom = {
+      setopt = {
         eww-search-prefix = ''"https://search.inetol.net/?q="'';
         eww-header-line-format = false;
         eww-desktop-remove-duplicates = true;
@@ -53,7 +51,7 @@
 
     yeetube = {
       enable = true;
-      custom.yeetube-play-function = "'mpv-play-url";
+      setopt.yeetube-play-function = "'mpv-play-url";
       generalOne.global-leader."y" = '''(yeetube-search :which-key "search")'';
       generalTwoConfig.":n"."yeetube-mode-map" = {
         "RET" = "'yeetube-play";
@@ -83,13 +81,13 @@
     webjump = {
       enable = true;
       generalOne.global-leader."s" = "'webjump";
-      custom.webjump-sites = ''
-        '(("DuckDuckGo" . [simple-query "duckduckgo.com" "duckduckgo.com/?q=" ""])
-          ("Invidious" . [simple-query "inv.nadeko.net" "inv.nadeko.net/search?q=" ""])
-          ("Aur" . [simple-query "aur.archlinux.org" "aur.archlinux.org/packages/?K=" ""])
-          ("Nixpkgs" . [simple-query "search.nixos.org" "search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=" ""])
-          ("Curseforge" . webjump-to-curseforge))
-      '';
+      setopt.webjump-sites = [
+        '''("DuckDuckGo" . [simple-query "duckduckgo.com" "duckduckgo.com/?q=" ""])''
+        '''("Invidious" . [simple-query "inv.nadeko.net" "inv.nadeko.net/search?q=" ""])''
+        '''("Aur" . [simple-query "aur.archlinux.org" "aur.archlinux.org/packages/?K=" ""])''
+        '''("Nixpkgs" . [simple-query "search.nixos.org" "search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=" ""])''
+        '''("Curseforge" . webjump-to-curseforge)''
+      ];
       config = ''
         (defun webjump-to-curseforge (name)
           (let* ((prefix "legacy.curseforge.com/minecraft/")
@@ -103,18 +101,19 @@
     elfeed = {
       enable = true;
       defer = true;
-      custom.elfeed-feeds = '''("https://lukesmith.xyz/index.xml"
-                                "https://youtube.com/feeds/videos.xml?channel_id=UCSJPFQdZwrOutnmSFYtbstA"
-                                "https://planet.emacslife.com/atom.xml"
-                                "https://youtube.com/feeds/videos.xml?channel_id=UC_GQ4mac4oN3wl1UdbFuTEA"
-                                "https://youtube.com/feeds/videos.xml?channel_id=UC6UBbvEA8uh6Ulc6ax1Zs0g"
-                                "https://youtube.com/feeds/videos.xml?channel_id=UCNzZD3otfZVlIdvYYRRqNSw"
-                                "https://youtube.com/feeds/videos.xml?channel_id=UCnnkTXnyn0uZzmArZO99Klg"
-                                "https://youtube.com/feeds/videos.xml?channel_id=UCq-VIBjS6Ia1r1IR_j-7NUw"
-                                "https://youtube.com/feeds/videos.xml?channel_id=UC0E_vIe1e1lVeojYOgVg_5Q"
-                                "https://youtube.com/feeds/videos.xml?channel_id=UCUQs6rEz6lRGHn6DWqss0hA"
-                                "https://notrelated.xyz/rss")
-        '';
+      setopt.elfeed-feeds = [
+        ''"https://lukesmith.xyz/index.xml"''
+        ''"https://youtube.com/feeds/videos.xml?channel_id=UCSJPFQdZwrOutnmSFYtbstA"''
+        ''"https://planet.emacslife.com/atom.xml"''
+        ''"https://youtube.com/feeds/videos.xml?channel_id=UC_GQ4mac4oN3wl1UdbFuTEA"''
+        ''"https://youtube.com/feeds/videos.xml?channel_id=UC6UBbvEA8uh6Ulc6ax1Zs0g"''
+        ''"https://youtube.com/feeds/videos.xml?channel_id=UCNzZD3otfZVlIdvYYRRqNSw"''
+        ''"https://youtube.com/feeds/videos.xml?channel_id=UCnnkTXnyn0uZzmArZO99Klg"''
+        ''"https://youtube.com/feeds/videos.xml?channel_id=UCq-VIBjS6Ia1r1IR_j-7NUw"''
+        ''"https://youtube.com/feeds/videos.xml?channel_id=UC0E_vIe1e1lVeojYOgVg_5Q"''
+        ''"https://youtube.com/feeds/videos.xml?channel_id=UCUQs6rEz6lRGHn6DWqss0hA"''
+        ''"https://notrelated.xyz/rss"''
+      ];
       generalOne.global-leader."r" = "(cmd! (elfeed) (elfeed-update))";
     };
   };

@@ -44,7 +44,7 @@
       enable = true;
       ghookf = ["('tab-bar-mode 'i3bar-mode)"];
       
-      custom = {
+      setopt = {
         i3bar-command = ''"${(import ../scripts/i3status-rust.nix {inherit pkgs;})}/bin/i3status-rust"'';
       };
     };
@@ -62,12 +62,12 @@
         '';
         ghookf = ["('exwm-init 'tab-bar-mode)"];
         general."s-u" = "'tab-bar-hydra/body";
-        custom = {
-          tab-bar-format = "'(tab-bar-format-tabs-groups tab-bar-separator doom-nano-tabline tab-bar-format-align-right tab-bar-format-global)";
+        setopt = {
           tab-bar-close-button-show = false;
           tab-bar-select-restore-windows = false;
-          tab-bar-auto-width-max = "'((150) 20)";
+          tab-bar-auto-width-max = ["'(150)" "20"];
         };
+        custom.tab-bar-format = ["'tab-bar-format-tabs-groups" "'tab-bar-separator" "'doom-nano-tabline" "'tab-bar-format-align-right" "'tab-bar-format-global"];
         extraConfig = ''
           :pretty-hydra
           ((:color amaranth)
@@ -334,63 +334,67 @@
           mouse-autoselect-window = false;
           focus-follows-mouse = false;
           # These keys should always pass through to Emacs
-          exwm-input-prefix-keys = '''(?\M-`
-            ?\C-^
-                                       ?\M-&
-                                       ?\s-\M-'
-                                       ?\s-b
-                                       ?\M-u
-                                       ?\M-:
-                                       ?\s-o
-                                       ?\s-c
-                                       ?\s-v
-                                       ?\s-n
-                                       ?\s-i
-                                       ?\s-e
-                                       ?\s-f
-                                       ?\s-F
-                                       ?\s-u
-                                       ?\s-/
-                                       ?\s-'	;; popper-toggle-latest
-                                       ?\s-\" ;; popper-toggle-type
-                                       ?\s-\ 
-                                       XF86AudioRaiseVolume
-                                       XF86AudioLowerVolume
-                                       XF86AudioMute
-                                       ?\M-\ )'';
+          exwm-input-prefix-keys = [
+            '''?\M-`''
+            '''?\C-^''
+            '''?\M-&''
+            "?\\s-\\M-'"
+            '''?\s-b''
+            '''?\M-u''
+            '''?\M-:''
+            '''?\s-o''
+            '''?\s-c''
+            '''?\s-v''
+            '''?\s-n''
+            '''?\s-i''
+            '''?\s-e''
+            '''?\s-f''
+            '''?\s-F''
+            '''?\s-u''
+            '''?\s-/''
+            "?\\s-'"	# popper-toggle-latest
+            '''?\s-\"'' # popper-toggle-type
+            '''?\s-\ ''
+            '''XF86AudioRaiseVolume''
+            '''XF86AudioLowerVolume''
+            '''XF86AudioMute''
+            '''?\M-\ ''
+          ];
           # Set up global key bindings.  These always work, no matter the input state!
           # Keep in mind that changing this list after EXWM initializes has no effect.
-          exwm-input-global-keys = ''`(;; Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
-            ([?\s-r] . exwm-reset)
-                                         ([?\s-a] . evil-ex)
+          exwm-input-global-keys = [
+            # Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
+            '''([?\s-r] . exwm-reset)''
+            '''([?\s-a] . evil-ex)''
           
-                                          ;; Launch applications (basically dmenu)
-                                          ([?\s-d] . app-launcher-run-app)
-                                          ([?\s-t] . proced)
+            # Launch applications (basically dmenu)
+            '''([?\s-d] . app-launcher-run-app)''
+            '''([?\s-t] . proced)''
           
-                                          ;;Movement
-                                          ([?\s-e] . elwm-next)
-                                          ([?\s-o] . elwm-prev)
+            # Movement
+            '''([?\s-e] . elwm-next)''
+            '''([?\s-o] . elwm-prev)''
       
-                                          ;; Arrangement
-                                          ([?\s-E] . elwm-rotate-window)
-                                          ([?\s-O] . elwm-derotate-window)
-                                          ([?\s-c] . elwm-split-window)
-                                          ([?\s-n] . evil-window-move-far-left)
-                                          ([?\s-i] . evil-window-move-far-right)
-                                          ([?\s-j] . winner-undo)
-                                          ([?\s-J] . winner-redo)
-                                          ([?\s-r] . exwm-reset)
-                                          ([?\s-m] . toggle-single-window)
-                                          ([?\s-x] . toggle-follow-mode)
-                                          ([?\s-k] . evil-window-delete)
-                                          ([?\s-K] . evil-delete-buffer-and-window)
+            # Arrangement
+            '''([?\s-E] . elwm-rotate-window)''
+            '''([?\s-O] . elwm-derotate-window)''
+            '''([?\s-c] . elwm-split-window)''
+            '''([?\s-n] . evil-window-move-far-left)''
+            '''([?\s-i] . evil-window-move-far-right)''
+            '''([?\s-j] . winner-undo)''
+            '''([?\s-J] . winner-redo)''
+            '''([?\s-r] . exwm-reset)''
+            '''([?\s-m] . toggle-single-window)''
+            '''([?\s-x] . toggle-follow-mode)''
+            '''([?\s-k] . evil-window-delete)''
+            '''([?\s-K] . evil-delete-buffer-and-window)''
           
-                                          ;; Shell bindings
-                                          ([?\s-s] . (lambda () (interactive) (shell-command "slock")))
-                                          ([?\s-y] . (lambda () (interactive) (start-process-shell-command "maim" nil  "${pkgs.maim}/bin/maim ~/pic/screenshot.png")))
-      				    ([XF86MonBrightnessDown] . (lambda () (interactive) (efs/alter-monitor-brightness 5 t)))
-      				    ([XF86MonBrightnessUp] . (lambda () (interactive) (efs/alter-monitor-brightness 5))))'';
+            # Shell bindings
+            '''([?\s-s] . (lambda () (interactive) (shell-command "slock")))''
+            '''([?\s-y] . (lambda () (interactive) (start-process-shell-command "maim" nil  "${pkgs.maim}/bin/maim ~/pic/screenshot.png")))''
+            "'([XF86MonBrightnessDown] . (lambda () (interactive) (efs/alter-monitor-brightness 5 t)))"
+            "'([XF86MonBrightnessUp] . (lambda () (interactive) (efs/alter-monitor-brightness 5)))"
+          ];
           
         };
         afterCall = ["on-init-ui-hook"];
@@ -495,28 +499,30 @@
           "s-\\\"" = "'popper-cycle";
           "C-s-'" = "'popper-toggle-type";
         };
-        custom = {
+        setopt = {
           popper-window-height = 30;
           popper-group-function = "'popper-group-by-project";
-          popper-reference-buffers = '''(help-mode
-                                           helpful-mode
-                                           compilation-mode
-                                           inferior-python-mode
-                                           occur-mode
-                                           grep-mode
-                                           "^\\*.*eshell\\*"
-                                           "^\\*eat\\*"
-                                           "^\\*Sage\\*"
-                                           "^\\*prolog\\*"
-      				     xref--xref-buffer-mode
-                                           flymake-diagnostics-buffer-mode
-                                           rustic-cargo-test-mode
-                                           rustic-cargo-run-mode
-      				     geiser-repl-mode
-                                           dape-repl-mode
-      				     racket-repl-mode
-                                           inferior-ess-r-mode
-                                           cider-repl-mode)'';
+          popper-reference-buffers = [
+            "'help-mode"
+            "'helpful-mode"
+            "'compilation-mode"
+            "'inferior-python-mode"
+            "'occur-mode"
+            "'grep-mode"
+            ''"^\\*.*eshell\\*"''
+            ''"^\\*eat\\*"''
+            ''"^\\*Sage\\*"''
+            ''"^\\*prolog\\*"''
+            "'xref--xref-buffer-mode"
+            "'flymake-diagnostics-buffer-mode"
+            "'rustic-cargo-test-mode"
+            "'rustic-cargo-run-mode"
+            "'geiser-repl-mode"
+            "'dape-repl-mode"
+            "'racket-repl-mode"
+            "'inferior-ess-r-mode"
+            "'cider-repl-mode"
+          ];
         };
       };
       
@@ -531,7 +537,7 @@
       
       ace-window = {
         enable = true;
-        custom = {
+        setopt = {
           aw-scope = "'frame";
           aw-keys = "'(?c ?r ?s ?t ?n ?e ?i ?a)";
         };

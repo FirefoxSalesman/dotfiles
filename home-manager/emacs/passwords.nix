@@ -24,13 +24,9 @@
     
     pinentry = {
       enable = true;
-      custom.epa-pinentry-mode = "'loopback";
+      setopt.epa-pinentry-mode = "'loopback";
       deferIncrementally = true;
-      config = ''
-        (pinentry-start)
-        (shell-command "gpgconf --launch-agent")
-        (shell-command "gpg-connect agent updatestartuptty /bye >/dev/null")
-      '';
+      config = "(pinentry-start)";
     };
   };
 }

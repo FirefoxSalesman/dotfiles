@@ -106,7 +106,7 @@
         
         display-line-numbers = {
           enable = true;
-          custom = {
+          setopt = {
             display-line-numbers-type = "'relative";
             display-line-numbers-width = 3;
           }; 
@@ -126,7 +126,7 @@
           demand = true;
           #no-littering doesn't set this by default so we must place
           #auto save files in the same path as it uses for sessions
-          custom.auto-save-file-name-transforms = ''`((".*" ,(no-littering-expand-var-file-name "auto-save/") t))'';
+          setopt.auto-save-file-name-transforms = ''`((".*" ,(no-littering-expand-var-file-name "auto-save/") t))'';
         };
 
         async = {
@@ -139,7 +139,7 @@
 
         wgrep = {
           enable = true;
-          custom.wgrep-auto-save-buffer = true;
+          setopt.wgrep-auto-save-buffer = true;
           generalTwo.":n".grep-mode-map."w" = "'wgrep-change-to-wgrep-mode";
         };
 

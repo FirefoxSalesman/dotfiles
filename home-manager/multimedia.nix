@@ -75,7 +75,7 @@
   programs.emacs.init.usePackage = {
     pulseaudio-control = {
       enable = true;
-      custom.pulseaudio-control-volume-step = ''"5%"'';
+      setopt.pulseaudio-control-volume-step = ''"5%"'';
       general = {
         "<XF86AudioRaiseVolume>" = "'pulseaudio-control-increase-sink-volume";
         "<XF86AudioLowerVolume>" = "'pulseaudio-control-decrease-sink-volume";

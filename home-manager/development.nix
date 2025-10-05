@@ -38,18 +38,12 @@
     };
 
     usePackage = {
-      editorconfig = {
-        enable = true;
-        afterCall = ["on-first-file-hook"];
-        config = ''(editorconfig-mode)'';
-      };
-      
       rainbow-delimiters = {
         enable = true;
         ghookf = ["('prog-mode 'rainbow-delimiters-mode)"];
       };
       
-      # lsp-java.custom.lsp-java-content-provider-preferred = ''"fernflower"'';
+      # lsp-java.setopt.lsp-java-content-provider-preferred = ''"fernflower"'';
       
 
       treesit-fold = {
@@ -59,7 +53,7 @@
 
       magit = {
         enable = true;
-        custom.magit-display-buffer-function = "#'magit-display-buffer-same-window-except-diff-v1";
+        setopt.magit-display-buffer-function = "#'magit-display-buffer-same-window-except-diff-v1";
         generalOne.project-prefix-map = {
           "v" = "'magit-status";
           "c" = "'magit-commit";
@@ -75,7 +69,7 @@
         generalOne.project-prefix-map.i = "(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current)))";
       };
       
-      projection-multi.custom.projection-gradle-use-daemon = false;
+      projection-multi.setopt.projection-gradle-use-daemon = false;
       
       projection-multi-embark = {
         enable = true;
@@ -104,17 +98,31 @@
         config = ''(eglot-tempel-mode)'';
       };
       
-      # dape = {
-      #   enable = true;
-      #   after = ["eglot"];
-      #   gfhookf = ["('dape-on-stopped (list 'dape-info 'dape-repl))"];
-      #   custom = {
-      #     dape-window-arrangement = "gud";
-      #     dape-key-prefix = ''"\C-x\C-a"'';
-      #   };
-      # };
+      eglot-java = {
+        setopt.eglot-java-user-init-opts-fn = "'eglot-java-init-opts";
+        preface = ''
+          (defun eglot-java-init-opts (server eglot-java-eclipse-jdt)
+              '(:bundles ["/usr/share/java-debug/com.microsoft.java.debug.plugin.jar"]))
+        '';
+      };
+      
+      dape = {
+        enable = true;
+        after = ["eglot"];
+        gfhookf = ["('dape-on-stopped (list 'dape-info 'dape-repl))"];
+        setopt = {
+          dape-window-arrangement = "'gud";
+          dape-key-prefix = ''"\C-x\C-a"'';
+        };
+      };
+      
+      projection-dape = {
+        enable = true;
+        after = ["dape"];
+        generalOne.project-prefix-map."d" = "'projection-dape";
+      };
 
-      python-ts-mode.custom = {
+      python-ts-mode.setopt = {
           python-shell-interpreter = ''"ipython"'';
           python-shell-interpreter-args = ''"-i --simple-prompt"'';
       };
@@ -123,9 +131,9 @@
 
       elisp-mode.gfhookf = ["('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"];
 
-      flymake-popon.custom.flymake-popon-posframe-extra-arguments = '''(:poshandler posframe-poshandler-point-bottom-left-corner-upward
-	                                                                :parent-frame nil
-                                                                        :refposhandler posframe-refposhandler-xwininfo)'';
+      flymake-popon.setopt.flymake-popon-posframe-extra-arguments = [ "':poshandler" "'posframe-poshandler-point-bottom-left-corner-upward"
+	                                                                "':parent-frame" false
+                                                                        "':refposhandler" "'posframe-refposhandler-xwininfo" ];
       java-ts-mode = {
         init = ''
           (defun tkj/java-decompile-class ()

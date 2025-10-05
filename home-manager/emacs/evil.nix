@@ -187,6 +187,8 @@
             "F" = "'evil-beginning-of-visual-line";
             "C-f" = "'evil-first-non-blank";
             "B" = "'evil-goto-line";
+            "C-M-o" = "'scroll-other-window-down";
+            "C-M-e" = "'scroll-other-window";
           };
           ":v" = {
             "U" = "'evil-forward-word-begin";
@@ -227,7 +229,7 @@
         };
       };
     
-      evil-collection.custom.evil-collection-unimpaired-want-repeat-mode-integration = true;
+      evil-collection.setopt.evil-collection-unimpaired-want-repeat-mode-integration = true;
       
       evil-surround.generalTwoConfig = {
         ":v".evil-surround-mode-map."R" = "'evil-surround-region";
@@ -247,16 +249,16 @@
           "H-x" = "'evilem-motion-backward-WORD-begin";
           "H-M" = "'evilem-motion-search-previous";
         };
-        custom = {
+        custom.avy-dispatch-alist = [
+          "'(?l . avy-action-ispell)"
+          "'(?o . nix-emacs-avy-action-embark)"
+          "'(?h . avy-action-helpful)"
+          "'(?g . avy-action-yank)"
+          "'(?p . avy-action-teleport)"
+          "'(?q . nix-emacs-avy-action-fold)"
+        ];
+        setopt = {
           avy-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
-          avy-dispatch-alist = ''
-            '((?l . avy-action-ispell)
-      			  (?o . nix-emacs-avy-action-embark)
-      			  (?h . avy-action-helpful)
-      			  (?g . avy-action-yank)
-      			  (?p . avy-action-teleport)
-      			  (?q . nix-emacs-avy-action-fold))
-          '';
           avy-all-windows = false;
         };
         config = "(defun avy-action-helpful (pt) (nix-emacs-base-avy-action 'helpful-at-point pt))";
@@ -315,66 +317,57 @@
         '';
       };
     
-        symex = {
-          enable = true;
-          defer = true;
-          generalTwo.":n"."(racket-repl-mode-map lisp-interaction-mode-map lisp-mode-map)"."RET" = "'symex-mode-interface";
-          init = ''
-              (with-eval-after-load 'evil-easymotion
-                (evilem-make-motion-plain evilem-symex-forward 'symex-traverse-forward :post-hook 'symex-select-nearest-in-line)
-                (evilem-make-motion-plain evilem-symex-backward 'symex-traverse-backward :post-hook 'symex-select-nearest-in-line)
-                (evilem-make-motion-plain evilem-symex-next-visual-line 'symex-next-visual-line :post-hook 'symex-select-nearest-in-line)
-                (evilem-make-motion-plain evilem-symex-previous-visual-line 'symex-previous-visual-line :post-hook 'symex-select-nearest-in-line)
-                (evilem-make-motion-plain evilem-symex-go-forward 'symex-go-forward :post-hook 'symex-select-nearest-in-line)
-                (evilem-make-motion-plain evilem-symex-go-backward 'symex-go-backward :post-hook 'symex-select-nearest-in-line))    
-          '';
-          config = ''
-            (symex-mode)
-            (repeaters-define-maps
-             '(("symex-visual-line"
-                symex-next-visual-line "e"
-                symex-previous-visual-line "o")))    
-          '';
-          generalOneConfig.evil-symex-state-map = {
-            "n" = "'symex-go-backward";
-            "e" = "'symex-go-down";
-            "o" = "'symex-go-up";
-            "i" = "'symex-go-forward";
-            "bn" = "'evil-backward-char";
-            "bi" = "'evil-forward-char";
-            "C-e" = "'symex-climb-branch";
-            "C-o" = "'symex-descend-branch";
-            "d" = "'symex-yank";
-            "D" = "'symex-yank-remaining";
-            "G" = "'symex-paste-after";
-            "g" = "'symex-paste-before";
-            "k" = "'symex-delete";
-            "C-k" = "'symex-delete-backward";
-            "p" = "'symex-delete-remaining";
-            "K" = "'symex-change";
-            "P" = "'symex-change-remaining";
-            "N" = "'symex-shift-backward";
-            "I" = "'symex-shift-forward";
-            "M-N" = "'symex-shift-backward-most";
-            "M-I" = "'symex-shift-forward-most";
-            "M-n" = "'symex-goto-first";
-            "M-i" = "'symex-goto-last";
-            "t" = "'symex-insert-at-beginning";
-            "T" = "'symex-append-at-end";
-            "S" = "'symex-open-line-after";
-            "R" = "'symex-open-line-before";
-            "j" = "'evil-undo";
-            "J" = "'evil-redo";
-            "s" = "'symex-append-after";
-            "r" = "'symex-insert-before";
-            "w" = "'evil-repeat";
-            "C-w" = "'evil-repeat-pop";
-            "W" = "'evil-ex-repeat";
-            "a" = "'evil-ex";
-            "~" = "'evil-record-macro";
-            "$" = "'evil-execute-macro";
-          };
+      symex = {
+        enable = true;
+        defer = true;
+        generalTwo.":n"."(racket-repl-mode-map lisp-interaction-mode-map lisp-mode-map)"."RET" = "'symex-mode-interface";
+        config = ''
+          (symex-mode)
+          (repeaters-define-maps
+           '(("symex-visual-line"
+              symex-next-visual-line "e"
+              symex-previous-visual-line "o")))    
+        '';
+        generalOneConfig.evil-symex-state-map = {
+          "n" = "'symex-go-backward";
+          "e" = "'symex-go-down";
+          "o" = "'symex-go-up";
+          "i" = "'symex-go-forward";
+          "bn" = "'evil-backward-char";
+          "bi" = "'evil-forward-char";
+          "C-e" = "'symex-climb-branch";
+          "C-o" = "'symex-descend-branch";
+          "d" = "'symex-yank";
+          "D" = "'symex-yank-remaining";
+          "G" = "'symex-paste-after";
+          "g" = "'symex-paste-before";
+          "k" = "'symex-delete";
+          "C-k" = "'symex-delete-backward";
+          "p" = "'symex-delete-remaining";
+          "K" = "'symex-change";
+          "P" = "'symex-change-remaining";
+          "N" = "'symex-shift-backward";
+          "I" = "'symex-shift-forward";
+          "M-N" = "'symex-shift-backward-most";
+          "M-I" = "'symex-shift-forward-most";
+          "M-n" = "'symex-goto-first";
+          "M-i" = "'symex-goto-last";
+          "t" = "'symex-insert-at-beginning";
+          "T" = "'symex-append-at-end";
+          "S" = "'symex-open-line-after";
+          "R" = "'symex-open-line-before";
+          "j" = "'evil-undo";
+          "J" = "'evil-redo";
+          "s" = "'symex-append-after";
+          "r" = "'symex-insert-before";
+          "w" = "'evil-repeat";
+          "C-w" = "'evil-repeat-pop";
+          "W" = "'evil-ex-repeat";
+          "a" = "'evil-ex";
+          "~" = "'evil-record-macro";
+          "$" = "'evil-execute-macro";
         };
+      };
 
       evil-org.config = ''
         (evil-define-key 'operator 'evil-org-mode

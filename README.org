@@ -46,7 +46,7 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 ** Emacs
 + [ ] The python files from emacs-qutebrowser should be part of the emacs package & be provided by nix
 + [ ] Make the minibuffer dissapear
-+ [ ] https://coredumped.dev/2025/06/18/making-tramp-go-brrrr./
 + [ ] https://github.com/konrad1977/flyover
-+ [ ] project checker
 + [ ] https://github.com/eshelyaron/semel
++ [ ] https://github.com/Andrew-William-Smith/evil-fringe-mark
++ [ ] https://github.com/mamapanda/evil-owl

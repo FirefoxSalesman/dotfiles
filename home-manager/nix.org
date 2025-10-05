@@ -1402,71 +1402,73 @@ Installs all the icon fonts for dired.
 Use =M-x all-the-icons-install-fonts=
 #+NAME: Emacs Ricing Icons
 #+begin_src nix-ts
-  nerd-icons = {
-    enable = true;
-    command = [
-      "nerd-icons-octicon"
-      "nerd-icons-faicon"
-      "nerd-icons-flicon"
-      "nerd-icons-wicon"
-      "nerd-icons-mdicon"
-      "nerd-icons-codicon"
-      "nerd-icons-devicon"
-      "nerd-icons-ipsicon"
-      "nerd-icons-pomicon"
-      "nerd-icons-powerline"
-    ];
-  };
+nerd-icons = {
+  enable = true;
+  command = [
+    "nerd-icons-octicon"
+    "nerd-icons-faicon"
+    "nerd-icons-flicon"
+    "nerd-icons-wicon"
+    "nerd-icons-mdicon"
+    "nerd-icons-codicon"
+    "nerd-icons-devicon"
+    "nerd-icons-ipsicon"
+    "nerd-icons-pomicon"
+    "nerd-icons-powerline"
+  ];
+};
 
-  all-the-icons = {
-    enable = true;
-  };
+all-the-icons = {
+  enable = true;
+};
 
-  nerd-icons-completion = {
-    enable = true;
-    ghookf = ["('marginalia-mode 'nerd-icons-completion-marginalia-setup)"];
-  };
+nerd-icons-completion = {
+  enable = true;
+  ghookf = ["('marginalia-mode 'nerd-icons-completion-marginalia-setup)"];
+};
 #+end_src
 
 *** Prettify Symbols
 #+NAME: Aesthetics Prettify Symbols
 #+begin_src nix-ts
-  prettify-symbols = {
-    enable = true;
-    ghookf = ["('prog-mode 'prettify-symbols-mode)"];
-  };
+prettify-symbols = {
+  enable = true;
+  ghookf = ["('prog-mode 'prettify-symbols-mode)"];
+};
 #+end_src
 
 *** Dashboard
 #+NAME: Emacs Ricing Dashboard
 #+begin_src nix-ts :noweb yes
-  dashboard = {
-    enable = true;
-    ghookf = ["('on-init-ui '(dashboard-insert-startupify-lists dashboard-initialize))"];
-    config = ''
-      <<Emacs Dashboard Config>>  
-    '' ;
-    custom = {
-      dashboard-banner-logo-title = ''"Emacs: The one true desktop environment"'';
-      dashboard-center-content = true;
-      dashboard-items = '''((recents   . 5)
-                            (bookmarks . 5)
-                            (projects  . 5)
-                            (agenda    . 5))'';
-      dashboard-icon-type = "'nerd-icons";
-      dashboard-set-heading-icons = true;
-      dashboard-set-file-icons = true;
-      dashboard-agenda-sort-strategy = "'(time-up)";
-    };
+dashboard = {
+  enable = true;
+  ghookf = ["('on-init-ui '(dashboard-insert-startupify-lists dashboard-initialize))"];
+  config = ''
+    <<Emacs Dashboard Config>>  
+  '' ;
+  setopt = {
+    dashboard-banner-logo-title = ''"Emacs: The one true desktop environment"'';
+    dashboard-center-content = true;
+    dashboard-items = [
+      "'(recents . 5)"
+      "'(bookmarks . 5)"
+      "'(projects . 5)"
+      "'(agenda . 5)"
+    ];
+    dashboard-icon-type = "'nerd-icons";
+    dashboard-set-heading-icons = true;
+    dashboard-set-file-icons = true;
+    dashboard-agenda-sort-strategy = "'(time-up)";
   };
+};
 #+end_src
 
 #+NAME: Emacs Dashboard Config
 #+begin_src emacs-lisp
-  (dashboard-setup-startup-hook)
-  (dashboard-open)
-  (evil-collection-dashboard-setup)
-  (evil-collection-dashboard-setup-jump-commands)
+(dashboard-setup-startup-hook)
+(dashboard-open)
+(evil-collection-dashboard-setup)
+(evil-collection-dashboard-setup-jump-commands)
 #+end_src
 
 *** Nano
@@ -1477,208 +1479,201 @@ I'm not using the minor mode, because its text is being sent to the tab bar.
 The powerline separators were borrowed from punchline, because I think they look cool
 #+NAME: Emacs Ricing Nano
 #+begin_src nix-ts :noweb yes
-  doom-nano-modeline = {
-    enable = true;
-    afterCall = ["after-init-hook"];
-    custom.mode-line-format = false;
-    config = ''
-      <<Emacs Doom Nano Modeline Config>>
-    '';
-  };
+doom-nano-modeline = {
+  enable = true;
+  afterCall = ["after-init-hook"];
+  setopt.mode-line-format = false;
+  config = ''
+    <<Emacs Doom Nano Modeline Config>>
+  '';
+};
 #+end_src
 
 This is just overriding a bunch of functions so that I can put all the info in the tab bar
 #+NAME: Emacs Doom Nano Modeline Config
 #+begin_src emacs-lisp
-  (defun doom-nano-modeline--render (left right &optional hide-evil-mode)
-    "Render the doom-nano modeline string.
+(defun doom-nano-modeline--render (left right &optional hide-evil-mode)
+  "Render the doom-nano modeline string.
 
-    LEFT is the information that will be rendered to the left of the modeline. RIGHT
-    is the information that will be rendered to the right of modeline. Both
-    variables must be a list in which each element has the following syntax:
+  LEFT is the information that will be rendered to the left of the modeline. RIGHT
+  is the information that will be rendered to the right of modeline. Both
+  variables must be a list in which each element has the following syntax:
 
-        (text . face)
+      (text . face)
 
-    where TEXT will be decorated with FACE.
+  where TEXT will be decorated with FACE.
 
-    If HIDE-EVIL-MODE is nil, the Evil mode state is not shown in the modeline."
-    (let* ((window (get-buffer-window (current-buffer)))
+  If HIDE-EVIL-MODE is nil, the Evil mode state is not shown in the modeline."
+  (let* ((window (get-buffer-window (current-buffer)))
 
-           ;; Variable to store if the this window is active.
-  	 (active t)
+         ;; Variable to store if the this window is active.
+	 (active t)
 
-           ;; Status of the buffer.
-           (status (doom-nano-modeline-status))
+         ;; Status of the buffer.
+         (status (doom-nano-modeline-status))
 
-           ;; Check if we are recording a macro and get its name.
-           (hasmacro (or defining-kbd-macro executing-kbd-macro))
-           (macroname (if (bound-and-true-p evil-this-macro)
-                          (char-to-string evil-this-macro)
-                        "?"))
+         ;; Check if we are recording a macro and get its name.
+         (hasmacro (or defining-kbd-macro executing-kbd-macro))
+         (macroname (if (bound-and-true-p evil-this-macro)
+                        (char-to-string evil-this-macro)
+                      "?"))
 
-           ;; String to indicate the current evil mode.
-           (evilstate
-            (if hide-evil-mode
-                nil
-              (concat (cond ((eq evil-state 'emacs)    "E ")
-                            ((eq evil-state 'motion)   "M ")
-                            ((eq evil-state 'normal)   "N ")
-                            ((eq evil-state 'insert)   "I ")
-                            ((eq evil-state 'replace)  "R ")
-                            ((eq evil-state 'operator) "O ")
-                            ((eq evil-state 'god) "G ")
-                            ((eq evil-state 'symex) "S ")
-                            ((eq evil-state 'visual) (cond ((eq evil-visual-selection 'line)  "L ")
-                                                           ((eq evil-visual-selection 'block) "B ")
-                                                           (t                                 "V ")))
-                            (t "? ")))))
+         ;; String to indicate the current evil mode.
+         (evilstate
+          (if hide-evil-mode
+              nil
+            (concat (cond ((eq evil-state 'emacs)    "E ")
+                          ((eq evil-state 'motion)   "M ")
+                          ((eq evil-state 'normal)   "N ")
+                          ((eq evil-state 'insert)   "I ")
+                          ((eq evil-state 'replace)  "R ")
+                          ((eq evil-state 'operator) "O ")
+                          ((eq evil-state 'god) "G ")
+                          ((eq evil-state 'symex) "S ")
+                          ((eq evil-state 'visual) (cond ((eq evil-visual-selection 'line)  "L ")
+                                                         ((eq evil-visual-selection 'block) "B ")
+                                                         (t                                 "V ")))
+                          (t "? ")))))
 
-           ;; String to indicate if a macro is being recorded.
-           (macrostring (if hasmacro (concat "● " macroname ) nil))
+         ;; String to indicate if a macro is being recorded.
+         (macrostring (if hasmacro (concat "● " macroname ) nil))
 
-           ;; Select the modeline face.
-  	 (modeline-face 'doom-nano-modeline-active-face)
+         ;; Select the modeline face.
+	 (modeline-face 'doom-nano-modeline-active-face)
 
-           ;; Select the face to highlight the evil state.
-           (evilstate-face
-            (cond (hide-evil-mode            modeline-face)
-                  ((not active)              modeline-face)
-                  ((eq evil-state 'emacs)    'doom-nano-modeline-evil-emacs-state-face)
-                  ((or (eq evil-state 'normal) (eq evil-state 'god) (eq evil-state 'symex))   'doom-nano-modeline-evil-normal-state-face)
-                  ((eq evil-state 'motion)   'doom-nano-modeline-evil-motion-state-face)
-                  ((eq evil-state 'insert)   'doom-nano-modeline-evil-insert-state-face)
-                  ((eq evil-state 'replace)  'doom-nano-modeline-evil-replace-state-face)
-                  ((eq evil-state 'operator) 'doom-nano-modeline-evil-operator-state-face)
-                  ((eq evil-state 'visual)   'doom-nano-modeline-evil-visual-state-face)
-                  (t                         modeline-face)))
+         ;; Select the face to highlight the evil state.
+         (evilstate-face
+          (cond (hide-evil-mode            modeline-face)
+                ((not active)              modeline-face)
+                ((eq evil-state 'emacs)    'doom-nano-modeline-evil-emacs-state-face)
+                ((or (eq evil-state 'normal) (eq evil-state 'god) (eq evil-state 'symex))   'doom-nano-modeline-evil-normal-state-face)
+                ((eq evil-state 'motion)   'doom-nano-modeline-evil-motion-state-face)
+                ((eq evil-state 'insert)   'doom-nano-modeline-evil-insert-state-face)
+                ((eq evil-state 'replace)  'doom-nano-modeline-evil-replace-state-face)
+                ((eq evil-state 'operator) 'doom-nano-modeline-evil-operator-state-face)
+                ((eq evil-state 'visual)   'doom-nano-modeline-evil-visual-state-face)
+                (t                         modeline-face)))
 
-           ;; Select the face to highlight the macro recording indicator.
-           (macro-face (if hasmacro 'doom-nano-modeline-macro-face modeline-face))
+         ;; Select the face to highlight the macro recording indicator.
+         (macro-face (if hasmacro 'doom-nano-modeline-macro-face modeline-face))
 
-           ;; Assemble the left string with the highlights.
-           (pleft (concat
-                   (propertize " "
-                               'face evilstate-face
-                               'display `(raise ,doom-nano-modeline-top-padding))
+         ;; Assemble the left string with the highlights.
+         (pleft (concat
+                 (propertize " "
+                             'face evilstate-face
+                             'display `(raise ,doom-nano-modeline-top-padding))
 
-                   ;; Evil state.
-                   (when evilstate
-                     (concat (propertize evilstate 'face evilstate-face)
-                             (propertize " " 'face modeline-face)))
+                 ;; Evil state.
+                 (when evilstate
+                   (concat (propertize evilstate 'face evilstate-face)
+                           (propertize " " 'face modeline-face)))
 
-                   ;; Macro recording indicator.
-                   (when macrostring
-                     (concat (propertize macrostring 'face macro-face)
-                             (propertize " " 'face modeline-face)))
+                 ;; Macro recording indicator.
+                 (when macrostring
+                   (concat (propertize macrostring 'face macro-face)
+                           (propertize " " 'face modeline-face)))
 
-                   ;; Left list.
-                   (if left
-                       (mapconcat
-                        (lambda (element)
-                          (if (and active (cdr element))
-                              (propertize (car element) 'face (cdr element))
-                            (propertize (car element) 'face modeline-face)))
-                        left
-                        "")
-                     ""))))
+                 ;; Left list.
+                 (if left
+                     (mapconcat
+                      (lambda (element)
+                        (if (and active (cdr element))
+                            (propertize (car element) 'face (cdr element))
+                          (propertize (car element) 'face modeline-face)))
+                      left
+                      "")
+                   ""))))
 
-      ;; Concatenate and return the modeline string.
-      (concat pleft
-              ;; We have one final space as margin, so we make sure it is
-              ;; highlighted with the correct face.
-              (propertize " " 'face modeline-face))))
+    ;; Concatenate and return the modeline string.
+    (concat pleft
+            ;; We have one final space as margin, so we make sure it is
+            ;; highlighted with the correct face.
+            (propertize " " 'face modeline-face))))
 
-  (defun doom-nano-modeline-org-mode-buffer-name-and-major-mode ()
-    "Return the buffer name and the major mode for Org buffers."
-    (if (derived-mode-p 'org-mode)
-        (let* ((org-title (doom-nano-modeline--get-org-title))
-               (buffer-name (if org-title
-                                org-title
-                              (format-mode-line "%b")))
-               (buffer-modified (if (and buffer-file-name (buffer-modified-p)) "** " "")))
+(defun doom-nano-modeline-org-mode-buffer-name-and-major-mode ()
+  "Return the buffer name and the major mode for Org buffers."
+  (if (derived-mode-p 'org-mode)
+      (let* ((org-title (doom-nano-modeline--get-org-title))
+             (buffer-name (if org-title
+                              org-title
+                            (format-mode-line "%b")))
+             (buffer-modified (if (and buffer-file-name (buffer-modified-p)) "** " "")))
 
-          `((,(concat buffer-modified buffer-name) . nil)
-  	  ("  " . nil)
-            (,(nerd-icons-icon-for-buffer) . doom-nano-modeline-major-mode-face)
-  	  ("  " . nil)))
-      (doom-nano-modeline-default-mode)))
+        `((,(concat buffer-modified buffer-name) . nil)
+	  ("  " . nil)
+          (,(nerd-icons-icon-for-buffer) . doom-nano-modeline-major-mode-face)
+	  ("  " . nil)))
+    (doom-nano-modeline-default-mode)))
 
-  (defun doom-nano-modeline-buffer-name-vc-and-major-mode ()
-    "Return the buffer name and the major mode."
-    (let* ((buffer-name (cond
-                         ((and (derived-mode-p 'org-mode)
-                               (buffer-narrowed-p)
-                               (buffer-base-buffer))
-                          (format"%s [%s]" (buffer-base-buffer)
-                                 (org-link-display-format
-                                  (substring-no-properties (or (org-get-heading 'no-tags)
-                                                               "-")))))
-                         ((and (buffer-narrowed-p)
-                               (buffer-base-buffer))
-                          (format"%s [narrow]" (buffer-base-buffer)))
-                         (t
-                          (format-mode-line "%b"))))
+(defun doom-nano-modeline-buffer-name-vc-and-major-mode ()
+  "Return the buffer name and the major mode."
+  (let* ((buffer-name (cond
+                       ((and (derived-mode-p 'org-mode)
+                             (buffer-narrowed-p)
+                             (buffer-base-buffer))
+                        (format"%s [%s]" (buffer-base-buffer)
+                               (org-link-display-format
+                                (substring-no-properties (or (org-get-heading 'no-tags)
+                                                             "-")))))
+                       ((and (buffer-narrowed-p)
+                             (buffer-base-buffer))
+                        (format"%s [narrow]" (buffer-base-buffer)))
+                       (t
+                        (format-mode-line "%b"))))
 
-           (buffer-modified (if (and buffer-file-name (buffer-modified-p)) "** " ""))
+         (buffer-modified (if (and buffer-file-name (buffer-modified-p)) "** " ""))
 
-           (vc-branch-name (doom-nano-modeline--get-vc-branch))
+         (vc-branch-name (doom-nano-modeline--get-vc-branch))
 
-           (vc-branch (if vc-branch-name
-                          `((vc-branch-name . nil))
-                        nil)))
+         (vc-branch (if vc-branch-name
+                        `((vc-branch-name . nil))
+                      nil)))
 
-      `((,(concat buffer-modified buffer-name) . nil)
-        ("  " . nil)
-        (,(if vc-branch-name (concat vc-branch-name " ") "") . doom-nano-modeline-vc-branch-name-face)
-        (,(if vc-branch-name " " "") . nil)
-        (,(if (or (equal major-mode 'nix-mode) (equal major-mode 'bibtex-mode)) (all-the-icons-icon-for-buffer) (nerd-icons-icon-for-buffer)) . doom-nano-modeline-major-mode-face)
-        ("  " . nil))))
+    `((,(concat buffer-modified buffer-name) . nil)
+      ("  " . nil)
+      (,(if vc-branch-name (concat vc-branch-name " ") "") . doom-nano-modeline-vc-branch-name-face)
+      (,(if vc-branch-name " " "") . nil)
+      (,(if (or (equal major-mode 'nix-mode) (equal major-mode 'bibtex-mode)) (all-the-icons-icon-for-buffer) (nerd-icons-icon-for-buffer)) . doom-nano-modeline-major-mode-face)
+      ("  " . nil))))
 
-  (defun doom-nano-modeline--special-mode-p ()
-    "Return t if we are in `special-mode' or nil otherwise."
-    (or (derived-mode-p 'special-mode) (and (eq major-mode 'exwm-mode) (not qutebrowser-exwm-mode))))
+(defun doom-nano-modeline--special-mode-p ()
+  "Return t if we are in `special-mode' or nil otherwise."
+  (or (derived-mode-p 'special-mode) (and (eq major-mode 'exwm-mode) (not qutebrowser-exwm-mode))))
 
-  (defun doom-nano-tabline ()
-    "Format the modeline for the tabline"
-    (let* ((the-format '((:eval
-  			(funcall
-  			 (or (catch 'found
-  			       (dolist (elt doom-nano-modeline-mode-formats)
-  				 (let* ((config (cdr elt))
-  					(mode-p (plist-get config :mode-p))
-  					(format (plist-get config :format)))
-  				   (when mode-p
-  				     (when (funcall mode-p)
-  				       (throw 'found format))))))
-  			     #'doom-nano-modeline-default-mode-format))))))
-      `((global menu-item ,(format-mode-line the-format) ignore))))
+(defun doom-nano-tabline ()
+  "Format the modeline for the tabline"
+  (let* ((the-format '((:eval
+			(funcall
+			 (or (catch 'found
+			       (dolist (elt doom-nano-modeline-mode-formats)
+				 (let* ((config (cdr elt))
+					(mode-p (plist-get config :mode-p))
+					(format (plist-get config :format)))
+				   (when mode-p
+				     (when (funcall mode-p)
+				       (throw 'found format))))))
+			     #'doom-nano-modeline-default-mode-format))))))
+    `((global menu-item ,(format-mode-line the-format) ignore))))
 #+end_src
 
 *** Emacs Theme
 Makes emacs' theme mimic the wallpaper. A good pywal config will get most things to match.
 #+NAME: Emacs Ricing Theme
 #+begin_src nix-ts :noweb yes
-  ewal = {
-    enable = true;
-    demand = true;
-    custom = {
-      ewal-use-built-in-always-p = false;
-      ewal-use-built-in-on-failure-p = true;
-      ewal-built-in-palette = ''"sexy-material"'';
-    };
+ewal-doom-themes = {
+  enable = true;
+  demand = true;
+  config = ''
+    <<Emacs Ewal Config>>
+  '';
+  setopt = {
+    ewal-use-built-in-always-p = false;
+    ewal-use-built-in-on-failure-p = true;
+    ewal-built-in-palette = ''"sexy-material"'';
+    doom-themes-enable-bold = true;
+    doom-themes-enable-italic = true;
   };
-
-  ewal-doom-themes = {
-    enable = true;
-    demand = true;
-    config = ''
-      <<Emacs Ewal Config>>
-    '';
-    custom = {
-      doom-themes-enable-bold = true;
-      doom-themes-enable-italic = true;
-    };
-  };
+};
 #+end_src
 
 #+NAME: Emacs Ewal Config
@@ -1749,7 +1744,7 @@ shr-tag-pre-highlight = {
 shrface = {
   enable = true;    
   ghookf = ["('(eww-mode elfeed-show-mode nov-mode) 'shrface-mode)"];
-  custom.shrface-header-line-max-level = 0;
+  setopt.shrface-header-line-max-level = 0;
   config = ''
     <<Emacs Ricing Shrface Config>>
   '';
@@ -2028,7 +2023,7 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
     usePackage = {
       <<Development Misc>>
       
-      # lsp-java.custom.lsp-java-content-provider-preferred = ''"fernflower"'';
+      # lsp-java.setopt.lsp-java-content-provider-preferred = ''"fernflower"'';
       <<Development Direnv>>
 
       <<Development Treesitter>>
@@ -2037,7 +2032,7 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 
       <<Development Eglot>>
       
-      # <<Development Dape>>
+      <<Development Dape>>
 
       <<Development Python>>
       
@@ -2045,9 +2040,9 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 
       elisp-mode.gfhookf = ["('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"];
 
-      flymake-popon.custom.flymake-popon-posframe-extra-arguments = '''(:poshandler posframe-poshandler-point-bottom-left-corner-upward
-	                                                                :parent-frame nil
-                                                                        :refposhandler posframe-refposhandler-xwininfo)'';
+      flymake-popon.setopt.flymake-popon-posframe-extra-arguments = [ "':poshandler" "'posframe-poshandler-point-bottom-left-corner-upward"
+	                                                                "':parent-frame" false
+                                                                        "':refposhandler" "'posframe-refposhandler-xwininfo" ];
       java-ts-mode = {
         init = ''
           <<Java Config>>
@@ -2061,12 +2056,6 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 *** Misc
 #+NAME: Development Misc
 #+begin_src nix-ts
-editorconfig = {
-  enable = true;
-  afterCall = ["on-first-file-hook"];
-  config = ''(editorconfig-mode)'';
-};
-
 rainbow-delimiters = {
   enable = true;
   ghookf = ["('prog-mode 'rainbow-delimiters-mode)"];
@@ -2114,7 +2103,7 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 #+begin_src nix-ts :noweb yes
 magit = {
   enable = true;
-  custom.magit-display-buffer-function = "#'magit-display-buffer-same-window-except-diff-v1";
+  setopt.magit-display-buffer-function = "#'magit-display-buffer-same-window-except-diff-v1";
   generalOne.project-prefix-map = {
     "v" = "'magit-status";
     "c" = "'magit-commit";
@@ -2130,7 +2119,7 @@ projection-ibuffer = {
   generalOne.project-prefix-map.i = "(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current)))";
 };
 
-projection-multi.custom.projection-gradle-use-daemon = false;
+projection-multi.setopt.projection-gradle-use-daemon = false;
 
 projection-multi-embark = {
   enable = true;
@@ -2168,6 +2157,14 @@ eglot-tempel = {
   after = ["eglot"];
   config = ''(eglot-tempel-mode)'';
 };
+
+eglot-java = {
+  setopt.eglot-java-user-init-opts-fn = "'eglot-java-init-opts";
+  preface = ''
+    (defun eglot-java-init-opts (server eglot-java-eclipse-jdt)
+        '(:bundles ["/usr/share/java-debug/com.microsoft.java.debug.plugin.jar"]))
+  '';
+};
 #+end_src
 
 #+NAME: Development Eglot Config
@@ -2183,17 +2180,23 @@ dape = {
   enable = true;
   after = ["eglot"];
   gfhookf = ["('dape-on-stopped (list 'dape-info 'dape-repl))"];
-  custom = {
-    dape-window-arrangement = "gud";
+  setopt = {
+    dape-window-arrangement = "'gud";
     dape-key-prefix = ''"\C-x\C-a"'';
   };
+};
+
+projection-dape = {
+  enable = true;
+  after = ["dape"];
+  generalOne.project-prefix-map."d" = "'projection-dape";
 };
 #+end_src
 
 *** Python
 #+NAME: Development Python
 #+begin_src nix-ts
-python-ts-mode.custom = {
+python-ts-mode.setopt = {
     python-shell-interpreter = ''"ipython"'';
     python-shell-interpreter-args = ''"-i --simple-prompt"'';
 };
@@ -2216,7 +2219,7 @@ I'm running dired with a couple of small packages that improve on it
       };
       generalOne.global-leader."d" = '''(dired :which-key "dired")'';
       generalTwoConfig.":n".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
-      custom = {
+      setopt = {
         dired-recursive-deletes = "'always";
         dired-listing-switches = ''"-agho --group-directories-first"'';
         # We're doing our best to get rid of that 1st extraneous line
@@ -2283,7 +2286,7 @@ I'm running dired with a couple of small packages that improve on it
         "E" = "'image-next-file";
         "O" = "'image-previous-file";
       };
-      custom.image-animate-loop = true;
+      setopt.image-animate-loop = true;
     };
 
     dired-narrow = {
@@ -2483,7 +2486,7 @@ simple = {
 
 display-line-numbers = {
   enable = true;
-  custom = {
+  setopt = {
     display-line-numbers-type = "'relative";
     display-line-numbers-width = 3;
   }; 
@@ -2509,7 +2512,7 @@ no-littering = {
   demand = true;
   #no-littering doesn't set this by default so we must place
   #auto save files in the same path as it uses for sessions
-  custom.auto-save-file-name-transforms = ''`((".*" ,(no-littering-expand-var-file-name "auto-save/") t))'';
+  setopt.auto-save-file-name-transforms = ''`((".*" ,(no-littering-expand-var-file-name "auto-save/") t))'';
 };
 #+end_src
 
@@ -2546,7 +2549,7 @@ Wgrep basically turns grep into sed.
 #+begin_src nix-ts
 wgrep = {
   enable = true;
-  custom.wgrep-auto-save-buffer = true;
+  setopt.wgrep-auto-save-buffer = true;
   generalTwo.":n".grep-mode-map."w" = "'wgrep-change-to-wgrep-mode";
 };
 #+end_src
@@ -2808,6 +2811,8 @@ evil = {
       "F" = "'evil-beginning-of-visual-line";
       "C-f" = "'evil-first-non-blank";
       "B" = "'evil-goto-line";
+      "C-M-o" = "'scroll-other-window-down";
+      "C-M-e" = "'scroll-other-window";
     };
     ":v" = {
       "U" = "'evil-forward-word-begin";
@@ -2916,7 +2921,7 @@ Easymotion's prefix is M-SPC, however, most important keys are already bound som
 Cursors hydra: https://hungyi.net/posts/hydra-for-evil-mc/
 #+NAME: Emacs Evil Extensions
 #+begin_src nix-ts :noweb yes
-evil-collection.custom.evil-collection-unimpaired-want-repeat-mode-integration = true;
+evil-collection.setopt.evil-collection-unimpaired-want-repeat-mode-integration = true;
 
 evil-surround.generalTwoConfig = {
   ":v".evil-surround-mode-map."R" = "'evil-surround-region";
@@ -2936,16 +2941,16 @@ evil-easymotion = {
     "H-x" = "'evilem-motion-backward-WORD-begin";
     "H-M" = "'evilem-motion-search-previous";
   };
-  custom = {
+  custom.avy-dispatch-alist = [
+    "'(?l . avy-action-ispell)"
+    "'(?o . nix-emacs-avy-action-embark)"
+    "'(?h . avy-action-helpful)"
+    "'(?g . avy-action-yank)"
+    "'(?p . avy-action-teleport)"
+    "'(?q . nix-emacs-avy-action-fold)"
+  ];
+  setopt = {
     avy-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
-    avy-dispatch-alist = ''
-      '((?l . avy-action-ispell)
-			  (?o . nix-emacs-avy-action-embark)
-			  (?h . avy-action-helpful)
-			  (?g . avy-action-yank)
-			  (?p . avy-action-teleport)
-			  (?q . nix-emacs-avy-action-fold))
-    '';
     avy-all-windows = false;
   };
   config = "(defun avy-action-helpful (pt) (nix-emacs-base-avy-action 'helpful-at-point pt))";
@@ -3014,67 +3019,53 @@ evil-mc = {
 Gives us an entire state where we can rapidly make specific edits to code.
 #+NAME: Emacs Evil Symex
 #+begin_src nix-ts :noweb yes
-  symex = {
-    enable = true;
-    defer = true;
-    generalTwo.":n"."(racket-repl-mode-map lisp-interaction-mode-map lisp-mode-map)"."RET" = "'symex-mode-interface";
-    init = ''
-      <<Emacs Symex Init>>    
-    '';
-    config = ''
-      <<Emacs Symex Config>>    
-    '';
-    generalOneConfig.evil-symex-state-map = {
-      "n" = "'symex-go-backward";
-      "e" = "'symex-go-down";
-      "o" = "'symex-go-up";
-      "i" = "'symex-go-forward";
-      "bn" = "'evil-backward-char";
-      "bi" = "'evil-forward-char";
-      "C-e" = "'symex-climb-branch";
-      "C-o" = "'symex-descend-branch";
-      "d" = "'symex-yank";
-      "D" = "'symex-yank-remaining";
-      "G" = "'symex-paste-after";
-      "g" = "'symex-paste-before";
-      "k" = "'symex-delete";
-      "C-k" = "'symex-delete-backward";
-      "p" = "'symex-delete-remaining";
-      "K" = "'symex-change";
-      "P" = "'symex-change-remaining";
-      "N" = "'symex-shift-backward";
-      "I" = "'symex-shift-forward";
-      "M-N" = "'symex-shift-backward-most";
-      "M-I" = "'symex-shift-forward-most";
-      "M-n" = "'symex-goto-first";
-      "M-i" = "'symex-goto-last";
-      "t" = "'symex-insert-at-beginning";
-      "T" = "'symex-append-at-end";
-      "S" = "'symex-open-line-after";
-      "R" = "'symex-open-line-before";
-      "j" = "'evil-undo";
-      "J" = "'evil-redo";
-      "s" = "'symex-append-after";
-      "r" = "'symex-insert-before";
-      "w" = "'evil-repeat";
-      "C-w" = "'evil-repeat-pop";
-      "W" = "'evil-ex-repeat";
-      "a" = "'evil-ex";
-      "~" = "'evil-record-macro";
-      "$" = "'evil-execute-macro";
-    };
+symex = {
+  enable = true;
+  defer = true;
+  generalTwo.":n"."(racket-repl-mode-map lisp-interaction-mode-map lisp-mode-map)"."RET" = "'symex-mode-interface";
+  config = ''
+    <<Emacs Symex Config>>    
+  '';
+  generalOneConfig.evil-symex-state-map = {
+    "n" = "'symex-go-backward";
+    "e" = "'symex-go-down";
+    "o" = "'symex-go-up";
+    "i" = "'symex-go-forward";
+    "bn" = "'evil-backward-char";
+    "bi" = "'evil-forward-char";
+    "C-e" = "'symex-climb-branch";
+    "C-o" = "'symex-descend-branch";
+    "d" = "'symex-yank";
+    "D" = "'symex-yank-remaining";
+    "G" = "'symex-paste-after";
+    "g" = "'symex-paste-before";
+    "k" = "'symex-delete";
+    "C-k" = "'symex-delete-backward";
+    "p" = "'symex-delete-remaining";
+    "K" = "'symex-change";
+    "P" = "'symex-change-remaining";
+    "N" = "'symex-shift-backward";
+    "I" = "'symex-shift-forward";
+    "M-N" = "'symex-shift-backward-most";
+    "M-I" = "'symex-shift-forward-most";
+    "M-n" = "'symex-goto-first";
+    "M-i" = "'symex-goto-last";
+    "t" = "'symex-insert-at-beginning";
+    "T" = "'symex-append-at-end";
+    "S" = "'symex-open-line-after";
+    "R" = "'symex-open-line-before";
+    "j" = "'evil-undo";
+    "J" = "'evil-redo";
+    "s" = "'symex-append-after";
+    "r" = "'symex-insert-before";
+    "w" = "'evil-repeat";
+    "C-w" = "'evil-repeat-pop";
+    "W" = "'evil-ex-repeat";
+    "a" = "'evil-ex";
+    "~" = "'evil-record-macro";
+    "$" = "'evil-execute-macro";
   };
-#+end_src
-
-#+NAME: Emacs Symex Init
-#+begin_src emacs-lisp
-  (with-eval-after-load 'evil-easymotion
-    (evilem-make-motion-plain evilem-symex-forward 'symex-traverse-forward :post-hook 'symex-select-nearest-in-line)
-    (evilem-make-motion-plain evilem-symex-backward 'symex-traverse-backward :post-hook 'symex-select-nearest-in-line)
-    (evilem-make-motion-plain evilem-symex-next-visual-line 'symex-next-visual-line :post-hook 'symex-select-nearest-in-line)
-    (evilem-make-motion-plain evilem-symex-previous-visual-line 'symex-previous-visual-line :post-hook 'symex-select-nearest-in-line)
-    (evilem-make-motion-plain evilem-symex-go-forward 'symex-go-forward :post-hook 'symex-select-nearest-in-line)
-    (evilem-make-motion-plain evilem-symex-go-backward 'symex-go-backward :post-hook 'symex-select-nearest-in-line))
+};
 #+end_src
 
 #+NAME: Emacs Symex Config
@@ -3194,7 +3185,7 @@ vertico = {
   '';
 };
 
-vertico-quick.custom = {
+vertico-quick.setopt = {
   vertico-quick1 = ''"crst"'';
   vertico-quick2 = ''"neia"'';
 };
@@ -3219,7 +3210,7 @@ nerd-icons-corfu = {
 
 corfu-quick = {
   enable = true;
-  custom = {
+  setopt = {
     corfu-quick1 = ''"crst"'';
     corfu-quick2 = ''"neia"'';
   };
@@ -3248,7 +3239,7 @@ Evil integration is from noctuid & minad
 consult = {
   ghookf = ["('minibuffer-setup 'consult-initial-narrow)"];
   command = ["consult-goto-line" "consult-keep-lines"];
-  custom.consult-buffer-sources = "'(consult--source-buffer)";
+  setopt.consult-buffer-sources = "'(consult--source-buffer)";
   generalOne = {
     ":n" = {
       "M-g" = "'consult-yank-pop"; # orig. evil-paste-pop
@@ -3373,11 +3364,18 @@ ace-isearch = {
   gfhookf = ["('pdf-view-mode (lambda () (ace-isearch-mode -1)))"];
   generalOneConfig.isearch-mode-map."C-a" = "'avy-isearch";
   config = "(global-ace-isearch-mode)";
-  custom = {
+  setopt = {
     ace-isearch-on-evil-mode = true;
     ace-isearch-input-length = 5;
     ace-isearch-jump-based-on-one-char = false;
+    isearch-wrap-pause = "'no-ding";
   };
+};
+
+replace = {
+  enable = true;  
+  defer = true;
+  generalTwoConfig.":n".occur-mode-map."w" = "'occur-edit-mode";
 };
 #+end_src
 
@@ -3387,7 +3385,7 @@ ace-isearch = {
 tempel = {
   enable = true;
   command = ["tempel-complete"];
-  custom.tempel-path = ''"~/.config/emacs/templates.eld"'';
+  setopt.tempel-path = ''"~/.config/emacs/templates.eld"'';
   init = ''
       <<Emacs Templ Init>>
     '';
@@ -3581,22 +3579,13 @@ password-store-otp = {
 This is a pinentry program (alternative to pinentry-dmenu)
 When you're prompted for your gpg password, the place for entry will be your modeline.
 #+NAME: Emacs Pinentry
-#+begin_src nix-ts :noweb yes
+#+begin_src nix-ts
 pinentry = {
   enable = true;
-  custom.epa-pinentry-mode = "'loopback";
+  setopt.epa-pinentry-mode = "'loopback";
   deferIncrementally = true;
-  config = ''
-    <<Emacs Pinentry Config>>
-  '';
+  config = "(pinentry-start)";
 };
-#+end_src
-
-#+NAME: Emacs Pinentry Config
-#+begin_src emacs-lisp
-(pinentry-start)
-(shell-command "gpgconf --launch-agent")
-(shell-command "gpg-connect agent updatestartuptty /bye >/dev/null")
 #+end_src
 
 *** Writing
@@ -3604,6 +3593,8 @@ pinentry = {
 { config, inputs, pkgs, ... }:
 
 {
+  imports = [../writing];
+
   home.packages = with pkgs; [
     libreoffice-fresh
     hunspell
@@ -3612,6 +3603,10 @@ pinentry = {
   ];
 
   programs.emacs.init = {
+    tools = {
+      nov = true;
+      pdf = true;
+    };
     ide.languages = {
       markdown.enable = true;
       latex = {
@@ -3635,8 +3630,6 @@ pinentry = {
       <<Emacs Org Extensions>>
       
       <<Emacs Org Denote>>
-      
-      <<Emacs Org Novelist>>
       
       <<Emacs Latex>>
       
@@ -3672,16 +3665,10 @@ org = {
 						#'cape-dict
                                                 #'cape-dabbrev))))''
   ];
-  custom = {
-    org-export-with-toc = false;
+  custom.org-directory = ''"~/doc"'';
+  setopt = {
     org-export-with-section-numbers = false;
-    org-directory = ''"~/doc"'';
-    org-emphasis-alist = '''(("*" bold)
-      ("/" italic)
-                                 ("=" org-verbatim verbatim)
-                                 ("~" org-code verbatim)
-                                 ("+" (:strike-through t))
-                                 ("!" (:overline t) verbatim))'';
+    org-export-with-toc = false;
   };
   generalTwoConfig.local-leader.org-mode-map."a" = '''(avy-org-goto-heading-timer :which-key "avy")'';
 
@@ -3713,11 +3700,11 @@ denote = {
   enable = true;
   defer = true;
   gfhookf = ["('dired-mode 'denote-dired-mode-in-directories)"];
-  custom = {
+  setopt = {
     denote-directory = ''(expand-file-name "~/doc/denote")'';
-    denote-known-keywords = '''("quotes" "chem" "emacs" "java" "physics" "calculus" "minecraft" "de" "proofs" "csse230" "os" "databases" "scifi" "softwarerequirements" "anthropology" "theoryofcomputation" "parallelcomp" "cybersecurity" "probstats" "scheme" "dreams" "softwaredevelopment" "ethics" "plp" "malwareanalysis" "bio" "ai" "resolve")'';
+    denote-known-keywords = [ ''"quotes"'' ''"chem"'' ''"emacs"'' ''"java"'' ''"physics"'' ''"calculus"'' ''"minecraft"'' ''"de"'' ''"proofs"'' ''"csse230"'' ''"os"'' ''"databases"'' ''"scifi"'' ''"softwarerequirements"'' ''"anthropology"'' ''"theoryofcomputation"'' ''"parallelcomp"'' ''"cybersecurity"'' ''"probstats"'' ''"scheme"'' ''"dreams"'' ''"softwaredevelopment"'' ''"ethics"'' ''"plp"'' ''"malwareanalysis"'' ''"bio"'' ''"ai"'' ''"resolve"'' ];
     denote-file-type = false;
-    denote-dired-directories = "(list denote-directory)";
+    denote-dired-directories = ["denote-directory"];
     
   };
   generalOne.global-leader = {
@@ -3732,35 +3719,7 @@ consult-denote = {
   enable = true;
   command = ["consult-denote-mode"];
   generalOne.global-leader."os" = "'consult-denote-grep";
-  custom.consult-denote-grep-command = "'consult-ripgrep";
-};
-#+end_src
-
-***** Novelist
-#+NAME: Emacs Org Novelist
-#+begin_src nix-ts
-org-novelist = {
-  enable = true;
-  command = ["org-novelist-mode" "org-novelist-new-story"];
-  generalTwoConfig.local-leader.org-novelist-mode-map = {
-    "c" = '''(:ignore t :which-key "character")'';
-    "cn" = '''(org-novelist-new-character :which-key "new")'';
-    "cr" = '''(org-novelist-rename-character :which-key "rename")'';
-    "cd" = '''(org-novelist-destroy-character :which-key "destroy")'';
-    "h" = '''(:ignore t :which-key "chapter")'';
-    "hn" = '''(org-novelist-new-chapter :which-key "new")'';
-    "hr" = '''(org-novelist-rename-chapter :which-key "rename")'';
-    "hd" = '''(org-novelist-destroy-chapter :which-key "destroy")'';
-    "p" = '''(:ignore t :which-key "place")'';
-    "pn" = '''(org-novelist-new-place :which-key "new")'';
-    "pr" = '''(org-novelist-rename-place :which-key "rename")'';
-    "pd" = '''(org-novelist-destroy-place :which-key "destroy")'';
-    "r" = '''(:ignore t :which-key "prop")'';
-    "rn" = '''(org-novelist-new-prop :which-key "new")'';
-    "rr" = '''(org-novelist-rename-prop :which-key "rename")'';
-    "rd" = '''(org-novelist-destroy-prop :which-key "destroy")'';
-    "e" = '''(org-novelist-export-story :which-key "export")'';
-  };
+  setopt.consult-denote-grep-command = "'consult-ripgrep";
 };
 #+end_src
 
@@ -3783,22 +3742,8 @@ No idea what the rest of this is for.
 #+NAME: Emacs Latex
 #+begin_src nix-ts
 pdf-tools = {
-  enable = true;
-  defer = true;
   generalOneConfig.pdf-view-mode-map."C-s" = "'search-forward";
-  custom = {
-    # Makes PDFtools the default
-    TeX-view-program-selection = '''((output-pdf "PDF Tools"))'';
-    TeX-view-program-list = '''(("PDF Tools" TeX-pdf-tools-sync-view))'';
-    TeX-source-correlate-start-server = false;
-  };
-  config = ''
-    (pdf-tools-install)
-  '';
-  gfhook = ["('TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)"];
   gfhookf = ["('pdf-view-mode 'pdf-view-midnight-minor-mode)"];
-  init = ''(setq-default pdf-view-display-size 'fit-width)'';
-  extraConfig = '':magic ("%PDF" . pdf-view-mode)'';
 };
 
 evil-collection-pdf = {
@@ -3831,7 +3776,7 @@ evil-tex.generalOneConfig.":ov" = {
 markdown = {
   generalOneConfig.markdown-mode-map."C-c C-e" = "'markdown-do";
   gfhookf = ["('markdown-mode 'efs/markdown-font-setup)"];
-  custom = {
+  setopt = {
     markdown-command = ''"multimarkdown"'';
     markdown-hide-markup = true;
   };
@@ -3868,7 +3813,7 @@ writeroom-mode = {
   enable = true;
   ghookf = ["((gen-mode-hooks '(Man org-agenda org Info markdown shrface)) 'writeroom-mode)"];
   gfhookf = ["('writeroom-mode 'visual-line-mode)"];
-  custom = {
+  setopt = {
     writeroom-mode-line = true;
     writeroom-maximize-window = false;
     writeroom-global-effects = false;
@@ -3882,7 +3827,6 @@ writeroom-mode = {
 #+begin_src nix-ts
 flyspell = {
   enable = true;
-  custom.ispell-personal-dictionary = "~/.config/emacs/ispell.txt";
   ghookf = [
     "('text-mode 'flyspell-mode)"
     "('prog-mode 'flyspell-prog-mode)"
@@ -3897,12 +3841,12 @@ citar = {
   enable = true;
   config = ''(citar-denote-mode)'';
   ghookf = ["('(LaTeX-mode org-mode) 'citar-capf-setup)"];
-  custom = {
+  setopt = {
     org-cite-insert-processor = "'citar";
     org-cite-follow-processor = "'citar";
     org-cite-activate-processor = "'citar";
-    citar-bibliography = '''("~/doc/uni.bib")'';
-    org-cite-global-bibliography = '''("~/doc/uni.bib")'';
+    citar-bibliography = [''"~/doc/uni.bib"''];
+    org-cite-global-bibliography = [''"~/doc/uni.bib"''];
   };
 };
 
@@ -3910,7 +3854,7 @@ citar-embark = {
   enable = true;
   after = ["citar" "embark"];
   config = ''(citar-embark-mode)'';
-  custom.citar-at-point-function = "'embark-act";
+  setopt.citar-at-point-function = "'embark-act";
 };
 
 citar-denote = {
@@ -3971,17 +3915,97 @@ use citation key."
   (citar-open-files citekey))
 #+end_src
 
-**** Epub Reader
-Nov allows you to read an epub file in a very similar way to an org file.
-You can't get page numbers, though, which becomes unfortunate for doing citations.
-#+NAME: Emacs Epub Reader
-#+begin_src nix-ts
-nov = {
-  enable = true;
-  defer = true;
-  extraPackages = with pkgs; [unzip];
-  mode = [''("\\.epub\\'" . nov-mode)''];
-};
+**** Modules
+#+begin_src nix-ts :tangle writing/default.nix
+{ ... }:
+
+{
+  imports = [
+    ./nov.nix
+    ./pdf.nix
+    ./novelist.nix
+  ];
+}
+#+end_src
+
+***** Nov
+#+begin_src nix-ts :tangle writing/nov.nix
+{ pkgs, config, lib, ... }:
+
+{
+  options.programs.emacs.init.tools.nov = lib.mkEnableOption "Enables nov.el, for reading epubs";
+
+  config.programs.emacs.init.usePackage.nov = lib.mkIf config.programs.emacs.init.tools.nov {
+    enable = true;
+    extraPackages = [pkgs.unzip];
+    mode = [''("\\.epub\\'" . nov-mode)''];
+  };
+}
+#+end_src
+
+***** PDF
+#+begin_src nix-ts :tangle writing/pdf.nix
+{ pkgs, config, lib, ... }:
+
+let
+  ide = config.programs.emacs.init.ide;
+in
+{
+  options.programs.emacs.init.tools.pdf = lib.mkEnableOption "Enables pdf-tools.";
+
+  config.programs.emacs.init.usePackage.pdf-tools = lib.mkIf config.programs.emacs.init.tools.pdf {
+    enable = true;
+    defer = true;
+    setopt = lib.mkIf ide.languages.latex.enable {
+      # Makes PDFtools the default
+      TeX-view-program-selection = lib.mkDefault ['''(output-pdf "PDF Tools")''];
+      TeX-view-program-list = lib.mkDefault ['''("PDF Tools" TeX-pdf-tools-sync-view)''];
+      TeX-source-correlate-start-server = lib.mkDefault false;
+    };
+    # Not actually sure if we need this
+    config = ''
+      (pdf-tools-install)
+    '';
+    init = ''
+      (setq-default pdf-view-display-size 'fit-width)
+      ${if ide.languages.latex.enable then "(with-eval-after-load 'latex (add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer))" else ""}
+    '';
+    magic = [''("%PDF" . pdf-view-mode)''];
+  };
+}
+#+end_src
+
+***** Novelist
+#+begin_src nix-ts :tangle writing/novelist.nix
+{ config, lib, ... }:
+
+{
+  options.programs.emacs.init.writing.novelist = lib.mkEnableOption "Enables org-novelist";
+
+  config.programs.emacs.init.usePackage.org-novelist = lib.mkIf config.programs.emacs.init.writing.novelist {
+    enable = true;
+    command = ["org-novelist-mode" "org-novelist-new-story"];
+    generalTwoConfig.local-leader.org-novelist-mode-map = lib.mkIf config.programs.emacs.init.keybinds.leader-key.enable {
+      "c" = '''(:ignore t :which-key "character")'';
+      "cn" = '''(org-novelist-new-character :which-key "new")'';
+      "cr" = '''(org-novelist-rename-character :which-key "rename")'';
+      "cd" = '''(org-novelist-destroy-character :which-key "destroy")'';
+      "h" = '''(:ignore t :which-key "chapter")'';
+      "hn" = '''(org-novelist-new-chapter :which-key "new")'';
+      "hr" = '''(org-novelist-rename-chapter :which-key "rename")'';
+      "hd" = '''(org-novelist-destroy-chapter :which-key "destroy")'';
+      "p" = '''(:ignore t :which-key "place")'';
+      "pn" = '''(org-novelist-new-place :which-key "new")'';
+      "pr" = '''(org-novelist-rename-place :which-key "rename")'';
+      "pd" = '''(org-novelist-destroy-place :which-key "destroy")'';
+      "r" = '''(:ignore t :which-key "prop")'';
+      "rn" = '''(org-novelist-new-prop :which-key "new")'';
+      "rr" = '''(org-novelist-rename-prop :which-key "rename")'';
+      "rd" = '''(org-novelist-destroy-prop :which-key "destroy")'';
+      "e" = '''(org-novelist-export-story :which-key "export")'';
+    };
+  };
+}
 #+end_src
 
 ** Window Management
@@ -4029,12 +4053,12 @@ tab-bar = {
   '';
   ghookf = ["('exwm-init 'tab-bar-mode)"];
   general."s-u" = "'tab-bar-hydra/body";
-  custom = {
-    tab-bar-format = "'(tab-bar-format-tabs-groups tab-bar-separator doom-nano-tabline tab-bar-format-align-right tab-bar-format-global)";
+  setopt = {
     tab-bar-close-button-show = false;
     tab-bar-select-restore-windows = false;
-    tab-bar-auto-width-max = "'((150) 20)";
+    tab-bar-auto-width-max = ["'(150)" "20"];
   };
+  custom.tab-bar-format = ["'tab-bar-format-tabs-groups" "'tab-bar-separator" "'doom-nano-tabline" "'tab-bar-format-align-right" "'tab-bar-format-global"];
   extraConfig = ''
     :pretty-hydra
     ((:color amaranth)
@@ -4343,63 +4367,67 @@ exwm = {
     mouse-autoselect-window = false;
     focus-follows-mouse = false;
     # These keys should always pass through to Emacs
-    exwm-input-prefix-keys = '''(?\M-`
-      ?\C-^
-                                 ?\M-&
-                                 ?\s-\M-'
-                                 ?\s-b
-                                 ?\M-u
-                                 ?\M-:
-                                 ?\s-o
-                                 ?\s-c
-                                 ?\s-v
-                                 ?\s-n
-                                 ?\s-i
-                                 ?\s-e
-                                 ?\s-f
-                                 ?\s-F
-                                 ?\s-u
-                                 ?\s-/
-                                 ?\s-'	;; popper-toggle-latest
-                                 ?\s-\" ;; popper-toggle-type
-                                 ?\s-\ 
-                                 XF86AudioRaiseVolume
-                                 XF86AudioLowerVolume
-                                 XF86AudioMute
-                                 ?\M-\ )'';
+    exwm-input-prefix-keys = [
+      '''?\M-`''
+      '''?\C-^''
+      '''?\M-&''
+      "?\\s-\\M-'"
+      '''?\s-b''
+      '''?\M-u''
+      '''?\M-:''
+      '''?\s-o''
+      '''?\s-c''
+      '''?\s-v''
+      '''?\s-n''
+      '''?\s-i''
+      '''?\s-e''
+      '''?\s-f''
+      '''?\s-F''
+      '''?\s-u''
+      '''?\s-/''
+      "?\\s-'"	# popper-toggle-latest
+      '''?\s-\"'' # popper-toggle-type
+      '''?\s-\ ''
+      '''XF86AudioRaiseVolume''
+      '''XF86AudioLowerVolume''
+      '''XF86AudioMute''
+      '''?\M-\ ''
+    ];
     # Set up global key bindings.  These always work, no matter the input state!
     # Keep in mind that changing this list after EXWM initializes has no effect.
-    exwm-input-global-keys = ''`(;; Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
-      ([?\s-r] . exwm-reset)
-                                   ([?\s-a] . evil-ex)
+    exwm-input-global-keys = [
+      # Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
+      '''([?\s-r] . exwm-reset)''
+      '''([?\s-a] . evil-ex)''
     
-                                    ;; Launch applications (basically dmenu)
-                                    ([?\s-d] . app-launcher-run-app)
-                                    ([?\s-t] . proced)
+      # Launch applications (basically dmenu)
+      '''([?\s-d] . app-launcher-run-app)''
+      '''([?\s-t] . proced)''
     
-                                    ;;Movement
-                                    ([?\s-e] . elwm-next)
-                                    ([?\s-o] . elwm-prev)
+      # Movement
+      '''([?\s-e] . elwm-next)''
+      '''([?\s-o] . elwm-prev)''
 
-                                    ;; Arrangement
-                                    ([?\s-E] . elwm-rotate-window)
-                                    ([?\s-O] . elwm-derotate-window)
-                                    ([?\s-c] . elwm-split-window)
-                                    ([?\s-n] . evil-window-move-far-left)
-                                    ([?\s-i] . evil-window-move-far-right)
-                                    ([?\s-j] . winner-undo)
-                                    ([?\s-J] . winner-redo)
-                                    ([?\s-r] . exwm-reset)
-                                    ([?\s-m] . toggle-single-window)
-                                    ([?\s-x] . toggle-follow-mode)
-                                    ([?\s-k] . evil-window-delete)
-                                    ([?\s-K] . evil-delete-buffer-and-window)
+      # Arrangement
+      '''([?\s-E] . elwm-rotate-window)''
+      '''([?\s-O] . elwm-derotate-window)''
+      '''([?\s-c] . elwm-split-window)''
+      '''([?\s-n] . evil-window-move-far-left)''
+      '''([?\s-i] . evil-window-move-far-right)''
+      '''([?\s-j] . winner-undo)''
+      '''([?\s-J] . winner-redo)''
+      '''([?\s-r] . exwm-reset)''
+      '''([?\s-m] . toggle-single-window)''
+      '''([?\s-x] . toggle-follow-mode)''
+      '''([?\s-k] . evil-window-delete)''
+      '''([?\s-K] . evil-delete-buffer-and-window)''
     
-                                    ;; Shell bindings
-                                    ([?\s-s] . (lambda () (interactive) (shell-command "slock")))
-                                    ([?\s-y] . (lambda () (interactive) (start-process-shell-command "maim" nil  "${pkgs.maim}/bin/maim ~/pic/screenshot.png")))
-				    ([XF86MonBrightnessDown] . (lambda () (interactive) (efs/alter-monitor-brightness 5 t)))
-				    ([XF86MonBrightnessUp] . (lambda () (interactive) (efs/alter-monitor-brightness 5))))'';
+      # Shell bindings
+      '''([?\s-s] . (lambda () (interactive) (shell-command "slock")))''
+      '''([?\s-y] . (lambda () (interactive) (start-process-shell-command "maim" nil  "${pkgs.maim}/bin/maim ~/pic/screenshot.png")))''
+      "'([XF86MonBrightnessDown] . (lambda () (interactive) (efs/alter-monitor-brightness 5 t)))"
+      "'([XF86MonBrightnessUp] . (lambda () (interactive) (efs/alter-monitor-brightness 5)))"
+    ];
     
   };
   afterCall = ["on-init-ui-hook"];
@@ -4518,28 +4546,30 @@ popper = {
     "s-\\\"" = "'popper-cycle";
     "C-s-'" = "'popper-toggle-type";
   };
-  custom = {
+  setopt = {
     popper-window-height = 30;
     popper-group-function = "'popper-group-by-project";
-    popper-reference-buffers = '''(help-mode
-                                     helpful-mode
-                                     compilation-mode
-                                     inferior-python-mode
-                                     occur-mode
-                                     grep-mode
-                                     "^\\*.*eshell\\*"
-                                     "^\\*eat\\*"
-                                     "^\\*Sage\\*"
-                                     "^\\*prolog\\*"
-				     xref--xref-buffer-mode
-                                     flymake-diagnostics-buffer-mode
-                                     rustic-cargo-test-mode
-                                     rustic-cargo-run-mode
-				     geiser-repl-mode
-                                     dape-repl-mode
-				     racket-repl-mode
-                                     inferior-ess-r-mode
-                                     cider-repl-mode)'';
+    popper-reference-buffers = [
+      "'help-mode"
+      "'helpful-mode"
+      "'compilation-mode"
+      "'inferior-python-mode"
+      "'occur-mode"
+      "'grep-mode"
+      ''"^\\*.*eshell\\*"''
+      ''"^\\*eat\\*"''
+      ''"^\\*Sage\\*"''
+      ''"^\\*prolog\\*"''
+      "'xref--xref-buffer-mode"
+      "'flymake-diagnostics-buffer-mode"
+      "'rustic-cargo-test-mode"
+      "'rustic-cargo-run-mode"
+      "'geiser-repl-mode"
+      "'dape-repl-mode"
+      "'racket-repl-mode"
+      "'inferior-ess-r-mode"
+      "'cider-repl-mode"
+    ];
   };
 };
 
@@ -4598,7 +4628,7 @@ emacs.init.usePackage.i3bar = {
   enable = true;
   ghookf = ["('tab-bar-mode 'i3bar-mode)"];
   
-  custom = {
+  setopt = {
     i3bar-command = ''"${(import ../scripts/i3status-rust.nix {inherit pkgs;})}/bin/i3status-rust"'';
   };
 };
@@ -4609,7 +4639,7 @@ emacs.init.usePackage.i3bar = {
 #+begin_src nix-ts :noweb yes
 ace-window = {
   enable = true;
-  custom = {
+  setopt = {
     aw-scope = "'frame";
     aw-keys = "'(?c ?r ?s ?t ?n ?e ?i ?a)";
   };
@@ -4682,19 +4712,27 @@ ace-window = {
       enable = true;
       defer = true;
       command = ["start-ollama"];
-      custom = {
+      setopt = {
 	gptel-default-mode = "'org-mode";
 	gptel-max-tokens = 10000000;
-	gptel-prompt-prefix-alist = ''
-	  `((markdown-mode . ,(concat "meatbag ›  "))
-            (org-mode . ,(concat  "meatbag ›  "))
-            (text-mode . ,(concat "meatbag ›  ")))
+	gptel-prompt-prefix-alist = [
+	  ''`(markdown-mode . ,(concat "meatbag ›  "))''
+          ''`(org-mode . ,(concat  "meatbag ›  "))''
+          ''`(text-mode . ,(concat "meatbag ›  "))''
+	];
+	gptel-response-prefix-alist = [
+	  '''(markdown-mode . "HK-47  ")''
+          '''(org-mode . "HK-47  ")''
+          '''(text-mode . "HK-47  ")''
+	];
+	gptel-backend = ''
+	  (gptel-make-ollama "Ollama"
+	    :stream t
+	    :protocol "http"
+	    :host "localhost:11434"
+	    :models '(qwen3:latest llama3.2:3b))
 	'';
-	gptel-response-prefix-alist = ''
-	  '((markdown-mode . "HK-47  ")
-            (org-mode . "HK-47  ")
-            (text-mode . "HK-47  "))
-	'';
+	# gptel-backend = ''(gptel-make-gh-copilot "Copilot")'';
       };
       generalOne.global-leader = {
 	"g" = '''(:ignore t :which-key "gptel")'';
@@ -4705,9 +4743,7 @@ ace-window = {
       preface = ''
 	<<Emacs Gptel Preface>>
       '';
-      config = ''
-	<<Emacs Gpt4all Config>>
-      '';
+      config = "(start-ollama)";
     };
 
     macher = {
@@ -4763,19 +4799,6 @@ ace-window = {
 			 ragmacs-coerce-nil
 			 ragmacs-all-arg-types
 			 ragmacs-async))
-#+end_src
-
-#+NAME: Emacs Gpt4all Config
-#+begin_src emacs-lisp
-(start-ollama)
-
-(setopt gptel-backend (gptel-make-ollama "Ollama"
-			:stream t
-			:protocol "http"
-			:host "localhost:11434"
-			:models '(qwen3:latest llama3.2:3b)))
-
-;; (setopt gptel-backend (gptel-make-gh-copilot "Copilot"))
 #+end_src
 
 ** Multimedia
@@ -4890,7 +4913,7 @@ programs.mpv = {
 #+begin_src nix-ts
 pulseaudio-control = {
   enable = true;
-  custom.pulseaudio-control-volume-step = ''"5%"'';
+  setopt.pulseaudio-control-volume-step = ''"5%"'';
   general = {
     "<XF86AudioRaiseVolume>" = "'pulseaudio-control-increase-sink-volume";
     "<XF86AudioLowerVolume>" = "'pulseaudio-control-decrease-sink-volume";
@@ -4971,7 +4994,7 @@ programs.emacs.init.usePackage = {
   sage-shell-mode = {
     enable = true;
     defer = true;
-    custom."sage-shell-edit:display-function" = ''"display-buffer"'';
+    setopt."sage-shell-edit:display-function" = ''"display-buffer"'';
     config = ''(sage-shell:define-alias)'';
     generalOne.global-leader."S" = '''(run-sage :which-key "sage")'';
     generalTwoConfig."local-leader"."sage-shell-mode-map"."h" = "'sage-shell:help";
@@ -4982,6 +5005,114 @@ programs.emacs.init.usePackage = {
     afterCall = ["sage-shell-mode" "ob"];
   };
 };
+#+end_src
+
+** Keyboard
+I use kmonad to manage my keybinds.
+Canary is my layout of choice.
+#+begin_src nix-ts :tangle keyboard.nix
+{ ... }:
+
+{
+  home.file = {
+    ".config/kmonad/kmonad.kbd".text = ''
+      ;; ** For Linux **
+      (defcfg
+      input  (device-file "/dev/input/by-path/platform-i8042-serio-0-event-kbd") ;; Change this line for your device
+      output (uinput-sink "KMonad output")
+
+      fallthrough true)
+
+      (defsrc
+        esc     f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12            prnt    slck    pause
+        grv     1    2    3    4    5    6    7    8    9    0    -    =    bspc      ins     home    pgup
+        tab     q    w    e    r    t    y    u    i    o    p    [    ]    \         del     end     pgdn
+        caps    a    s    d    f    g    h    j    k    l    ;    '    ret
+        lsft    z    x    c    v    b    n    m    ,    .    /    rsft                         up
+        lctl    lmet lalt           spc            ralt    rctl                       left    down    right)
+
+      (defalias
+        def  (tap-macro nlck (layer-switch canary)) ;; Bind 'def' to canary Layer
+        caps  (tap-macro nlck (layer-switch canary-shift)) ;; Bind 'def' to canary Layer
+        cesc (tap-hold 200 esc (layer-toggle extend))
+        sesc (tap-hold 200 S-esc (layer-toggle extend))
+        num (sticky-key 500 (layer-toggle num))
+        qwerty (tap-macro nlck (layer-switch qwerty)) ;; Bind 'def' to canary Layer
+        smet (sticky-key 500 lmet)
+        salt (sticky-key 500 lalt)
+        sshft (sticky-key 500 lshft)
+        spc (tap-hold 200 spc caps)
+        SPC (tap-hold 200 S-spc caps)
+        c (tap-hold 200 c lmet)
+        r (tap-hold 200 r lalt)
+        s (tap-hold 200 s lctl)
+        t (tap-hold 200 t (layer-toggle canary-shift))
+        a (tap-hold 200 a lmet)
+        i (tap-hold 200 i lalt)
+        e (tap-hold 200 e lctl)
+        n (tap-hold 200 n (layer-toggle canary-shift))
+        C (tap-hold 200 C lmet)
+        R (tap-hold 200 R lalt)
+        S (tap-hold 200 S lctl)
+        A (tap-hold 200 A lmet)
+        I (tap-hold 200 I lalt)
+        E (tap-hold 200 E lctl)
+        wlft C-left
+        wrht C-right
+        bhst A-left
+        fhst A-right)
+      (deflayer canary
+        esc     f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12            prnt    slck    pause
+        $       &    [    {    }    \(   =    *    \)   +    ]    !    `    bspc      ins     home    pgup
+        tab     w    l    y    p    k    z    x    o    u    ;    -    @    \         del     end     pgdn
+        @cesc   @c   @r   @s   @t   b    f    @n   @e   @i   @a   '    ret
+        shft   j    v    d    g    q    m    h    /    ,    .    @sshft                      up
+        caps   @smet @num           @spc             caps     rctl                    left    down    right)
+
+      (deflayer canary-shift
+        S-esc   S-f1 S-f2 S-f3 S-f4 S-f5 S-f6 S-f7 S-f8 S-f9 S-f10 S-f11 S-f12        S-prnt  S-slck  S-pause
+        ~       %    7    5    3    1    9    0    2    4    6    8    #  S-bspc      S-ins   S-home  S-pgup
+        S-tab   W    L    Y    P    K    Z    X    O    U    :    \_   ^    S-\        S-del   S-end   S-pgdn
+        @sesc   @C   @R   @S   T    B    F    N   @E   @I   @A    "    S-ret
+        @sshft   J    V    D    G    Q    M    H    ?    <    >    @sshft                     S-up
+        caps   @smet @def           @SPC             caps    rctl                   S-left S-down S-right)
+
+      (deflayer qwerty
+        esc     f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12            prnt    slck    pause
+        grv     1    2    3    4    5    6    7    8    9    0    -    =    bspc      ins     home    pgup
+        tab     q    w    e    r    t    y    u    i    o    p    [    ]    \         del     end     pgdn
+        caps    a    s    d    f    g    h    j    k    l    ;    '    ret
+        lsft    z    x    c    v    b    n    m    ,    .    /    rsft                         up
+        lctl    lmet lalt           spc            @def     rctl                     left    down    right)
+
+      (deflayer extend
+        _       _    _    _    _    _    _    _    _    _    _    _    _              _    _    _
+        _     f11    f7   f5   f3   f1   f9  f10   f2   f4   f6   f8  f12   _         _    _    _
+        _   @bhst @fhst  C-z  C-x   C-c  C-z @wlft up  @wrht  _    _    _    _         _    _    _
+        _   @smet @salt lctl @sshft del bspc left down right _    _    _
+        _         _    _  @caps    _    _    _    h    _    _    _    _                      _
+        _       _    _               ret              @qwerty        _                     _    _    _)
+    
+      (deflayer num
+        _       _    _    _    _    _    _    _    _    _    _    _    _              _    _    _
+        _     f11    f7   f5   f3   f1   f9  f10   f2   f4   f6   f8  f12   _         _    _    _
+        _       \_    =    +    -    [    ]    7    8    9   &    ^    _    _         _    _    _
+        _   @smet @salt lctl @sshft  {    }    4    5    6   0    *    _
+        _        @    !    $     \(  ~  \)    1    2    3    #    _                      _
+        _       _    _               ret              _        _                     _    _    _)
+    '';
+      
+    ".Xmodmap".text = ''
+      clear lock
+      clear mod3
+      clear mod4
+      keycode 66 = Hyper_R
+      keycode 105 = Caps_Lock
+      add mod3 = Hyper_L Hyper_R
+      add mod4 = Super_L Super_R
+    '';
+  };
+}
 #+end_src
 
 ** Internet
@@ -5020,17 +5151,15 @@ You need regexes to do this, & you can build them easily using =rx=
 browse-url = {
   enable = true;
   config = "(defun qutebrowser-browse-url (url &rest args) (qutebrowser-open-url url 'tab))";
-  custom = {
-    browse-url-handlers = ''
-      '(("https:\\/\\/www\\.youtu\\.*be." . efs/mpv-browse-url)
-        ("https:\\/\\/yewtu\\.*be." . efs/mpv-browse-url)
-        ("https:\\/\\/inv\\.*nadeko\\.*net\\/watch." . efs/mpv-browse-url)
-        ("search\\.nixos\\.org[^z-a]*" . qutebrowser-browse-url)
-        ("melpa\.org\.*" . qutebrowser-browse-url)
-        ("." . (lambda (url &rest args) (eww url (prefix-numeric-value 4)))))
-    '';
-    browse-url-secondary-browser-function = "'browse-url-default-browser";
-  };
+  custom.browse-url-handlers = [
+    '''("https:\\/\\/www\\.youtu\\.*be." . efs/mpv-browse-url)''
+    '''("https:\\/\\/yewtu\\.*be." . efs/mpv-browse-url)''
+    '''("https:\\/\\/inv\\.*nadeko\\.*net\\/watch." . efs/mpv-browse-url)''
+    '''("search\\.nixos\\.org[^z-a]*" . qutebrowser-browse-url)''
+    '''("melpa\.org\.*" . qutebrowser-browse-url)''
+    '''("." . (lambda (url &rest args) (eww url (prefix-numeric-value 4))))''
+  ];
+  setopt.browse-url-secondary-browser-function = "'browse-url-default-browser";
 };
 #+end_src
 
@@ -5040,7 +5169,7 @@ It's a simple text based web browser. I use it for short web searches & for find
 #+begin_src nix-ts :noweb yes
 eww = {
   enable = true;
-  custom = {
+  setopt = {
     eww-search-prefix = ''"https://search.inetol.net/?q="'';
     eww-header-line-format = false;
     eww-desktop-remove-duplicates = true;
@@ -5078,7 +5207,7 @@ eww = {
 #+begin_src nix-ts
 yeetube = {
   enable = true;
-  custom.yeetube-play-function = "'mpv-play-url";
+  setopt.yeetube-play-function = "'mpv-play-url";
   generalOne.global-leader."y" = '''(yeetube-search :which-key "search")'';
   generalTwoConfig.":n"."yeetube-mode-map" = {
     "RET" = "'yeetube-play";
@@ -5123,13 +5252,13 @@ ement = {
 webjump = {
   enable = true;
   generalOne.global-leader."s" = "'webjump";
-  custom.webjump-sites = ''
-    '(("DuckDuckGo" . [simple-query "duckduckgo.com" "duckduckgo.com/?q=" ""])
-      ("Invidious" . [simple-query "inv.nadeko.net" "inv.nadeko.net/search?q=" ""])
-      ("Aur" . [simple-query "aur.archlinux.org" "aur.archlinux.org/packages/?K=" ""])
-      ("Nixpkgs" . [simple-query "search.nixos.org" "search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=" ""])
-      ("Curseforge" . webjump-to-curseforge))
-  '';
+  setopt.webjump-sites = [
+    '''("DuckDuckGo" . [simple-query "duckduckgo.com" "duckduckgo.com/?q=" ""])''
+    '''("Invidious" . [simple-query "inv.nadeko.net" "inv.nadeko.net/search?q=" ""])''
+    '''("Aur" . [simple-query "aur.archlinux.org" "aur.archlinux.org/packages/?K=" ""])''
+    '''("Nixpkgs" . [simple-query "search.nixos.org" "search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=" ""])''
+    '''("Curseforge" . webjump-to-curseforge)''
+  ];
   config = ''
     <<Emacs Internet Webjump Config>>
   '';
@@ -5152,18 +5281,19 @@ webjump = {
 elfeed = {
   enable = true;
   defer = true;
-  custom.elfeed-feeds = '''("https://lukesmith.xyz/index.xml"
-                            "https://youtube.com/feeds/videos.xml?channel_id=UCSJPFQdZwrOutnmSFYtbstA"
-                            "https://planet.emacslife.com/atom.xml"
-                            "https://youtube.com/feeds/videos.xml?channel_id=UC_GQ4mac4oN3wl1UdbFuTEA"
-                            "https://youtube.com/feeds/videos.xml?channel_id=UC6UBbvEA8uh6Ulc6ax1Zs0g"
-                            "https://youtube.com/feeds/videos.xml?channel_id=UCNzZD3otfZVlIdvYYRRqNSw"
-                            "https://youtube.com/feeds/videos.xml?channel_id=UCnnkTXnyn0uZzmArZO99Klg"
-                            "https://youtube.com/feeds/videos.xml?channel_id=UCq-VIBjS6Ia1r1IR_j-7NUw"
-                            "https://youtube.com/feeds/videos.xml?channel_id=UC0E_vIe1e1lVeojYOgVg_5Q"
-                            "https://youtube.com/feeds/videos.xml?channel_id=UCUQs6rEz6lRGHn6DWqss0hA"
-                            "https://notrelated.xyz/rss")
-    '';
+  setopt.elfeed-feeds = [
+    ''"https://lukesmith.xyz/index.xml"''
+    ''"https://youtube.com/feeds/videos.xml?channel_id=UCSJPFQdZwrOutnmSFYtbstA"''
+    ''"https://planet.emacslife.com/atom.xml"''
+    ''"https://youtube.com/feeds/videos.xml?channel_id=UC_GQ4mac4oN3wl1UdbFuTEA"''
+    ''"https://youtube.com/feeds/videos.xml?channel_id=UC6UBbvEA8uh6Ulc6ax1Zs0g"''
+    ''"https://youtube.com/feeds/videos.xml?channel_id=UCNzZD3otfZVlIdvYYRRqNSw"''
+    ''"https://youtube.com/feeds/videos.xml?channel_id=UCnnkTXnyn0uZzmArZO99Klg"''
+    ''"https://youtube.com/feeds/videos.xml?channel_id=UCq-VIBjS6Ia1r1IR_j-7NUw"''
+    ''"https://youtube.com/feeds/videos.xml?channel_id=UC0E_vIe1e1lVeojYOgVg_5Q"''
+    ''"https://youtube.com/feeds/videos.xml?channel_id=UCUQs6rEz6lRGHn6DWqss0hA"''
+    ''"https://notrelated.xyz/rss"''
+  ];
   generalOne.global-leader."r" = "(cmd! (elfeed) (elfeed-update))";
 };
 #+end_src
@@ -5481,113 +5611,5 @@ programs.emacs.init.usePackage = {
     (kill-buffer)
     (add-hook 'dired-mode-hook 'qute-dired-mode)
     (setq qute-dired-buffers (list (dired "~/")))))
-#+end_src
-
-** Keyboard
-I use kmonad to manage my keybinds.
-Canary is my layout of choice.
-#+begin_src nix-ts :tangle keyboard.nix
-{ ... }:
-
-{
-  home.file = {
-    ".config/kmonad/kmonad.kbd".text = ''
-      ;; ** For Linux **
-      (defcfg
-      input  (device-file "/dev/input/by-path/platform-i8042-serio-0-event-kbd") ;; Change this line for your device
-      output (uinput-sink "KMonad output")
-
-      fallthrough true)
-
-      (defsrc
-        esc     f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12            prnt    slck    pause
-        grv     1    2    3    4    5    6    7    8    9    0    -    =    bspc      ins     home    pgup
-        tab     q    w    e    r    t    y    u    i    o    p    [    ]    \         del     end     pgdn
-        caps    a    s    d    f    g    h    j    k    l    ;    '    ret
-        lsft    z    x    c    v    b    n    m    ,    .    /    rsft                         up
-        lctl    lmet lalt           spc            ralt    rctl                       left    down    right)
-
-      (defalias
-        def  (tap-macro nlck (layer-switch canary)) ;; Bind 'def' to canary Layer
-        caps  (tap-macro nlck (layer-switch canary-shift)) ;; Bind 'def' to canary Layer
-        cesc (tap-hold 200 esc (layer-toggle extend))
-        sesc (tap-hold 200 S-esc (layer-toggle extend))
-        num (sticky-key 500 (layer-toggle num))
-        qwerty (tap-macro nlck (layer-switch qwerty)) ;; Bind 'def' to canary Layer
-        smet (sticky-key 500 lmet)
-        salt (sticky-key 500 lalt)
-        sshft (sticky-key 500 lshft)
-        spc (tap-hold 200 spc caps)
-        SPC (tap-hold 200 S-spc caps)
-        c (tap-hold 200 c lmet)
-        r (tap-hold 200 r lalt)
-        s (tap-hold 200 s lctl)
-        t (tap-hold 200 t (layer-toggle canary-shift))
-        a (tap-hold 200 a lmet)
-        i (tap-hold 200 i lalt)
-        e (tap-hold 200 e lctl)
-        n (tap-hold 200 n (layer-toggle canary-shift))
-        C (tap-hold 200 C lmet)
-        R (tap-hold 200 R lalt)
-        S (tap-hold 200 S lctl)
-        A (tap-hold 200 A lmet)
-        I (tap-hold 200 I lalt)
-        E (tap-hold 200 E lctl)
-        wlft C-left
-        wrht C-right
-        bhst A-left
-        fhst A-right)
-      (deflayer canary
-        esc     f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12            prnt    slck    pause
-        $       &    [    {    }    \(   =    *    \)   +    ]    !    `    bspc      ins     home    pgup
-        tab     w    l    y    p    k    z    x    o    u    ;    -    @    \         del     end     pgdn
-        @cesc   @c   @r   @s   @t   b    f    @n   @e   @i   @a   '    ret
-        shft   j    v    d    g    q    m    h    /    ,    .    @sshft                      up
-        caps   @smet @num           @spc             caps     rctl                    left    down    right)
-
-      (deflayer canary-shift
-        S-esc   S-f1 S-f2 S-f3 S-f4 S-f5 S-f6 S-f7 S-f8 S-f9 S-f10 S-f11 S-f12        S-prnt  S-slck  S-pause
-        ~       %    7    5    3    1    9    0    2    4    6    8    #  S-bspc      S-ins   S-home  S-pgup
-        S-tab   W    L    Y    P    K    Z    X    O    U    :    \_   ^    S-\        S-del   S-end   S-pgdn
-        @sesc   @C   @R   @S   T    B    F    N   @E   @I   @A    "    S-ret
-        @sshft   J    V    D    G    Q    M    H    ?    <    >    @sshft                     S-up
-        caps   @smet @def           @SPC             caps    rctl                   S-left S-down S-right)
-
-      (deflayer qwerty
-        esc     f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12            prnt    slck    pause
-        grv     1    2    3    4    5    6    7    8    9    0    -    =    bspc      ins     home    pgup
-        tab     q    w    e    r    t    y    u    i    o    p    [    ]    \         del     end     pgdn
-        caps    a    s    d    f    g    h    j    k    l    ;    '    ret
-        lsft    z    x    c    v    b    n    m    ,    .    /    rsft                         up
-        lctl    lmet lalt           spc            @def     rctl                     left    down    right)
-
-      (deflayer extend
-        _       _    _    _    _    _    _    _    _    _    _    _    _              _    _    _
-        _     f11    f7   f5   f3   f1   f9  f10   f2   f4   f6   f8  f12   _         _    _    _
-        _   @bhst @fhst  C-z  C-x   C-c  C-z @wlft up  @wrht  _    _    _    _         _    _    _
-        _   @smet @salt lctl @sshft del bspc left down right _    _    _
-        _         _    _  @caps    _    _    _    h    _    _    _    _                      _
-        _       _    _               ret              @qwerty        _                     _    _    _)
-    
-      (deflayer num
-        _       _    _    _    _    _    _    _    _    _    _    _    _              _    _    _
-        _     f11    f7   f5   f3   f1   f9  f10   f2   f4   f6   f8  f12   _         _    _    _
-        _       \_    =    +    -    [    ]    7    8    9   &    ^    _    _         _    _    _
-        _   @smet @salt lctl @sshft  {    }    4    5    6   0    *    _
-        _        @    !    $     \(  ~  \)    1    2    3    #    _                      _
-        _       _    _               ret              _        _                     _    _    _)
-    '';
-      
-    ".Xmodmap".text = ''
-      clear lock
-      clear mod3
-      clear mod4
-      keycode 66 = Hyper_R
-      keycode 105 = Caps_Lock
-      add mod3 = Hyper_L Hyper_R
-      add mod4 = Super_L Super_R
-    '';
-  };
-}
 #+end_src
 
