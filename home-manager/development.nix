@@ -30,7 +30,6 @@
         emacs-lisp.enable = true;
         javascript.enable = true;
         ledger.enable = true;
-	c.enable = true;
 	r.enable = true;
 	makefile.enable = true;
 	yaml.enable = true;
@@ -66,15 +65,15 @@
       
       projection-ibuffer = {
         enable = true;
-        generalOne.project-prefix-map.i = "(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current)))";
+        generalOne.project-prefix-map.i = ''`(,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))) :which-key "ibuffer")'';
       };
       
-      projection-multi.setopt.projection-gradle-use-daemon = false;
+      projection-multi.custom.projection-gradle-use-daemon = false;
       
       projection-multi-embark = {
         enable = true;
         after = ["embark" "projection-multi"];
-        config = ''(projection-multi-embark-setup-command-map)'';
+        config = "(projection-multi-embark-setup-command-map)";
       };
 
       eglot = {

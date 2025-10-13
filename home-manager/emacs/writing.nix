@@ -1,8 +1,6 @@
 { config, inputs, pkgs, ... }:
 
 {
-  imports = [../writing];
-
   home.packages = with pkgs; [
     libreoffice-fresh
     hunspell
@@ -14,6 +12,10 @@
     tools = {
       nov = true;
       pdf = true;
+    };
+    writing = {
+      denote = true;
+      citar = true;
     };
     ide.languages = {
       markdown.enable = true;
@@ -46,12 +48,62 @@
         setopt = {
           org-export-with-section-numbers = false;
           org-export-with-toc = false;
+          org-capture-templates = [
+            '''("d" "Denote note" plain
+      	(file denote-last-path)
+              #'denote-org-capture
+              :no-save t
+              :immediate-finish nil
+              :kill-buffer t
+              :jump-to-captured t)''
+            ''
+              '("t" "Personal todo" entry
+                                           (file org-default-todo-file)
+                                           "* TODO [ ] %?\n%i\n%a" :prepend t)''
+            ''
+              '("n" "Personal notes" entry
+                                           (file org-default-notes-file)
+                                           "* %u %?\n%i\n%a" :prepend t)''
+            ''
+              '("j" "Journal" entry
+                                           (file+olp+datetree org-default-journal-file)
+                                           "* %U %?\n%i\n%a" :prepend t)''
+      
+            # Will use {project-root}/{todo,notes,changelog}.org, unless a
+            # {todo,notes,changelog}.org file is found in a parent directory.
+            # Uses the basename from `+org-capture-todo-file',
+            # `+org-capture-changelog-file' and `+org-capture-notes-file'.
+            '''("p" "Templates for projects")''
+            ''
+              '("pt" "Project-local todo" entry ; {project-root}/todo.org
+                                           (file nix-emacs-project-todo)
+                                           "* TODO %?\n%i\n%a" :prepend t)''
+            ''
+              '("pn" "Project-local notes" entry ; {project-root}/notes.org
+                                           (file nix-emacs-project-notes)
+                                           "* %U %?\n%i\n%a" :prepend t)''
+            ''
+              '("pc" "Project-local changelog" entry  ; {project-root}/changelog.org
+                                           (file+headline nix-emacs-project-changelog "Unreleased")
+                                           "* %U %?\n%i\n%a" :prepend t)''
+          ] ;
         };
-        generalTwoConfig.local-leader.org-mode-map."a" = '''(avy-org-goto-heading-timer :which-key "avy")'';
+        generalTwoConfig.local-leader.org-mode-map = {
+          "a" = '''(avy-org-goto-heading-timer :which-key "avy")'';
+          "e" = "'smart-export";
+        };
       
         config = ''
           (require 'ol-man)
-        '';
+          (defun smart-export ()
+            "Export the current buffer, according to its heading, then preview the result."
+            (interactive)
+            (let* ((export-type (cadr (assoc "EXPORT" (org-collect-keywords '("EXPORT")))))
+          	 (result (cond ((equal export-type "pdf") (org-latex-export-to-pdf))
+          		       ((equal export-type "odt")  (org-odt-export-to-odt))
+                                 ((equal export-type "html") (when (< 2 (count-windows)) (elwm-split-window)) (eww-open-file (org-html-export-to-html)))))))
+              (when (stringp result) (find-file-other-window result)))
+        '' ;
       };
 
       org-auto-tangle = {
@@ -59,36 +111,15 @@
         ghookf = ["('org-mode 'org-auto-tangle-mode)"];
       };
       
-      org-auto-export-pandoc = {
-        enable = true;
-        extraPackages = with pkgs; [pandoc];
-        ghookf = ["('after-save (lambda () (when (equal major-mode 'org-mode) (org-auto-export-pandoc))))"];
-      };
+      denote.setopt.denote-known-keywords = [ ''"quotes"'' ''"chem"'' ''"emacs"'' ''"java"'' ''"physics"'' ''"calculus"'' ''"minecraft"'' ''"de"'' ''"proofs"'' ''"csse230"'' ''"os"'' ''"databases"'' ''"scifi"'' ''"softwarerequirements"'' ''"anthropology"'' ''"theoryofcomputation"'' ''"parallelcomp"'' ''"cybersecurity"'' ''"probstats"'' ''"scheme"'' ''"dreams"'' ''"softwaredevelopment"'' ''"ethics"'' ''"plp"'' ''"malwareanalysis"'' ''"bio"'' ''"ai"'' ''"resolve"'' ];
       
-      denote = {
+      biblio = {
         enable = true;
-        defer = true;
-        gfhookf = ["('dired-mode 'denote-dired-mode-in-directories)"];
-        setopt = {
-          denote-directory = ''(expand-file-name "~/doc/denote")'';
-          denote-known-keywords = [ ''"quotes"'' ''"chem"'' ''"emacs"'' ''"java"'' ''"physics"'' ''"calculus"'' ''"minecraft"'' ''"de"'' ''"proofs"'' ''"csse230"'' ''"os"'' ''"databases"'' ''"scifi"'' ''"softwarerequirements"'' ''"anthropology"'' ''"theoryofcomputation"'' ''"parallelcomp"'' ''"cybersecurity"'' ''"probstats"'' ''"scheme"'' ''"dreams"'' ''"softwaredevelopment"'' ''"ethics"'' ''"plp"'' ''"malwareanalysis"'' ''"bio"'' ''"ai"'' ''"resolve"'' ];
-          denote-file-type = false;
-          denote-dired-directories = ["denote-directory"];
-          
-        };
         generalOne.global-leader = {
-          "of" = "'denote-open-or-create";
-          "or" = '''(denote-rename-file :whick-key "denote rename")'';
-          "oi" = '''(denote-link :which-key "link to note")'';
+          "ob" = '''(:ignore t :which-key "biblio")'';
+          "obl" = "'biblio-lookup";
+          "obi" = "'biblio-doi-insert-bibtex";
         };
-        config = "(consult-denote-mode)";
-      };
-      
-      consult-denote = {
-        enable = true;
-        command = ["consult-denote-mode"];
-        generalOne.global-leader."os" = "'consult-denote-grep";
-        setopt.consult-denote-grep-command = "'consult-ripgrep";
       };
       
       pdf-tools = {
@@ -165,79 +196,7 @@
         ];
       };
       
-      citar = {
-        enable = true;
-        config = ''(citar-denote-mode)'';
-        ghookf = ["('(LaTeX-mode org-mode) 'citar-capf-setup)"];
-        setopt = {
-          org-cite-insert-processor = "'citar";
-          org-cite-follow-processor = "'citar";
-          org-cite-activate-processor = "'citar";
-          citar-bibliography = [''"~/doc/uni.bib"''];
-          org-cite-global-bibliography = [''"~/doc/uni.bib"''];
-        };
-      };
-      
-      citar-embark = {
-        enable = true;
-        after = ["citar" "embark"];
-        config = ''(citar-embark-mode)'';
-        setopt.citar-at-point-function = "'embark-act";
-      };
-      
-      citar-denote = {
-        enable = true;
-        command = ["citar-denote-mode"];
-        generalOne.global-leader = {
-          "on" = '''(citar-create-note :which-key "new citar note")'';
-          "oo" = '''(citar-denote-open-note :which-key "open citar note")'';
-          "ol" = "'citar-denote-link-reference";
-          "ow" = "'citar-denote-find-citation";
-        };
-        config = ''
-          (defun citar-denote--create-note (citekey &optional _entry)
-            "Create a bibliographic note for CITEKEY with properties ENTRY.
-          
-          The note file type is determined by `citar-denote-file-type'.
-          
-          The title format is set by `citar-denote-title-format'.
-          
-          When `citar-denote-subdir' is non-nil, prompt for a subdirectory.
-          
-          When `citar-denote-template' is a symbol, use the specified
-          template, if otherwise non-nil, prompt for a Denote template.
-          
-          When `citar-denote-signature' is non-nil, prompt for a signature or
-          use citation key."
-            (denote
-             (read-string "Title: " (citar-denote--generate-title citekey))
-             (citar-denote--keywords-prompt citekey)
-             citar-denote-file-type
-             (when citar-denote-subdir
-               (if (stringp citar-denote-subdir)
-                   (expand-file-name
-                    (concat denote-directory citar-denote-subdir))
-                 (denote-subdirectory-prompt)))
-             nil
-             (when citar-denote-template
-               (or (alist-get citar-denote-template denote-templates)
-                   (denote-template-prompt)))
-             (cond ((eq citar-denote-signature 'ask)
-                    (denote-signature-prompt nil "Signature: "))
-                   ((eq citar-denote-signature 'citekey)
-                    citekey)
-                   (nil nil)))
-            (citar-denote--add-reference citekey)
-            ;; Open available atachment in other window
-            (when (one-window-p)
-              (split-window-right))
-            (other-window 1)
-            (citar-open-files citekey))
-        '';
-        afterCall = ["citar"];
-      };
-
-      
+      citar.setopt.citar-bibliography = [''"~/doc/uni.bib"''];
     };
   };
 }

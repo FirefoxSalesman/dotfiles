@@ -9,7 +9,6 @@
     ./emacs/completion-system.nix
     ./emacs/passwords.nix
     ./emacs/writing.nix
-    ./emacs/window-manager.nix
   ];
 
   programs.emacs = {
@@ -64,7 +63,7 @@
         A factory for quickly producing interaction commands, particularly for keybinds
         or aliases. Stolen from Doom."
           (declare (doc-string 1) (pure t) (side-effect-free t))
-          `(quote (lambda (&rest _) (interactive) ,@body)))
+          `(lambda (&rest _) (interactive) ,@body))
         
         (defmacro local! (var body)
           "Creates a lambda that runs setq-local on the variable VAR with the value provided by BODY."

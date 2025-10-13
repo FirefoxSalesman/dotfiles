@@ -114,7 +114,7 @@
         ''"https://youtube.com/feeds/videos.xml?channel_id=UCUQs6rEz6lRGHn6DWqss0hA"''
         ''"https://notrelated.xyz/rss"''
       ];
-      generalOne.global-leader."r" = "(cmd! (elfeed) (elfeed-update))";
+      generalOne.global-leader."r" = "`,(cmd! (elfeed) (elfeed-update))";
     };
   };
 

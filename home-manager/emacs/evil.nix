@@ -51,10 +51,10 @@
       evil = {
         gfhookf = ["('doom-escape 'evil-normal-state)"];
         config = ''
-          (evil-ex-define-cmd "q" (cmd! (prescient--save) (save-buffers-kill-emacs)))
+          (evil-ex-define-cmd "q" `,(cmd! (prescient--save) (save-buffers-kill-emacs)))
           (evil-ex-define-cmd "Undotree" 'vundo)
           (evil-ex-define-cmd "k[ill]" 'kill-current-buffer)
-          (evil-ex-define-cmd "trash" (cmd! (start-process-shell-command "rm" nil "rm -rf ~/.local/Trash")))
+          (evil-ex-define-cmd "trash" `,(cmd! (start-process-shell-command "rm" nil "rm -rf ~/.local/Trash")))
           
           (evil-set-initial-state 'dashboard-mode 'normal)
           
@@ -221,11 +221,11 @@
       };
       
       emacs.generalOneConfig = {
-        help-map."A" = ''(cmd! (async-shell-command "${pkgs.wiki}/bin/wiki"))'';
+        help-map."A" = ''`(,(cmd! (async-shell-command "${pkgs.wiki}/bin/wiki")) :which-key "Arch Wiki")'';
         global-leader = {
-          "l" = ''(cmd! (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k"))))'';
-          "L" = ''(cmd! (if (project-current) (project-recompile) (recompile)))'';
-          "u" = ''(cmd! (start-process-shell-command "udisksmenu" nil "${pkgs.udisksmenu}/bin/udisksmenu"))'';
+          "l" = ''`(,(cmd! (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k")))) :which-key "Compile")'';
+          "L" = ''`(,(cmd! (if (project-current) (project-recompile) (recompile))) :which-key "Recompile")'';
+          "u" = ''`(,(cmd! (start-process-shell-command "udisksmenu" nil "${pkgs.udisksmenu}/bin/udisksmenu")) :which-key "Mount USB")'';
         };
       };
     
@@ -268,16 +268,15 @@
         enable = true;
         defer = true;
         command = ["evil-mc-pause-cursors" "evil-mc-make-cursor-here"];
+        gfhookf = [''('doom-escape (lambda () (when (and (featurep 'evil-mc) (evil-mc-has-cursors-p))
+      						 (evil-mc-undo-all-cursors)
+      						 (evil-mc-resume-cursors) t)))''];
         generalOne = {
           ":nv"."bz" = "'evil-mc-hydra/body";
           global-leader."C" = "'evil-mc-hydra/body";
         };
         config = ''
           (global-evil-mc-mode)
-          
-          (general-add-hook 'doom-escape-hook (lambda () (when (evil-mc-has-cursors-p)
-            						 (evil-mc-undo-all-cursors)
-            						 (evil-mc-resume-cursors) t)))
           
           ;; Don't mess with my macros.
           ;; https://github.com/gabesoft/evil-mc/issues/83
@@ -315,6 +314,16 @@
              ("E" #'evil-mc-make-cursor-move-next-line "Next Line")
              ("O" #'evil-mc-make-cursor-move-prev-line "Prev Line"))))
         '';
+      };
+      
+      evil-owl = {
+        enable = true;
+        setopt = {
+          evil-owl-max-string-length = 50;
+          evil-owl-extra-posframe-args = [ "':width" 50 "':height" 20 ];
+          evil-owl-display-method = "'posframe";
+        };
+        ghookf = ["('evil-mode 'evil-owl-mode)"];
       };
     
       symex = {

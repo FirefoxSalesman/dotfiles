@@ -33,11 +33,6 @@
       flake = false;
     };
     
-    ragmacs = {
-      url = "github:positron-solutions/ragmacs";
-      flake = false;
-    };
-    
     macher = {
       url = "github:kmontag/macher";
       flake = false;
@@ -70,11 +65,6 @@
     
     doom-nano-modeline = {
       url = "github:ronisbr/doom-nano-modeline";
-      flake = false;
-    };
-    
-    org-novelist = {
-      url = "github:sympodius/org-novelist";
       flake = false;
     };
     
@@ -122,7 +112,7 @@
             inherit self;
             inherit inputs;
             inherit system;
-            inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline gptel-quick org-novelist mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
+            inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline gptel-quick mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
             inherit pkgs-stable;
           };
           modules = [

@@ -31,8 +31,7 @@
     (au "#+author: " q)
     (ti "#+title: " q)
     (ci "* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q)
-    (pdf "#+auto-export-pandoc: to-latex-pdf")
-    (odt "#+auto-export-pandoc: to-odt")
+    (exp "#+export: " q)
   
     java-ts-mode
     (doc "/**" n> " * " q n " */")
@@ -94,6 +93,7 @@
           "N" = "'vertico-first";
           "B" = "'vertico-last";
           "bg" = "'vertico-first";
+          "G" = "'evil-paste-after";
         };
         config = ''
           (with-eval-after-load 'evil-collection-vertico
@@ -143,6 +143,7 @@
             "H-q" = "'consult-flymake"; # Alternative: consult-flycheck
           };
           ctl-x-map."C-f" = "'consult-fd";
+          global-leader."i" = "'efs/consult-header";
         };
         bindLocal.help-map."M" = "man";
         config = ''
@@ -171,6 +172,13 @@
               (when (and (eq this-command #'consult-buffer)
                          (bufler-workspace--tab-parameter 'bufler-workspace-path (tab-bar--current-tab-find)))
                 (setq unread-command-events (append unread-command-events (list ?w 32)))))
+            
+            (defun efs/consult-header ()
+              "Runs 'consult-imenu', unless 'consult-outline' or 'consult-org-heading' can be run."
+              (interactive)
+              (cond ((eq major-mode 'org-mode) (consult-org-heading))
+            	((eq major-mode 'gfm-mode) (consult-outline))
+            	(t (consult-imenu))))
           '';
       } ;
 

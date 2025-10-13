@@ -58,11 +58,6 @@ gptel-quick = {
   flake = false;
 };
 
-ragmacs = {
-  url = "github:positron-solutions/ragmacs";
-  flake = false;
-};
-
 macher = {
   url = "github:kmontag/macher";
   flake = false;
@@ -95,11 +90,6 @@ ezf = {
 
 doom-nano-modeline = {
   url = "github:ronisbr/doom-nano-modeline";
-  flake = false;
-};
-
-org-novelist = {
-  url = "github:sympodius/org-novelist";
   flake = false;
 };
 
@@ -149,7 +139,7 @@ extraSpecialArgs = {
   inherit self;
   inherit inputs;
   inherit system;
-  inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline gptel-quick org-novelist mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
+  inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline gptel-quick mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
   inherit pkgs-stable;
 };
 modules = [
@@ -211,10 +201,6 @@ final: prev: pkgs: inputs: {
           inherit inputs;
           inherit (prev.emacsPackages) trivialBuild;
         });
-        org-novelist = (prev.emacsPackages.callPackage ./packages/emacs/org-novelist.nix {
-          inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild org;
-        });
         exwm-outer-gaps = (prev.emacsPackages.callPackage ./packages/emacs/exwm-outer-gaps.nix {
           inherit inputs;
           inherit (prev.emacsPackages) trivialBuild exwm xelb;
@@ -226,10 +212,6 @@ final: prev: pkgs: inputs: {
 	macher = (prev.emacsPackages.callPackage ./packages/emacs/macher.nix {
           inherit inputs;
           inherit (prev.emacsPackages) trivialBuild gptel;
-        });
-	ragmacs = (prev.emacsPackages.callPackage ./packages/emacs/ragmacs.nix {
-          inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild gptel orderless;
         });
 	mpc-wrapper = (prev.emacsPackages.callPackage ./packages/emacs/mpc-wrapper.nix {
           inherit inputs;
@@ -393,24 +375,6 @@ trivialBuild rec {
   src = inputs.macher;
 
   propagatedUserEnvPkgs = [
-    gptel
-  ];
-
-  buildInputs = propagatedUserEnvPkgs;
-}
-#+end_src
-
-*** Ragmacs
-#+begin_src nix-ts :tangle packages/emacs/ragmacs.nix
-{ inputs, trivialBuild, gptel, orderless } :
-
-trivialBuild rec {
-  pname = "ragmacs";
-  version = "current";
-  src = inputs.ragmacs;
-
-  propagatedUserEnvPkgs = [
-    orderless
     gptel
   ];
 
@@ -834,7 +798,6 @@ fi
 { lib, config, inputs, ... }:
 
 {
-  # This is some text
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
   home.username = "holschcc";
@@ -852,20 +815,20 @@ fi
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 
-  imports =
-    [ # Include the results of the hardware scan.
-      ./internet.nix
-      ./multimedia.nix
-      ./aesthetics.nix
-      ./extra-packages.nix
-      ./development.nix
-      ./gui.nix
-      ./emacs.nix
-      ./shells.nix
-      ./gptel.nix
-      ./sage.nix
-      ./keyboard.nix
-    ];
+  imports = [ 
+    ./window-manager.nix
+    ./internet.nix
+    ./multimedia.nix
+    ./aesthetics.nix
+    ./extra-packages.nix
+    ./development.nix
+    ./gui.nix
+    ./emacs.nix
+    ./shells.nix
+    ./gptel.nix
+    ./sage.nix
+    ./keyboard.nix
+  ];
 
   nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
 
@@ -1748,7 +1711,7 @@ shrface = {
   config = ''
     <<Emacs Ricing Shrface Config>>
   '';
-  generalOneConfig.shr-map."RET" = "(cmd! (if (eq major-mode 'eww-mode) (eww-follow-link) (shr-browse-url)))";
+  generalOneConfig.shr-map."RET" = "`,(cmd! (if (eq major-mode 'eww-mode) (eww-follow-link) (shr-browse-url)))";
   generalTwoConfig.local-leader.shrface-mode-map = {
     "l" = "'shrface-links-consult";
     "o" = "'shrface-headline-consult";
@@ -2013,7 +1976,6 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
         emacs-lisp.enable = true;
         javascript.enable = true;
         ledger.enable = true;
-	c.enable = true;
 	r.enable = true;
 	makefile.enable = true;
 	yaml.enable = true;
@@ -2116,15 +2078,15 @@ magit = {
 
 projection-ibuffer = {
   enable = true;
-  generalOne.project-prefix-map.i = "(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current)))";
+  generalOne.project-prefix-map.i = ''`(,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))) :which-key "ibuffer")'';
 };
 
-projection-multi.setopt.projection-gradle-use-daemon = false;
+projection-multi.custom.projection-gradle-use-daemon = false;
 
 projection-multi-embark = {
   enable = true;
   after = ["embark" "projection-multi"];
-  config = ''(projection-multi-embark-setup-command-map)'';
+  config = "(projection-multi-embark-setup-command-map)";
 };
 #+end_src
 
@@ -2316,27 +2278,6 @@ I'm running dired with a couple of small packages that improve on it
                  "flac"))
               "mpv"
               '(file))))
-
-(defun dired-do-async-delete (&optional arg)
-  "Delete all marked (or next ARG) files.
-  `dired-recursive-deletes' controls whether deletion of
-  non-empty directories is allowed."
-  ;; This is more consistent with the file marking feature than
-  ;; dired-do-flagged-delete.
-  (interactive "P")
-  (let (markers)
-    (dired-internal-do-deletions
-     (nreverse
-      ;; this may move point if ARG is an integer
-      (dired-map-over-marks (cons (dired-get-filename)
-                                  (let ((m (point-marker)))
-                                    (push m markers)
-                                    m))
-                            arg))
-     arg t)
-    (async-start (lambda ()
-  		   (dolist (m markers) (set-marker m nil)))
-  		 'ignore)))
 #+end_src
 
 ** Emacs
@@ -2354,7 +2295,6 @@ I'm running dired with a couple of small packages that improve on it
     ./emacs/completion-system.nix
     ./emacs/passwords.nix
     ./emacs/writing.nix
-    ./emacs/window-manager.nix
   ];
 
   programs.emacs = {
@@ -2439,7 +2379,7 @@ prelude =''
 A factory for quickly producing interaction commands, particularly for keybinds
 or aliases. Stolen from Doom."
   (declare (doc-string 1) (pure t) (side-effect-free t))
-  `(quote (lambda (&rest _) (interactive) ,@body)))
+  `(lambda (&rest _) (interactive) ,@body))
 
 (defmacro local! (var body)
   "Creates a lambda that runs setq-local on the variable VAR with the value provided by BODY."
@@ -2845,21 +2785,21 @@ evil = {
 };
 
 emacs.generalOneConfig = {
-  help-map."A" = ''(cmd! (async-shell-command "${pkgs.wiki}/bin/wiki"))'';
+  help-map."A" = ''`(,(cmd! (async-shell-command "${pkgs.wiki}/bin/wiki")) :which-key "Arch Wiki")'';
   global-leader = {
-    "l" = ''(cmd! (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k"))))'';
-    "L" = ''(cmd! (if (project-current) (project-recompile) (recompile)))'';
-    "u" = ''(cmd! (start-process-shell-command "udisksmenu" nil "${pkgs.udisksmenu}/bin/udisksmenu"))'';
+    "l" = ''`(,(cmd! (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k")))) :which-key "Compile")'';
+    "L" = ''`(,(cmd! (if (project-current) (project-recompile) (recompile))) :which-key "Recompile")'';
+    "u" = ''`(,(cmd! (start-process-shell-command "udisksmenu" nil "${pkgs.udisksmenu}/bin/udisksmenu")) :which-key "Mount USB")'';
   };
 };
 #+end_src
 
 #+NAME: Evil Config
 #+begin_src emacs-lisp
-(evil-ex-define-cmd "q" (cmd! (prescient--save) (save-buffers-kill-emacs)))
+(evil-ex-define-cmd "q" `,(cmd! (prescient--save) (save-buffers-kill-emacs)))
 (evil-ex-define-cmd "Undotree" 'vundo)
 (evil-ex-define-cmd "k[ill]" 'kill-current-buffer)
-(evil-ex-define-cmd "trash" (cmd! (start-process-shell-command "rm" nil "rm -rf ~/.local/Trash")))
+(evil-ex-define-cmd "trash" `,(cmd! (start-process-shell-command "rm" nil "rm -rf ~/.local/Trash")))
 
 (evil-set-initial-state 'dashboard-mode 'normal)
 
@@ -2960,6 +2900,9 @@ evil-mc = {
   enable = true;
   defer = true;
   command = ["evil-mc-pause-cursors" "evil-mc-make-cursor-here"];
+  gfhookf = [''('doom-escape (lambda () (when (and (featurep 'evil-mc) (evil-mc-has-cursors-p))
+						 (evil-mc-undo-all-cursors)
+						 (evil-mc-resume-cursors) t)))''];
   generalOne = {
     ":nv"."bz" = "'evil-mc-hydra/body";
     global-leader."C" = "'evil-mc-hydra/body";
@@ -2989,15 +2932,21 @@ evil-mc = {
        ("O" #'evil-mc-make-cursor-move-prev-line "Prev Line"))))
   '';
 };
+
+evil-owl = {
+  enable = true;
+  setopt = {
+    evil-owl-max-string-length = 50;
+    evil-owl-extra-posframe-args = [ "':width" 50 "':height" 20 ];
+    evil-owl-display-method = "'posframe";
+  };
+  ghookf = ["('evil-mode 'evil-owl-mode)"];
+};
 #+end_src
 
 #+NAME: Emacs Evil-MC Config
 #+begin_src emacs-lisp
 (global-evil-mc-mode)
-
-(general-add-hook 'doom-escape-hook (lambda () (when (evil-mc-has-cursors-p)
-  						 (evil-mc-undo-all-cursors)
-  						 (evil-mc-resume-cursors) t)))
 
 ;; Don't mess with my macros.
 ;; https://github.com/gabesoft/evil-mc/issues/83
@@ -3179,6 +3128,7 @@ vertico = {
     "N" = "'vertico-first";
     "B" = "'vertico-last";
     "bg" = "'vertico-first";
+    "G" = "'evil-paste-after";
   };
   config = ''
     <<Emacs Vertico Config>>
@@ -3249,6 +3199,7 @@ consult = {
       "H-q" = "'consult-flymake"; # Alternative: consult-flycheck
     };
     ctl-x-map."C-f" = "'consult-fd";
+    global-leader."i" = "'efs/consult-header";
   };
   bindLocal.help-map."M" = "man";
   config = ''
@@ -3284,6 +3235,13 @@ consult = {
   (when (and (eq this-command #'consult-buffer)
              (bufler-workspace--tab-parameter 'bufler-workspace-path (tab-bar--current-tab-find)))
     (setq unread-command-events (append unread-command-events (list ?w 32)))))
+
+(defun efs/consult-header ()
+  "Runs 'consult-imenu', unless 'consult-outline' or 'consult-org-heading' can be run."
+  (interactive)
+  (cond ((eq major-mode 'org-mode) (consult-org-heading))
+	((eq major-mode 'gfm-mode) (consult-outline))
+	(t (consult-imenu))))
 #+end_src
 
 **** Embark
@@ -3444,8 +3402,7 @@ home.file.".config/emacs/templates.eld".text = ''
   (au "#+author: " q)
   (ti "#+title: " q)
   (ci "* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q)
-  (pdf "#+auto-export-pandoc: to-latex-pdf")
-  (odt "#+auto-export-pandoc: to-odt")
+  (exp "#+export: " q)
 
   java-ts-mode
   (doc "/**" n> " * " q n " */")
@@ -3593,8 +3550,6 @@ pinentry = {
 { config, inputs, pkgs, ... }:
 
 {
-  imports = [../writing];
-
   home.packages = with pkgs; [
     libreoffice-fresh
     hunspell
@@ -3606,6 +3561,10 @@ pinentry = {
     tools = {
       nov = true;
       pdf = true;
+    };
+    writing = {
+      denote = true;
+      citar = true;
     };
     ide.languages = {
       markdown.enable = true;
@@ -3629,8 +3588,6 @@ pinentry = {
 
       <<Emacs Org Extensions>>
       
-      <<Emacs Org Denote>>
-      
       <<Emacs Latex>>
       
       <<Emacs Markdown>>
@@ -3639,9 +3596,7 @@ pinentry = {
 
       <<Emacs Spellcheck>>
       
-      <<Emacs Citations>>
-
-      <<Emacs Epub Reader>>
+      citar.setopt.citar-bibliography = [''"~/doc/uni.bib"''];
     };
   };
 }
@@ -3655,7 +3610,7 @@ How to add a latex package
 : #+LATEX_HEADER: \usepackage{times}
 
 #+NAME: Emacs Org Main
-#+begin_src nix-ts
+#+begin_src nix-ts :noweb yes
 org = {
   gfhookf = [''('org-mode (list 'ispell-minor-mode
     (local! completion-at-point-functions (list (cape-capf-super
@@ -3669,13 +3624,68 @@ org = {
   setopt = {
     org-export-with-section-numbers = false;
     org-export-with-toc = false;
+    org-capture-templates = [
+      '''("d" "Denote note" plain
+	(file denote-last-path)
+        #'denote-org-capture
+        :no-save t
+        :immediate-finish nil
+        :kill-buffer t
+        :jump-to-captured t)''
+      ''
+        '("t" "Personal todo" entry
+                                     (file org-default-todo-file)
+                                     "* TODO [ ] %?\n%i\n%a" :prepend t)''
+      ''
+        '("n" "Personal notes" entry
+                                     (file org-default-notes-file)
+                                     "* %u %?\n%i\n%a" :prepend t)''
+      ''
+        '("j" "Journal" entry
+                                     (file+olp+datetree org-default-journal-file)
+                                     "* %U %?\n%i\n%a" :prepend t)''
+
+      # Will use {project-root}/{todo,notes,changelog}.org, unless a
+      # {todo,notes,changelog}.org file is found in a parent directory.
+      # Uses the basename from `+org-capture-todo-file',
+      # `+org-capture-changelog-file' and `+org-capture-notes-file'.
+      '''("p" "Templates for projects")''
+      ''
+        '("pt" "Project-local todo" entry ; {project-root}/todo.org
+                                     (file nix-emacs-project-todo)
+                                     "* TODO %?\n%i\n%a" :prepend t)''
+      ''
+        '("pn" "Project-local notes" entry ; {project-root}/notes.org
+                                     (file nix-emacs-project-notes)
+                                     "* %U %?\n%i\n%a" :prepend t)''
+      ''
+        '("pc" "Project-local changelog" entry  ; {project-root}/changelog.org
+                                     (file+headline nix-emacs-project-changelog "Unreleased")
+                                     "* %U %?\n%i\n%a" :prepend t)''
+    ] ;
   };
-  generalTwoConfig.local-leader.org-mode-map."a" = '''(avy-org-goto-heading-timer :which-key "avy")'';
+  generalTwoConfig.local-leader.org-mode-map = {
+    "a" = '''(avy-org-goto-heading-timer :which-key "avy")'';
+    "e" = "'smart-export";
+  };
 
   config = ''
-    (require 'ol-man)
-  '';
+    <<Emacs Org Main Config>>
+  '' ;
 };
+#+end_src
+
+#+NAME: Emacs Org Main Config
+#+begin_src emacs-lisp
+(require 'ol-man)
+(defun smart-export ()
+  "Export the current buffer, according to its heading, then preview the result."
+  (interactive)
+  (let* ((export-type (cadr (assoc "EXPORT" (org-collect-keywords '("EXPORT")))))
+	 (result (cond ((equal export-type "pdf") (org-latex-export-to-pdf))
+		       ((equal export-type "odt")  (org-odt-export-to-odt))
+                       ((equal export-type "html") (when (< 2 (count-windows)) (elwm-split-window)) (eww-open-file (org-html-export-to-html)))))))
+    (when (stringp result) (find-file-other-window result)))
 #+end_src
 
 ***** Extensions
@@ -3686,40 +3696,15 @@ org-auto-tangle = {
   ghookf = ["('org-mode 'org-auto-tangle-mode)"];
 };
 
-org-auto-export-pandoc = {
-  enable = true;
-  extraPackages = with pkgs; [pandoc];
-  ghookf = ["('after-save (lambda () (when (equal major-mode 'org-mode) (org-auto-export-pandoc))))"];
-};
-#+end_src
+denote.setopt.denote-known-keywords = [ ''"quotes"'' ''"chem"'' ''"emacs"'' ''"java"'' ''"physics"'' ''"calculus"'' ''"minecraft"'' ''"de"'' ''"proofs"'' ''"csse230"'' ''"os"'' ''"databases"'' ''"scifi"'' ''"softwarerequirements"'' ''"anthropology"'' ''"theoryofcomputation"'' ''"parallelcomp"'' ''"cybersecurity"'' ''"probstats"'' ''"scheme"'' ''"dreams"'' ''"softwaredevelopment"'' ''"ethics"'' ''"plp"'' ''"malwareanalysis"'' ''"bio"'' ''"ai"'' ''"resolve"'' ];
 
-***** Denote
-#+NAME: Emacs Org Denote
-#+begin_src nix-ts :noweb yes
-denote = {
+biblio = {
   enable = true;
-  defer = true;
-  gfhookf = ["('dired-mode 'denote-dired-mode-in-directories)"];
-  setopt = {
-    denote-directory = ''(expand-file-name "~/doc/denote")'';
-    denote-known-keywords = [ ''"quotes"'' ''"chem"'' ''"emacs"'' ''"java"'' ''"physics"'' ''"calculus"'' ''"minecraft"'' ''"de"'' ''"proofs"'' ''"csse230"'' ''"os"'' ''"databases"'' ''"scifi"'' ''"softwarerequirements"'' ''"anthropology"'' ''"theoryofcomputation"'' ''"parallelcomp"'' ''"cybersecurity"'' ''"probstats"'' ''"scheme"'' ''"dreams"'' ''"softwaredevelopment"'' ''"ethics"'' ''"plp"'' ''"malwareanalysis"'' ''"bio"'' ''"ai"'' ''"resolve"'' ];
-    denote-file-type = false;
-    denote-dired-directories = ["denote-directory"];
-    
-  };
   generalOne.global-leader = {
-    "of" = "'denote-open-or-create";
-    "or" = '''(denote-rename-file :whick-key "denote rename")'';
-    "oi" = '''(denote-link :which-key "link to note")'';
+    "ob" = '''(:ignore t :which-key "biblio")'';
+    "obl" = "'biblio-lookup";
+    "obi" = "'biblio-doi-insert-bibtex";
   };
-  config = "(consult-denote-mode)";
-};
-
-consult-denote = {
-  enable = true;
-  command = ["consult-denote-mode"];
-  generalOne.global-leader."os" = "'consult-denote-grep";
-  setopt.consult-denote-grep-command = "'consult-ripgrep";
 };
 #+end_src
 
@@ -3834,185 +3819,10 @@ flyspell = {
 };
 #+end_src
 
-**** Citations
-#+NAME: Emacs Citations
-#+begin_src nix-ts :noweb yes
-citar = {
-  enable = true;
-  config = ''(citar-denote-mode)'';
-  ghookf = ["('(LaTeX-mode org-mode) 'citar-capf-setup)"];
-  setopt = {
-    org-cite-insert-processor = "'citar";
-    org-cite-follow-processor = "'citar";
-    org-cite-activate-processor = "'citar";
-    citar-bibliography = [''"~/doc/uni.bib"''];
-    org-cite-global-bibliography = [''"~/doc/uni.bib"''];
-  };
-};
-
-citar-embark = {
-  enable = true;
-  after = ["citar" "embark"];
-  config = ''(citar-embark-mode)'';
-  setopt.citar-at-point-function = "'embark-act";
-};
-
-citar-denote = {
-  enable = true;
-  command = ["citar-denote-mode"];
-  generalOne.global-leader = {
-    "on" = '''(citar-create-note :which-key "new citar note")'';
-    "oo" = '''(citar-denote-open-note :which-key "open citar note")'';
-    "ol" = "'citar-denote-link-reference";
-    "ow" = "'citar-denote-find-citation";
-  };
-  config = ''
-    <<Emacs Writing Citar Denote Config>>
-  '';
-  afterCall = ["citar"];
-};
-#+end_src
-
-#+NAME: Emacs Writing Citar Denote Config
-#+begin_src emacs-lisp
-(defun citar-denote--create-note (citekey &optional _entry)
-  "Create a bibliographic note for CITEKEY with properties ENTRY.
-
-The note file type is determined by `citar-denote-file-type'.
-
-The title format is set by `citar-denote-title-format'.
-
-When `citar-denote-subdir' is non-nil, prompt for a subdirectory.
-
-When `citar-denote-template' is a symbol, use the specified
-template, if otherwise non-nil, prompt for a Denote template.
-
-When `citar-denote-signature' is non-nil, prompt for a signature or
-use citation key."
-  (denote
-   (read-string "Title: " (citar-denote--generate-title citekey))
-   (citar-denote--keywords-prompt citekey)
-   citar-denote-file-type
-   (when citar-denote-subdir
-     (if (stringp citar-denote-subdir)
-         (expand-file-name
-          (concat denote-directory citar-denote-subdir))
-       (denote-subdirectory-prompt)))
-   nil
-   (when citar-denote-template
-     (or (alist-get citar-denote-template denote-templates)
-         (denote-template-prompt)))
-   (cond ((eq citar-denote-signature 'ask)
-          (denote-signature-prompt nil "Signature: "))
-         ((eq citar-denote-signature 'citekey)
-          citekey)
-         (nil nil)))
-  (citar-denote--add-reference citekey)
-  ;; Open available atachment in other window
-  (when (one-window-p)
-    (split-window-right))
-  (other-window 1)
-  (citar-open-files citekey))
-#+end_src
-
-**** Modules
-#+begin_src nix-ts :tangle writing/default.nix
-{ ... }:
-
-{
-  imports = [
-    ./nov.nix
-    ./pdf.nix
-    ./novelist.nix
-  ];
-}
-#+end_src
-
-***** Nov
-#+begin_src nix-ts :tangle writing/nov.nix
-{ pkgs, config, lib, ... }:
-
-{
-  options.programs.emacs.init.tools.nov = lib.mkEnableOption "Enables nov.el, for reading epubs";
-
-  config.programs.emacs.init.usePackage.nov = lib.mkIf config.programs.emacs.init.tools.nov {
-    enable = true;
-    extraPackages = [pkgs.unzip];
-    mode = [''("\\.epub\\'" . nov-mode)''];
-  };
-}
-#+end_src
-
-***** PDF
-#+begin_src nix-ts :tangle writing/pdf.nix
-{ pkgs, config, lib, ... }:
-
-let
-  ide = config.programs.emacs.init.ide;
-in
-{
-  options.programs.emacs.init.tools.pdf = lib.mkEnableOption "Enables pdf-tools.";
-
-  config.programs.emacs.init.usePackage.pdf-tools = lib.mkIf config.programs.emacs.init.tools.pdf {
-    enable = true;
-    defer = true;
-    setopt = lib.mkIf ide.languages.latex.enable {
-      # Makes PDFtools the default
-      TeX-view-program-selection = lib.mkDefault ['''(output-pdf "PDF Tools")''];
-      TeX-view-program-list = lib.mkDefault ['''("PDF Tools" TeX-pdf-tools-sync-view)''];
-      TeX-source-correlate-start-server = lib.mkDefault false;
-    };
-    # Not actually sure if we need this
-    config = ''
-      (pdf-tools-install)
-    '';
-    init = ''
-      (setq-default pdf-view-display-size 'fit-width)
-      ${if ide.languages.latex.enable then "(with-eval-after-load 'latex (add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer))" else ""}
-    '';
-    magic = [''("%PDF" . pdf-view-mode)''];
-  };
-}
-#+end_src
-
-***** Novelist
-#+begin_src nix-ts :tangle writing/novelist.nix
-{ config, lib, ... }:
-
-{
-  options.programs.emacs.init.writing.novelist = lib.mkEnableOption "Enables org-novelist";
-
-  config.programs.emacs.init.usePackage.org-novelist = lib.mkIf config.programs.emacs.init.writing.novelist {
-    enable = true;
-    command = ["org-novelist-mode" "org-novelist-new-story"];
-    generalTwoConfig.local-leader.org-novelist-mode-map = lib.mkIf config.programs.emacs.init.keybinds.leader-key.enable {
-      "c" = '''(:ignore t :which-key "character")'';
-      "cn" = '''(org-novelist-new-character :which-key "new")'';
-      "cr" = '''(org-novelist-rename-character :which-key "rename")'';
-      "cd" = '''(org-novelist-destroy-character :which-key "destroy")'';
-      "h" = '''(:ignore t :which-key "chapter")'';
-      "hn" = '''(org-novelist-new-chapter :which-key "new")'';
-      "hr" = '''(org-novelist-rename-chapter :which-key "rename")'';
-      "hd" = '''(org-novelist-destroy-chapter :which-key "destroy")'';
-      "p" = '''(:ignore t :which-key "place")'';
-      "pn" = '''(org-novelist-new-place :which-key "new")'';
-      "pr" = '''(org-novelist-rename-place :which-key "rename")'';
-      "pd" = '''(org-novelist-destroy-place :which-key "destroy")'';
-      "r" = '''(:ignore t :which-key "prop")'';
-      "rn" = '''(org-novelist-new-prop :which-key "new")'';
-      "rr" = '''(org-novelist-rename-prop :which-key "rename")'';
-      "rd" = '''(org-novelist-destroy-prop :which-key "destroy")'';
-      "e" = '''(org-novelist-export-story :which-key "export")'';
-    };
-  };
-}
-#+end_src
 
 ** Window Management
-Almost everything here was copied from David Wilson. Thank you, David, for practically writing my config for me.
-
-#+begin_src nix-ts :noweb yes :tangle emacs/window-manager.nix
-{ inputs, pkgs, config, ... }:
+#+begin_src nix-ts :noweb yes :tangle window-manager.nix
+{ pkgs, config, ... }:
 
 {
   programs = {
@@ -4022,9 +3832,9 @@ Almost everything here was copied from David Wilson. Thank you, David, for pract
       <<Emacs Window Management Tab Bar>>
       
       <<Emacs Window Management Bufler>>
-
+      
       <<Emacs Window Management ELWM>>
-
+      
       <<Emacs Window Management Golden Ratio>>
       
       <<Emacs Window Management EXWM>>
@@ -4264,8 +4074,8 @@ elwm = {
   config = ''
     <<Emacs Elwm Config>>
   '';
-  init = ''
-    <<Emacs Elwm Init>>
+  preface = ''
+    <<Emacs Elwm Preface>>
   '';
 };
 #+end_src
@@ -4304,7 +4114,7 @@ elwm = {
 	      (evil-window-vsplit))))))))
 #+end_src
 
-#+NAME: Emacs Elwm Init
+#+NAME: Emacs Elwm Preface
 #+begin_src emacs-lisp
 (defun elwm-next ()
   "Go to the next visible window, or if there is 1 window, the next buffer in the workspace"
@@ -4405,8 +4215,8 @@ exwm = {
       '''([?\s-t] . proced)''
     
       # Movement
-      '''([?\s-e] . elwm-next)''
-      '''([?\s-o] . elwm-prev)''
+      ''`([?\s-e] . ,(cmd! (efs/exwm-smart-move 'elwm-next)))''
+      ''`([?\s-o] . ,(cmd! (efs/exwm-smart-move 'elwm-prev)))''
 
       # Arrangement
       '''([?\s-E] . elwm-rotate-window)''
@@ -4423,10 +4233,10 @@ exwm = {
       '''([?\s-K] . evil-delete-buffer-and-window)''
     
       # Shell bindings
-      '''([?\s-s] . (lambda () (interactive) (shell-command "slock")))''
-      '''([?\s-y] . (lambda () (interactive) (start-process-shell-command "maim" nil  "${pkgs.maim}/bin/maim ~/pic/screenshot.png")))''
-      "'([XF86MonBrightnessDown] . (lambda () (interactive) (efs/alter-monitor-brightness 5 t)))"
-      "'([XF86MonBrightnessUp] . (lambda () (interactive) (efs/alter-monitor-brightness 5)))"
+      ''`([?\s-s] . ,(cmd! (shell-command "slock")))''
+      ''`([?\s-y] . ,(cmd! (start-process-shell-command "maim" nil  "${pkgs.maim}/bin/maim ~/pic/screenshot.png")))''
+      "`([XF86MonBrightnessDown] . ,(cmd! (efs/alter-monitor-brightness 5 t)))"
+      "`([XF86MonBrightnessUp] . ,(cmd! (efs/alter-monitor-brightness 5)))"
     ];
     
   };
@@ -4485,9 +4295,7 @@ exwm-outer-gaps = {
 	(when treesitter-context-mode (treesitter-context-focus-mode -1)))
     (setq single-window--last-configuration (current-window-configuration))
     (setq elwm-current-layout 'monocle)
-    (delete-other-windows)
-    (when (and treesitter-context-mode)
-      (treesitter-context-focus-mode 1))))
+    (delete-other-windows)))
 
 (defun evil-delete-buffer-and-window ()
   "kill the current buffer & its window"
@@ -4515,6 +4323,12 @@ INC is the percent to increment the volume by.
 NEG subtracts if it is true."
   (setopt efs/monitor-brightness (funcall (if neg '- '+) efs/monitor-brightness inc))
   (async-shell-command (concat "brightnessctl -d intel_backlight set " (int-to-string efs/monitor-brightness) "%")))
+
+(defun efs/exwm-smart-move (command)
+  "Call COMMAND if there are 3 or less windows. Otherwise, call 'ace-window'."
+  (if (> (count-windows) 3)
+      (ace-window 0)
+    (funcall command)))
 #+end_src
 
 #+NAME: Emacs Exwm Config
@@ -4629,7 +4443,7 @@ emacs.init.usePackage.i3bar = {
   ghookf = ["('tab-bar-mode 'i3bar-mode)"];
   
   setopt = {
-    i3bar-command = ''"${(import ../scripts/i3status-rust.nix {inherit pkgs;})}/bin/i3status-rust"'';
+    i3bar-command = ''"${(import scripts/i3status-rust.nix {inherit pkgs;})}/bin/i3status-rust"'';
   };
 };
 #+end_src
@@ -4647,6 +4461,7 @@ ace-window = {
     <<Emacs Ace Window Preface>>
   '';
   init = ''(setopt aw-dispatch-alist '((?k aw-delete-window "Delete Window")
+                                       (?K efs-aw-kill-buffer-and-window "Delete Buffer and Window")
                                        (?m aw-swap-window "Swap Windows")
                                        (?M aw-move-window "Move Window")
                                        (?d aw-copy-window "Copy Window")
@@ -4659,6 +4474,7 @@ ace-window = {
                                        (?T aw-transpose-frame "Transpose Frame")
                                        (?? aw-show-dispatch-help)))'';
   general."s-/" = "'ace-window";
+  command = ["ace-window"];
   config = ''
     <<Emacs Ace Window Config>>
   '';
@@ -4671,6 +4487,10 @@ ace-window = {
   "Split WINDOW horizontally."
   (select-window window)
   (elwm-split-window))
+
+(defun efs-aw-kill-buffer-and-window (window)
+  "Delete window WINDOW & its associated buffer."
+  (aw-delete-window window t))
 #+end_src
 
 #+NAME: Emacs Ace Window Config
@@ -4700,6 +4520,17 @@ ace-window = {
                      :background-color (face-background 'aw-leading-char-face nil t)))))
 
 (general-add-advice 'ace-window :after (lambda (&rest args) (golden-ratio)))
+
+(defun aw--switch-buffer ()
+  "Call the buffer switching command appropriate to your setup."
+  (cond ((bound-and-true-p ivy-mode)
+         (ivy-switch-buffer))
+        ((bound-and-true-p ido-mode)
+         (ido-switch-buffer))
+	((featurep 'consult)
+	 (consult-buffer))
+        (t
+         (call-interactively 'switch-to-buffer))))
 #+end_src
 
 ** GPT.el
@@ -4756,14 +4587,6 @@ ace-window = {
 	"ga" = "'macher-abort";
       };
     };
-
-    ragmacs = {
-      enable = false;
-      after = ["gptel"];
-      config = ''
-	<<Emacs Gpt4all Tools>>
-      '';
-    };
   };
 }
 #+end_src
@@ -4775,42 +4598,16 @@ ace-window = {
   (start-process-shell-command "start-ollama" nil "${(import ./scripts/start-ollama.nix { inherit pkgs config; })}/bin/start-ollama"))
 #+end_src
 
-#+NAME: Emacs Gpt4all Tools
-#+begin_src emacs-lisp
-(gsetq gptel-tools (list ragmacs-eval
-			 ragmacs-symbolp
-			 ragmacs-load-paths
-			 ragmacs-features
-			 ragmacs-manuals
-			 ragmacs-manual-nodes
-			 ragmacs-manual-node-contents
-			 ragmacs-featurep
-			 ragmacs-library-source
-			 ragmacs-symbol-manual-node
-			 ragmacs-function-source
-			 ragmacs-variable-source
-			 ragmacs-variable-value
-			 ragmacs-function-docstring
-			 ragmacs-variable-docstring
-			 ragmacs-function-completions
-			 ragmacs-command-completions
-			 ragmacs-variable-completions
-			 ragmacs-simulate-error
-			 ragmacs-coerce-nil
-			 ragmacs-all-arg-types
-			 ragmacs-async))
-#+end_src
-
 ** Multimedia
 This is where all the audio/video stuff goes
 #+begin_src nix-ts :tangle multimedia.nix :noweb yes
-{ pkgs, config, inputs, ... }:
+{ pkgs, pkgs-stable, config, inputs, ... }:
 
 {
   home.packages = with pkgs; [
     yt-dlp
     (config.lib.nixGL.wrap obs-studio)
-    lmms
+    pkgs-stable.lmms
     audacity
     mpc-cli
     doomer
@@ -5294,7 +5091,7 @@ elfeed = {
     ''"https://youtube.com/feeds/videos.xml?channel_id=UCUQs6rEz6lRGHn6DWqss0hA"''
     ''"https://notrelated.xyz/rss"''
   ];
-  generalOne.global-leader."r" = "(cmd! (elfeed) (elfeed-update))";
+  generalOne.global-leader."r" = "`,(cmd! (elfeed) (elfeed-update))";
 };
 #+end_src
 

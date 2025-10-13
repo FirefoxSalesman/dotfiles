@@ -43,27 +43,6 @@
                            "flac"))
                         "mpv"
                         '(file))))
-          
-          (defun dired-do-async-delete (&optional arg)
-            "Delete all marked (or next ARG) files.
-            `dired-recursive-deletes' controls whether deletion of
-            non-empty directories is allowed."
-            ;; This is more consistent with the file marking feature than
-            ;; dired-do-flagged-delete.
-            (interactive "P")
-            (let (markers)
-              (dired-internal-do-deletions
-               (nreverse
-                ;; this may move point if ARG is an integer
-                (dired-map-over-marks (cons (dired-get-filename)
-                                            (let ((m (point-marker)))
-                                              (push m markers)
-                                              m))
-                                      arg))
-               arg t)
-              (async-start (lambda ()
-            		   (dolist (m markers) (set-marker m nil)))
-            		 'ignore)))
         '';
     };
 

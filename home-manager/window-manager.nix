@@ -1,4 +1,4 @@
-{ inputs, pkgs, config, ... }:
+{ pkgs, config, ... }:
 
 {
   programs = {
@@ -45,7 +45,7 @@
       ghookf = ["('tab-bar-mode 'i3bar-mode)"];
       
       setopt = {
-        i3bar-command = ''"${(import ../scripts/i3status-rust.nix {inherit pkgs;})}/bin/i3status-rust"'';
+        i3bar-command = ''"${(import scripts/i3status-rust.nix {inherit pkgs;})}/bin/i3status-rust"'';
       };
     };
 
@@ -241,7 +241,7 @@
         ghookf = ["('bufler-mode 'bufler-workspace-workspaces-as-tabs-mode)"];
         gfhookf = ["('bufler-workspace-workspaces-as-tabs-mode '(global-tab-line-mode burly-tabs-mode))"];
       };
-
+      
       elwm = {
         enable = true;
         defer = true;
@@ -278,7 +278,7 @@
           		 buf)
           	      (evil-window-vsplit))))))))
         '';
-        init = ''
+        preface = ''
           (defun elwm-next ()
             "Go to the next visible window, or if there is 1 window, the next buffer in the workspace"
             (interactive)
@@ -295,7 +295,7 @@
           (defun elwm-derotate-window () (interactive) (elwm-rotate-window (prefix-numeric-value -1)))
         '';
       };
-
+      
       golden-ratio = {
         enable = true;
         defer = true;
@@ -372,8 +372,8 @@
             '''([?\s-t] . proced)''
           
             # Movement
-            '''([?\s-e] . elwm-next)''
-            '''([?\s-o] . elwm-prev)''
+            ''`([?\s-e] . ,(cmd! (efs/exwm-smart-move 'elwm-next)))''
+            ''`([?\s-o] . ,(cmd! (efs/exwm-smart-move 'elwm-prev)))''
       
             # Arrangement
             '''([?\s-E] . elwm-rotate-window)''
@@ -390,10 +390,10 @@
             '''([?\s-K] . evil-delete-buffer-and-window)''
           
             # Shell bindings
-            '''([?\s-s] . (lambda () (interactive) (shell-command "slock")))''
-            '''([?\s-y] . (lambda () (interactive) (start-process-shell-command "maim" nil  "${pkgs.maim}/bin/maim ~/pic/screenshot.png")))''
-            "'([XF86MonBrightnessDown] . (lambda () (interactive) (efs/alter-monitor-brightness 5 t)))"
-            "'([XF86MonBrightnessUp] . (lambda () (interactive) (efs/alter-monitor-brightness 5)))"
+            ''`([?\s-s] . ,(cmd! (shell-command "slock")))''
+            ''`([?\s-y] . ,(cmd! (start-process-shell-command "maim" nil  "${pkgs.maim}/bin/maim ~/pic/screenshot.png")))''
+            "`([XF86MonBrightnessDown] . ,(cmd! (efs/alter-monitor-brightness 5 t)))"
+            "`([XF86MonBrightnessUp] . ,(cmd! (efs/alter-monitor-brightness 5)))"
           ];
           
         };
@@ -429,9 +429,7 @@
           	(when treesitter-context-mode (treesitter-context-focus-mode -1)))
               (setq single-window--last-configuration (current-window-configuration))
               (setq elwm-current-layout 'monocle)
-              (delete-other-windows)
-              (when (and treesitter-context-mode)
-                (treesitter-context-focus-mode 1))))
+              (delete-other-windows)))
           
           (defun evil-delete-buffer-and-window ()
             "kill the current buffer & its window"
@@ -459,6 +457,12 @@
           NEG subtracts if it is true."
             (setopt efs/monitor-brightness (funcall (if neg '- '+) efs/monitor-brightness inc))
             (async-shell-command (concat "brightnessctl -d intel_backlight set " (int-to-string efs/monitor-brightness) "%")))
+          
+          (defun efs/exwm-smart-move (command)
+            "Call COMMAND if there are 3 or less windows. Otherwise, call 'ace-window'."
+            (if (> (count-windows) 3)
+                (ace-window 0)
+              (funcall command)))
         '';
         config = ''
           ;; Set the screen resolution (update this to be the correct resolution for your screen!)
@@ -546,8 +550,13 @@
             "Split WINDOW horizontally."
             (select-window window)
             (elwm-split-window))
+          
+          (defun efs-aw-kill-buffer-and-window (window)
+            "Delete window WINDOW & its associated buffer."
+            (aw-delete-window window t))
         '';
         init = ''(setopt aw-dispatch-alist '((?k aw-delete-window "Delete Window")
+                                             (?K efs-aw-kill-buffer-and-window "Delete Buffer and Window")
                                              (?m aw-swap-window "Swap Windows")
                                              (?M aw-move-window "Move Window")
                                              (?d aw-copy-window "Copy Window")
@@ -560,6 +569,7 @@
                                              (?T aw-transpose-frame "Transpose Frame")
                                              (?? aw-show-dispatch-help)))'';
         general."s-/" = "'ace-window";
+        command = ["ace-window"];
         config = ''
           (ace-window-posframe-mode)
           
@@ -586,6 +596,17 @@
                                :background-color (face-background 'aw-leading-char-face nil t)))))
           
           (general-add-advice 'ace-window :after (lambda (&rest args) (golden-ratio)))
+          
+          (defun aw--switch-buffer ()
+            "Call the buffer switching command appropriate to your setup."
+            (cond ((bound-and-true-p ivy-mode)
+                   (ivy-switch-buffer))
+                  ((bound-and-true-p ido-mode)
+                   (ido-switch-buffer))
+          	((featurep 'consult)
+          	 (consult-buffer))
+                  (t
+                   (call-interactively 'switch-to-buffer))))
         '';
       };
     };

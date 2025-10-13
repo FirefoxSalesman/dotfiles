@@ -467,7 +467,7 @@
                          :delete nil
                          :open-rec nil))
         '';
-        generalOneConfig.shr-map."RET" = "(cmd! (if (eq major-mode 'eww-mode) (eww-follow-link) (shr-browse-url)))";
+        generalOneConfig.shr-map."RET" = "`,(cmd! (if (eq major-mode 'eww-mode) (eww-follow-link) (shr-browse-url)))";
         generalTwoConfig.local-leader.shrface-mode-map = {
           "l" = "'shrface-links-consult";
           "o" = "'shrface-headline-consult";

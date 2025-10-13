@@ -47,10 +47,6 @@ final: prev: pkgs: inputs: {
           inherit inputs;
           inherit (prev.emacsPackages) trivialBuild;
         });
-        org-novelist = (prev.emacsPackages.callPackage ./packages/emacs/org-novelist.nix {
-          inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild org;
-        });
         exwm-outer-gaps = (prev.emacsPackages.callPackage ./packages/emacs/exwm-outer-gaps.nix {
           inherit inputs;
           inherit (prev.emacsPackages) trivialBuild exwm xelb;
@@ -62,10 +58,6 @@ final: prev: pkgs: inputs: {
 	macher = (prev.emacsPackages.callPackage ./packages/emacs/macher.nix {
           inherit inputs;
           inherit (prev.emacsPackages) trivialBuild gptel;
-        });
-	ragmacs = (prev.emacsPackages.callPackage ./packages/emacs/ragmacs.nix {
-          inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild gptel orderless;
         });
 	mpc-wrapper = (prev.emacsPackages.callPackage ./packages/emacs/mpc-wrapper.nix {
           inherit inputs;

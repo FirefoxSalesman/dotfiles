@@ -52,34 +52,5 @@
 	"ga" = "'macher-abort";
       };
     };
-
-    ragmacs = {
-      enable = false;
-      after = ["gptel"];
-      config = ''
-	(gsetq gptel-tools (list ragmacs-eval
-				 ragmacs-symbolp
-				 ragmacs-load-paths
-				 ragmacs-features
-				 ragmacs-manuals
-				 ragmacs-manual-nodes
-				 ragmacs-manual-node-contents
-				 ragmacs-featurep
-				 ragmacs-library-source
-				 ragmacs-symbol-manual-node
-				 ragmacs-function-source
-				 ragmacs-variable-source
-				 ragmacs-variable-value
-				 ragmacs-function-docstring
-				 ragmacs-variable-docstring
-				 ragmacs-function-completions
-				 ragmacs-command-completions
-				 ragmacs-variable-completions
-				 ragmacs-simulate-error
-				 ragmacs-coerce-nil
-				 ragmacs-all-arg-types
-				 ragmacs-async))
-      '';
-    };
   };
 }

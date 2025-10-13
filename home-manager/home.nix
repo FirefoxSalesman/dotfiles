@@ -1,7 +1,6 @@
 { lib, config, inputs, ... }:
 
 {
-  # This is some text
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
   home.username = "holschcc";
@@ -19,20 +18,20 @@
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 
-  imports =
-    [ # Include the results of the hardware scan.
-      ./internet.nix
-      ./multimedia.nix
-      ./aesthetics.nix
-      ./extra-packages.nix
-      ./development.nix
-      ./gui.nix
-      ./emacs.nix
-      ./shells.nix
-      ./gptel.nix
-      ./sage.nix
-      ./keyboard.nix
-    ];
+  imports = [ 
+    ./window-manager.nix
+    ./internet.nix
+    ./multimedia.nix
+    ./aesthetics.nix
+    ./extra-packages.nix
+    ./development.nix
+    ./gui.nix
+    ./emacs.nix
+    ./shells.nix
+    ./gptel.nix
+    ./sage.nix
+    ./keyboard.nix
+  ];
 
   nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
 
