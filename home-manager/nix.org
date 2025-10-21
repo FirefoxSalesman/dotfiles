@@ -1715,6 +1715,8 @@ shrface = {
   generalTwoConfig.local-leader.shrface-mode-map = {
     "l" = "'shrface-links-consult";
     "o" = "'shrface-headline-consult";
+    "]c" = "'org-next-block";
+    "[c" = "'org-previous-block";
   };
 };
 #+end_src
@@ -1788,8 +1790,8 @@ shrface = {
   (require 'eww)
   (let ((shrface-org nil)
         (shr-bullet (concat (char-to-string shrface-item-bullet) " "))
-        (shr-width 7000)
-        (shr-max-width 7000)
+        (shr-width 91)
+        (shr-max-width 91)
         (shr-indentation 0)
         (shr-external-rendering-functions shrface-general-rendering-functions)
         (shrface-toggle-bullets nil)
@@ -1802,7 +1804,6 @@ shrface = {
   (require 'eww)
   (let ((shrface-org nil)
         ;; make it large enough, it would not fill the column
-        ;; I uses visual-line-mode, writeroom-mode for improving the reading experience instead
         (shr-width 7000)
         (shr-indentation 0)
         (shr-external-rendering-functions shrface-general-rendering-functions)
@@ -1976,6 +1977,7 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
         emacs-lisp.enable = true;
         javascript.enable = true;
         ledger.enable = true;
+	python.enable = true;
 	r.enable = true;
 	makefile.enable = true;
 	yaml.enable = true;
@@ -2005,6 +2007,9 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
       flymake-popon.setopt.flymake-popon-posframe-extra-arguments = [ "':poshandler" "'posframe-poshandler-point-bottom-left-corner-upward"
 	                                                                "':parent-frame" false
                                                                         "':refposhandler" "'posframe-refposhandler-xwininfo" ];
+
+      eat.generalOne.global-leader.a = ''`("AI via cursor" . ,(cmd! (eat "${pkgs.cursor-cli}/bin/cursor-agent")))'';
+
       java-ts-mode = {
         init = ''
           <<Java Config>>
@@ -2078,7 +2083,7 @@ magit = {
 
 projection-ibuffer = {
   enable = true;
-  generalOne.project-prefix-map.i = ''`(,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))) :which-key "ibuffer")'';
+  generalOne.project-prefix-map.i = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
 };
 
 projection-multi.custom.projection-gradle-use-daemon = false;
@@ -2103,10 +2108,10 @@ projection-multi-embark = {
 eglot = {
   gfhookf = [
     ''('eglot-managed-mode (local! completion-at-point-functions (list (cape-capf-super #'tempel-complete
-                                                                                             #'eglot-completion-at-point
-											     #'cape-file)
-                                                                            #'cape-dabbrev)))''
-    "('before-save (lambda () (when eglot--managed-mode (eglot-format-buffer))))"
+      #'eglot-completion-at-point
+											     #'cape-file))))
+    ''
+    "('before-save 'eglot-format-buffer)"
   ];
   config = ''
     <<Development Eglot Config>>
@@ -2159,8 +2164,8 @@ projection-dape = {
 #+NAME: Development Python
 #+begin_src nix-ts
 python-ts-mode.setopt = {
-    python-shell-interpreter = ''"ipython"'';
-    python-shell-interpreter-args = ''"-i --simple-prompt"'';
+  python-shell-interpreter = ''"ipython"'';
+  python-shell-interpreter-args = ''"-i --simple-prompt"'';
 };
 #+end_src
 
@@ -2179,7 +2184,7 @@ I'm running dired with a couple of small packages that improve on it
         "C-x C-j" = "'dired-jump";
         "C-x d" = "'consult-dir";
       };
-      generalOne.global-leader."d" = '''(dired :which-key "dired")'';
+      generalOne.global-leader."d" = '''("dired" . dired)'';
       generalTwoConfig.":n".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
       setopt = {
         dired-recursive-deletes = "'always";
@@ -2591,6 +2596,7 @@ Evil mode provides vim-like keybinds.
 
 {
   programs.emacs.init = {
+    aggressiveSymex = true;
     keybinds = {
       evil = {
         enable = true;
@@ -2785,11 +2791,11 @@ evil = {
 };
 
 emacs.generalOneConfig = {
-  help-map."A" = ''`(,(cmd! (async-shell-command "${pkgs.wiki}/bin/wiki")) :which-key "Arch Wiki")'';
+  help-map."A" = ''`("Arch Wiki" . ,(cmd! (async-shell-command "${pkgs.wiki}/bin/wiki")))'';
   global-leader = {
-    "l" = ''`(,(cmd! (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k")))) :which-key "Compile")'';
-    "L" = ''`(,(cmd! (if (project-current) (project-recompile) (recompile))) :which-key "Recompile")'';
-    "u" = ''`(,(cmd! (start-process-shell-command "udisksmenu" nil "${pkgs.udisksmenu}/bin/udisksmenu")) :which-key "Mount USB")'';
+    "l" = ''`("Compile" . ,(cmd! (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k")))))'';
+    "L" = ''`("Recompile" . ,(cmd! (if (project-current) (project-recompile) (recompile))))'';
+    "u" = ''`("Mount USB" . ,(cmd! (start-process-shell-command "udisksmenu" nil "${pkgs.udisksmenu}/bin/udisksmenu")))'';
   };
 };
 #+end_src
@@ -2864,7 +2870,10 @@ Cursors hydra: https://hungyi.net/posts/hydra-for-evil-mc/
 evil-collection.setopt.evil-collection-unimpaired-want-repeat-mode-integration = true;
 
 evil-surround.generalTwoConfig = {
-  ":v".evil-surround-mode-map."R" = "'evil-surround-region";
+  ":v".evil-surround-mode-map = {
+    "r" = "'evil-surround-region";
+    "R" = "'evil-surround-region";
+  };
   ":o".evil-surround-mode-map = {
     "s" = "nil";
     "r" = "'evil-surround-edit";
@@ -2880,6 +2889,8 @@ evil-easymotion = {
     "H-X" = "'evilem-motion-backward-word-begin";
     "H-x" = "'evilem-motion-backward-WORD-begin";
     "H-M" = "'evilem-motion-search-previous";
+    "H-)" = "'evilem-motion-forward-sentence-begin";
+    "H-(" = "'evilem-motion-backward-sentence-begin";
   };
   custom.avy-dispatch-alist = [
     "'(?l . avy-action-ispell)"
@@ -2942,6 +2953,15 @@ evil-owl = {
   };
   ghookf = ["('evil-mode 'evil-owl-mode)"];
 };
+
+evil-exchange = {
+  enable = true;
+  generalOne = {
+    evil-operator-state-map."M-z" = "'evil-exchange/cx";
+    evil-visual-state-map."M-z" = "'evil-exchange";
+  };
+  gfhookf = ["('doom-escape (lambda () (when (featurep 'evil-exchange) (evil-exchange-cancel))))"];
+};
 #+end_src
 
 #+NAME: Emacs Evil-MC Config
@@ -2977,13 +2997,17 @@ symex = {
   '';
   generalOneConfig.evil-symex-state-map = {
     "n" = "'symex-go-backward";
-    "e" = "'symex-go-down";
-    "o" = "'symex-go-up";
+    "H-n" = "'efs/evilem-motion-symex-go-backward";
+    "H-o" = "'efs/evilem-motion-symex-go-down";
+    "C-o" = "'symex-climb-branch";
+    "o" = "'symex-go-down";
+    "H-e" = "'efs/evilem-motion-symex-go-up";
+    "C-e" = "'symex-descend-branch";
+    "e" = "'symex-go-up";
     "i" = "'symex-go-forward";
+    "H-i" = "'efs/evilem-motion-symex-go-forward";
     "bn" = "'evil-backward-char";
     "bi" = "'evil-forward-char";
-    "C-e" = "'symex-climb-branch";
-    "C-o" = "'symex-descend-branch";
     "d" = "'symex-yank";
     "D" = "'symex-yank-remaining";
     "G" = "'symex-paste-after";
@@ -3024,6 +3048,13 @@ symex = {
  '(("symex-visual-line"
     symex-next-visual-line "e"
     symex-previous-visual-line "o")))
+
+(require 'evil-easymotion)
+
+(evilem-make-motion efs/evilem-motion-symex-go-forward #'symex-go-forward)
+(evilem-make-motion efs/evilem-motion-symex-go-backward #'symex-go-backward)
+(evilem-make-motion efs/evilem-motion-symex-go-down #'symex-go-down)
+(evilem-make-motion efs/evilem-motion-symex-go-up #'symex-go-up)
 #+end_src
 
 **** Compats
@@ -3062,6 +3093,9 @@ ewal-evil-cursors = {
   "x" 'evil-backward-WORD-begin
   "X" 'evil-backward-word-begin
   "d" 'evil-yank)
+(evil-define-key 'symex 'evil-org-mode
+  "R" 'evil-org-open-above
+  "S" 'evil-org-open-below)
 (evil-define-key 'visual 'evil-org-mode
   "i" 'evil-forward-char
   "s" evil-inner-text-objects-map)
@@ -3518,9 +3552,9 @@ password-store = {
   defer = true;
   generalOne.global-leader = {
     "p" = '''(:ignore t :which-key "pass")'';
-    "py" = '''(password-store-copy :which-key "yank")'';
-    "pi" = '''(password-store-insert :which-key "insert")'';
-    "pg" = '''(password-store-generate :which-key "generate")'';
+    "py" = '''("yank" . password-store-copy)'';
+    "pi" = '''("insert" . password-store-insert)'';
+    "pg" = '''("generate" . password-store-generate)'';
   };
   extraConfig = ":autoload pass-entries password-store-list";
 };
@@ -3528,7 +3562,7 @@ password-store = {
 password-store-otp = {
   enable = true;
   defer = true;
-  generalOne.global-leader."po" = '''(password-store-otp-token-copy :which-key "copy otp")'';
+  generalOne.global-leader."po" = '''("copy otp" . password-store-otp-token-copy)'';
 };
 #+end_src
 
@@ -3665,7 +3699,7 @@ org = {
     ] ;
   };
   generalTwoConfig.local-leader.org-mode-map = {
-    "a" = '''(avy-org-goto-heading-timer :which-key "avy")'';
+    "a" = '''("avy" . avy-org-goto-heading-timer)'';
     "e" = "'smart-export";
   };
 
@@ -3766,7 +3800,7 @@ markdown = {
     markdown-hide-markup = true;
   };
   generalTwoConfig = {
-    ":n".markdown-mode-map = {
+    ":nm".gfm-mode-map = {
       "[h" = "'markdown-previous-visible-heading";
       "]h" = "'markdown-next-visible-heading";
     };  
@@ -3803,7 +3837,7 @@ writeroom-mode = {
     writeroom-maximize-window = false;
     writeroom-global-effects = false;
   };
-  generalOne.global-leader."w" = '''(writeroom-mode :which-key "writeroom")'';
+  generalOne.global-leader."w" = '''("writeroom" . writeroom-mode)'';
 };
 #+end_src
 
@@ -3818,7 +3852,6 @@ flyspell = {
   ];
 };
 #+end_src
-
 
 ** Window Management
 #+begin_src nix-ts :noweb yes :tangle window-manager.nix
@@ -4215,8 +4248,8 @@ exwm = {
       '''([?\s-t] . proced)''
     
       # Movement
-      ''`([?\s-e] . ,(cmd! (efs/exwm-smart-move 'elwm-next)))''
-      ''`([?\s-o] . ,(cmd! (efs/exwm-smart-move 'elwm-prev)))''
+      '''([?\s-e] . elwm-next)''
+      '''([?\s-o] . elwm-prev)''
 
       # Arrangement
       '''([?\s-E] . elwm-rotate-window)''
@@ -4323,12 +4356,6 @@ INC is the percent to increment the volume by.
 NEG subtracts if it is true."
   (setopt efs/monitor-brightness (funcall (if neg '- '+) efs/monitor-brightness inc))
   (async-shell-command (concat "brightnessctl -d intel_backlight set " (int-to-string efs/monitor-brightness) "%")))
-
-(defun efs/exwm-smart-move (command)
-  "Call COMMAND if there are 3 or less windows. Otherwise, call 'ace-window'."
-  (if (> (count-windows) 3)
-      (ace-window 0)
-    (funcall command)))
 #+end_src
 
 #+NAME: Emacs Exwm Config
@@ -4473,8 +4500,10 @@ ace-window = {
                                        (?o delete-other-windows "Delete Other Windows")
                                        (?T aw-transpose-frame "Transpose Frame")
                                        (?? aw-show-dispatch-help)))'';
-  general."s-/" = "'ace-window";
-  command = ["ace-window"];
+  general = {
+    "s-H-o" = "'ace-window";
+    "s-H-e" = "'ace-window";
+  };
   config = ''
     <<Emacs Ace Window Config>>
   '';
@@ -4567,8 +4596,8 @@ ace-window = {
       };
       generalOne.global-leader = {
 	"g" = '''(:ignore t :which-key "gptel")'';
-	"gs" = '''(start-ollama :which-key "start")'';
-	"gp" = '''(gptel :which-key "prompt")'';
+	"gs" = '''("start" . start-ollama)'';
+	"gp" = '''("prompt" . gptel)'';
       };
       generalTwoConfig.":n".gptel-mode-map."S-RET" = "'gptel-menu";
       preface = ''
@@ -4646,9 +4675,9 @@ programs.emacs.init.usePackage.mpc-wrapper = {
   enable = true;
   generalOne.global-leader = {
     "m" = '''(:ignore t :which-key "mpd")'';
-    "mp" = '''(mpc-play :which-key "replay file")'';
-    "mm" = '''(music-menu :which-key "menu")'';
-    "ms" = '''(mpc-stop :which-key "stop")'';
+    "mp" = '''("replay file" . mpc-play)'';
+    "mm" = '''("menu" . music-menu)'';
+    "ms" = '''("stop" . mpc-stop)'';
   };
   deferIncrementally = true;
   config = ''
@@ -4710,6 +4739,7 @@ programs.mpv = {
 #+begin_src nix-ts
 pulseaudio-control = {
   enable = true;
+  deferIncrementally = true;
   setopt.pulseaudio-control-volume-step = ''"5%"'';
   general = {
     "<XF86AudioRaiseVolume>" = "'pulseaudio-control-increase-sink-volume";
@@ -4717,6 +4747,7 @@ pulseaudio-control = {
     "<XF86AudioMute>" = "'pulseaudio-control-toggle-current-sink-mute";
     "s-v" = "'pulseaudio-control-default-sink-mode";
   };
+  config = "(pulseaudio-control-default-sink-mode)";
 };
 #+end_src
 
@@ -4793,7 +4824,7 @@ programs.emacs.init.usePackage = {
     defer = true;
     setopt."sage-shell-edit:display-function" = ''"display-buffer"'';
     config = ''(sage-shell:define-alias)'';
-    generalOne.global-leader."S" = '''(run-sage :which-key "sage")'';
+    generalOne.global-leader."S" = '''("sage" . run-sage)'';
     generalTwoConfig."local-leader"."sage-shell-mode-map"."h" = "'sage-shell:help";
   };
 
@@ -5005,7 +5036,7 @@ eww = {
 yeetube = {
   enable = true;
   setopt.yeetube-play-function = "'mpv-play-url";
-  generalOne.global-leader."y" = '''(yeetube-search :which-key "search")'';
+  generalOne.global-leader."y" = '''("search" . yeetube-search)'';
   generalTwoConfig.":n"."yeetube-mode-map" = {
     "RET" = "'yeetube-play";
     "r" = "'yeetube-channel-videos";
@@ -5024,8 +5055,8 @@ ement = {
   enable = true;
   defer = true;
   generalOne = {
-    global-leader."e" = '''(ement-connect :which-key "element")''; 
-    local-leader."s" = '''(ement-sidebar :which-key "sidebar")'';
+    global-leader."e" = '''("element" . ement-connect)''; 
+    local-leader."s" = '''("sidebar" . ement-sidebar)'';
   };
   init = ''
     <<Emacs Internet Ement Init>>
@@ -5055,6 +5086,7 @@ webjump = {
     '''("Aur" . [simple-query "aur.archlinux.org" "aur.archlinux.org/packages/?K=" ""])''
     '''("Nixpkgs" . [simple-query "search.nixos.org" "search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=" ""])''
     '''("Curseforge" . webjump-to-curseforge)''
+    '''("Modrinth" . webjump-to-modrinth)''
   ];
   config = ''
     <<Emacs Internet Webjump Config>>
@@ -5065,11 +5097,22 @@ webjump = {
 #+NAME: Emacs Internet Webjump Config
 #+begin_src emacs-lisp
 (defun webjump-to-curseforge (name)
+  "Webjump function for searching curseforge.
+NAME is the term to search for."
   (let* ((prefix "legacy.curseforge.com/minecraft/")
          (category (completing-read "Choose a category" '("mc-mods" "modpacks" "shaders" "data-pack" "texture-packs")))
 	 (url (concat prefix category))
 	 (term (webjump-read-string (concat name " Search for"))))
     (concat url "/search?search=" (webjump-url-encode term))))
+
+(defun webjump-to-modrinth (name)
+  "Webjump function for searching modrinth.
+NAME is the term to search for."
+  (let* ((prefix "modrinth.com/")
+         (category (completing-read "Choose a category" '("mods" "resourcepacks" "datapacks" "shaders" "modpacks" "plugins")))
+	 (url (concat prefix category))
+	 (term (webjump-read-string (concat name " Search for"))))
+    (concat url "?q=" (webjump-url-encode term))))
 #+end_src
 
 *** Elfeed
@@ -5089,9 +5132,10 @@ elfeed = {
     ''"https://youtube.com/feeds/videos.xml?channel_id=UCq-VIBjS6Ia1r1IR_j-7NUw"''
     ''"https://youtube.com/feeds/videos.xml?channel_id=UC0E_vIe1e1lVeojYOgVg_5Q"''
     ''"https://youtube.com/feeds/videos.xml?channel_id=UCUQs6rEz6lRGHn6DWqss0hA"''
+    ''"https://youtube.com/feeds/videos.xml?channel_id=UC_zBdZ0_H_jn41FDRG7q4Tw"''
     ''"https://notrelated.xyz/rss"''
   ];
-  generalOne.global-leader."r" = "`,(cmd! (elfeed) (elfeed-update))";
+  generalOne.global-leader."r" = ''`("elfeed" . ,(cmd! (elfeed) (elfeed-update)))'';
 };
 #+end_src
 

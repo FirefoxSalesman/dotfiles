@@ -48,5 +48,4 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] Make the minibuffer dissapear
 + [ ] https://github.com/konrad1977/flyover
 + [ ] https://github.com/eshelyaron/semel
-+ [ ] https://github.com/mamapanda/evil-owl
 + [ ] See if there's anything to glean from here: https://www.reddit.com/r/emacs/comments/1nwgygm/building_workflows_with_gptel/

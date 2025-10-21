@@ -89,7 +89,7 @@
           ] ;
         };
         generalTwoConfig.local-leader.org-mode-map = {
-          "a" = '''(avy-org-goto-heading-timer :which-key "avy")'';
+          "a" = '''("avy" . avy-org-goto-heading-timer)'';
           "e" = "'smart-export";
         };
       
@@ -158,7 +158,7 @@
           markdown-hide-markup = true;
         };
         generalTwoConfig = {
-          ":n".markdown-mode-map = {
+          ":nm".gfm-mode-map = {
             "[h" = "'markdown-previous-visible-heading";
             "]h" = "'markdown-next-visible-heading";
           };  
@@ -185,7 +185,7 @@
           writeroom-maximize-window = false;
           writeroom-global-effects = false;
         };
-        generalOne.global-leader."w" = '''(writeroom-mode :which-key "writeroom")'';
+        generalOne.global-leader."w" = '''("writeroom" . writeroom-mode)'';
       };
 
       flyspell = {

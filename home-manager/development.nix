@@ -30,6 +30,8 @@
         emacs-lisp.enable = true;
         javascript.enable = true;
         ledger.enable = true;
+	python.enable = true;
+	c.enable = true;
 	r.enable = true;
 	makefile.enable = true;
 	yaml.enable = true;
@@ -65,7 +67,7 @@
       
       projection-ibuffer = {
         enable = true;
-        generalOne.project-prefix-map.i = ''`(,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))) :which-key "ibuffer")'';
+        generalOne.project-prefix-map.i = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
       };
       
       projection-multi.custom.projection-gradle-use-daemon = false;
@@ -79,10 +81,10 @@
       eglot = {
         gfhookf = [
           ''('eglot-managed-mode (local! completion-at-point-functions (list (cape-capf-super #'tempel-complete
-                                                                                                   #'eglot-completion-at-point
-      											     #'cape-file)
-                                                                                  #'cape-dabbrev)))''
-          "('before-save (lambda () (when eglot--managed-mode (eglot-format-buffer))))"
+            #'eglot-completion-at-point
+      											     #'cape-file))))
+          ''
+          "('before-save 'eglot-format-buffer)"
         ];
         config = ''
           (efs/evil-collection-remap 'evil-collection-eglot-setup 'normal eglot-mode-map 
@@ -122,8 +124,8 @@
       };
 
       python-ts-mode.setopt = {
-          python-shell-interpreter = ''"ipython"'';
-          python-shell-interpreter-args = ''"-i --simple-prompt"'';
+        python-shell-interpreter = ''"ipython"'';
+        python-shell-interpreter-args = ''"-i --simple-prompt"'';
       };
       
       racket-mode.gfhookf = ["('racket-mode 'hs-minor-mode)"];
@@ -133,6 +135,9 @@
       flymake-popon.setopt.flymake-popon-posframe-extra-arguments = [ "':poshandler" "'posframe-poshandler-point-bottom-left-corner-upward"
 	                                                                "':parent-frame" false
                                                                         "':refposhandler" "'posframe-refposhandler-xwininfo" ];
+
+      eat.generalOne.global-leader.a = ''`("AI via cursor" . ,(cmd! (eat "${pkgs.cursor-cli}/bin/cursor-agent")))'';
+
       java-ts-mode = {
         init = ''
           (defun tkj/java-decompile-class ()

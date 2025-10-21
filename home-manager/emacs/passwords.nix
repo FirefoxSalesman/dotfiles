@@ -9,9 +9,9 @@
       defer = true;
       generalOne.global-leader = {
         "p" = '''(:ignore t :which-key "pass")'';
-        "py" = '''(password-store-copy :which-key "yank")'';
-        "pi" = '''(password-store-insert :which-key "insert")'';
-        "pg" = '''(password-store-generate :which-key "generate")'';
+        "py" = '''("yank" . password-store-copy)'';
+        "pi" = '''("insert" . password-store-insert)'';
+        "pg" = '''("generate" . password-store-generate)'';
       };
       extraConfig = ":autoload pass-entries password-store-list";
     };
@@ -19,7 +19,7 @@
     password-store-otp = {
       enable = true;
       defer = true;
-      generalOne.global-leader."po" = '''(password-store-otp-token-copy :which-key "copy otp")'';
+      generalOne.global-leader."po" = '''("copy otp" . password-store-otp-token-copy)'';
     };
     
     pinentry = {

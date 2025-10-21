@@ -2,6 +2,7 @@
 
 {
   programs.emacs.init = {
+    aggressiveSymex = true;
     keybinds = {
       evil = {
         enable = true;
@@ -221,18 +222,21 @@
       };
       
       emacs.generalOneConfig = {
-        help-map."A" = ''`(,(cmd! (async-shell-command "${pkgs.wiki}/bin/wiki")) :which-key "Arch Wiki")'';
+        help-map."A" = ''`("Arch Wiki" . ,(cmd! (async-shell-command "${pkgs.wiki}/bin/wiki")))'';
         global-leader = {
-          "l" = ''`(,(cmd! (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k")))) :which-key "Compile")'';
-          "L" = ''`(,(cmd! (if (project-current) (project-recompile) (recompile))) :which-key "Recompile")'';
-          "u" = ''`(,(cmd! (start-process-shell-command "udisksmenu" nil "${pkgs.udisksmenu}/bin/udisksmenu")) :which-key "Mount USB")'';
+          "l" = ''`("Compile" . ,(cmd! (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k")))))'';
+          "L" = ''`("Recompile" . ,(cmd! (if (project-current) (project-recompile) (recompile))))'';
+          "u" = ''`("Mount USB" . ,(cmd! (start-process-shell-command "udisksmenu" nil "${pkgs.udisksmenu}/bin/udisksmenu")))'';
         };
       };
     
       evil-collection.setopt.evil-collection-unimpaired-want-repeat-mode-integration = true;
       
       evil-surround.generalTwoConfig = {
-        ":v".evil-surround-mode-map."R" = "'evil-surround-region";
+        ":v".evil-surround-mode-map = {
+          "r" = "'evil-surround-region";
+          "R" = "'evil-surround-region";
+        };
         ":o".evil-surround-mode-map = {
           "s" = "nil";
           "r" = "'evil-surround-edit";
@@ -248,6 +252,8 @@
           "H-X" = "'evilem-motion-backward-word-begin";
           "H-x" = "'evilem-motion-backward-WORD-begin";
           "H-M" = "'evilem-motion-search-previous";
+          "H-)" = "'evilem-motion-forward-sentence-begin";
+          "H-(" = "'evilem-motion-backward-sentence-begin";
         };
         custom.avy-dispatch-alist = [
           "'(?l . avy-action-ispell)"
@@ -325,6 +331,15 @@
         };
         ghookf = ["('evil-mode 'evil-owl-mode)"];
       };
+      
+      evil-exchange = {
+        enable = true;
+        generalOne = {
+          evil-operator-state-map."M-z" = "'evil-exchange/cx";
+          evil-visual-state-map."M-z" = "'evil-exchange";
+        };
+        gfhookf = ["('doom-escape (lambda () (when (featurep 'evil-exchange) (evil-exchange-cancel))))"];
+      };
     
       symex = {
         enable = true;
@@ -335,17 +350,28 @@
           (repeaters-define-maps
            '(("symex-visual-line"
               symex-next-visual-line "e"
-              symex-previous-visual-line "o")))    
+              symex-previous-visual-line "o")))
+          
+          (require 'evil-easymotion)
+          
+          (evilem-make-motion efs/evilem-motion-symex-go-forward #'symex-go-forward)
+          (evilem-make-motion efs/evilem-motion-symex-go-backward #'symex-go-backward)
+          (evilem-make-motion efs/evilem-motion-symex-go-down #'symex-go-down)
+          (evilem-make-motion efs/evilem-motion-symex-go-up #'symex-go-up)    
         '';
         generalOneConfig.evil-symex-state-map = {
           "n" = "'symex-go-backward";
-          "e" = "'symex-go-down";
-          "o" = "'symex-go-up";
+          "H-n" = "'efs/evilem-motion-symex-go-backward";
+          "H-o" = "'efs/evilem-motion-symex-go-down";
+          "C-o" = "'symex-climb-branch";
+          "o" = "'symex-go-down";
+          "H-e" = "'efs/evilem-motion-symex-go-up";
+          "C-e" = "'symex-descend-branch";
+          "e" = "'symex-go-up";
           "i" = "'symex-go-forward";
+          "H-i" = "'efs/evilem-motion-symex-go-forward";
           "bn" = "'evil-backward-char";
           "bi" = "'evil-forward-char";
-          "C-e" = "'symex-climb-branch";
-          "C-o" = "'symex-descend-branch";
           "d" = "'symex-yank";
           "D" = "'symex-yank-remaining";
           "G" = "'symex-paste-after";
@@ -389,6 +415,9 @@
           "x" 'evil-backward-WORD-begin
           "X" 'evil-backward-word-begin
           "d" 'evil-yank)
+        (evil-define-key 'symex 'evil-org-mode
+          "R" 'evil-org-open-above
+          "S" 'evil-org-open-below)
         (evil-define-key 'visual 'evil-org-mode
           "i" 'evil-forward-char
           "s" evil-inner-text-objects-map)

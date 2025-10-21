@@ -10,7 +10,7 @@
         "C-x C-j" = "'dired-jump";
         "C-x d" = "'consult-dir";
       };
-      generalOne.global-leader."d" = '''(dired :which-key "dired")'';
+      generalOne.global-leader."d" = '''("dired" . dired)'';
       generalTwoConfig.":n".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
       setopt = {
         dired-recursive-deletes = "'always";

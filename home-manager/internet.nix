@@ -52,7 +52,7 @@
     yeetube = {
       enable = true;
       setopt.yeetube-play-function = "'mpv-play-url";
-      generalOne.global-leader."y" = '''(yeetube-search :which-key "search")'';
+      generalOne.global-leader."y" = '''("search" . yeetube-search)'';
       generalTwoConfig.":n"."yeetube-mode-map" = {
         "RET" = "'yeetube-play";
         "r" = "'yeetube-channel-videos";
@@ -65,8 +65,8 @@
     #   enable = true;
     #   defer = true;
     #   generalOne = {
-    #     global-leader."e" = '''(ement-connect :which-key "element")''; 
-    #     local-leader."s" = '''(ement-sidebar :which-key "sidebar")'';
+    #     global-leader."e" = '''("element" . ement-connect)''; 
+    #     local-leader."s" = '''("sidebar" . ement-sidebar)'';
     #   };
     #   init = ''
     #       (defun ement-sidebar ()
@@ -87,14 +87,26 @@
         '''("Aur" . [simple-query "aur.archlinux.org" "aur.archlinux.org/packages/?K=" ""])''
         '''("Nixpkgs" . [simple-query "search.nixos.org" "search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=" ""])''
         '''("Curseforge" . webjump-to-curseforge)''
+        '''("Modrinth" . webjump-to-modrinth)''
       ];
       config = ''
         (defun webjump-to-curseforge (name)
+          "Webjump function for searching curseforge.
+        NAME is the term to search for."
           (let* ((prefix "legacy.curseforge.com/minecraft/")
                  (category (completing-read "Choose a category" '("mc-mods" "modpacks" "shaders" "data-pack" "texture-packs")))
         	 (url (concat prefix category))
         	 (term (webjump-read-string (concat name " Search for"))))
             (concat url "/search?search=" (webjump-url-encode term))))
+        
+        (defun webjump-to-modrinth (name)
+          "Webjump function for searching modrinth.
+        NAME is the term to search for."
+          (let* ((prefix "modrinth.com/")
+                 (category (completing-read "Choose a category" '("mods" "resourcepacks" "datapacks" "shaders" "modpacks" "plugins")))
+        	 (url (concat prefix category))
+        	 (term (webjump-read-string (concat name " Search for"))))
+            (concat url "?q=" (webjump-url-encode term))))
       '';
     };
 
@@ -112,9 +124,10 @@
         ''"https://youtube.com/feeds/videos.xml?channel_id=UCq-VIBjS6Ia1r1IR_j-7NUw"''
         ''"https://youtube.com/feeds/videos.xml?channel_id=UC0E_vIe1e1lVeojYOgVg_5Q"''
         ''"https://youtube.com/feeds/videos.xml?channel_id=UCUQs6rEz6lRGHn6DWqss0hA"''
+        ''"https://youtube.com/feeds/videos.xml?channel_id=UC_zBdZ0_H_jn41FDRG7q4Tw"''
         ''"https://notrelated.xyz/rss"''
       ];
-      generalOne.global-leader."r" = "`,(cmd! (elfeed) (elfeed-update))";
+      generalOne.global-leader."r" = ''`("elfeed" . ,(cmd! (elfeed) (elfeed-update)))'';
     };
   };
 

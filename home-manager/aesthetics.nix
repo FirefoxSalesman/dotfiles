@@ -415,8 +415,8 @@
             (require 'eww)
             (let ((shrface-org nil)
                   (shr-bullet (concat (char-to-string shrface-item-bullet) " "))
-                  (shr-width 7000)
-                  (shr-max-width 7000)
+                  (shr-width 91)
+                  (shr-max-width 91)
                   (shr-indentation 0)
                   (shr-external-rendering-functions shrface-general-rendering-functions)
                   (shrface-toggle-bullets nil)
@@ -429,7 +429,6 @@
             (require 'eww)
             (let ((shrface-org nil)
                   ;; make it large enough, it would not fill the column
-                  ;; I uses visual-line-mode, writeroom-mode for improving the reading experience instead
                   (shr-width 7000)
                   (shr-indentation 0)
                   (shr-external-rendering-functions shrface-general-rendering-functions)
@@ -471,6 +470,8 @@
         generalTwoConfig.local-leader.shrface-mode-map = {
           "l" = "'shrface-links-consult";
           "o" = "'shrface-headline-consult";
+          "]c" = "'org-next-block";
+          "[c" = "'org-previous-block";
         };
       };
     };

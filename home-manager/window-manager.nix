@@ -372,8 +372,8 @@
             '''([?\s-t] . proced)''
           
             # Movement
-            ''`([?\s-e] . ,(cmd! (efs/exwm-smart-move 'elwm-next)))''
-            ''`([?\s-o] . ,(cmd! (efs/exwm-smart-move 'elwm-prev)))''
+            '''([?\s-e] . elwm-next)''
+            '''([?\s-o] . elwm-prev)''
       
             # Arrangement
             '''([?\s-E] . elwm-rotate-window)''
@@ -457,12 +457,6 @@
           NEG subtracts if it is true."
             (setopt efs/monitor-brightness (funcall (if neg '- '+) efs/monitor-brightness inc))
             (async-shell-command (concat "brightnessctl -d intel_backlight set " (int-to-string efs/monitor-brightness) "%")))
-          
-          (defun efs/exwm-smart-move (command)
-            "Call COMMAND if there are 3 or less windows. Otherwise, call 'ace-window'."
-            (if (> (count-windows) 3)
-                (ace-window 0)
-              (funcall command)))
         '';
         config = ''
           ;; Set the screen resolution (update this to be the correct resolution for your screen!)
@@ -568,8 +562,10 @@
                                              (?o delete-other-windows "Delete Other Windows")
                                              (?T aw-transpose-frame "Transpose Frame")
                                              (?? aw-show-dispatch-help)))'';
-        general."s-/" = "'ace-window";
-        command = ["ace-window"];
+        general = {
+          "s-H-o" = "'ace-window";
+          "s-H-e" = "'ace-window";
+        };
         config = ''
           (ace-window-posframe-mode)
           

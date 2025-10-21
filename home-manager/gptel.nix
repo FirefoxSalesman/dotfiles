@@ -30,8 +30,8 @@
       };
       generalOne.global-leader = {
 	"g" = '''(:ignore t :which-key "gptel")'';
-	"gs" = '''(start-ollama :which-key "start")'';
-	"gp" = '''(gptel :which-key "prompt")'';
+	"gs" = '''("start" . start-ollama)'';
+	"gp" = '''("prompt" . gptel)'';
       };
       generalTwoConfig.":n".gptel-mode-map."S-RET" = "'gptel-menu";
       preface = ''
