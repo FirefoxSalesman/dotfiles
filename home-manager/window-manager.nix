@@ -304,7 +304,7 @@
           "('exwm-init 'efs/exwm-init-hook)"
           "('exwm-mode 'evil-motion-state)"
           # When window title updates, use it to set the buffer name
-          "('exwm-update-title 'efs/exwm-update-title)"
+          # "('exwm-update-title 'efs/exwm-update-title)"
         ];
         # Ctrl+q will enable the next key to be sent directly
         generalOneConfig.exwm-mode-map."C-q" = "'exwm-input-send-next-key";
@@ -400,10 +400,10 @@
           (defun efs/exwm-update-class ()
             (exwm-workspace-rename-buffer exwm-class-name))
           
-          (defun efs/exwm-update-title ()
-            (pcase exwm-class-name
-              ("qutebrowser" (exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title)))
-              ("mpv" (exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title)))))
+          ;; (defun efs/exwm-update-title ()
+          ;;   (pcase exwm-class-name
+          ;;     ("qutebrowser" (exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title)))
+          ;;     ("mpv" (exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title)))))
           
           ;; From dmacs
           (defvar single-window--last-configuration nil "Last window configuration before calling `delete-other-windows'.")

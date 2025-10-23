@@ -29,7 +29,7 @@
 #+begin_src nix-ts
 nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-24.11";
-emacs-overlay.url  = "github:nix-community/emacs-overlay";
+emacs-overlay.url  = "github:nix-community/emacs-overlay/c5ba5a5";
 
 stylix.url = "github:danth/stylix";
 
@@ -1891,7 +1891,8 @@ shrface = {
 
 {
   home.packages = with pkgs; [
-    (config.lib.nixGL.wrap gimp)
+    # (config.lib.nixGL.wrap gimp)
+    gimp
     (config.lib.nixGL.wrap prismlauncher)
     (config.lib.nixGL.wrap blockbench)
     (config.lib.nixGL.wrap tor-browser)
@@ -2319,9 +2320,8 @@ I'm running dired with a couple of small packages that improve on it
 
   programs.emacs = {
     enable = true;
-    package = pkgs.emacs30-gtk3;
+    package = (config.lib.nixGL.wrap pkgs.emacs30-gtk3);
     extraPackages = epkgs: with epkgs; [ 
-      on
       repeaters
       hydra
       pretty-hydra
@@ -4230,7 +4230,7 @@ exwm = {
     "('exwm-init 'efs/exwm-init-hook)"
     "('exwm-mode 'evil-motion-state)"
     # When window title updates, use it to set the buffer name
-    "('exwm-update-title 'efs/exwm-update-title)"
+    # "('exwm-update-title 'efs/exwm-update-title)"
   ];
   # Ctrl+q will enable the next key to be sent directly
   generalOneConfig.exwm-mode-map."C-q" = "'exwm-input-send-next-key";
@@ -4349,10 +4349,10 @@ exwm-outer-gaps = {
 (defun efs/exwm-update-class ()
   (exwm-workspace-rename-buffer exwm-class-name))
 
-(defun efs/exwm-update-title ()
-  (pcase exwm-class-name
-    ("qutebrowser" (exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title)))
-    ("mpv" (exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title)))))
+;; (defun efs/exwm-update-title ()
+;;   (pcase exwm-class-name
+;;     ("qutebrowser" (exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title)))
+;;     ("mpv" (exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title)))))
 
 ;; From dmacs
 (defvar single-window--last-configuration nil "Last window configuration before calling `delete-other-windows'.")
@@ -4796,9 +4796,9 @@ pulseaudio-control = {
 ** Sagemath
 Sagemath is my goto for dealing with complex math. It makes for a wonderful maple replacement.
 #+begin_src nix-ts :tangle sage.nix :noweb yes
-{ pkgs, ... }:
+{ pkgs-stable, ... }:
 {
-  home.packages = with pkgs; [ sage ];
+  home.packages = with pkgs-stable; [ sage ];
 
   <<Sage Emacs>>
 

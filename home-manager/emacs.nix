@@ -13,9 +13,8 @@
 
   programs.emacs = {
     enable = true;
-    package = pkgs.emacs30-gtk3;
+    package = (config.lib.nixGL.wrap pkgs.emacs30-gtk3);
     extraPackages = epkgs: with epkgs; [ 
-      on
       repeaters
       hydra
       pretty-hydra
