@@ -22,5 +22,6 @@
     ezf
     pkg
     updatefix
+    hdmihelper
   ];
 }

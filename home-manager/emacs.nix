@@ -128,6 +128,11 @@
           setopt.auto-save-file-name-transforms = ''`((".*" ,(no-littering-expand-var-file-name "auto-save/") t))'';
         };
 
+        files = {
+          enable = true;
+          custom.trusted-content = [''"/home/holschcc/projects/RESOLVE/"''];
+        };
+
         async = {
           enable = true;
           config = ''

@@ -212,14 +212,6 @@
             (interactive)
             (bufler-cycle-buffers 'evil-prev-buffer))
         '';
-        config = ''
-          (defun bufler-bar ()
-            (interactive)
-            (bufler-sidebar)
-            (with-selected-window (get-buffer-window "*Bufler*")
-              (gsetq window-size-fixed 'width)
-              (window-resize (selected-window) (- 35 (window-total-width)) t t)))
-        '';
         extraConfig = ''
           :pretty-hydra
           ((:color amaranth)

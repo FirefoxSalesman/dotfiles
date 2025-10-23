@@ -141,7 +141,9 @@
             "H-'" = "'evil-collection-consult-mark";
             "H--" = "'evil-collection-consult-jump-list";
             "H-q" = "'consult-flymake"; # Alternative: consult-flycheck
-          };
+            "[i" = '''("Previous Imenu" . efs/consult-imenu-previous)'';
+            "]i" = '''("Next Imenu" . efs/consult-imenu-next)'';
+          } ;
           ctl-x-map."C-f" = "'consult-fd";
           global-leader."i" = "'efs/consult-header";
         };
@@ -179,8 +181,35 @@
               (cond ((eq major-mode 'org-mode) (consult-org-heading))
             	((eq major-mode 'gfm-mode) (consult-outline))
             	(t (consult-imenu))))
+            
+            (defun efs/consult-goto-imenu (filter getter)
+              "Go to the next imenu item.
+            FILTER is a function used to filter for items. (Such as '>' or '<').
+            GETTER is a function used to get the appropriate item (Such as 'car' or 'last')."
+              (require 'consult-imenu)
+              (goto-char (funcall getter
+            		      (-filter (lambda (x)
+            				 (funcall filter x (marker-last-position (point-marker))))
+            			       (mapcar (lambda (x)
+            					 (marker-last-position (cdr x)))
+            				       (consult-imenu--items))))))
+            
+            (defun efs/consult-imenu-next ()
+              "Go to the next imenu item."
+              (interactive)
+              (efs/consult-goto-imenu '> 'car))
+            
+            (defun efs/consult-imenu-previous ()
+              "Go to the previous imenu item."
+              (interactive)
+              (efs/consult-goto-imenu '< (lambda (x) (car (last x)))))
+            
+            (repeaters-define-maps
+             '(("imenu"
+                efs/consult-imenu-next "i"
+                efs/consult-imenu-previous "I")))
           '';
-      } ;
+      };
 
       embark = {
         general."M-a" = "'embark-dwim";

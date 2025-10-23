@@ -31,7 +31,6 @@
         javascript.enable = true;
         ledger.enable = true;
 	python.enable = true;
-	c.enable = true;
 	r.enable = true;
 	makefile.enable = true;
 	yaml.enable = true;
@@ -79,12 +78,13 @@
       };
 
       eglot = {
+        preface = "(defvar efs/autoformat t)";
         gfhookf = [
           ''('eglot-managed-mode (local! completion-at-point-functions (list (cape-capf-super #'tempel-complete
             #'eglot-completion-at-point
       											     #'cape-file))))
           ''
-          "('before-save 'eglot-format-buffer)"
+          "('before-save (lambda () (when (and eglot--managed-mode efs/autoformat) (eglot-format-buffer))))"
         ];
         config = ''
           (efs/evil-collection-remap 'evil-collection-eglot-setup 'normal eglot-mode-map 

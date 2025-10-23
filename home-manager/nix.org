@@ -159,6 +159,7 @@ final: prev: pkgs: inputs: {
   doomer = (import ./scripts/doomer.nix { inherit pkgs; });
   ffmpeg-bulk = (import ./scripts/ffmpeg-bulk.nix { inherit pkgs; });
   masstube = (import ./scripts/masstube.nix { inherit pkgs; });
+  hdmihelper = (import ./scripts/hdmi-helper.nix { inherit pkgs; });
   pkg = (import ./scripts/pkg.nix { inherit pkgs; });
   udisksmenu = (import ./scripts/udisksmenu.nix { inherit pkgs; });
   updatefix = (import ./scripts/updatefix.nix { inherit pkgs; });
@@ -662,6 +663,18 @@ for F in "''${INPUT[@]}"; do # Actually execute
 done
 
 exit
+''
+#+end_src
+
+*** HDMI Helper
+#+begin_src nix-ts :tangle scripts/hdmi-helper.nix
+{ pkgs }:
+
+pkgs.writeShellScriptBin "hdmihelper" ''
+  case "$1" in
+    mirror ) xrandr --output HDMI-1-0 --mode 1920x1080 --output eDP-1 --mode 1920x1080 ;;
+    off ) xrandr --output eDP-1 --mode 2560x1600 ;;
+  esac
 ''
 #+end_src
 
@@ -1898,6 +1911,7 @@ shrface = {
     ezf
     pkg
     updatefix
+    hdmihelper
   ];
 }
 #+end_src
@@ -2106,12 +2120,13 @@ projection-multi-embark = {
 #+NAME: Development Eglot
 #+begin_src nix-ts :noweb yes
 eglot = {
+  preface = "(defvar efs/autoformat t)";
   gfhookf = [
     ''('eglot-managed-mode (local! completion-at-point-functions (list (cape-capf-super #'tempel-complete
       #'eglot-completion-at-point
 											     #'cape-file))))
     ''
-    "('before-save 'eglot-format-buffer)"
+    "('before-save (lambda () (when (and eglot--managed-mode efs/autoformat) (eglot-format-buffer))))"
   ];
   config = ''
     <<Development Eglot Config>>
@@ -2326,6 +2341,8 @@ I'm running dired with a couple of small packages that improve on it
 
         <<Emacs Cleanup>>
 
+        <<Emacs Trust>>
+
         <<Emacs Async>>
 
         <<Emacs Wgrep>>
@@ -2458,6 +2475,15 @@ no-littering = {
   #no-littering doesn't set this by default so we must place
   #auto save files in the same path as it uses for sessions
   setopt.auto-save-file-name-transforms = ''`((".*" ,(no-littering-expand-var-file-name "auto-save/") t))'';
+};
+#+end_src
+
+***** Trust
+#+NAME: Emacs Trust
+#+begin_src nix-ts
+files = {
+  enable = true;
+  custom.trusted-content = [''"/home/holschcc/projects/RESOLVE/"''];
 };
 #+end_src
 
@@ -3231,7 +3257,9 @@ consult = {
       "H-'" = "'evil-collection-consult-mark";
       "H--" = "'evil-collection-consult-jump-list";
       "H-q" = "'consult-flymake"; # Alternative: consult-flycheck
-    };
+      "[i" = '''("Previous Imenu" . efs/consult-imenu-previous)'';
+      "]i" = '''("Next Imenu" . efs/consult-imenu-next)'';
+    } ;
     ctl-x-map."C-f" = "'consult-fd";
     global-leader."i" = "'efs/consult-header";
   };
@@ -3239,7 +3267,7 @@ consult = {
   config = ''
       <<Emacs Consult Config>>
     '';
-} ;
+};
 #+end_src
 
 #+NAME: Emacs Consult Config
@@ -3276,6 +3304,33 @@ consult = {
   (cond ((eq major-mode 'org-mode) (consult-org-heading))
 	((eq major-mode 'gfm-mode) (consult-outline))
 	(t (consult-imenu))))
+
+(defun efs/consult-goto-imenu (filter getter)
+  "Go to the next imenu item.
+FILTER is a function used to filter for items. (Such as '>' or '<').
+GETTER is a function used to get the appropriate item (Such as 'car' or 'last')."
+  (require 'consult-imenu)
+  (goto-char (funcall getter
+		      (-filter (lambda (x)
+				 (funcall filter x (marker-last-position (point-marker))))
+			       (mapcar (lambda (x)
+					 (marker-last-position (cdr x)))
+				       (consult-imenu--items))))))
+
+(defun efs/consult-imenu-next ()
+  "Go to the next imenu item."
+  (interactive)
+  (efs/consult-goto-imenu '> 'car))
+
+(defun efs/consult-imenu-previous ()
+  "Go to the previous imenu item."
+  (interactive)
+  (efs/consult-goto-imenu '< (lambda (x) (car (last x)))))
+
+(repeaters-define-maps
+ '(("imenu"
+    efs/consult-imenu-next "i"
+    efs/consult-imenu-previous "I")))
 #+end_src
 
 **** Embark
@@ -3962,9 +4017,6 @@ bufler = {
   init = ''
     <<Emacs Bufler Init>>
   '';
-  config = ''
-    <<Emacs Bufler Config>>
-  '';
   extraConfig = ''
     :pretty-hydra
     ((:color amaranth)
@@ -4085,16 +4137,6 @@ bufler-workspace-tabs = {
   "Cycles the buffers in the workspace backward."
   (interactive)
   (bufler-cycle-buffers 'evil-prev-buffer))
-#+end_src
-
-#+NAME: Emacs Bufler Config
-#+begin_src emacs-lisp
-(defun bufler-bar ()
-  (interactive)
-  (bufler-sidebar)
-  (with-selected-window (get-buffer-window "*Bufler*")
-    (gsetq window-size-fixed 'width)
-    (window-resize (selected-window) (- 35 (window-total-width)) t t)))
 #+end_src
 
 *** ELWM
