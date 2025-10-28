@@ -157,7 +157,8 @@
             (group
              (group-or "AV"
                        (name-match "lmms" (rx bos "lmms"))
-                       (name-match "Gimp-2.10" (rx bos "Gimp-2.10"))
+                       (name-match "Gimp" (rx bos "Gimp"))
+                       (name-match "Audacity" (rx bos "Audacity"))
                        (name-match "kdenlive" (rx bos "kdenlive"))))
             (group
              (group-or "Games"
@@ -167,7 +168,6 @@
             (group
              ;; Subgroup collecting all `help-mode' and `info-mode' buffers.
              (group-or "Help/Info"
-                       (mode-match "*Help*" (rx bos (or "help-" "helpful-")))
                        (mode-match "*Info*" (rx bos "info-"))
           	     (mode-match "Man-mode" (rx bos "Man-"))))
             (group
@@ -299,15 +299,25 @@
         enable = true;
         gfhookf = [
           # When window "class" updates, use it to set the buffer name
-          "('exwm-update-class 'efs/exwm-update-class)"
+          "('exwm-update-class (lambda () (exwm-workspace-rename-buffer exwm-class-name)))"
           # When EXWM starts up, do some extra configuration
-          "('exwm-init 'efs/exwm-init-hook)"
+          ''('exwm-init (lambda ()
+                                ;; Make workspace 0 be the one where we land at startup
+                                (exwm-workspace-switch-create 0)
+                                ;; Show status in the mode line
+                                (start-process-shell-command "xbanish" nil "${pkgs.xbanish}/bin/xbanish")))''
           "('exwm-mode 'evil-motion-state)"
           # When window title updates, use it to set the buffer name
-          # "('exwm-update-title 'efs/exwm-update-title)"
+          ''('exwm-update-title (lambda ()
+                                        (pcase exwm-class-name
+                                               ("qutebrowser" (exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title)))
+                                               ("mpv" (exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title))))))''
         ];
         # Ctrl+q will enable the next key to be sent directly
-        generalOneConfig.exwm-mode-map."C-q" = "'exwm-input-send-next-key";
+        generalOneConfig.exwm-mode-map = {
+          "C-q" = "'exwm-input-send-next-key";
+          "C-c" = "mode-specific-map";
+        };
         custom = {
           exwm-manage-force-tiling = true;
           # Emacs everywhere
@@ -319,7 +329,7 @@
           exwm-workspace-show-all-buffers = true;
           # This will need to be updated to the name of a display!  You can find
           # the names of your displays by looking at arandr or the output of xrandr
-          exwm-randr-workspace-monitor-plist = '''(1 "eDP-1-1") (2 "HDMI-0")'';
+          exwm-randr-workspace-monitor-plist = '''(0 "eDP-1-1") (1 "HDMI-0")'';
           # Automatically send the mouse cursor to the selected workspace's display
           exwm-workspace-warp-cursor = true;
           # Window focus should follow the mouse pointer
@@ -366,6 +376,7 @@
             # Movement
             '''([?\s-e] . elwm-next)''
             '''([?\s-o] . elwm-prev)''
+            '''([?\s-.] . other-frame)''
       
             # Arrangement
             '''([?\s-E] . elwm-rotate-window)''
@@ -391,20 +402,6 @@
         };
         afterCall = ["on-init-ui-hook"];
         init = ''
-          (defun efs/exwm-init-hook ()
-            ;; Make workspace 0 be the one where we land at startup
-            (exwm-workspace-switch-create 0)
-            
-            ;; Show status in the mode line
-            (start-process-shell-command "xbanish" nil "${pkgs.xbanish}/bin/xbanish"))
-          (defun efs/exwm-update-class ()
-            (exwm-workspace-rename-buffer exwm-class-name))
-          
-          ;; (defun efs/exwm-update-title ()
-          ;;   (pcase exwm-class-name
-          ;;     ("qutebrowser" (exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title)))
-          ;;     ("mpv" (exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title)))))
-          
           ;; From dmacs
           (defvar single-window--last-configuration nil "Last window configuration before calling `delete-other-windows'.")
           ;; From dmacs

@@ -32,6 +32,7 @@
     (ti "#+title: " q)
     (ci "* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q)
     (exp "#+export: " q)
+    (latex "@@latex:" q "@@")
   
     java-ts-mode
     (doc "/**" n> " * " q n " */")
@@ -133,7 +134,21 @@
       consult = {
         ghookf = ["('minibuffer-setup 'consult-initial-narrow)"];
         command = ["consult-goto-line" "consult-keep-lines"];
-        setopt.consult-buffer-sources = "'(consult--source-buffer)";
+        setopt = {
+          consult-buffer-sources = "'(consult--source-buffer)";
+          consult-bookmark-narrow = [
+            '''(?b "Bufler" bufler-workspace-bookmark-handler)''
+            '''(?f "File" bookmark-default-handler)''
+            '''(?h "Help" help-bookmark-jump Info-bookmark-jump Man-bookmark-jump woman-bookmark-jump)''
+            '''(?p "Picture" image-bookmark-jump)''
+            '''(?d "Docview" doc-view-bookmark-jump)''
+            '''(?m "Mail" gnus-summary-bookmark-jump)''
+            '''(?s "Eshell" eshell-bookmark-jump)''
+            '''(?w "Web" qutebrowser-bookmark-jump eww-bookmark-jump xwidget-webkit-bookmark-jump-handler)''
+            '''(?v "VC Directory" vc-dir-bookmark-jump)''
+            '''(nil "Other")''
+          ] ;
+        };
         generalOne = {
           ":n" = {
             "M-g" = "'consult-yank-pop"; # orig. evil-paste-pop

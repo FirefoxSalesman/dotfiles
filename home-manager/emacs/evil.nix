@@ -2,7 +2,6 @@
 
 {
   programs.emacs.init = {
-    aggressiveSymex = true;
     keybinds = {
       evil = {
         enable = true;

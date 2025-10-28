@@ -82,7 +82,6 @@
       url = "github:lrustand/qutebrowser.el/18f98f0";
       flake = false;
     };
-    
   };
 
   outputs = { self, home-manager, nixgl, nixpkgs, nixpkgs-stable, stylix, emacs-init, ... }@inputs:

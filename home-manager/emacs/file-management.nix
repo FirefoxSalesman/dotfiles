@@ -6,12 +6,13 @@
       enable = true;
       gfhookf = ["('dired-mode (list 'dired-omit-mode 'hl-line-mode (local!
         visible-cursor nil)))"];
-      general = {
-        "C-x C-j" = "'dired-jump";
-        "C-x d" = "'consult-dir";
+      generalOne = {
+	global-leader."d" = '''("dired" . dired)'';
+	ctl-x-map = {
+          "C-j" = "'dired-jump";
+          "d" = "'consult-dir";
+	};
       };
-      generalOne.global-leader."d" = '''("dired" . dired)'';
-      generalTwoConfig.":n".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
       setopt = {
         dired-recursive-deletes = "'always";
         dired-listing-switches = ''"-agho --group-directories-first"'';
@@ -21,29 +22,41 @@
       config = ''(with-eval-after-load 'dired-x (gsetq dired-omit-extensions (delete ".class" dired-omit-extensions)))'';
     };
 
+    wdired = {
+      enable = true;
+      generalTwoConfig.":n" = {
+	dired-mode-map."w" = "'wdired-change-to-wdired-mode";
+	wdired-mode-map = {
+	  "v" = "'dired-do-delete";
+	  "R" = "'dired-create-empty-file";
+	  "S" = "'dired-create-empty-file";
+	};
+      };
+    };
+
     openwith = {
       enable = true;
       defer = true;
       ghookf = ["('dired-mode 'openwith-mode)"];
       config = ''
-          (gsetq openwith-associations
-                 (list
-                  (list (openwith-make-extension-regexp
-                         '("ff"))
-                        "lel"
-                        '(file))
-                  (list (openwith-make-extension-regexp
-                         '("odt" "doc" "docx" "odp" "pptx" "xlsx"))
-                        "libreoffice"
-                        '(file))
-                  (list (openwith-make-extension-regexp
-                         '("mpg" "mpeg" "mp3" "mp4"
-                           "avi" "wmv" "wav" "mov" "flv"
-                           "ogm" "ogg" "mkv" "webm" "opus"
-                           "flac"))
-                        "mpv"
-                        '(file))))
-        '';
+        (gsetq openwith-associations
+               (list
+                (list (openwith-make-extension-regexp
+                       '("ff"))
+                      "lel"
+                      '(file))
+                (list (openwith-make-extension-regexp
+                       '("odt" "doc" "docx" "odp" "pptx" "xlsx"))
+                      "libreoffice"
+                      '(file))
+                (list (openwith-make-extension-regexp
+                       '("mpg" "mpeg" "mp3" "mp4"
+                         "avi" "wmv" "wav" "mov" "flv"
+                         "ogm" "ogg" "mkv" "webm" "opus"
+                         "flac"))
+                      "mpv"
+                      '(file))))
+      '';
     };
 
     dired-hide-dotfiles = {
@@ -61,21 +74,21 @@
     dired-single = {
       enable = true;
       ghookf = [''
-          ('dired-mode (lambda () (general-def 'normal dired-mode-map
+        ('dired-mode (lambda () (general-def 'normal dired-mode-map
                "B" 'evil-goto-line
                "n" 'dired-single-prev
                "i" 'dired-single-next)))
-        ''];
+      ''];
     };
 
     dired-ranger = {
       enable = true;
       ghookf = [''
-          ('dired-mode (lambda () (general-def 'normal dired-mode-map
+        ('dired-mode (lambda () (general-def 'normal dired-mode-map
                "d" 'dired-ranger-copy
                "O" 'dired-ranger-move
                "G" 'dired-ranger-paste)))
-        ''];
+      ''];
     };
 
     diredfl = {

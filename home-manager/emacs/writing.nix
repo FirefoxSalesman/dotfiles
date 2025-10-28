@@ -41,6 +41,8 @@
                                                        #'tempel-complete
       						 #'cape-file)
                                                       #'pcomplete-completions-at-point
+      						#'cape-tex
+      						#'cape-elisp-block
       						#'cape-dict
                                                       #'cape-dabbrev))))''
         ];
@@ -96,13 +98,12 @@
         config = ''
           (require 'ol-man)
           (defun smart-export ()
-            "Export the current buffer, according to its heading, then preview the result."
+            "Export the current buffer, according to its heading."
             (interactive)
-            (let* ((export-type (cadr (assoc "EXPORT" (org-collect-keywords '("EXPORT")))))
-          	 (result (cond ((equal export-type "pdf") (org-latex-export-to-pdf))
-          		       ((equal export-type "odt")  (org-odt-export-to-odt))
-                                 ((equal export-type "html") (when (< 2 (count-windows)) (elwm-split-window)) (eww-open-file (org-html-export-to-html)))))))
-              (when (stringp result) (find-file-other-window result)))
+            (let ((export-type (cadr (assoc "EXPORT" (org-collect-keywords '("EXPORT"))))))
+              (cond ((equal export-type "pdf") (org-latex-export-to-pdf))
+          	  ((equal export-type "odt")  (org-odt-export-to-odt))
+                    ((equal export-type "html") (org-html-export-to-html)))))
         '' ;
       };
 

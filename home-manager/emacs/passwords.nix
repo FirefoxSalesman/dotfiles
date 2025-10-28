@@ -22,6 +22,12 @@
       generalOne.global-leader."po" = '''("copy otp" . password-store-otp-token-copy)'';
     };
     
+    auth-source-pass = {
+      enable = true;
+      after = ["magit"];
+      config = "(auth-source-pass-enable)";
+    };
+    
     pinentry = {
       enable = true;
       setopt.epa-pinentry-mode = "'loopback";

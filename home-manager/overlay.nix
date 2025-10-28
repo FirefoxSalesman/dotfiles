@@ -52,7 +52,7 @@ final: prev: pkgs: inputs: {
           inherit inputs;
           inherit (prev.emacsPackages) trivialBuild exwm xelb;
         });
-        gptel-quick = (prev.emacsPackages.callPackage ./packages/emacs/gptel-quick.nix {
+	gptel-quick = (prev.emacsPackages.callPackage ./packages/emacs/gptel-quick.nix {
           inherit inputs;
           inherit (prev.emacsPackages) trivialBuild gptel;
         });

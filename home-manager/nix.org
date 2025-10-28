@@ -107,7 +107,6 @@ exwm-qutebrowser = {
   url = "github:lrustand/qutebrowser.el/18f98f0";
   flake = false;
 };
-
 #+end_src
 
 ** Outputs
@@ -206,7 +205,7 @@ final: prev: pkgs: inputs: {
           inherit inputs;
           inherit (prev.emacsPackages) trivialBuild exwm xelb;
         });
-        gptel-quick = (prev.emacsPackages.callPackage ./packages/emacs/gptel-quick.nix {
+	gptel-quick = (prev.emacsPackages.callPackage ./packages/emacs/gptel-quick.nix {
           inherit inputs;
           inherit (prev.emacsPackages) trivialBuild gptel;
         });
@@ -672,6 +671,7 @@ exit
 
 pkgs.writeShellScriptBin "hdmihelper" ''
   case "$1" in
+    dual ) xrandr --output HDMI-1-0 --right-of eDP-1 --mode 1920x1080 --output eDP-1 --primary --mode 1920x1080 ;;
     mirror ) xrandr --output HDMI-1-0 --mode 1920x1080 --output eDP-1 --mode 1920x1080 ;;
     off ) xrandr --output eDP-1 --mode 2560x1600 ;;
   esac
@@ -1891,11 +1891,12 @@ shrface = {
 
 {
   home.packages = with pkgs; [
-    # (config.lib.nixGL.wrap gimp)
-    gimp
+    (config.lib.nixGL.wrap gimp)
+    (config.lib.nixGL.wrap ghidra)
     (config.lib.nixGL.wrap prismlauncher)
     (config.lib.nixGL.wrap blockbench)
     (config.lib.nixGL.wrap tor-browser)
+    yara
     wget
     zip
     unzip
@@ -1994,6 +1995,7 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
         ledger.enable = true;
 	python.enable = true;
 	r.enable = true;
+	c.enable = true;
 	makefile.enable = true;
 	yaml.enable = true;
       };
@@ -2014,6 +2016,8 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
       <<Development Dape>>
 
       <<Development Python>>
+
+      <<Development Yara>>
       
       racket-mode.gfhookf = ["('racket-mode 'hs-minor-mode)"];
 
@@ -2085,7 +2089,10 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 #+begin_src nix-ts :noweb yes
 magit = {
   enable = true;
-  setopt.magit-display-buffer-function = "#'magit-display-buffer-same-window-except-diff-v1";
+  setopt = {
+    magit-display-buffer-function = "#'magit-display-buffer-same-window-except-diff-v1";
+    magit-process-find-password-functions = ["'magit-process-password-auth-source"];
+  };
   generalOne.project-prefix-map = {
     "v" = "'magit-status";
     "c" = "'magit-commit";
@@ -2094,6 +2101,12 @@ magit = {
     "b" = "'magit-branch";
     "m" = "'magit-merge";
   };
+};
+
+magit-todos = {
+  enable = true;
+  after = ["magit"];
+  config = "(magit-todos-mode)";
 };
 
 projection-ibuffer = {
@@ -2185,6 +2198,15 @@ python-ts-mode.setopt = {
 };
 #+end_src
 
+*** Yara
+#+NAME: Development Yara
+#+begin_src nix-ts
+yara-mode = {
+  enable = true;
+  mode = [''"\\.yar\\'"''];
+};
+#+end_src
+
 ** File Management
 I'm running dired with a couple of small packages that improve on it
 #+begin_src nix-ts :noweb yes :tangle emacs/file-management.nix
@@ -2196,12 +2218,13 @@ I'm running dired with a couple of small packages that improve on it
       enable = true;
       gfhookf = ["('dired-mode (list 'dired-omit-mode 'hl-line-mode (local!
         visible-cursor nil)))"];
-      general = {
-        "C-x C-j" = "'dired-jump";
-        "C-x d" = "'consult-dir";
+      generalOne = {
+	global-leader."d" = '''("dired" . dired)'';
+	ctl-x-map = {
+          "C-j" = "'dired-jump";
+          "d" = "'consult-dir";
+	};
       };
-      generalOne.global-leader."d" = '''("dired" . dired)'';
-      generalTwoConfig.":n".dired-mode-map."w" = "'wdired-change-to-wdired-mode";
       setopt = {
         dired-recursive-deletes = "'always";
         dired-listing-switches = ''"-agho --group-directories-first"'';
@@ -2211,13 +2234,25 @@ I'm running dired with a couple of small packages that improve on it
       config = ''(with-eval-after-load 'dired-x (gsetq dired-omit-extensions (delete ".class" dired-omit-extensions)))'';
     };
 
+    wdired = {
+      enable = true;
+      generalTwoConfig.":n" = {
+	dired-mode-map."w" = "'wdired-change-to-wdired-mode";
+	wdired-mode-map = {
+	  "v" = "'dired-do-delete";
+	  "R" = "'dired-create-empty-file";
+	  "S" = "'dired-create-empty-file";
+	};
+      };
+    };
+
     openwith = {
       enable = true;
       defer = true;
       ghookf = ["('dired-mode 'openwith-mode)"];
       config = ''
-          <<Emacs Openwith Config>>
-        '';
+        <<Emacs Openwith Config>>
+      '';
     };
 
     dired-hide-dotfiles = {
@@ -2235,21 +2270,21 @@ I'm running dired with a couple of small packages that improve on it
     dired-single = {
       enable = true;
       ghookf = [''
-          ('dired-mode (lambda () (general-def 'normal dired-mode-map
+        ('dired-mode (lambda () (general-def 'normal dired-mode-map
                "B" 'evil-goto-line
                "n" 'dired-single-prev
                "i" 'dired-single-next)))
-        ''];
+      ''];
     };
 
     dired-ranger = {
       enable = true;
       ghookf = [''
-          ('dired-mode (lambda () (general-def 'normal dired-mode-map
+        ('dired-mode (lambda () (general-def 'normal dired-mode-map
                "d" 'dired-ranger-copy
                "O" 'dired-ranger-move
                "G" 'dired-ranger-paste)))
-        ''];
+      ''];
     };
 
     diredfl = {
@@ -2622,7 +2657,6 @@ Evil mode provides vim-like keybinds.
 
 {
   programs.emacs.init = {
-    aggressiveSymex = true;
     keybinds = {
       evil = {
         enable = true;
@@ -3249,7 +3283,21 @@ Evil integration is from noctuid & minad
 consult = {
   ghookf = ["('minibuffer-setup 'consult-initial-narrow)"];
   command = ["consult-goto-line" "consult-keep-lines"];
-  setopt.consult-buffer-sources = "'(consult--source-buffer)";
+  setopt = {
+    consult-buffer-sources = "'(consult--source-buffer)";
+    consult-bookmark-narrow = [
+      '''(?b "Bufler" bufler-workspace-bookmark-handler)''
+      '''(?f "File" bookmark-default-handler)''
+      '''(?h "Help" help-bookmark-jump Info-bookmark-jump Man-bookmark-jump woman-bookmark-jump)''
+      '''(?p "Picture" image-bookmark-jump)''
+      '''(?d "Docview" doc-view-bookmark-jump)''
+      '''(?m "Mail" gnus-summary-bookmark-jump)''
+      '''(?s "Eshell" eshell-bookmark-jump)''
+      '''(?w "Web" qutebrowser-bookmark-jump eww-bookmark-jump xwidget-webkit-bookmark-jump-handler)''
+      '''(?v "VC Directory" vc-dir-bookmark-jump)''
+      '''(nil "Other")''
+    ] ;
+  };
   generalOne = {
     ":n" = {
       "M-g" = "'consult-yank-pop"; # orig. evil-paste-pop
@@ -3492,6 +3540,7 @@ home.file.".config/emacs/templates.eld".text = ''
   (ti "#+title: " q)
   (ci "* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q)
   (exp "#+export: " q)
+  (latex "@@latex:" q "@@")
 
   java-ts-mode
   (doc "/**" n> " * " q n " */")
@@ -3619,6 +3668,12 @@ password-store-otp = {
   defer = true;
   generalOne.global-leader."po" = '''("copy otp" . password-store-otp-token-copy)'';
 };
+
+auth-source-pass = {
+  enable = true;
+  after = ["magit"];
+  config = "(auth-source-pass-enable)";
+};
 #+end_src
 
 **** Pinentry
@@ -3706,6 +3761,8 @@ org = {
                                                  #'tempel-complete
 						 #'cape-file)
                                                 #'pcomplete-completions-at-point
+						#'cape-tex
+						#'cape-elisp-block
 						#'cape-dict
                                                 #'cape-dabbrev))))''
   ];
@@ -3768,13 +3825,12 @@ org = {
 #+begin_src emacs-lisp
 (require 'ol-man)
 (defun smart-export ()
-  "Export the current buffer, according to its heading, then preview the result."
+  "Export the current buffer, according to its heading."
   (interactive)
-  (let* ((export-type (cadr (assoc "EXPORT" (org-collect-keywords '("EXPORT")))))
-	 (result (cond ((equal export-type "pdf") (org-latex-export-to-pdf))
-		       ((equal export-type "odt")  (org-odt-export-to-odt))
-                       ((equal export-type "html") (when (< 2 (count-windows)) (elwm-split-window)) (eww-open-file (org-html-export-to-html)))))))
-    (when (stringp result) (find-file-other-window result)))
+  (let ((export-type (cadr (assoc "EXPORT" (org-collect-keywords '("EXPORT"))))))
+    (cond ((equal export-type "pdf") (org-latex-export-to-pdf))
+	  ((equal export-type "odt")  (org-odt-export-to-odt))
+          ((equal export-type "html") (org-html-export-to-html)))))
 #+end_src
 
 ***** Extensions
@@ -4081,7 +4137,8 @@ bufler-workspace-tabs = {
   (group
    (group-or "AV"
              (name-match "lmms" (rx bos "lmms"))
-             (name-match "Gimp-2.10" (rx bos "Gimp-2.10"))
+             (name-match "Gimp" (rx bos "Gimp"))
+             (name-match "Audacity" (rx bos "Audacity"))
              (name-match "kdenlive" (rx bos "kdenlive"))))
   (group
    (group-or "Games"
@@ -4091,7 +4148,6 @@ bufler-workspace-tabs = {
   (group
    ;; Subgroup collecting all `help-mode' and `info-mode' buffers.
    (group-or "Help/Info"
-             (mode-match "*Help*" (rx bos (or "help-" "helpful-")))
              (mode-match "*Info*" (rx bos "info-"))
 	     (mode-match "Man-mode" (rx bos "Man-"))))
   (group
@@ -4225,15 +4281,25 @@ exwm = {
   enable = true;
   gfhookf = [
     # When window "class" updates, use it to set the buffer name
-    "('exwm-update-class 'efs/exwm-update-class)"
+    "('exwm-update-class (lambda () (exwm-workspace-rename-buffer exwm-class-name)))"
     # When EXWM starts up, do some extra configuration
-    "('exwm-init 'efs/exwm-init-hook)"
+    ''('exwm-init (lambda ()
+                          ;; Make workspace 0 be the one where we land at startup
+                          (exwm-workspace-switch-create 0)
+                          ;; Show status in the mode line
+                          (start-process-shell-command "xbanish" nil "${pkgs.xbanish}/bin/xbanish")))''
     "('exwm-mode 'evil-motion-state)"
     # When window title updates, use it to set the buffer name
-    # "('exwm-update-title 'efs/exwm-update-title)"
+    ''('exwm-update-title (lambda ()
+                                  (pcase exwm-class-name
+                                         ("qutebrowser" (exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title)))
+                                         ("mpv" (exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title))))))''
   ];
   # Ctrl+q will enable the next key to be sent directly
-  generalOneConfig.exwm-mode-map."C-q" = "'exwm-input-send-next-key";
+  generalOneConfig.exwm-mode-map = {
+    "C-q" = "'exwm-input-send-next-key";
+    "C-c" = "mode-specific-map";
+  };
   custom = {
     exwm-manage-force-tiling = true;
     # Emacs everywhere
@@ -4245,7 +4311,7 @@ exwm = {
     exwm-workspace-show-all-buffers = true;
     # This will need to be updated to the name of a display!  You can find
     # the names of your displays by looking at arandr or the output of xrandr
-    exwm-randr-workspace-monitor-plist = '''(1 "eDP-1-1") (2 "HDMI-0")'';
+    exwm-randr-workspace-monitor-plist = '''(0 "eDP-1-1") (1 "HDMI-0")'';
     # Automatically send the mouse cursor to the selected workspace's display
     exwm-workspace-warp-cursor = true;
     # Window focus should follow the mouse pointer
@@ -4292,6 +4358,7 @@ exwm = {
       # Movement
       '''([?\s-e] . elwm-next)''
       '''([?\s-o] . elwm-prev)''
+      '''([?\s-.] . other-frame)''
 
       # Arrangement
       '''([?\s-E] . elwm-rotate-window)''
@@ -4340,20 +4407,6 @@ exwm-outer-gaps = {
 
 #+NAME: Emacs Exwm Init
 #+begin_src emacs-lisp
-(defun efs/exwm-init-hook ()
-  ;; Make workspace 0 be the one where we land at startup
-  (exwm-workspace-switch-create 0)
-  
-  ;; Show status in the mode line
-  (start-process-shell-command "xbanish" nil "${pkgs.xbanish}/bin/xbanish"))
-(defun efs/exwm-update-class ()
-  (exwm-workspace-rename-buffer exwm-class-name))
-
-;; (defun efs/exwm-update-title ()
-;;   (pcase exwm-class-name
-;;     ("qutebrowser" (exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title)))
-;;     ("mpv" (exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title)))))
-
 ;; From dmacs
 (defvar single-window--last-configuration nil "Last window configuration before calling `delete-other-windows'.")
 ;; From dmacs
@@ -4656,6 +4709,15 @@ ace-window = {
 	"gr" = "'macher-revise";
 	"gd" = "'macher-discuss";
 	"ga" = "'macher-abort";
+      };
+    };
+
+    copilot = {
+      enable = true;
+      ghookf = ["('prog-mode (lambda () (unless (or (eq major-mode 'c-ts-mode) (eq major-mode 'json5-ts-mode) (eq major-mode 'json-ts-mode) (eq major-mode 'LaTeX-mode)) (copilot-mode))))"];
+      generalOneConfig.copilot-mode-map = {
+	"M-/" = "'copilot-accept-completion";
+	"M-?" = "'copilot-accept-completion-by-word";
       };
     };
   };

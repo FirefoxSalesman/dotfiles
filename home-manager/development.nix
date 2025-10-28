@@ -32,6 +32,7 @@
         ledger.enable = true;
 	python.enable = true;
 	r.enable = true;
+	c.enable = true;
 	makefile.enable = true;
 	yaml.enable = true;
       };
@@ -53,7 +54,10 @@
 
       magit = {
         enable = true;
-        setopt.magit-display-buffer-function = "#'magit-display-buffer-same-window-except-diff-v1";
+        setopt = {
+          magit-display-buffer-function = "#'magit-display-buffer-same-window-except-diff-v1";
+          magit-process-find-password-functions = ["'magit-process-password-auth-source"];
+        };
         generalOne.project-prefix-map = {
           "v" = "'magit-status";
           "c" = "'magit-commit";
@@ -62,6 +66,12 @@
           "b" = "'magit-branch";
           "m" = "'magit-merge";
         };
+      };
+      
+      magit-todos = {
+        enable = true;
+        after = ["magit"];
+        config = "(magit-todos-mode)";
       };
       
       projection-ibuffer = {
@@ -126,6 +136,11 @@
       python-ts-mode.setopt = {
         python-shell-interpreter = ''"ipython"'';
         python-shell-interpreter-args = ''"-i --simple-prompt"'';
+      };
+
+      yara-mode = {
+        enable = true;
+        mode = [''"\\.yar\\'"''];
       };
       
       racket-mode.gfhookf = ["('racket-mode 'hs-minor-mode)"];
