@@ -2,8 +2,23 @@
 
 {
   programs.emacs.init = {
+    completions.tempel.templates = {
+      nix-ts-mode.upackage = ''p "= {" n "  enable = true;" q "  }"'';
+      ledger-mode = {
+	payroll = ''p "Rose-Hulman Payroll" n> "Income:TeachingAssistant" > "-" p n> "*Assets:Checking"'';
+	checking = ''"Assets:Checking"'';
+      };
+      emacs-lisp-mode = {
+	wcd = ''"(with-current-buffer " "q)"'';
+	gbc = ''"(get-buffer-create " "q)"'';
+      };
+    };
     ide = {
       project = true;
+      copilot = {
+	enable = true;
+	keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode"];
+      };
       flymake = {
         enable = true;
         preset = true;
@@ -141,8 +156,8 @@
       elisp-mode.gfhookf = ["('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"];
 
       flymake-popon.setopt.flymake-popon-posframe-extra-arguments = [ "':poshandler" "'posframe-poshandler-point-bottom-left-corner-upward"
-	                                                                "':parent-frame" false
-                                                                        "':refposhandler" "'posframe-refposhandler-xwininfo" ];
+	"':parent-frame" false
+        "':refposhandler" "'posframe-refposhandler-xwininfo" ];
 
       eat.generalOne.global-leader.a = ''`("AI via cursor" . ,(cmd! (eat "${pkgs.cursor-cli}/bin/cursor-agent")))'';
 

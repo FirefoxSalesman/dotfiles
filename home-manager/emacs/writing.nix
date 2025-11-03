@@ -17,6 +17,10 @@
       denote = true;
       citar = true;
     };
+    completions.tempel.templates.org-mode = {
+      ci = ''"* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q'';
+      exp = ''"#+export: " q'';
+    };
     ide.languages = {
       markdown.enable = true;
       latex = {

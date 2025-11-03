@@ -67,6 +67,7 @@
     };
 
     emacs.init = {
+      completions.tempel.templates.eshell-mode.gbc = ''"(get-buffer-create \"" q "\")"'';
       terminals = {
 	eshell = true;
 	eat = true;

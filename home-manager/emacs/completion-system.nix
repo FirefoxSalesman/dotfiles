@@ -18,25 +18,7 @@
         wantMinibuffer = true;
         popupInfo = true;
       };
-      tempel = {
-	enable = true;
-	templates = {
-	  nix-ts-mode.upackage = ''p "= {" n "  enable = true;" q "  }"'';
-	  org-mode = {
-	    ci = ''"* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q'';
-	    exp = ''"#+export: " q'';
-          };
-	  ledger-mode = {
-	    payroll = ''p "Rose-Hulman Payroll" n> "Income:TeachingAssistant" > "-" p n> "*Assets:Checking"'';
-	    checking = ''"Assets:Checking"'';
-	  };
-	  emacs-lisp-mode = {
-	    wcd = ''"(with-current-buffer " "q)"'';
-	    gbc = ''"(get-buffer-create " "q)"'';
-	  };
-	  eshell-mode.gbc = ''"(get-buffer-create \"" q "\")"'';
-	};
-      };
+      tempel.enable = true;
     };
 
     usePackage = {
@@ -160,6 +142,11 @@
                 efs/consult-imenu-next "i"
                 efs/consult-imenu-previous "I")))
           '';
+      };
+      
+      bookmark = {
+        enable = true;  
+        generalOne."ctl-x-r-map"."S" = "'bookmark-save";
       };
 
       embark = {

@@ -954,6 +954,7 @@ xdg.userDirs = {
     <<Dash Shell>>
 
     emacs.init = {
+      completions.tempel.templates.eshell-mode.gbc = ''"(get-buffer-create \"" q "\")"'';
       terminals = {
 	eshell = true;
 	eat = true;
@@ -1965,8 +1966,23 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 
 {
   programs.emacs.init = {
+    completions.tempel.templates = {
+      nix-ts-mode.upackage = ''p "= {" n "  enable = true;" q "  }"'';
+      ledger-mode = {
+	payroll = ''p "Rose-Hulman Payroll" n> "Income:TeachingAssistant" > "-" p n> "*Assets:Checking"'';
+	checking = ''"Assets:Checking"'';
+      };
+      emacs-lisp-mode = {
+	wcd = ''"(with-current-buffer " "q)"'';
+	gbc = ''"(get-buffer-create " "q)"'';
+      };
+    };
     ide = {
       project = true;
+      copilot = {
+	enable = true;
+	keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode"];
+      };
       flymake = {
         enable = true;
         preset = true;
@@ -2024,8 +2040,8 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
       elisp-mode.gfhookf = ["('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"];
 
       flymake-popon.setopt.flymake-popon-posframe-extra-arguments = [ "':poshandler" "'posframe-poshandler-point-bottom-left-corner-upward"
-	                                                                "':parent-frame" false
-                                                                        "':refposhandler" "'posframe-refposhandler-xwininfo" ];
+	"':parent-frame" false
+        "':refposhandler" "'posframe-refposhandler-xwininfo" ];
 
       eat.generalOne.global-leader.a = ''`("AI via cursor" . ,(cmd! (eat "${pkgs.cursor-cli}/bin/cursor-agent")))'';
 
@@ -3190,25 +3206,7 @@ My completions system is based around vertico, because that's what all the cool 
         wantMinibuffer = true;
         popupInfo = true;
       };
-      tempel = {
-	enable = true;
-	templates = {
-	  nix-ts-mode.upackage = ''p "= {" n "  enable = true;" q "  }"'';
-	  org-mode = {
-	    ci = ''"* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q'';
-	    exp = ''"#+export: " q'';
-          };
-	  ledger-mode = {
-	    payroll = ''p "Rose-Hulman Payroll" n> "Income:TeachingAssistant" > "-" p n> "*Assets:Checking"'';
-	    checking = ''"Assets:Checking"'';
-	  };
-	  emacs-lisp-mode = {
-	    wcd = ''"(with-current-buffer " "q)"'';
-	    gbc = ''"(get-buffer-create " "q)"'';
-	  };
-	  eshell-mode.gbc = ''"(get-buffer-create \"" q "\")"'';
-	};
-      };
+      tempel.enable = true;
     };
 
     usePackage = {
@@ -3336,6 +3334,11 @@ consult = {
   config = ''
       <<Emacs Consult Config>>
     '';
+};
+
+bookmark = {
+  enable = true;  
+  generalOne."ctl-x-r-map"."S" = "'bookmark-save";
 };
 #+end_src
 
@@ -3611,6 +3614,10 @@ pinentry = {
     writing = {
       denote = true;
       citar = true;
+    };
+    completions.tempel.templates.org-mode = {
+      ci = ''"* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q'';
+      exp = ''"#+export: " q'';
     };
     ide.languages = {
       markdown.enable = true;
@@ -4572,15 +4579,6 @@ ace-window = {
 	"gr" = "'macher-revise";
 	"gd" = "'macher-discuss";
 	"ga" = "'macher-abort";
-      };
-    };
-
-    copilot = {
-      enable = true;
-      ghookf = ["('prog-mode (lambda () (unless (or (major-mode? 'c-ts-mode) (major-mode? 'json5-ts-mode) (major-mode? 'json-ts-mode) (major-mode? 'LaTeX-mode)) (copilot-mode))))"];
-      generalOneConfig.copilot-mode-map = {
-	"M-/" = "'copilot-accept-completion";
-	"M-?" = "'copilot-accept-completion-by-word";
       };
     };
   };

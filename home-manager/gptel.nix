@@ -52,14 +52,5 @@
 	"ga" = "'macher-abort";
       };
     };
-
-    copilot = {
-      enable = true;
-      ghookf = ["('prog-mode (lambda () (unless (or (major-mode? 'c-ts-mode) (major-mode? 'json5-ts-mode) (major-mode? 'json-ts-mode) (major-mode? 'LaTeX-mode)) (copilot-mode))))"];
-      generalOneConfig.copilot-mode-map = {
-	"M-/" = "'copilot-accept-completion";
-	"M-?" = "'copilot-accept-completion-by-word";
-      };
-    };
   };
 }
