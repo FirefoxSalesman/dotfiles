@@ -24,47 +24,47 @@ final: prev: pkgs: inputs: {
   emacsPackagesFor = emacs: (
     (prev.emacsPackagesFor emacs).overrideScope (
       nfinal: nprev: {
-        qutebrowser = (prev.emacsPackages.callPackage ./packages/emacs/qutebrowser.nix {
+        qutebrowser = (prev.emacs.pkgs.callPackage ./packages/emacs/qutebrowser.nix {
           inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild dash consult exwm password-store evil;
+          inherit (prev.emacs.pkgs) trivialBuild dash consult exwm password-store evil;
         });
-        doom-nano-modeline = (prev.emacsPackages.callPackage ./packages/emacs/doom-nano-modeline.nix {
+        doom-nano-modeline = (prev.emacs.pkgs.callPackage ./packages/emacs/doom-nano-modeline.nix {
           inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild doom-themes;
+          inherit (prev.emacs.pkgs) trivialBuild doom-themes;
         });
-        dired-single = (prev.emacsPackages.callPackage ./packages/emacs/dired-single.nix {
+        dired-single = (prev.emacs.pkgs.callPackage ./packages/emacs/dired-single.nix {
           inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild;
+          inherit (prev.emacs.pkgs) trivialBuild;
         });
-        repeaters = (prev.emacsPackages.callPackage ./packages/emacs/repeaters.nix {
+        repeaters = (prev.emacs.pkgs.callPackage ./packages/emacs/repeaters.nix {
           inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild;
+          inherit (prev.emacs.pkgs) trivialBuild;
         });
-        app-launcher = (prev.emacsPackages.callPackage ./packages/emacs/app-launcher.nix {
+        app-launcher = (prev.emacs.pkgs.callPackage ./packages/emacs/app-launcher.nix {
           inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild;
+          inherit (prev.emacs.pkgs) trivialBuild;
         });
-        ezf = (prev.emacsPackages.callPackage ./packages/emacs/ezf.nix {
+        ezf = (prev.emacs.pkgs.callPackage ./packages/emacs/ezf.nix {
           inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild;
+          inherit (prev.emacs.pkgs) trivialBuild;
         });
-        exwm-outer-gaps = (prev.emacsPackages.callPackage ./packages/emacs/exwm-outer-gaps.nix {
+        exwm-outer-gaps = (prev.emacs.pkgs.callPackage ./packages/emacs/exwm-outer-gaps.nix {
           inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild exwm xelb;
+          inherit (prev.emacs.pkgs) trivialBuild exwm xelb;
         });
-	gptel-quick = (prev.emacsPackages.callPackage ./packages/emacs/gptel-quick.nix {
+	gptel-quick = (prev.emacs.pkgs.callPackage ./packages/emacs/gptel-quick.nix {
           inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild gptel;
+          inherit (prev.emacs.pkgs) trivialBuild gptel;
         });
-	macher = (prev.emacsPackages.callPackage ./packages/emacs/macher.nix {
+	macher = (prev.emacs.pkgs.callPackage ./packages/emacs/macher.nix {
           inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild gptel;
+          inherit (prev.emacs.pkgs) trivialBuild gptel;
         });
-	mpc-wrapper = (prev.emacsPackages.callPackage ./packages/emacs/mpc-wrapper.nix {
+	mpc-wrapper = (prev.emacs.pkgs.callPackage ./packages/emacs/mpc-wrapper.nix {
           inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild;
+          inherit (prev.emacs.pkgs) trivialBuild;
         });
-        embark = prev.emacsPackages.callPackage (
+        embark = prev.emacs.pkgs.callPackage (
           {
             org,
             consult,

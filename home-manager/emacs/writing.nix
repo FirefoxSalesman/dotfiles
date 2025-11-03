@@ -50,45 +50,6 @@
         setopt = {
           org-export-with-section-numbers = false;
           org-export-with-toc = false;
-          org-capture-templates = [
-            '''("d" "Denote note" plain
-      	(file denote-last-path)
-              #'denote-org-capture
-              :no-save t
-              :immediate-finish nil
-              :kill-buffer t
-              :jump-to-captured t)''
-            ''
-              '("t" "Personal todo" entry
-                                           (file org-default-todo-file)
-                                           "* TODO [ ] %?\n%i\n%a" :prepend t)''
-            ''
-              '("n" "Personal notes" entry
-                                           (file org-default-notes-file)
-                                           "* %u %?\n%i\n%a" :prepend t)''
-            ''
-              '("j" "Journal" entry
-                                           (file+olp+datetree org-default-journal-file)
-                                           "* %U %?\n%i\n%a" :prepend t)''
-      
-            # Will use {project-root}/{todo,notes,changelog}.org, unless a
-            # {todo,notes,changelog}.org file is found in a parent directory.
-            # Uses the basename from `+org-capture-todo-file',
-            # `+org-capture-changelog-file' and `+org-capture-notes-file'.
-            '''("p" "Templates for projects")''
-            ''
-              '("pt" "Project-local todo" entry ; {project-root}/todo.org
-                                           (file nix-emacs-project-todo)
-                                           "* TODO %?\n%i\n%a" :prepend t)''
-            ''
-              '("pn" "Project-local notes" entry ; {project-root}/notes.org
-                                           (file nix-emacs-project-notes)
-                                           "* %U %?\n%i\n%a" :prepend t)''
-            ''
-              '("pc" "Project-local changelog" entry  ; {project-root}/changelog.org
-                                           (file+headline nix-emacs-project-changelog "Unreleased")
-                                           "* %U %?\n%i\n%a" :prepend t)''
-          ] ;
         };
         generalTwoConfig.local-leader.org-mode-map = {
           "a" = '''("avy" . avy-org-goto-heading-timer)'';

@@ -6,7 +6,6 @@
     (config.lib.nixGL.wrap obs-studio)
     pkgs-stable.lmms
     audacity
-    mpc-cli
     doomer
     masstube
     cast
@@ -28,6 +27,7 @@
   
   programs.emacs.init.usePackage.mpc-wrapper = {
     enable = true;
+    extraPackages = [pkgs.mpc];
     generalOne.global-leader = {
       "m" = '''(:ignore t :which-key "mpd")'';
       "mp" = '''("replay file" . mpc-play)'';

@@ -24,7 +24,7 @@
 }
 #+end_src
 
-** Inputs
+Inputs
 #+NAME: Flake Inputs
 #+begin_src nix-ts
 nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -177,47 +177,47 @@ final: prev: pkgs: inputs: {
   emacsPackagesFor = emacs: (
     (prev.emacsPackagesFor emacs).overrideScope (
       nfinal: nprev: {
-        qutebrowser = (prev.emacsPackages.callPackage ./packages/emacs/qutebrowser.nix {
+        qutebrowser = (prev.emacs.pkgs.callPackage ./packages/emacs/qutebrowser.nix {
           inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild dash consult exwm password-store evil;
+          inherit (prev.emacs.pkgs) trivialBuild dash consult exwm password-store evil;
         });
-        doom-nano-modeline = (prev.emacsPackages.callPackage ./packages/emacs/doom-nano-modeline.nix {
+        doom-nano-modeline = (prev.emacs.pkgs.callPackage ./packages/emacs/doom-nano-modeline.nix {
           inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild doom-themes;
+          inherit (prev.emacs.pkgs) trivialBuild doom-themes;
         });
-        dired-single = (prev.emacsPackages.callPackage ./packages/emacs/dired-single.nix {
+        dired-single = (prev.emacs.pkgs.callPackage ./packages/emacs/dired-single.nix {
           inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild;
+          inherit (prev.emacs.pkgs) trivialBuild;
         });
-        repeaters = (prev.emacsPackages.callPackage ./packages/emacs/repeaters.nix {
+        repeaters = (prev.emacs.pkgs.callPackage ./packages/emacs/repeaters.nix {
           inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild;
+          inherit (prev.emacs.pkgs) trivialBuild;
         });
-        app-launcher = (prev.emacsPackages.callPackage ./packages/emacs/app-launcher.nix {
+        app-launcher = (prev.emacs.pkgs.callPackage ./packages/emacs/app-launcher.nix {
           inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild;
+          inherit (prev.emacs.pkgs) trivialBuild;
         });
-        ezf = (prev.emacsPackages.callPackage ./packages/emacs/ezf.nix {
+        ezf = (prev.emacs.pkgs.callPackage ./packages/emacs/ezf.nix {
           inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild;
+          inherit (prev.emacs.pkgs) trivialBuild;
         });
-        exwm-outer-gaps = (prev.emacsPackages.callPackage ./packages/emacs/exwm-outer-gaps.nix {
+        exwm-outer-gaps = (prev.emacs.pkgs.callPackage ./packages/emacs/exwm-outer-gaps.nix {
           inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild exwm xelb;
+          inherit (prev.emacs.pkgs) trivialBuild exwm xelb;
         });
-	gptel-quick = (prev.emacsPackages.callPackage ./packages/emacs/gptel-quick.nix {
+	gptel-quick = (prev.emacs.pkgs.callPackage ./packages/emacs/gptel-quick.nix {
           inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild gptel;
+          inherit (prev.emacs.pkgs) trivialBuild gptel;
         });
-	macher = (prev.emacsPackages.callPackage ./packages/emacs/macher.nix {
+	macher = (prev.emacs.pkgs.callPackage ./packages/emacs/macher.nix {
           inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild gptel;
+          inherit (prev.emacs.pkgs) trivialBuild gptel;
         });
-	mpc-wrapper = (prev.emacsPackages.callPackage ./packages/emacs/mpc-wrapper.nix {
+	mpc-wrapper = (prev.emacs.pkgs.callPackage ./packages/emacs/mpc-wrapper.nix {
           inherit inputs;
-          inherit (prev.emacsPackages) trivialBuild;
+          inherit (prev.emacs.pkgs) trivialBuild;
         });
-        embark = prev.emacsPackages.callPackage (
+        embark = prev.emacs.pkgs.callPackage (
           {
             org,
             consult,
@@ -1609,12 +1609,12 @@ This is just overriding a bunch of functions so that I can put all the info in t
       ("  " . nil)
       (,(if vc-branch-name (concat vc-branch-name " ") "") . doom-nano-modeline-vc-branch-name-face)
       (,(if vc-branch-name " " "") . nil)
-      (,(if (or (equal major-mode 'nix-mode) (equal major-mode 'bibtex-mode)) (all-the-icons-icon-for-buffer) (nerd-icons-icon-for-buffer)) . doom-nano-modeline-major-mode-face)
+      (,(if (or (major-mode? 'nix-ts-mode) (major-mode? 'bibtex-ts-mode)) (all-the-icons-icon-for-buffer) (nerd-icons-icon-for-buffer)) . doom-nano-modeline-major-mode-face)
       ("  " . nil))))
 
 (defun doom-nano-modeline--special-mode-p ()
   "Return t if we are in `special-mode' or nil otherwise."
-  (or (derived-mode-p 'special-mode) (and (eq major-mode 'exwm-mode) (not qutebrowser-exwm-mode))))
+  (or (derived-mode-p 'special-mode) (and (major-mode? 'exwm-mode) (not qutebrowser-exwm-mode))))
 
 (defun doom-nano-tabline ()
   "Format the modeline for the tabline"
@@ -1724,7 +1724,7 @@ shrface = {
   config = ''
     <<Emacs Ricing Shrface Config>>
   '';
-  generalOneConfig.shr-map."RET" = "`,(cmd! (if (eq major-mode 'eww-mode) (eww-follow-link) (shr-browse-url)))";
+  generalOneConfig.shr-map."RET" = "`,(cmd! (if (major-mode? 'eww-mode) (eww-follow-link) (shr-browse-url)))";
   generalTwoConfig.local-leader.shrface-mode-map = {
     "l" = "'shrface-links-consult";
     "o" = "'shrface-headline-consult";
@@ -2145,13 +2145,6 @@ eglot = {
   config = ''
     <<Development Eglot Config>>
   '';
-  generalTwoConfig.local-leader.eglot-mode-map."r" = "'eglot-rename";
-};
-
-eglot-tempel = {
-  enable = true;
-  after = ["eglot"];
-  config = ''(eglot-tempel-mode)'';
 };
 
 eglot-java = {
@@ -2865,7 +2858,6 @@ emacs.generalOneConfig = {
 (evil-ex-define-cmd "q" `,(cmd! (prescient--save) (save-buffers-kill-emacs)))
 (evil-ex-define-cmd "Undotree" 'vundo)
 (evil-ex-define-cmd "k[ill]" 'kill-current-buffer)
-(evil-ex-define-cmd "trash" `,(cmd! (start-process-shell-command "rm" nil "rm -rf ~/.local/Trash")))
 
 (evil-set-initial-state 'dashboard-mode 'normal)
 
@@ -2879,7 +2871,8 @@ emacs.generalOneConfig = {
 		   evilem-motion-search-next
 		   evilem-motion-search-previous
 		   find-file
-		   consult-fd))
+		   consult-fd
+		   nix-emacs/consult-header))
   (evil-add-command-properties command :jump t))
 
 (evil-define-operator ergo-word-delete (beg end type register yank-handler)
@@ -2964,7 +2957,9 @@ evil-easymotion = {
     avy-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
     avy-all-windows = false;
   };
-  config = "(defun avy-action-helpful (pt) (nix-emacs-base-avy-action 'helpful-at-point pt))";
+  config = ''
+    <<Emacs Evil Easymotion Config>>
+  '';
 };
 
 evil-mc = {
@@ -3022,6 +3017,17 @@ evil-exchange = {
   };
   gfhookf = ["('doom-escape (lambda () (when (featurep 'evil-exchange) (evil-exchange-cancel))))"];
 };
+#+end_src
+
+#+NAME: Emacs Evil Easymotion Config
+#+begin_src emacs-lisp
+(defun avy-action-helpful (pt)
+  "Get documentation for thing at point."
+  (nix-emacs-base-avy-action 'helpful-at-point pt))
+
+(defun avy-action-repeat (pt)
+  "Repeat the last evil command."
+  (nix-emacs-base-avy-action (lambda () (evil-repeat 1)) pt))
 #+end_src
 
 #+NAME: Emacs Evil-MC Config
@@ -3167,8 +3173,6 @@ My completions system is based around vertico, because that's what all the cool 
 { inputs, pkgs, ... }:
 
 {
-  <<Emacs Templates File>>
-
   programs.emacs.init = {
     completions = {
       prescient = true;
@@ -3186,6 +3190,25 @@ My completions system is based around vertico, because that's what all the cool 
         wantMinibuffer = true;
         popupInfo = true;
       };
+      tempel = {
+	enable = true;
+	templates = {
+	  nix-ts-mode.upackage = ''p "= {" n "  enable = true;" q "  }"'';
+	  org-mode = {
+	    ci = ''"* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q'';
+	    exp = ''"#+export: " q'';
+          };
+	  ledger-mode = {
+	    payroll = ''p "Rose-Hulman Payroll" n> "Income:TeachingAssistant" > "-" p n> "*Assets:Checking"'';
+	    checking = ''"Assets:Checking"'';
+	  };
+	  emacs-lisp-mode = {
+	    wcd = ''"(with-current-buffer " "q)"'';
+	    gbc = ''"(get-buffer-create " "q)"'';
+	  };
+	  eshell-mode.gbc = ''"(get-buffer-create \"" q "\")"'';
+	};
+      };
     };
 
     usePackage = {
@@ -3200,8 +3223,6 @@ My completions system is based around vertico, because that's what all the cool 
       <<Emacs App Launcher>>
 
       <<Emacs Search>>
-
-      <<Emacs Snippets>>
 
       <<Emacs Ezf>>
     };
@@ -3309,7 +3330,7 @@ consult = {
       "]i" = '''("Next Imenu" . efs/consult-imenu-next)'';
     } ;
     ctl-x-map."C-f" = "'consult-fd";
-    global-leader."i" = "'efs/consult-header";
+    global-leader."R" = "'consult-recent-file";
   };
   bindLocal.help-map."M" = "man";
   config = ''
@@ -3345,25 +3366,6 @@ consult = {
   (when (and (eq this-command #'consult-buffer)
              (bufler-workspace--tab-parameter 'bufler-workspace-path (tab-bar--current-tab-find)))
     (setq unread-command-events (append unread-command-events (list ?w 32)))))
-
-(defun efs/consult-header ()
-  "Runs 'consult-imenu', unless 'consult-outline' or 'consult-org-heading' can be run."
-  (interactive)
-  (cond ((eq major-mode 'org-mode) (consult-org-heading))
-	((eq major-mode 'gfm-mode) (consult-outline))
-	(t (consult-imenu))))
-
-(defun efs/consult-goto-imenu (filter getter)
-  "Go to the next imenu item.
-FILTER is a function used to filter for items. (Such as '>' or '<').
-GETTER is a function used to get the appropriate item (Such as 'car' or 'last')."
-  (require 'consult-imenu)
-  (goto-char (funcall getter
-		      (-filter (lambda (x)
-				 (funcall filter x (marker-last-position (point-marker))))
-			       (mapcar (lambda (x)
-					 (marker-last-position (cdr x)))
-				       (consult-imenu--items))))))
 
 (defun efs/consult-imenu-next ()
   "Go to the next imenu item."
@@ -3472,106 +3474,6 @@ replace = {
   defer = true;
   generalTwoConfig.":n".occur-mode-map."w" = "'occur-edit-mode";
 };
-#+end_src
-
-**** Snippets
-#+NAME: Emacs Snippets
-#+begin_src nix-ts :noweb yes
-tempel = {
-  enable = true;
-  command = ["tempel-complete"];
-  setopt.tempel-path = ''"~/.config/emacs/templates.eld"'';
-  init = ''
-      <<Emacs Templ Init>>
-    '';
-};
-
-tempel-collection = {
-  enable = true;
-  after = ["tempel"];
-};
-#+end_src
-
-#+NAME: Emacs Templ Init
-#+begin_src emacs-lisp
-(defun tempel-setup-capf ()
-  " Add the Tempel Capf to `completion-at-point-functions'.
-    `tempel-expand' only triggers on exact matches. Alternatively use
-    `tempel-complete' if you want to see all matches, but then you
-    should also configure `tempel-trigger-prefix', such that Tempel
-    does not trigger too often when you don't expect it. NOTE: We add
-    `tempel-expand' *before* the main programming mode Capf, such
-    that it will be tried first."
-  (setq-local completion-at-point-functions
-              (cons #'tempel-expand
-                    completion-at-point-functions)))
-#+end_src
-
-#+NAME: Emacs Templates File
-#+begin_src nix-ts
-home.file.".config/emacs/templates.eld".text = ''
-  nix-mode
-  (upackage p "= {" n "  enable = true;" q "  }")
-
-  js-ts-mode
-  (clg "console.log(" p ");")
-  (doc "/**" n> " * " q n " */")
-  (anfn "(" p ") => {" n> q n "};")
-  (qs "document.querySelector(\"" q "\");")
-  (if "if (" p ") {" n> q n "}")
-
-  c-ts-mode
-  (doc "/**" n> " * " q n " */")
-  (if "if (" p ") {" n> q n "}")
-  (for "for (int i = " p "; i < " p "; i++) {" n> q n "}")
-  (while "while (" p ") {" n> q n "}")
-  (stdio "#include <stdio.h>")
-  (stdlib "#include <stdlib.h>")
-  (string "#include <string.h>")
-  (unistd "#include <unistd.h>")
-  (mpi "#include <mpi.h>")
-  (math "#include <math.h>")
-  (define "#define " p)
-  (function p " " p " (" p ") {" n> q n "}" ) 
-  (main "int main (int argc, char **argv) {" n> q n "}" ) 
-
-  org-mode
-  (au "#+author: " q)
-  (ti "#+title: " q)
-  (ci "* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q)
-  (exp "#+export: " q)
-  (latex "@@latex:" q "@@")
-
-  java-ts-mode
-  (doc "/**" n> " * " q n " */")
-  (if "if (" p ") {" n> q n "}")
-  (class "public class " (p (file-name-base (or (buffer-file-name) (buffer-name)))) " {" n> r> n "}")
-  (method p " " p " " p "(" p ") {" n> q n "}")
-  (while "while (" p ") {" n> q n "}")
-  (for "for (int i = " p "; i < " p "; i++) {" n> q n "}")
-
-  bash-ts-mode
-  (bang "#!/bin/sh" n q)
-  (safebang "#!/bin/sh" n "set -euo pipefail" n q)
-
-  ledger-mode
-  (payroll p "Rose-Hulman Payroll" n> "Income:TeachingAssistant" > "-" p n> "*Assets:Checking")
-  (checking "Assets:Checking")
-
-  racket-mode
-  (let "(let [(" p ")]" n q ")")
-  (letrec "(letrec [(" p ")]" n q ")")
-  (letstar "(let* [(" p ")]" n q ")")
-  (namelet "(let " p " [(" p ")]" n q ")")
-  (defun "(define " p " (lambda (" p ")" n q "))")
-
-  emacs-lisp-mode
-  (wcd "(with-current-buffer " "q)")
-  (gbc "(get-buffer-create " "q)")
-
-  eshell-mode
-  (gbc "(get-buffer-create \"" q "\")")
-'';
 #+end_src
 
 **** Ezf
@@ -3770,45 +3672,6 @@ org = {
   setopt = {
     org-export-with-section-numbers = false;
     org-export-with-toc = false;
-    org-capture-templates = [
-      '''("d" "Denote note" plain
-	(file denote-last-path)
-        #'denote-org-capture
-        :no-save t
-        :immediate-finish nil
-        :kill-buffer t
-        :jump-to-captured t)''
-      ''
-        '("t" "Personal todo" entry
-                                     (file org-default-todo-file)
-                                     "* TODO [ ] %?\n%i\n%a" :prepend t)''
-      ''
-        '("n" "Personal notes" entry
-                                     (file org-default-notes-file)
-                                     "* %u %?\n%i\n%a" :prepend t)''
-      ''
-        '("j" "Journal" entry
-                                     (file+olp+datetree org-default-journal-file)
-                                     "* %U %?\n%i\n%a" :prepend t)''
-
-      # Will use {project-root}/{todo,notes,changelog}.org, unless a
-      # {todo,notes,changelog}.org file is found in a parent directory.
-      # Uses the basename from `+org-capture-todo-file',
-      # `+org-capture-changelog-file' and `+org-capture-notes-file'.
-      '''("p" "Templates for projects")''
-      ''
-        '("pt" "Project-local todo" entry ; {project-root}/todo.org
-                                     (file nix-emacs-project-todo)
-                                     "* TODO %?\n%i\n%a" :prepend t)''
-      ''
-        '("pn" "Project-local notes" entry ; {project-root}/notes.org
-                                     (file nix-emacs-project-notes)
-                                     "* %U %?\n%i\n%a" :prepend t)''
-      ''
-        '("pc" "Project-local changelog" entry  ; {project-root}/changelog.org
-                                     (file+headline nix-emacs-project-changelog "Unreleased")
-                                     "* %U %?\n%i\n%a" :prepend t)''
-    ] ;
   };
   generalTwoConfig.local-leader.org-mode-map = {
     "a" = '''("avy" . avy-org-goto-heading-timer)'';
@@ -4714,7 +4577,7 @@ ace-window = {
 
     copilot = {
       enable = true;
-      ghookf = ["('prog-mode (lambda () (unless (or (eq major-mode 'c-ts-mode) (eq major-mode 'json5-ts-mode) (eq major-mode 'json-ts-mode) (eq major-mode 'LaTeX-mode)) (copilot-mode))))"];
+      ghookf = ["('prog-mode (lambda () (unless (or (major-mode? 'c-ts-mode) (major-mode? 'json5-ts-mode) (major-mode? 'json-ts-mode) (major-mode? 'LaTeX-mode)) (copilot-mode))))"];
       generalOneConfig.copilot-mode-map = {
 	"M-/" = "'copilot-accept-completion";
 	"M-?" = "'copilot-accept-completion-by-word";
@@ -4742,7 +4605,6 @@ This is where all the audio/video stuff goes
     (config.lib.nixGL.wrap obs-studio)
     pkgs-stable.lmms
     audacity
-    mpc-cli
     doomer
     masstube
     cast
@@ -4777,6 +4639,7 @@ services.mpd = {
 
 programs.emacs.init.usePackage.mpc-wrapper = {
   enable = true;
+  extraPackages = [pkgs.mpc];
   generalOne.global-leader = {
     "m" = '''(:ignore t :which-key "mpd")'';
     "mp" = '''("replay file" . mpc-play)'';

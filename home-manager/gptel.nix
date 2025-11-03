@@ -55,7 +55,7 @@
 
     copilot = {
       enable = true;
-      ghookf = ["('prog-mode (lambda () (unless (or (eq major-mode 'c-ts-mode) (eq major-mode 'json5-ts-mode) (eq major-mode 'json-ts-mode) (eq major-mode 'LaTeX-mode)) (copilot-mode))))"];
+      ghookf = ["('prog-mode (lambda () (unless (or (major-mode? 'c-ts-mode) (major-mode? 'json5-ts-mode) (major-mode? 'json-ts-mode) (major-mode? 'LaTeX-mode)) (copilot-mode))))"];
       generalOneConfig.copilot-mode-map = {
 	"M-/" = "'copilot-accept-completion";
 	"M-?" = "'copilot-accept-completion-by-word";

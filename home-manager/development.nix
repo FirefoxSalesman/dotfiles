@@ -100,13 +100,6 @@
           (efs/evil-collection-remap 'evil-collection-eglot-setup 'normal eglot-mode-map 
           			   "K" 'evil-substitute)
         '';
-        generalTwoConfig.local-leader.eglot-mode-map."r" = "'eglot-rename";
-      };
-      
-      eglot-tempel = {
-        enable = true;
-        after = ["eglot"];
-        config = ''(eglot-tempel-mode)'';
       };
       
       eglot-java = {

@@ -271,12 +271,12 @@
                 ("  " . nil)
                 (,(if vc-branch-name (concat vc-branch-name " ") "") . doom-nano-modeline-vc-branch-name-face)
                 (,(if vc-branch-name " " "") . nil)
-                (,(if (or (equal major-mode 'nix-mode) (equal major-mode 'bibtex-mode)) (all-the-icons-icon-for-buffer) (nerd-icons-icon-for-buffer)) . doom-nano-modeline-major-mode-face)
+                (,(if (or (major-mode? 'nix-ts-mode) (major-mode? 'bibtex-ts-mode)) (all-the-icons-icon-for-buffer) (nerd-icons-icon-for-buffer)) . doom-nano-modeline-major-mode-face)
                 ("  " . nil))))
           
           (defun doom-nano-modeline--special-mode-p ()
             "Return t if we are in `special-mode' or nil otherwise."
-            (or (derived-mode-p 'special-mode) (and (eq major-mode 'exwm-mode) (not qutebrowser-exwm-mode))))
+            (or (derived-mode-p 'special-mode) (and (major-mode? 'exwm-mode) (not qutebrowser-exwm-mode))))
           
           (defun doom-nano-tabline ()
             "Format the modeline for the tabline"
@@ -466,7 +466,7 @@
                          :delete nil
                          :open-rec nil))
         '';
-        generalOneConfig.shr-map."RET" = "`,(cmd! (if (eq major-mode 'eww-mode) (eww-follow-link) (shr-browse-url)))";
+        generalOneConfig.shr-map."RET" = "`,(cmd! (if (major-mode? 'eww-mode) (eww-follow-link) (shr-browse-url)))";
         generalTwoConfig.local-leader.shrface-mode-map = {
           "l" = "'shrface-links-consult";
           "o" = "'shrface-headline-consult";

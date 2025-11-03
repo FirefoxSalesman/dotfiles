@@ -54,7 +54,6 @@
           (evil-ex-define-cmd "q" `,(cmd! (prescient--save) (save-buffers-kill-emacs)))
           (evil-ex-define-cmd "Undotree" 'vundo)
           (evil-ex-define-cmd "k[ill]" 'kill-current-buffer)
-          (evil-ex-define-cmd "trash" `,(cmd! (start-process-shell-command "rm" nil "rm -rf ~/.local/Trash")))
           
           (evil-set-initial-state 'dashboard-mode 'normal)
           
@@ -68,7 +67,8 @@
           		   evilem-motion-search-next
           		   evilem-motion-search-previous
           		   find-file
-          		   consult-fd))
+          		   consult-fd
+          		   nix-emacs/consult-header))
             (evil-add-command-properties command :jump t))
           
           (evil-define-operator ergo-word-delete (beg end type register yank-handler)
@@ -266,7 +266,15 @@
           avy-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
           avy-all-windows = false;
         };
-        config = "(defun avy-action-helpful (pt) (nix-emacs-base-avy-action 'helpful-at-point pt))";
+        config = ''
+          (defun avy-action-helpful (pt)
+            "Get documentation for thing at point."
+            (nix-emacs-base-avy-action 'helpful-at-point pt))
+          
+          (defun avy-action-repeat (pt)
+            "Repeat the last evil command."
+            (nix-emacs-base-avy-action (lambda () (evil-repeat 1)) pt))
+        '';
       };
       
       evil-mc = {
