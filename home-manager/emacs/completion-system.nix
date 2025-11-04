@@ -127,6 +127,18 @@
                          (bufler-workspace--tab-parameter 'bufler-workspace-path (tab-bar--current-tab-find)))
                 (setq unread-command-events (append unread-command-events (list ?w 32)))))
             
+            (defun efs/consult-goto-imenu (filter getter)
+                          "Go to the next imenu item.
+                        FILTER is a function used to filter for items. (Such as '>' or '<').
+                        GETTER is a function used to get the appropriate item (Such as 'car' or 'last')."
+                          (require 'consult-imenu)
+                          (goto-char (funcall getter
+                        		      (-filter (lambda (x)
+                        				 (funcall filter x (marker-last-position (point-marker))))
+                        			       (mapcar (lambda (x)
+                        					 (marker-last-position (cdr x)))
+                        				       (consult-imenu--items))))))
+            
             (defun efs/consult-imenu-next ()
               "Go to the next imenu item."
               (interactive)

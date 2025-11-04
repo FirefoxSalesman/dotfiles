@@ -12,6 +12,8 @@
         "py" = '''("yank" . password-store-copy)'';
         "pi" = '''("insert" . password-store-insert)'';
         "pg" = '''("generate" . password-store-generate)'';
+        "pe" = '''("edit" . password-store-edit)'';
+        "pd" = '''("delete" . password-store-delete)'';
       };
       extraConfig = ":autoload pass-entries password-store-list";
     };
