@@ -168,8 +168,9 @@ final: prev: pkgs: inputs: {
   vesktop = (prev.vesktop.override {withSystemVencord = true;});
   mpv = (prev.mpv.override {
     scripts = with prev.mpvScripts; [
-      thumbnail
+      thumbfast
       sponsorblock
+      quality-menu
     ];
   });
 
@@ -2045,11 +2046,9 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 
       eat.generalOne.global-leader.a = ''`("AI via cursor" . ,(cmd! (eat "${pkgs.cursor-cli}/bin/cursor-agent")))'';
 
-      java-ts-mode = {
-        init = ''
-          <<Java Config>>
-        '';  
-      };
+      <<Development Java>>
+
+      <<Development C>>
     };
   };
 }
@@ -2074,9 +2073,24 @@ treesit-fold = {
 #+end_src
 
 *** Java
+#+NAME: Development Java
+#+begin_src nix-ts :noweb yes
+java-ts-mode = {
+  preface = ''
+    <<Java Preface>>
+  '';
+  generalTwoConfig.":n".java-ts-mode-map = {
+      "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "block_comment"))'';
+      "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "block_comment"))'';
+      "o" = "'evil-previous-visual-line";
+      "O" = "'evil-scroll-up";
+  };
+};
+#+end_src
+
 Borrowed from here:
 https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
-#+NAME: Java Config
+#+NAME: Java Preface
 #+begin_src emacs-lisp
 (defun tkj/java-decompile-class ()
   "Run the FernFlower decompiler on the current .class file using
@@ -2100,6 +2114,17 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
       (message "Error: This command can only be run on .class files"))))
 #+end_src
 
+*** C
+#+NAME: Development C
+#+begin_src nix-ts
+c-ts-mode.generalTwoConfig.":n".c-ts-mode-map = {
+    "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "comment"))'';
+    "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "comment"))'';
+    "o" = "'evil-previous-visual-line";
+    "O" = "'evil-scroll-up";
+};
+#+end_src
+
 *** Project
 #+NAME: Development Project
 #+begin_src nix-ts :noweb yes
@@ -2119,24 +2144,24 @@ magit = {
   };
 };
 
-magit-todos = {
-  enable = true;
-  after = ["magit"];
-  config = "(magit-todos-mode)";
-};
+  magit-todos = {
+    enable = true;
+    after = ["magit"];
+    config = "(magit-todos-mode)";
+  };
 
-projection-ibuffer = {
-  enable = true;
-  generalOne.project-prefix-map.i = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
-};
+  projection-ibuffer = {
+    enable = true;
+    generalOne.project-prefix-map.i = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
+  };
 
-projection-multi.custom.projection-gradle-use-daemon = false;
+  projection-multi.custom.projection-gradle-use-daemon = false;
 
-projection-multi-embark = {
-  enable = true;
-  after = ["embark" "projection-multi"];
-  config = "(projection-multi-embark-setup-command-map)";
-};
+  projection-multi-embark = {
+    enable = true;
+    after = ["embark" "projection-multi"];
+    config = "(projection-multi-embark-setup-command-map)";
+  };
 #+end_src
 
 #+NAME: Emacs Development Projection Config
@@ -4220,6 +4245,8 @@ exwm = {
       '''?\s-F''
       '''?\s-u''
       '''?\s-/''
+      '''?\s-\H-e''
+      '''?\s-\H-o''
       "?\\s-'"	# popper-toggle-latest
       '''?\s-\"'' # popper-toggle-type
       '''?\s-\ ''
@@ -4541,7 +4568,7 @@ ace-window = {
          (call-interactively 'switch-to-buffer))))
 #+end_src
 
-** GPT.el
+** Gptel
 #+begin_src nix-ts :noweb yes :tangle gptel.nix
 { config, pkgs, inputs, ... }:
 
@@ -4564,6 +4591,8 @@ ace-window = {
           '''(org-mode . "HK-47  ")''
           '''(text-mode . "HK-47  ")''
 	];
+	gptel-model = "'llama3.2:3b";
+	# gptel-model = "'qwen3:latest";
 	gptel-backend = ''
 	  (gptel-make-ollama "Ollama"
 	    :stream t
@@ -4595,6 +4624,15 @@ ace-window = {
 	"ga" = "'macher-abort";
       };
     };
+
+    # mcp = {
+    #   enable = true;
+    #   after = ["gptel"];
+    #   config = ''
+    # 	(require 'mcp-hub)
+    #     (require 'gptel-integrations)
+    #   '';
+    # };
   };
 }
 #+end_src
@@ -5357,11 +5395,7 @@ config.set('content.javascript.enabled', True, 'qute://*/*')
 config.set('content.notifications.enabled', False, 'https://www.reddit.com')
 config.set('content.notifications.enabled', False, 'https://www.youtube.com')
 
-config.set('content.headers.user_agent', 'Mozilla/5.0 ({os_info}) AppleWebKit/{webkit_version} (KHTML, like Gecko) {upstream_browser_key}/{upstream_browser_version} Safari/{webkit_version}', 'https://web.whatsapp.com/')
-config.set('content.headers.user_agent', 'Mozilla/5.0 ({os_info}; rv:71.0) Gecko/20100101 Firefox/119.0', 'https://accounts.google.com/*')
-config.set('content.headers.user_agent', 'Mozilla/5.0 ({os_info} rv:110.0) Gecko/20100101 Firefox/119.0', 'https://*.slack.com/*')
-config.set('content.headers.user_agent', 'Mozilla/5.0 ({os_info}; rv:71.0) Gecko/20100101 Firefox/119.0', 'https://docs.google.com/*')
-config.set('content.headers.user_agent', 'Mozilla/5.0 ({os_info}; rv:71.0) Gecko/20100101 Firefox/119.0', 'https://drive.google.com/*')
+c.content.headers.user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:144.0) Gecko/20100101 Firefox/144.0'
 
 c.editor.command = ['emacsclient', '{file}']
 

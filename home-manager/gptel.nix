@@ -19,6 +19,8 @@
           '''(org-mode . "HK-47  ")''
           '''(text-mode . "HK-47  ")''
 	];
+	gptel-model = "'llama3.2:3b";
+	# gptel-model = "'qwen3:latest";
 	gptel-backend = ''
 	  (gptel-make-ollama "Ollama"
 	    :stream t
@@ -52,5 +54,14 @@
 	"ga" = "'macher-abort";
       };
     };
+
+    # mcp = {
+    #   enable = true;
+    #   after = ["gptel"];
+    #   config = ''
+    # 	(require 'mcp-hub)
+    #     (require 'gptel-integrations)
+    #   '';
+    # };
   };
 }

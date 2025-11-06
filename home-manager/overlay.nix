@@ -15,8 +15,9 @@ final: prev: pkgs: inputs: {
   vesktop = (prev.vesktop.override {withSystemVencord = true;});
   mpv = (prev.mpv.override {
     scripts = with prev.mpvScripts; [
-      thumbnail
+      thumbfast
       sponsorblock
+      quality-menu
     ];
   });
 

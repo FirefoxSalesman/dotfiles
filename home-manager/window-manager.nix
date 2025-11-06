@@ -354,6 +354,8 @@
             '''?\s-F''
             '''?\s-u''
             '''?\s-/''
+            '''?\s-\H-e''
+            '''?\s-\H-o''
             "?\\s-'"	# popper-toggle-latest
             '''?\s-\"'' # popper-toggle-type
             '''?\s-\ ''

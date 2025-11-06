@@ -83,24 +83,24 @@
         };
       };
       
-      magit-todos = {
-        enable = true;
-        after = ["magit"];
-        config = "(magit-todos-mode)";
-      };
+        magit-todos = {
+          enable = true;
+          after = ["magit"];
+          config = "(magit-todos-mode)";
+        };
       
-      projection-ibuffer = {
-        enable = true;
-        generalOne.project-prefix-map.i = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
-      };
+        projection-ibuffer = {
+          enable = true;
+          generalOne.project-prefix-map.i = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
+        };
       
-      projection-multi.custom.projection-gradle-use-daemon = false;
+        projection-multi.custom.projection-gradle-use-daemon = false;
       
-      projection-multi-embark = {
-        enable = true;
-        after = ["embark" "projection-multi"];
-        config = "(projection-multi-embark-setup-command-map)";
-      };
+        projection-multi-embark = {
+          enable = true;
+          after = ["embark" "projection-multi"];
+          config = "(projection-multi-embark-setup-command-map)";
+        };
 
       eglot = {
         preface = "(defvar efs/autoformat t)";
@@ -162,7 +162,7 @@
       eat.generalOne.global-leader.a = ''`("AI via cursor" . ,(cmd! (eat "${pkgs.cursor-cli}/bin/cursor-agent")))'';
 
       java-ts-mode = {
-        init = ''
+        preface = ''
           (defun tkj/java-decompile-class ()
             "Run the FernFlower decompiler on the current .class file using
            fernflower, and opens the decompiled Java file."
@@ -183,7 +183,20 @@
                         (find-file decompiled-file)
                       (message "Error: Decompiled file not found at %s" decompiled-file)))
                 (message "Error: This command can only be run on .class files"))))
-        '';  
+        '';
+        generalTwoConfig.":n".java-ts-mode-map = {
+            "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "block_comment"))'';
+            "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "block_comment"))'';
+            "o" = "'evil-previous-visual-line";
+            "O" = "'evil-scroll-up";
+        };
+      };
+
+      c-ts-mode.generalTwoConfig.":n".c-ts-mode-map = {
+          "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "comment"))'';
+          "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "comment"))'';
+          "o" = "'evil-previous-visual-line";
+          "O" = "'evil-scroll-up";
       };
     };
   };
