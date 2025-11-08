@@ -30,6 +30,7 @@
         preset = true;
       };
       direnv = true;
+      treesit-fold.enable = true;
       languages = {
         bash.enable = true;
         gradle.enable = true;
@@ -50,6 +51,7 @@
 	c.enable = true;
 	makefile.enable = true;
 	yaml.enable = true;
+	yara.enable = true;
       };
     };
 
@@ -61,11 +63,6 @@
       
       # lsp-java.setopt.lsp-java-content-provider-preferred = ''"fernflower"'';
       
-
-      treesit-fold = {
-        enable = true;
-        ghookf = ["((gen-mode-hooks '(bash-ts c-ts css-ts emacs-lisp erlang-ts go-ts haskell-ts html-ts java-ts js-ts json-ts json5-ts julia-ts kotlin-ts lua-ts make nix-ts python-ts ess-r rustic scala-ts svelte-ts swift-ts toml-ts typescript-ts vimscript-ts yaml-ts zig-ts)) 'treesit-fold-mode)"];
-      };
 
       magit = {
         enable = true;
@@ -146,11 +143,6 @@
         python-shell-interpreter-args = ''"-i --simple-prompt"'';
       };
 
-      yara-mode = {
-        enable = true;
-        mode = [''"\\.yar\\'"''];
-      };
-      
       racket-mode.gfhookf = ["('racket-mode 'hs-minor-mode)"];
 
       elisp-mode.gfhookf = ["('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"];

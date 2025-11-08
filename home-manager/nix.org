@@ -1995,6 +1995,7 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
         preset = true;
       };
       direnv = true;
+      treesit-fold.enable = true;
       languages = {
         bash.enable = true;
         gradle.enable = true;
@@ -2015,6 +2016,7 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 	c.enable = true;
 	makefile.enable = true;
 	yaml.enable = true;
+	yara.enable = true;
       };
     };
 
@@ -2024,8 +2026,6 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
       # lsp-java.setopt.lsp-java-content-provider-preferred = ''"fernflower"'';
       <<Development Direnv>>
 
-      <<Development Treesitter>>
-
       <<Development Project>>
 
       <<Development Eglot>>
@@ -2034,8 +2034,6 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 
       <<Development Python>>
 
-      <<Development Yara>>
-      
       racket-mode.gfhookf = ["('racket-mode 'hs-minor-mode)"];
 
       elisp-mode.gfhookf = ["('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"];
@@ -2060,15 +2058,6 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 rainbow-delimiters = {
   enable = true;
   ghookf = ["('prog-mode 'rainbow-delimiters-mode)"];
-};
-#+end_src
-
-*** Treesitter
-#+NAME: Development Treesitter
-#+begin_src nix-ts
-treesit-fold = {
-  enable = true;
-  ghookf = ["((gen-mode-hooks '(bash-ts c-ts css-ts emacs-lisp erlang-ts go-ts haskell-ts html-ts java-ts js-ts json-ts json5-ts julia-ts kotlin-ts lua-ts make nix-ts python-ts ess-r rustic scala-ts svelte-ts swift-ts toml-ts typescript-ts vimscript-ts yaml-ts zig-ts)) 'treesit-fold-mode)"];
 };
 #+end_src
 
@@ -2229,15 +2218,6 @@ projection-dape = {
 python-ts-mode.setopt = {
   python-shell-interpreter = ''"ipython"'';
   python-shell-interpreter-args = ''"-i --simple-prompt"'';
-};
-#+end_src
-
-*** Yara
-#+NAME: Development Yara
-#+begin_src nix-ts
-yara-mode = {
-  enable = true;
-  mode = [''"\\.yar\\'"''];
 };
 #+end_src
 

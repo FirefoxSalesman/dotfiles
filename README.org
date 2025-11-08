@@ -49,4 +49,3 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] https://github.com/konrad1977/flyover
 + [ ] https://github.com/eshelyaron/semel
 + [ ] See if there's anything to glean from here: https://www.reddit.com/r/emacs/comments/1nwgygm/building_workflows_with_gptel/
-+ [ ] https://github.com/danielma/magit-org-todos.el
