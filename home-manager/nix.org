@@ -3033,8 +3033,8 @@ evil-owl = {
 evil-exchange = {
   enable = true;
   generalOne = {
-    evil-operator-state-map."M-z" = "'evil-exchange/cx";
-    evil-visual-state-map."M-z" = "'evil-exchange";
+    evil-operator-state-map."k" = "'evil-exchange/cx";
+    evil-visual-state-map."k" = "'evil-exchange";
   };
   gfhookf = ["('doom-escape (lambda () (when (featurep 'evil-exchange) (evil-exchange-cancel))))"];
 };
@@ -5158,7 +5158,7 @@ programs.qutebrowser = {
 
     <<Internet Qutebrowser Dir>>
 
-    <<Internet Qutebrowser Transparency>>
+    <<Internet Qutebrowser Aesthetics>>
 
     <<Internet Qutebrowser File Selection>>
 
@@ -5293,9 +5293,9 @@ url = {
 };
 #+end_src
 
-**** Transparency
+**** Aesthetics
 This is a very ugly way of doing things
-#+NAME: Internet Qutebrowser Transparency
+#+NAME: Internet Qutebrowser Aesthetics
 #+begin_src nix-ts
 window.transparent = true;
 colors = {
@@ -5315,6 +5315,11 @@ colors = {
       bg = lib.mkForce ("#50" + config.lib.stylix.colors.base00);
       private.bg = lib.mkForce ("#50" + config.lib.stylix.colors.base00);
     };
+  };
+  webpage.darkmode = {
+    enabled = true;
+    algorithm = "lightness-cielab";
+    policy.images = "never";
   };
 };
 #+end_src

@@ -342,8 +342,8 @@
       evil-exchange = {
         enable = true;
         generalOne = {
-          evil-operator-state-map."M-z" = "'evil-exchange/cx";
-          evil-visual-state-map."M-z" = "'evil-exchange";
+          evil-operator-state-map."k" = "'evil-exchange/cx";
+          evil-visual-state-map."k" = "'evil-exchange";
         };
         gfhookf = ["('doom-escape (lambda () (when (featurep 'evil-exchange) (evil-exchange-cancel))))"];
       };

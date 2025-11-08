@@ -250,6 +250,11 @@
             private.bg = lib.mkForce ("#50" + config.lib.stylix.colors.base00);
           };
         };
+        webpage.darkmode = {
+          enabled = true;
+          algorithm = "lightness-cielab";
+          policy.images = "never";
+        };
       };
   
       fileselect = {
