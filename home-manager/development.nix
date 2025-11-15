@@ -46,12 +46,9 @@
         emacs-lisp.enable = true;
         javascript.enable = true;
         ledger.enable = true;
-	python.enable = true;
 	r.enable = true;
-	c.enable = true;
 	makefile.enable = true;
 	yaml.enable = true;
-	yara.enable = true;
       };
     };
 
@@ -77,6 +74,10 @@
           "P" = "'magit-push";
           "b" = "'magit-branch";
           "m" = "'magit-merge";
+        };
+        generalOneConfig = {
+          magit-mode-map."e" = "'evil-next-visual-line";
+          magit-status-mode-map."j" = "'magit-unstage-files";
         };
       };
       

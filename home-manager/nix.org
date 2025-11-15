@@ -158,6 +158,7 @@ final: prev: pkgs: inputs: {
   doomer = (import ./scripts/doomer.nix { inherit pkgs; });
   ffmpeg-bulk = (import ./scripts/ffmpeg-bulk.nix { inherit pkgs; });
   masstube = (import ./scripts/masstube.nix { inherit pkgs; });
+  mpvmacs = (import ./scripts/mpvmacs.nix { inherit pkgs; });
   hdmihelper = (import ./scripts/hdmi-helper.nix { inherit pkgs; });
   pkg = (import ./scripts/pkg.nix { inherit pkgs; });
   udisksmenu = (import ./scripts/udisksmenu.nix { inherit pkgs; });
@@ -445,6 +446,16 @@ For moving massive quantities of Jordan Peterson's podcast into my mp3 player
     ${pkgs.coreutils}/bin/rm ~/*.$out
   ''
 #+end_src
+*** mpvmacs
+Play a file with mpv, controllable by emacs
+#+begin_src nix-ts :tangle scripts/mpvmacs.nix
+{ pkgs, ... }:
+
+pkgs.writeShellScriptBin "mpvmacs" ''
+  emacsclient -e "(mpv-play \"$1\")"
+''
+#+end_src
+
 *** Updatefix
 Script to automate fixing my setup after an update breaks certain parts.
 Meant to be run with doas
@@ -1894,7 +1905,6 @@ shrface = {
 {
   home.packages = with pkgs; [
     (config.lib.nixGL.wrap gimp)
-    (config.lib.nixGL.wrap ghidra)
     (config.lib.nixGL.wrap prismlauncher)
     (config.lib.nixGL.wrap blockbench)
     (config.lib.nixGL.wrap tor-browser)
@@ -2011,12 +2021,9 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
         emacs-lisp.enable = true;
         javascript.enable = true;
         ledger.enable = true;
-	python.enable = true;
 	r.enable = true;
-	c.enable = true;
 	makefile.enable = true;
 	yaml.enable = true;
-	yara.enable = true;
       };
     };
 
@@ -2131,6 +2138,10 @@ magit = {
     "b" = "'magit-branch";
     "m" = "'magit-merge";
   };
+  generalOneConfig = {
+    magit-mode-map."e" = "'evil-next-visual-line";
+    magit-status-mode-map."j" = "'magit-unstage-files";
+  };
 };
 
   magit-todos = {
@@ -2224,7 +2235,7 @@ python-ts-mode.setopt = {
 ** File Management
 I'm running dired with a couple of small packages that improve on it
 #+begin_src nix-ts :noweb yes :tangle emacs/file-management.nix
-{ inputs, ... }:
+{ inputs, pkgs, ... }:
 
 {
   programs.emacs.init.usePackage = {
@@ -2346,7 +2357,7 @@ I'm running dired with a couple of small packages that improve on it
                  "avi" "wmv" "wav" "mov" "flv"
                  "ogm" "ogg" "mkv" "webm" "opus"
                  "flac"))
-              "mpv"
+              "${pkgs.mpvmacs}/bin/mpvmacs"
               '(file))))
 #+end_src
 
@@ -5193,7 +5204,6 @@ keyBindings = {
     "i" = "fake-key <Right>";
     "n" = "fake-key <Left>";
     "N" = "back";
-    "k" = "hint links spawn mpv {hint-url}";
     "h" = "spawn --userscript emacsclient-wrapper '(qutebrowser-launcher)'";
     "H" = "spawn --userscript emacsclient-wrapper '(qutebrowser-launcher-tab)'";
     ";l" = "spawn --userscript qute-pass";
@@ -5202,7 +5212,7 @@ keyBindings = {
     ";o" = "spawn --userscript qute-pass --otp-only";
     ";P" = "spawn --userscript emacsclient-wrapper '(qutebrowser-pass \"{url}\")'";
     "a" = "cmd-set-text :";
-    "<ctrl-f>" = "hint links spawn mpv {hint-url}";
+    "k" = "hint links spawn --userscript emacsclient-wrapper '(mpv-play-url \"{hint-url}\")'";
   };
 };
 #+end_src

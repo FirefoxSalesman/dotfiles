@@ -151,7 +151,6 @@
         "i" = "fake-key <Right>";
         "n" = "fake-key <Left>";
         "N" = "back";
-        "k" = "hint links spawn mpv {hint-url}";
         "h" = "spawn --userscript emacsclient-wrapper '(qutebrowser-launcher)'";
         "H" = "spawn --userscript emacsclient-wrapper '(qutebrowser-launcher-tab)'";
         ";l" = "spawn --userscript qute-pass";
@@ -160,7 +159,7 @@
         ";o" = "spawn --userscript qute-pass --otp-only";
         ";P" = "spawn --userscript emacsclient-wrapper '(qutebrowser-pass \"{url}\")'";
         "a" = "cmd-set-text :";
-        "<ctrl-f>" = "hint links spawn mpv {hint-url}";
+        "k" = "hint links spawn --userscript emacsclient-wrapper '(mpv-play-url \"{hint-url}\")'";
       };
     };
   

@@ -5,6 +5,7 @@ final: prev: pkgs: inputs: {
   doomer = (import ./scripts/doomer.nix { inherit pkgs; });
   ffmpeg-bulk = (import ./scripts/ffmpeg-bulk.nix { inherit pkgs; });
   masstube = (import ./scripts/masstube.nix { inherit pkgs; });
+  mpvmacs = (import ./scripts/mpvmacs.nix { inherit pkgs; });
   hdmihelper = (import ./scripts/hdmi-helper.nix { inherit pkgs; });
   pkg = (import ./scripts/pkg.nix { inherit pkgs; });
   udisksmenu = (import ./scripts/udisksmenu.nix { inherit pkgs; });

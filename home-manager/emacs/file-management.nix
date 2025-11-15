@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ inputs, pkgs, ... }:
 
 {
   programs.emacs.init.usePackage = {
@@ -54,7 +54,7 @@
                          "avi" "wmv" "wav" "mov" "flv"
                          "ogm" "ogg" "mkv" "webm" "opus"
                          "flac"))
-                      "mpv"
+                      "${pkgs.mpvmacs}/bin/mpvmacs"
                       '(file))))
       '';
     };
