@@ -1908,7 +1908,6 @@ shrface = {
     (config.lib.nixGL.wrap prismlauncher)
     (config.lib.nixGL.wrap blockbench)
     (config.lib.nixGL.wrap tor-browser)
-    yara
     wget
     zip
     unzip
@@ -1990,6 +1989,7 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
     };
     ide = {
       project = true;
+      dape.enable = true;
       copilot = {
 	enable = true;
 	keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode"];
@@ -2036,8 +2036,6 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
       <<Development Project>>
 
       <<Development Eglot>>
-      
-      <<Development Dape>>
 
       <<Development Python>>
 
@@ -2144,24 +2142,40 @@ magit = {
   };
 };
 
-  magit-todos = {
-    enable = true;
-    after = ["magit"];
-    config = "(magit-todos-mode)";
+forge = {
+  enable = true;
+  afterCall = ["magit-status"];
+  command = ["forge-create-pullreq" "forge-create-issue"];
+  custom = {
+    forge-add-default-keybindings = lib.mkDefault (!config.programs.emacs.init.keybinds.evil.enable);
+    forge-database-file = lib.mkDefault ''(concat user-emacs-directory "forge/forge-database.sqlite")'';
   };
-
-  projection-ibuffer = {
-    enable = true;
-    generalOne.project-prefix-map.i = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
+  generalTwoConfig.":n".forge-topic-list-mode-map."q" = lib.mkIf config.programs.emacs.init.keybinds.evil.enable (lib.mkDefault "'kill-current-buffer");
+  generalOneConfig = lib.mkIf (!config.programs.emacs.init.keybinds.evil.enable) {
+    magit-mode-map."C-c C-o" = lib.mkDefault "'forge-browse";
+    magit-remote-section-map."C-c C-o" = lib.mkDefault "'forge-browse-remote";
+    magit-branch-section-map."C-c C-o" = lib.mkDefault "'forge-browse-branch";
   };
+};
 
-  projection-multi.custom.projection-gradle-use-daemon = false;
+magit-todos = {
+  enable = true;
+  after = ["magit"];
+  config = "(magit-todos-mode)";
+};
 
-  projection-multi-embark = {
-    enable = true;
-    after = ["embark" "projection-multi"];
-    config = "(projection-multi-embark-setup-command-map)";
-  };
+projection-ibuffer = {
+  enable = true;
+  generalOne.project-prefix-map.i = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
+};
+
+projection-multi.custom.projection-gradle-use-daemon = false;
+
+projection-multi-embark = {
+  enable = true;
+  after = ["embark" "projection-multi"];
+  config = "(projection-multi-embark-setup-command-map)";
+};
 #+end_src
 
 #+NAME: Emacs Development Projection Config
@@ -2201,26 +2215,6 @@ eglot-java = {
 #+begin_src emacs-lisp
 (efs/evil-collection-remap 'evil-collection-eglot-setup 'normal eglot-mode-map 
 			   "K" 'evil-substitute)
-#+end_src
-
-*** Dape
-#+NAME: Development Dape
-#+begin_src nix-ts
-dape = {
-  enable = true;
-  after = ["eglot"];
-  gfhookf = ["('dape-on-stopped (list 'dape-info 'dape-repl))"];
-  setopt = {
-    dape-window-arrangement = "'gud";
-    dape-key-prefix = ''"\C-x\C-a"'';
-  };
-};
-
-projection-dape = {
-  enable = true;
-  after = ["dape"];
-  generalOne.project-prefix-map."d" = "'projection-dape";
-};
 #+end_src
 
 *** Python
@@ -3568,7 +3562,9 @@ Helpful gives more information, & which-key tells what keybinds you have availab
 { pkgs, ... }:
 
 {
-  home.packages = with pkgs; [ pass ];
+  home.packages = with pkgs; [ (pass.withExtensions (exts:
+    with exts; [ pass-otp ]
+  ))];
 
   programs.emacs.init.usePackage = {
     <<Emacs Pass>>

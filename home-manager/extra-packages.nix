@@ -6,7 +6,6 @@
     (config.lib.nixGL.wrap prismlauncher)
     (config.lib.nixGL.wrap blockbench)
     (config.lib.nixGL.wrap tor-browser)
-    yara
     wget
     zip
     unzip

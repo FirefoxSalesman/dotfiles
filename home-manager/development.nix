@@ -15,6 +15,7 @@
     };
     ide = {
       project = true;
+      dape.enable = true;
       copilot = {
 	enable = true;
 	keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode"];
@@ -81,24 +82,40 @@
         };
       };
       
-        magit-todos = {
-          enable = true;
-          after = ["magit"];
-          config = "(magit-todos-mode)";
+      forge = {
+        enable = true;
+        afterCall = ["magit-status"];
+        command = ["forge-create-pullreq" "forge-create-issue"];
+        custom = {
+          forge-add-default-keybindings = lib.mkDefault (!config.programs.emacs.init.keybinds.evil.enable);
+          forge-database-file = lib.mkDefault ''(concat user-emacs-directory "forge/forge-database.sqlite")'';
         };
-      
-        projection-ibuffer = {
-          enable = true;
-          generalOne.project-prefix-map.i = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
+        generalTwoConfig.":n".forge-topic-list-mode-map."q" = lib.mkIf config.programs.emacs.init.keybinds.evil.enable (lib.mkDefault "'kill-current-buffer");
+        generalOneConfig = lib.mkIf (!config.programs.emacs.init.keybinds.evil.enable) {
+          magit-mode-map."C-c C-o" = lib.mkDefault "'forge-browse";
+          magit-remote-section-map."C-c C-o" = lib.mkDefault "'forge-browse-remote";
+          magit-branch-section-map."C-c C-o" = lib.mkDefault "'forge-browse-branch";
         };
+      };
       
-        projection-multi.custom.projection-gradle-use-daemon = false;
+      magit-todos = {
+        enable = true;
+        after = ["magit"];
+        config = "(magit-todos-mode)";
+      };
       
-        projection-multi-embark = {
-          enable = true;
-          after = ["embark" "projection-multi"];
-          config = "(projection-multi-embark-setup-command-map)";
-        };
+      projection-ibuffer = {
+        enable = true;
+        generalOne.project-prefix-map.i = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
+      };
+      
+      projection-multi.custom.projection-gradle-use-daemon = false;
+      
+      projection-multi-embark = {
+        enable = true;
+        after = ["embark" "projection-multi"];
+        config = "(projection-multi-embark-setup-command-map)";
+      };
 
       eglot = {
         preface = "(defvar efs/autoformat t)";
@@ -121,22 +138,6 @@
           (defun eglot-java-init-opts (server eglot-java-eclipse-jdt)
               '(:bundles ["/usr/share/java-debug/com.microsoft.java.debug.plugin.jar"]))
         '';
-      };
-      
-      dape = {
-        enable = true;
-        after = ["eglot"];
-        gfhookf = ["('dape-on-stopped (list 'dape-info 'dape-repl))"];
-        setopt = {
-          dape-window-arrangement = "'gud";
-          dape-key-prefix = ''"\C-x\C-a"'';
-        };
-      };
-      
-      projection-dape = {
-        enable = true;
-        after = ["dape"];
-        generalOne.project-prefix-map."d" = "'projection-dape";
       };
 
       python-ts-mode.setopt = {

@@ -1,7 +1,9 @@
 { pkgs, ... }:
 
 {
-  home.packages = with pkgs; [ pass ];
+  home.packages = with pkgs; [ (pass.withExtensions (exts:
+    with exts; [ pass-otp ]
+  ))];
 
   programs.emacs.init.usePackage = {
     password-store = {
