@@ -16,6 +16,11 @@
     ide = {
       project = true;
       dape.enable = true;
+      magit = {
+	enable = true;
+	forge = true;
+	todo = true;
+      };
       copilot = {
 	enable = true;
 	keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode"];
@@ -63,45 +68,11 @@
       
 
       magit = {
-        enable = true;
-        setopt = {
-          magit-display-buffer-function = "#'magit-display-buffer-same-window-except-diff-v1";
-          magit-process-find-password-functions = ["'magit-process-password-auth-source"];
-        };
-        generalOne.project-prefix-map = {
-          "v" = "'magit-status";
-          "c" = "'magit-commit";
-          "p" = "'magit-pull";
-          "P" = "'magit-push";
-          "b" = "'magit-branch";
-          "m" = "'magit-merge";
-        };
+        setopt.magit-process-find-password-functions = ["'magit-process-password-auth-source"];
         generalOneConfig = {
           magit-mode-map."e" = "'evil-next-visual-line";
           magit-status-mode-map."j" = "'magit-unstage-files";
         };
-      };
-      
-      forge = {
-        enable = true;
-        afterCall = ["magit-status"];
-        command = ["forge-create-pullreq" "forge-create-issue"];
-        custom = {
-          forge-add-default-keybindings = lib.mkDefault (!config.programs.emacs.init.keybinds.evil.enable);
-          forge-database-file = lib.mkDefault ''(concat user-emacs-directory "forge/forge-database.sqlite")'';
-        };
-        generalTwoConfig.":n".forge-topic-list-mode-map."q" = lib.mkIf config.programs.emacs.init.keybinds.evil.enable (lib.mkDefault "'kill-current-buffer");
-        generalOneConfig = lib.mkIf (!config.programs.emacs.init.keybinds.evil.enable) {
-          magit-mode-map."C-c C-o" = lib.mkDefault "'forge-browse";
-          magit-remote-section-map."C-c C-o" = lib.mkDefault "'forge-browse-remote";
-          magit-branch-section-map."C-c C-o" = lib.mkDefault "'forge-browse-branch";
-        };
-      };
-      
-      magit-todos = {
-        enable = true;
-        after = ["magit"];
-        config = "(magit-todos-mode)";
       };
       
       projection-ibuffer = {

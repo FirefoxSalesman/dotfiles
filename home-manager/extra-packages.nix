@@ -10,6 +10,7 @@
     zip
     unzip
     zbar
+    R
     # comms
     (config.lib.nixGL.wrap teams-for-linux)
     (config.lib.nixGL.wrap thunderbird)
