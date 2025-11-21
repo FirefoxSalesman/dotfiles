@@ -2142,12 +2142,6 @@ projection-ibuffer = {
 };
 
 projection-multi.custom.projection-gradle-use-daemon = false;
-
-projection-multi-embark = {
-  enable = true;
-  after = ["embark" "projection-multi"];
-  config = "(projection-multi-embark-setup-command-map)";
-};
 #+end_src
 
 #+NAME: Emacs Development Projection Config

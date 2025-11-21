@@ -81,12 +81,6 @@
       };
       
       projection-multi.custom.projection-gradle-use-daemon = false;
-      
-      projection-multi-embark = {
-        enable = true;
-        after = ["embark" "projection-multi"];
-        config = "(projection-multi-embark-setup-command-map)";
-      };
 
       eglot = {
         preface = "(defvar efs/autoformat t)";
