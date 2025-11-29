@@ -129,6 +129,8 @@
       ];
       generalOne.global-leader."r" = ''`("elfeed" . ,(cmd! (elfeed) (elfeed-update)))'';
     };
+    
+    
   };
 
   programs.qutebrowser = {

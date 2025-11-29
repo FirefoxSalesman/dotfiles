@@ -92,6 +92,28 @@
               				       ("halt" "doas shutdown -P now")
             				       ("reboot" "doas reboot")
               				       ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'"))))
+            
+            ;; https://xenodium.com/rinku-cli-link-previews
+            (defun adviced:eshell/cat (orig-fun &rest args)
+              "Like `eshell/cat' but with image support."
+              (if (seq-every-p (lambda (arg)
+                                 (and (stringp arg)
+                                      (file-exists-p arg)
+                                      (image-supported-file-p arg)))
+                               args)
+                  (with-temp-buffer
+                    (insert "\n")
+                    (dolist (path args)
+                      (let ((newpath (expand-file-name path)))
+            	    (insert-image (create-image
+            			   newpath (image-type-from-file-name newpath)
+            			   nil :max-width 350)))
+                      (insert "\n"))
+                    (insert "\n")
+                    (buffer-string))
+                (apply orig-fun args)))
+            
+            (advice-add #'eshell/cat :around #'adviced:eshell/cat)
           '';
         };
         

@@ -35,7 +35,7 @@
 
   nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
 
-  nixGL.packages = inputs.nixgl.packages;
+  targets.genericLinux.nixGL.packages = inputs.nixgl.packages;
   
   targets.genericLinux.enable = true;
   

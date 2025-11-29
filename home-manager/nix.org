@@ -24,7 +24,7 @@
 }
 #+end_src
 
-Inputs
+** Inputs
 #+NAME: Flake Inputs
 #+begin_src nix-ts
 nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -778,7 +778,6 @@ pkgs.writeShellScriptBin "i3status-rust" ''
 ${pkgs.i3status-rust}/bin/i3status-rs config-default.toml
 ''
 #+end_src
-
 *** Udisksmenu
 #+begin_src nix-ts :tangle scripts/udisksmenu.nix
 { pkgs }:
@@ -872,7 +871,7 @@ fi
 *** glx
 #+NAME: glx
 #+begin_src nix-ts
-nixGL.packages = inputs.nixgl.packages;
+targets.genericLinux.nixGL.packages = inputs.nixgl.packages;
 
 targets.genericLinux.enable = true;
 
@@ -1087,6 +1086,28 @@ evil-collection-eshell = {
   				       ("halt" "doas shutdown -P now")
 				       ("reboot" "doas reboot")
   				       ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'"))))
+
+;; https://xenodium.com/rinku-cli-link-previews
+(defun adviced:eshell/cat (orig-fun &rest args)
+  "Like `eshell/cat' but with image support."
+  (if (seq-every-p (lambda (arg)
+                     (and (stringp arg)
+                          (file-exists-p arg)
+                          (image-supported-file-p arg)))
+                   args)
+      (with-temp-buffer
+        (insert "\n")
+        (dolist (path args)
+          (let ((newpath (expand-file-name path)))
+	    (insert-image (create-image
+			   newpath (image-type-from-file-name newpath)
+			   nil :max-width 350)))
+          (insert "\n"))
+        (insert "\n")
+        (buffer-string))
+    (apply orig-fun args)))
+
+(advice-add #'eshell/cat :around #'adviced:eshell/cat)
 #+end_src
 
 #+NAME: Emacs Evil Eshell Config
@@ -1912,7 +1933,6 @@ shrface = {
     zip
     unzip
     zbar
-    R
     # comms
     (config.lib.nixGL.wrap teams-for-linux)
     (config.lib.nixGL.wrap thunderbird)
@@ -4934,6 +4954,8 @@ Canary is my layout of choice.
     <<Emacs Internet Webjump>>
 
     <<Emacs Internet Elfeed>>
+    
+    <<Emacs Internet Mu4e>>
   };
 
   <<Internet Qutebrowser>>
