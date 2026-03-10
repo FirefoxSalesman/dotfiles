@@ -23,8 +23,8 @@
           (gsetq openwith-associations
                  (list
                   (list (openwith-make-extension-regexp
-                         '("ff"))
-                        "lel"
+                         '("xcf"))
+                        "gimp"
                         '(file))
                   (list (openwith-make-extension-regexp
                          '("odt" "doc" "docx" "odp" "pptx" "xlsx"))
@@ -38,11 +38,6 @@
                         "${pkgs.mpvmacs}/bin/mpvmacs"
                         '(file))))
 	'';
-      };
-
-      all-the-icons-dired = {
-	enable = true;
-	ghookf = ["('dired-mode 'all-the-icons-dired-mode)"];
       };
 
       dired-single = {

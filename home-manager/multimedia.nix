@@ -2,7 +2,7 @@
 
 {
   home.packages = with pkgs; [
-    yt-dlp
+    # yt-dlp
     (config.lib.nixGL.wrap obs-studio)
     pkgs-stable.lmms
     audacity

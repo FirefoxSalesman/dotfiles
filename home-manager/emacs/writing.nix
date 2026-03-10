@@ -77,7 +77,7 @@
         ghookf = ["('org-mode 'org-auto-tangle-mode)"];
       };
       
-      denote.setopt.denote-known-keywords = [ ''"quotes"'' ''"chem"'' ''"emacs"'' ''"java"'' ''"physics"'' ''"calculus"'' ''"minecraft"'' ''"de"'' ''"proofs"'' ''"csse230"'' ''"os"'' ''"databases"'' ''"scifi"'' ''"softwarerequirements"'' ''"anthropology"'' ''"theoryofcomputation"'' ''"parallelcomp"'' ''"cybersecurity"'' ''"probstats"'' ''"scheme"'' ''"dreams"'' ''"softwaredevelopment"'' ''"ethics"'' ''"plp"'' ''"malwareanalysis"'' ''"bio"'' ''"ai"'' ''"resolve"'' ''"psychology"''];
+      denote.setopt.denote-known-keywords = [ ''"quotes"'' ''"chem"'' ''"emacs"'' ''"java"'' ''"physics"'' ''"calculus"'' ''"minecraft"'' ''"de"'' ''"proofs"'' ''"csse230"'' ''"os"'' ''"databases"'' ''"scifi"'' ''"softwarerequirements"'' ''"anthropology"'' ''"theoryofcomputation"'' ''"parallelcomp"'' ''"cybersecurity"'' ''"probstats"'' ''"scheme"'' ''"dreams"'' ''"softwaredevelopment"'' ''"ethics"'' ''"plp"'' ''"malwareanalysis"'' ''"bio"'' ''"ai"'' ''"resolve"'' ''"psychology"'' ''"algorithmanalysis"'' ''"music"''];
       
       biblio = {
         enable = true;
@@ -145,7 +145,7 @@
       writeroom-mode = {
         enable = true;
         ghookf = ["((gen-mode-hooks '(Man org-agenda org Info markdown shrface)) 'writeroom-mode)"];
-        gfhookf = ["('writeroom-mode 'visual-line-mode)"];
+        gfhookf = ["('writeroom-mode-enable 'visual-line-mode)"];
         setopt = {
           writeroom-mode-line = true;
           writeroom-maximize-window = false;

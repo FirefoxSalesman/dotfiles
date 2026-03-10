@@ -135,6 +135,7 @@
              (group-or "Chat"
                        (name-match "Thunderbird" (rx bos "Thunderbird"))
                        (name-match "teams-for-linux" (rx bos "teams-for-linux"))
+                       (name-match "zoom" (rx bos "zoom"))
                        (mode-match "ement" (rx bos "ement-"))
                        (name-match "vesktop" (rx bos "vesktop"))))
             (group
@@ -161,10 +162,15 @@
                        (name-match "Audacity" (rx bos "Audacity"))
                        (name-match "kdenlive" (rx bos "kdenlive"))))
             (group
-             (group-or "Games"
+             (group-or "Minecraft"
                        (dir "~/.local/PrismLauncher/")
                        (name-match "Minecraft" (rx bos "Minecraft"))
                        (name-match "PrismLauncher" (rx bos "PrismLauncher"))))
+            (group
+             (group-or "Games"
+                       (dir "~/game")
+                       (name-match "PPSSPPSDL" (rx bos "PPSSPPSDL"))
+                       (name-match "net.lutris.Lutris" (rx bos "net.lutris.Lutris"))))
             (group
              ;; Subgroup collecting all `help-mode' and `info-mode' buffers.
              (group-or "Help/Info"

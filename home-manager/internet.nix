@@ -3,6 +3,9 @@
 {
   home.packages = with pkgs; [
     python313Packages.adblock
+    libfido2
+    yubikey-manager
+    # brave
   ];
 
   programs.emacs.init.usePackage = {

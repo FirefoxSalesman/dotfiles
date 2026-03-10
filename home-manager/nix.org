@@ -28,7 +28,7 @@
 #+NAME: Flake Inputs
 #+begin_src nix-ts
 nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-24.11";
+nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
 emacs-overlay.url  = "github:nix-community/emacs-overlay";
 
 stylix.url = "github:danth/stylix";
@@ -312,23 +312,6 @@ trivialBuild rec {
   pname = "ezf";
   version = "current";
   src = inputs.ezf;
-}
-#+end_src
-
-*** Org Novelist
-#+begin_src nix-ts :tangle packages/emacs/org-novelist.nix
-{ inputs, trivialBuild, org }:
-
-trivialBuild rec {
-  pname = "org-novelist";
-  version = "current";
-  src = inputs.org-novelist;
-
-  propogatedUserEnvPkgs = [
-    org
-  ];
-
-  buildInputs = propogatedUserEnvPkgs;
 }
 #+end_src
 
@@ -1299,29 +1282,33 @@ in mkIf cfg.enable {
 ** Aesthetics
 *** Inputs
 #+begin_src nix-ts :noweb yes :tangle aesthetics.nix
-  { config, inputs, lib, pkgs, ... }:
+  { config, inputs, lib, pkgs, pkgs-stable, ... }:
 
   {
     <<Stylix Config>>
 
     <<Aesthetics Picom>>
 
-    programs.emacs.init.usePackage = {
-      <<Aesthetics Prettify Symbols>>
+    programs.emacs.init = {
+      aesthetics.icons = {
+        enable = true;
+        forceInstallAllTheIcons = true;
+      };
+      usePackage = {
+        <<Aesthetics Prettify Symbols>>
 
-      <<Emacs Ricing Icons>>
+        <<Emacs Ricing Dashboard>>
       
-      <<Emacs Ricing Dashboard>>
-      
-      <<Emacs Ricing Nano>>
+        <<Emacs Ricing Nano>>
 
-      <<Emacs Ricing Theme>>
+        <<Emacs Ricing Theme>>
       
-      <<Emacs Ricing Solaire>>
+        <<Emacs Ricing Solaire>>
       
-      <<Emacs Ricing Posframes>>
+        <<Emacs Ricing Posframes>>
 
-      <<Emacs Ricing Shrface>>
+        <<Emacs Ricing Shrface>>
+      };
     };
   }
 #+end_src
@@ -1336,8 +1323,8 @@ For making emacs transparent
     backend = "glx";
     opacityRules = [ "70:class_g = 'lmms'" ];
     settings = {
-      glx-no-stencil = true;
-      glx-no-rebind-pixmap = true;
+      # glx-no-stencil = true;
+      # glx-no-rebind-pixmap = true;
       use-damage = true;
       vsync = true;
       blur = {
@@ -1379,7 +1366,7 @@ Pywal integration: https://github.com/danth/stylix/issues/99
     };
     fonts = with pkgs; rec {
       monospace = {
-        package = jetbrains-mono;
+        package = pkgs-stable.jetbrains-mono;
         name = "JetBrains Mono";
       };
       sansSerif = {
@@ -1404,38 +1391,6 @@ Pywal integration: https://github.com/danth/stylix/issues/99
          $DRY_RUN_CMD ${pkgs.pywal}/bin/wal -R
        '';
     } ;
-#+end_src
-
-*** Icons
-Installs all the icon fonts for dired.
-
-Use =M-x all-the-icons-install-fonts=
-#+NAME: Emacs Ricing Icons
-#+begin_src nix-ts
-nerd-icons = {
-  enable = true;
-  command = [
-    "nerd-icons-octicon"
-    "nerd-icons-faicon"
-    "nerd-icons-flicon"
-    "nerd-icons-wicon"
-    "nerd-icons-mdicon"
-    "nerd-icons-codicon"
-    "nerd-icons-devicon"
-    "nerd-icons-ipsicon"
-    "nerd-icons-pomicon"
-    "nerd-icons-powerline"
-  ];
-};
-
-all-the-icons = {
-  enable = true;
-};
-
-nerd-icons-completion = {
-  enable = true;
-  ghookf = ["('marginalia-mode 'nerd-icons-completion-marginalia-setup)"];
-};
 #+end_src
 
 *** Prettify Symbols
@@ -1926,13 +1881,15 @@ shrface = {
 {
   home.packages = with pkgs; [
     (config.lib.nixGL.wrap gimp)
-    (config.lib.nixGL.wrap prismlauncher)
     (config.lib.nixGL.wrap blockbench)
     (config.lib.nixGL.wrap tor-browser)
     wget
     zip
     unzip
     zbar
+    (config.lib.nixGL.wrap lutris)
+    (config.lib.nixGL.wrap retroarch)
+    (config.lib.nixGL.wrap prismlauncher)
     # comms
     (config.lib.nixGL.wrap teams-for-linux)
     (config.lib.nixGL.wrap thunderbird)
@@ -2018,7 +1975,7 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
       };
       copilot = {
 	enable = true;
-	keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode"];
+	keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode" "zenscript-mode"];
       };
       flymake = {
         enable = true;
@@ -2047,9 +2004,16 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
         emacs-lisp.enable = true;
         javascript.enable = true;
         ledger.enable = true;
-	r.enable = true;
 	makefile.enable = true;
 	yaml.enable = true;
+        html = {
+	  enable = true;
+	  emmet = true;
+	};
+        css = {
+	  enable = true;
+	  emmet = true;
+	};
       };
     };
 
@@ -2072,8 +2036,6 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
       flymake-popon.setopt.flymake-popon-posframe-extra-arguments = [ "':poshandler" "'posframe-poshandler-point-bottom-left-corner-upward"
 	"':parent-frame" false
         "':refposhandler" "'posframe-refposhandler-xwininfo" ];
-
-      eat.generalOne.global-leader.a = ''`("AI via cursor" . ,(cmd! (eat "${pkgs.cursor-cli}/bin/cursor-agent")))'';
 
       <<Development Java>>
 
@@ -2241,11 +2203,6 @@ I'm running dired with a couple of small packages that improve on it
 	'';
       };
 
-      all-the-icons-dired = {
-	enable = true;
-	ghookf = ["('dired-mode 'all-the-icons-dired-mode)"];
-      };
-
       dired-single = {
 	enable = true;
 	after = [ "dired" ];
@@ -2286,8 +2243,8 @@ I'm running dired with a couple of small packages that improve on it
 (gsetq openwith-associations
        (list
         (list (openwith-make-extension-regexp
-               '("ff"))
-              "lel"
+               '("xcf"))
+              "gimp"
               '(file))
         (list (openwith-make-extension-regexp
                '("odt" "doc" "docx" "odp" "pptx" "xlsx"))
@@ -3222,12 +3179,6 @@ vertico-quick.setopt = {
 I took a lot of this from Gavin Freeborn's config
 #+NAME: Emacs Corfu
 #+begin_src nix-ts :noweb yes
-nerd-icons-corfu = {
-  enable = true;
-  config = ''(add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter)'';
-  after = ["corfu"];
-};
-
 corfu-quick = {
   enable = true;
   setopt = {
@@ -3260,7 +3211,7 @@ consult = {
   ghookf = ["('minibuffer-setup 'consult-initial-narrow)"];
   command = ["consult-goto-line" "consult-keep-lines"];
   setopt = {
-    consult-buffer-sources = "'(consult--source-buffer)";
+    consult-buffer-sources = "'(consult-source-buffer)";
     consult-bookmark-narrow = [
       '''(?b "Bufler" bufler-workspace-bookmark-handler)''
       '''(?f "File" bookmark-default-handler)''
@@ -3684,7 +3635,7 @@ org-auto-tangle = {
   ghookf = ["('org-mode 'org-auto-tangle-mode)"];
 };
 
-denote.setopt.denote-known-keywords = [ ''"quotes"'' ''"chem"'' ''"emacs"'' ''"java"'' ''"physics"'' ''"calculus"'' ''"minecraft"'' ''"de"'' ''"proofs"'' ''"csse230"'' ''"os"'' ''"databases"'' ''"scifi"'' ''"softwarerequirements"'' ''"anthropology"'' ''"theoryofcomputation"'' ''"parallelcomp"'' ''"cybersecurity"'' ''"probstats"'' ''"scheme"'' ''"dreams"'' ''"softwaredevelopment"'' ''"ethics"'' ''"plp"'' ''"malwareanalysis"'' ''"bio"'' ''"ai"'' ''"resolve"'' ''"psychology"''];
+denote.setopt.denote-known-keywords = [ ''"quotes"'' ''"chem"'' ''"emacs"'' ''"java"'' ''"physics"'' ''"calculus"'' ''"minecraft"'' ''"de"'' ''"proofs"'' ''"csse230"'' ''"os"'' ''"databases"'' ''"scifi"'' ''"softwarerequirements"'' ''"anthropology"'' ''"theoryofcomputation"'' ''"parallelcomp"'' ''"cybersecurity"'' ''"probstats"'' ''"scheme"'' ''"dreams"'' ''"softwaredevelopment"'' ''"ethics"'' ''"plp"'' ''"malwareanalysis"'' ''"bio"'' ''"ai"'' ''"resolve"'' ''"psychology"'' ''"algorithmanalysis"'' ''"music"''];
 
 biblio = {
   enable = true;
@@ -3785,7 +3736,7 @@ I couldn't get olivetti to work.
 writeroom-mode = {
   enable = true;
   ghookf = ["((gen-mode-hooks '(Man org-agenda org Info markdown shrface)) 'writeroom-mode)"];
-  gfhookf = ["('writeroom-mode 'visual-line-mode)"];
+  gfhookf = ["('writeroom-mode-enable 'visual-line-mode)"];
   setopt = {
     writeroom-mode-line = true;
     writeroom-maximize-window = false;
@@ -3958,6 +3909,7 @@ bufler-workspace-tabs = {
    (group-or "Chat"
              (name-match "Thunderbird" (rx bos "Thunderbird"))
              (name-match "teams-for-linux" (rx bos "teams-for-linux"))
+             (name-match "zoom" (rx bos "zoom"))
              (mode-match "ement" (rx bos "ement-"))
              (name-match "vesktop" (rx bos "vesktop"))))
   (group
@@ -3984,10 +3936,15 @@ bufler-workspace-tabs = {
              (name-match "Audacity" (rx bos "Audacity"))
              (name-match "kdenlive" (rx bos "kdenlive"))))
   (group
-   (group-or "Games"
+   (group-or "Minecraft"
              (dir "~/.local/PrismLauncher/")
              (name-match "Minecraft" (rx bos "Minecraft"))
              (name-match "PrismLauncher" (rx bos "PrismLauncher"))))
+  (group
+   (group-or "Games"
+             (dir "~/game")
+             (name-match "PPSSPPSDL" (rx bos "PPSSPPSDL"))
+             (name-match "net.lutris.Lutris" (rx bos "net.lutris.Lutris"))))
   (group
    ;; Subgroup collecting all `help-mode' and `info-mode' buffers.
    (group-or "Help/Info"
@@ -4585,7 +4542,7 @@ This is where all the audio/video stuff goes
 
 {
   home.packages = with pkgs; [
-    yt-dlp
+    # yt-dlp
     (config.lib.nixGL.wrap obs-studio)
     pkgs-stable.lmms
     audacity
@@ -4901,6 +4858,9 @@ Canary is my layout of choice.
 {
   home.packages = with pkgs; [
     python313Packages.adblock
+    libfido2
+    yubikey-manager
+    # brave
   ];
 
   programs.emacs.init.usePackage = {

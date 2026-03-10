@@ -23,7 +23,7 @@
       };
       copilot = {
 	enable = true;
-	keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode"];
+	keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode" "zenscript-mode"];
       };
       flymake = {
         enable = true;
@@ -52,9 +52,16 @@
         emacs-lisp.enable = true;
         javascript.enable = true;
         ledger.enable = true;
-	r.enable = true;
 	makefile.enable = true;
 	yaml.enable = true;
+        html = {
+	  enable = true;
+	  emmet = true;
+	};
+        css = {
+	  enable = true;
+	  emmet = true;
+	};
       };
     };
 
@@ -117,8 +124,6 @@
       flymake-popon.setopt.flymake-popon-posframe-extra-arguments = [ "':poshandler" "'posframe-poshandler-point-bottom-left-corner-upward"
 	"':parent-frame" false
         "':refposhandler" "'posframe-refposhandler-xwininfo" ];
-
-      eat.generalOne.global-leader.a = ''`("AI via cursor" . ,(cmd! (eat "${pkgs.cursor-cli}/bin/cursor-agent")))'';
 
       java-ts-mode = {
         preface = ''

@@ -45,12 +45,6 @@
         vertico-quick2 = ''"neia"'';
       };
       
-      nerd-icons-corfu = {
-        enable = true;
-        config = ''(add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter)'';
-        after = ["corfu"];
-      };
-      
       corfu-quick = {
         enable = true;
         setopt = {
@@ -72,7 +66,7 @@
         ghookf = ["('minibuffer-setup 'consult-initial-narrow)"];
         command = ["consult-goto-line" "consult-keep-lines"];
         setopt = {
-          consult-buffer-sources = "'(consult--source-buffer)";
+          consult-buffer-sources = "'(consult-source-buffer)";
           consult-bookmark-narrow = [
             '''(?b "Bufler" bufler-workspace-bookmark-handler)''
             '''(?f "File" bookmark-default-handler)''
