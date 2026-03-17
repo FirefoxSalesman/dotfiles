@@ -169,6 +169,7 @@
             (group
              (group-or "Games"
                        (dir "~/game")
+                       (name-match "retroarch" (rx bos "retroarch"))
                        (name-match "PPSSPPSDL" (rx bos "PPSSPPSDL"))
                        (name-match "net.lutris.Lutris" (rx bos "net.lutris.Lutris"))))
             (group

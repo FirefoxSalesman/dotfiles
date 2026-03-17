@@ -9,8 +9,10 @@
     zip
     unzip
     zbar
+    (config.lib.nixGL.wrap steam)
     (config.lib.nixGL.wrap lutris)
     (config.lib.nixGL.wrap retroarch)
+    (config.lib.nixGL.wrap gamemode)
     (config.lib.nixGL.wrap prismlauncher)
     # comms
     (config.lib.nixGL.wrap teams-for-linux)

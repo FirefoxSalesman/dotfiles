@@ -70,9 +70,12 @@
       };
 
     programs.emacs.init = {
-      aesthetics.icons = {
-        enable = true;
-        forceInstallAllTheIcons = true;
+      aesthetics = {
+        dashboard.enable = true;
+        icons = {
+          enable = true;
+          forceInstallAllTheIcons = true;
+        };
       };
       usePackage = {
         prettify-symbols = {
@@ -80,30 +83,7 @@
           ghookf = ["('prog-mode 'prettify-symbols-mode)"];
         };
 
-        dashboard = {
-          enable = true;
-          ghookf = ["('on-init-ui '(dashboard-insert-startupify-lists dashboard-initialize))"];
-          config = ''
-            (dashboard-setup-startup-hook)
-            (dashboard-open)
-            (evil-collection-dashboard-setup)
-            (evil-collection-dashboard-setup-jump-commands)  
-          '' ;
-          setopt = {
-            dashboard-banner-logo-title = ''"Emacs: The one true desktop environment"'';
-            dashboard-center-content = true;
-            dashboard-items = [
-              "'(recents . 5)"
-              "'(bookmarks . 5)"
-              "'(projects . 5)"
-              "'(agenda . 5)"
-            ];
-            dashboard-icon-type = "'nerd-icons";
-            dashboard-set-heading-icons = true;
-            dashboard-set-file-icons = true;
-            dashboard-agenda-sort-strategy = "'(time-up)";
-          };
-        };
+        dashboard.setopt.dashboard-banner-logo-title = ''"Emacs: The one true desktop environment"'';
       
         doom-nano-modeline = {
           enable = true;

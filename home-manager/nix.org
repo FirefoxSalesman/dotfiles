@@ -1290,14 +1290,17 @@ in mkIf cfg.enable {
     <<Aesthetics Picom>>
 
     programs.emacs.init = {
-      aesthetics.icons = {
-        enable = true;
-        forceInstallAllTheIcons = true;
+      aesthetics = {
+        dashboard.enable = true;
+        icons = {
+          enable = true;
+          forceInstallAllTheIcons = true;
+        };
       };
       usePackage = {
         <<Aesthetics Prettify Symbols>>
 
-        <<Emacs Ricing Dashboard>>
+        dashboard.setopt.dashboard-banner-logo-title = ''"Emacs: The one true desktop environment"'';
       
         <<Emacs Ricing Nano>>
 
@@ -1400,40 +1403,6 @@ prettify-symbols = {
   enable = true;
   ghookf = ["('prog-mode 'prettify-symbols-mode)"];
 };
-#+end_src
-
-*** Dashboard
-#+NAME: Emacs Ricing Dashboard
-#+begin_src nix-ts :noweb yes
-dashboard = {
-  enable = true;
-  ghookf = ["('on-init-ui '(dashboard-insert-startupify-lists dashboard-initialize))"];
-  config = ''
-    <<Emacs Dashboard Config>>  
-  '' ;
-  setopt = {
-    dashboard-banner-logo-title = ''"Emacs: The one true desktop environment"'';
-    dashboard-center-content = true;
-    dashboard-items = [
-      "'(recents . 5)"
-      "'(bookmarks . 5)"
-      "'(projects . 5)"
-      "'(agenda . 5)"
-    ];
-    dashboard-icon-type = "'nerd-icons";
-    dashboard-set-heading-icons = true;
-    dashboard-set-file-icons = true;
-    dashboard-agenda-sort-strategy = "'(time-up)";
-  };
-};
-#+end_src
-
-#+NAME: Emacs Dashboard Config
-#+begin_src emacs-lisp
-(dashboard-setup-startup-hook)
-(dashboard-open)
-(evil-collection-dashboard-setup)
-(evil-collection-dashboard-setup-jump-commands)
 #+end_src
 
 *** Nano
@@ -1887,8 +1856,10 @@ shrface = {
     zip
     unzip
     zbar
+    (config.lib.nixGL.wrap steam)
     (config.lib.nixGL.wrap lutris)
     (config.lib.nixGL.wrap retroarch)
+    (config.lib.nixGL.wrap gamemode)
     (config.lib.nixGL.wrap prismlauncher)
     # comms
     (config.lib.nixGL.wrap teams-for-linux)
@@ -2306,6 +2277,8 @@ I'm running dired with a couple of small packages that improve on it
         <<Emacs Wgrep>>
 
         <<Emacs Notifications>>
+        
+        <<Emacs Mutype>>
       };
 
       <<Emacs Postlude>>
@@ -2506,6 +2479,16 @@ ednc = {
 (ednc-mode)
 (defun show-notification-in-echo-area (old new)
   (when new (message (ednc-format-notification new t))))
+#+end_src
+
+**** Mutype
+#+NAME: Emacs Mutype
+#+begin_src nix-ts
+mutype = {
+  enable = true;
+  command = ["mutype-mode" "mutype-mode-custom"];
+  setopt.mutype-source-directory = ''"~/.config/emacs/mutype"'';
+};
 #+end_src
 
 **** Postlude
@@ -3389,6 +3372,7 @@ ace-isearch = {
     ace-isearch-input-length = 5;
     ace-isearch-jump-based-on-one-char = false;
     isearch-wrap-pause = "'no-ding";
+    isearch-lazy-count = true;
   };
 };
 
@@ -3943,6 +3927,7 @@ bufler-workspace-tabs = {
   (group
    (group-or "Games"
              (dir "~/game")
+             (name-match "retroarch" (rx bos "retroarch"))
              (name-match "PPSSPPSDL" (rx bos "PPSSPPSDL"))
              (name-match "net.lutris.Lutris" (rx bos "net.lutris.Lutris"))))
   (group

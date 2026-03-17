@@ -216,6 +216,7 @@
           ace-isearch-input-length = 5;
           ace-isearch-jump-based-on-one-char = false;
           isearch-wrap-pause = "'no-ding";
+          isearch-lazy-count = true;
         };
       };
       

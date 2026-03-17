@@ -49,6 +49,6 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] https://github.com/eshelyaron/semel
 + [ ] porg
 + [ ] See if there's anything to glean from here: https://www.reddit.com/r/emacs/comments/1nwgygm/building_workflows_with_gptel/
-+ [ ] https://melpa.org/#/mutype
 + [ ] https://github.com/cosmicz/clime
   I'd like to see if I could integrate this into the nix framework
++ [ ] https://codeberg.org/tazjin/reka
