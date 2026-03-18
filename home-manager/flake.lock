@@ -211,6 +211,7 @@
         "doom-utils": "doom-utils",
         "eglot-booster": "eglot-booster",
         "eglot-x": "eglot-x",
+        "exwm-outer-gaps": "exwm-outer-gaps",
         "org-modern-indent": "org-modern-indent",
         "org-novelist": "org-novelist",
         "svelte-ts-mode": "svelte-ts-mode",
@@ -218,11 +219,11 @@
         "use-package-eglot": "use-package-eglot"
       },
       "locked": {
-        "lastModified": 1773765160,
-        "narHash": "sha256-Nb5y5NplCEO+5oiqPE0IdsBnl4quTI/CU+GiQliux2I=",
+        "lastModified": 1773806384,
+        "narHash": "sha256-Cf50i1jajBaReLvXvDI1S6sImeM6LXyFI43E8zR4ges=",
         "owner": "firefoxsalesman",
         "repo": "NixEmacs",
-        "rev": "312c628ef534de06c487470754ab9d8e3b272036",
+        "rev": "9e7560f7494bed3c3cea1240cf3b8f93e3861a5b",
         "type": "github"
       },
       "original": {
@@ -690,7 +691,6 @@
         "emacs-embark": "emacs-embark",
         "emacs-init": "emacs-init",
         "emacs-overlay": "emacs-overlay",
-        "exwm-outer-gaps": "exwm-outer-gaps",
         "exwm-qutebrowser": "exwm-qutebrowser",
         "ezf": "ezf",
         "gptel-quick": "gptel-quick",

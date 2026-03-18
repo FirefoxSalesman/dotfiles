@@ -50,11 +50,7 @@ final: prev: pkgs: inputs: {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild;
         });
-        exwm-outer-gaps = (prev.emacs.pkgs.callPackage ./packages/emacs/exwm-outer-gaps.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild exwm xelb;
-        });
-	gptel-quick = (prev.emacs.pkgs.callPackage ./packages/emacs/gptel-quick.nix {
+        gptel-quick = (prev.emacs.pkgs.callPackage ./packages/emacs/gptel-quick.nix {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild gptel;
         });

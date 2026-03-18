@@ -98,11 +98,6 @@ mpc-wrapper = {
   flake = false;
 };
 
-exwm-outer-gaps = {
-  url = "github:firefoxsalesman/exwm-outer-gaps";
-  flake = false;
-};
-
 exwm-qutebrowser = {
   url = "github:lrustand/qutebrowser.el/18f98f0";
   flake = false;
@@ -203,11 +198,7 @@ final: prev: pkgs: inputs: {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild;
         });
-        exwm-outer-gaps = (prev.emacs.pkgs.callPackage ./packages/emacs/exwm-outer-gaps.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild exwm xelb;
-        });
-	gptel-quick = (prev.emacs.pkgs.callPackage ./packages/emacs/gptel-quick.nix {
+        gptel-quick = (prev.emacs.pkgs.callPackage ./packages/emacs/gptel-quick.nix {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild gptel;
         });
@@ -312,24 +303,6 @@ trivialBuild rec {
   pname = "ezf";
   version = "current";
   src = inputs.ezf;
-}
-#+end_src
-
-*** EXWM Outer Gaps
-#+begin_src nix-ts :tangle packages/emacs/exwm-outer-gaps.nix
-{ inputs, trivialBuild, xelb, exwm } :
-
-trivialBuild rec {
-  pname = "exwm-outer-gaps";
-  version = "current";
-  src = inputs.exwm-outer-gaps;
-
-  propagatedUserEnvPkgs = [
-    xelb
-    exwm
-  ];
-
-  buildInputs = propagatedUserEnvPkgs;
 }
 #+end_src
 
@@ -3744,26 +3717,67 @@ flyspell = {
 
 ** Window Management
 #+begin_src nix-ts :noweb yes :tangle window-manager.nix
-{ pkgs, config, ... }:
+{ pkgs, config, lib, ... }:
 
 {
   programs = {
     <<i3status>>
 
-    emacs.init.usePackage = {
-      <<Emacs Window Management Tab Bar>>
+    emacs.init = {
+      tools.exwm = {
+	enable = true;
+	wantMouseWarping = true;
+	useGaps = true;
+	bindings = {
+	  "?\\s-r" = "exwm-reset";
+	  "?\\s-a" = "evil-ex";
+	  "?\\s-d" = "app-launcher-run-app";
+	  "?\\s-t" = "proced";
+	  
+	  # Movement
+	  "?\\s-e" = "elwm-next";
+	  "?\\s-o" = "elwm-prev";
+	  "?\\s-." = "other-frame";
+
+	  # Arrangement
+	  "?\\s-E" = "elwm-rotate-window";
+	  "?\\s-O" = "elwm-derotate-window";
+	  "?\\s-c" = "elwm-split-window";
+	  "?\\s-n" = "evil-window-move-far-left";
+	  "?\\s-i" = "evil-window-move-far-right";
+	  "?\\s-j" = "winner-undo";
+	  "?\\s-J" = "winner-redo";
+	  "?\\s-m" = "toggle-single-window";
+	  "?\\s-x" = "toggle-follow-mode";
+	  "?\\s-k" = "evil-window-delete";
+	  "?\\s-K" = "evil-delete-buffer-and-window";
+
+	  #Shell bindings
+	  "?\\s-s" = '',(cmd! (shell-command "slock"))'';
+	  "?\\s-y" = '',(cmd! (start-process-shell-command "maim" nil  "${pkgs.maim}/bin/maim ~/pic/screenshot.png"))'';
+	  "XF86MonBrightnessDown" = '',(cmd! (efs/alter-monitor-brightness 5 t))'';
+	  "XF86MonBrightnessUp" = '',(cmd! (efs/alter-monitor-brightness 5))'';
+	};
+	titleAlterations = {
+	  "qutebrowser" = ''(exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title))'';
+	  "mpv" = ''(exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title))'';
+	};
+      };
+      usePackage = {
+        <<Emacs Window Management Tab Bar>>
       
-      <<Emacs Window Management Bufler>>
+        <<Emacs Window Management Bufler>>
       
-      <<Emacs Window Management ELWM>>
+        <<Emacs Window Management ELWM>>
       
-      <<Emacs Window Management Golden Ratio>>
+        <<Emacs Window Management Golden Ratio>>
       
-      <<Emacs Window Management EXWM>>
+        <<Emacs Window Management EXWM>>
       
-      <<Emacs Window Management Popper & Proced>>
+        <<Emacs Window Management Popper & Proced>>
       
-      <<Emacs Ace Window>>
+        <<Emacs Ace Window>>
+      };
     };
   };
 }
@@ -4063,7 +4077,6 @@ golden-ratio = {
 #+NAME: Emacs Window Management EXWM
 #+begin_src nix-ts :noweb yes
 exwm = {
-  enable = true;
   gfhookf = [
     # When window "class" updates, use it to set the buffer name
     "('exwm-update-class (lambda () (exwm-workspace-rename-buffer exwm-class-name)))"
@@ -4073,12 +4086,6 @@ exwm = {
                           (exwm-workspace-switch-create 0)
                           ;; Show status in the mode line
                           (start-process-shell-command "xbanish" nil "${pkgs.xbanish}/bin/xbanish")))''
-    "('exwm-mode 'evil-motion-state)"
-    # When window title updates, use it to set the buffer name
-    ''('exwm-update-title (lambda ()
-                                  (pcase exwm-class-name
-                                         ("qutebrowser" (exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title)))
-                                         ("mpv" (exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title))))))''
   ];
   # Ctrl+q will enable the next key to be sent directly
   generalOneConfig.exwm-mode-map = {
@@ -4090,15 +4097,9 @@ exwm = {
     # Emacs everywhere
     exwm-input-simulation-keys = '''(([?\C-h] . [backspace]))'';
     exwm-workspace-number = 1;
-    # Automatically move EXWM buffer to current workspace when selected
-    exwm-layout-show-all-buffers = true;
-    # Display all EXWM buffers in every workspace buffer list
-    exwm-workspace-show-all-buffers = true;
     # This will need to be updated to the name of a display!  You can find
     # the names of your displays by looking at arandr or the output of xrandr
     exwm-randr-workspace-monitor-plist = '''(0 "eDP-1-1") (1 "HDMI-0")'';
-    # Automatically send the mouse cursor to the selected workspace's display
-    exwm-workspace-warp-cursor = true;
     # Window focus should follow the mouse pointer
     mouse-autoselect-window = false;
     focus-follows-mouse = false;
@@ -4131,45 +4132,7 @@ exwm = {
       '''XF86AudioMute''
       '''?\M-\ ''
     ];
-    # Set up global key bindings.  These always work, no matter the input state!
-    # Keep in mind that changing this list after EXWM initializes has no effect.
-    exwm-input-global-keys = [
-      # Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
-      '''([?\s-r] . exwm-reset)''
-      '''([?\s-a] . evil-ex)''
-    
-      # Launch applications (basically dmenu)
-      '''([?\s-d] . app-launcher-run-app)''
-      '''([?\s-t] . proced)''
-    
-      # Movement
-      '''([?\s-e] . elwm-next)''
-      '''([?\s-o] . elwm-prev)''
-      '''([?\s-.] . other-frame)''
-
-      # Arrangement
-      '''([?\s-E] . elwm-rotate-window)''
-      '''([?\s-O] . elwm-derotate-window)''
-      '''([?\s-c] . elwm-split-window)''
-      '''([?\s-n] . evil-window-move-far-left)''
-      '''([?\s-i] . evil-window-move-far-right)''
-      '''([?\s-j] . winner-undo)''
-      '''([?\s-J] . winner-redo)''
-      '''([?\s-r] . exwm-reset)''
-      '''([?\s-m] . toggle-single-window)''
-      '''([?\s-x] . toggle-follow-mode)''
-      '''([?\s-k] . evil-window-delete)''
-      '''([?\s-K] . evil-delete-buffer-and-window)''
-    
-      # Shell bindings
-      ''`([?\s-s] . ,(cmd! (shell-command "slock")))''
-      ''`([?\s-y] . ,(cmd! (start-process-shell-command "maim" nil  "${pkgs.maim}/bin/maim ~/pic/screenshot.png")))''
-      "`([XF86MonBrightnessDown] . ,(cmd! (efs/alter-monitor-brightness 5 t)))"
-      "`([XF86MonBrightnessUp] . ,(cmd! (efs/alter-monitor-brightness 5)))"
-    ];
-    
   };
-  afterCall = ["on-init-ui-hook"];
   init = ''
     <<Emacs Exwm Init>>
   '';
@@ -4180,16 +4143,15 @@ exwm = {
 };
 
 exwm-mff = {
-  enable = true;
-  defer = true;
   command = ["exwm-mff-warp-to-selected"];
+  hook = lib.mkForce [];
 };
 
-exwm-outer-gaps = {
-  enable = true;
-  config = ''(ignore-errors (exwm-outer-gaps-mode))'';
-  after = ["exwm"];
-};
+# exwm-outer-gaps = {
+#   enable = true;
+#   config = ''(ignore-errors (exwm-outer-gaps-mode))'';
+#   after = ["exwm"];
+# };
 #+end_src
 
 #+NAME: Emacs Exwm Init

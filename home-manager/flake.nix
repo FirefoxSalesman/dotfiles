@@ -73,11 +73,6 @@
       flake = false;
     };
     
-    exwm-outer-gaps = {
-      url = "github:firefoxsalesman/exwm-outer-gaps";
-      flake = false;
-    };
-    
     exwm-qutebrowser = {
       url = "github:lrustand/qutebrowser.el/18f98f0";
       flake = false;
