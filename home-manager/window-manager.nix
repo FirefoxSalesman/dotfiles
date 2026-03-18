@@ -85,8 +85,8 @@
 	  "XF86MonBrightnessUp" = '',(cmd! (efs/alter-monitor-brightness 5))'';
 	};
 	titleAlterations = {
-	  "qutebrowser" = ''(exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title))'';
-	  "mpv" = ''(exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title))'';
+	  qutebrowser = ''(exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title))'';
+	  mpv = ''(exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title))'';
 	};
       };
       usePackage = {
@@ -348,14 +348,11 @@
             "('exwm-update-class (lambda () (exwm-workspace-rename-buffer exwm-class-name)))"
             # When EXWM starts up, do some extra configuration
             ''('exwm-init (lambda ()
-                                  ;; Make workspace 0 be the one where we land at startup
-                                  (exwm-workspace-switch-create 0)
                                   ;; Show status in the mode line
                                   (start-process-shell-command "xbanish" nil "${pkgs.xbanish}/bin/xbanish")))''
           ];
           # Ctrl+q will enable the next key to be sent directly
           generalOneConfig.exwm-mode-map = {
-            "C-q" = "'exwm-input-send-next-key";
             "C-c" = "mode-specific-map";
           };
           custom = {
@@ -370,7 +367,7 @@
             mouse-autoselect-window = false;
             focus-follows-mouse = false;
             # These keys should always pass through to Emacs
-            exwm-input-prefix-keys = [
+            exwm-input-prefix-keys = lib.mkForce [
               '''?\M-`''
               '''?\C-^''
               '''?\M-&''
@@ -446,10 +443,7 @@
               (async-shell-command (concat "brightnessctl -d intel_backlight set " (int-to-string efs/monitor-brightness) "%")))
           '';
           config = ''
-            ;; Set the screen resolution (update this to be the correct resolution for your screen!)
             (winner-mode)
-            (require 'exwm-randr)
-            (exwm-randr-mode)
             
             (repeaters-define-maps
              '(("delete-windows"
@@ -459,7 +453,6 @@
              '(("input-keys"
                 exwm-input-send-next-key "q")))
             (exwm-input-set-key (kbd "s-<return>") 'efs/make-eshell)
-            (exwm-wm-mode)
           '';
           after = ["repeaters"];
         };
@@ -468,12 +461,6 @@
           command = ["exwm-mff-warp-to-selected"];
           hook = lib.mkForce [];
         };
-        
-        # exwm-outer-gaps = {
-        #   enable = true;
-        #   config = ''(ignore-errors (exwm-outer-gaps-mode))'';
-        #   after = ["exwm"];
-        # };
       
         popper = {
           enable = true;
