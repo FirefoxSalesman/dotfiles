@@ -33,6 +33,8 @@
       "mp" = '''("replay file" . mpc-play)'';
       "mm" = '''("menu" . music-menu)'';
       "ms" = '''("stop" . mpc-stop)'';
+      "m+" = "'mpc-inc-by-five";
+      "m-" = "'mpc-dec-by-five";
     };
     deferIncrementally = true;
     config = ''
@@ -45,6 +47,18 @@
         (mpc-clear)
         (mpc-add (completing-read "Choose a song: " (mpc-ls)))
         (mpc-play))
+      (defun mpc-inc-by-five ()
+        "Increase the volume by 5."
+        (interactive)
+        (mpc-volume-inc 5))
+      (defun mpc-dec-by-five ()
+        "Decrease the volume by 5."
+        (interactive)
+        (mpc-volume-dec 5))
+      (repeaters-define-maps
+       '(("music"
+          mpc-volume-dec-by-five "-"
+          mpc-volume-inc-by-five "+")))
     '';
   };
 

@@ -1,16 +1,16 @@
 final: prev: pkgs: inputs: {
   # shell scripts
-  ezf = (import ./scripts/ezf.nix { inherit pkgs; });
-  cast = (import ./scripts/cast.nix { inherit pkgs; });
-  doomer = (import ./scripts/doomer.nix { inherit pkgs; });
-  ffmpeg-bulk = (import ./scripts/ffmpeg-bulk.nix { inherit pkgs; });
-  masstube = (import ./scripts/masstube.nix { inherit pkgs; });
-  mpvmacs = (import ./scripts/mpvmacs.nix { inherit pkgs; });
-  hdmihelper = (import ./scripts/hdmi-helper.nix { inherit pkgs; });
-  pkg = (import ./scripts/pkg.nix { inherit pkgs; });
-  udisksmenu = (import ./scripts/udisksmenu.nix { inherit pkgs; });
-  updatefix = (import ./scripts/updatefix.nix { inherit pkgs; });
-  wiki = (import ./scripts/wiki.nix { inherit pkgs; });
+  ezf = (import ../scripts/ezf.nix { inherit pkgs; });
+  cast = (import ../scripts/cast.nix { inherit pkgs; });
+  doomer = (import ../scripts/doomer.nix { inherit pkgs; });
+  ffmpeg-bulk = (import ../scripts/ffmpeg-bulk.nix { inherit pkgs; });
+  masstube = (import ../scripts/masstube.nix { inherit pkgs; });
+  mpvmacs = (import ../scripts/mpvmacs.nix { inherit pkgs; });
+  hdmihelper = (import ../scripts/hdmi-helper.nix { inherit pkgs; });
+  pkg = (import ../scripts/pkg.nix { inherit pkgs; });
+  udisksmenu = (import ../scripts/udisksmenu.nix { inherit pkgs; });
+  updatefix = (import ../scripts/updatefix.nix { inherit pkgs; });
+  wiki = (import ../scripts/wiki.nix { inherit pkgs; });
 
   # overrides
   vesktop = (prev.vesktop.override {withSystemVencord = true;});
@@ -26,39 +26,39 @@ final: prev: pkgs: inputs: {
   emacsPackagesFor = emacs: (
     (prev.emacsPackagesFor emacs).overrideScope (
       nfinal: nprev: {
-        qutebrowser = (prev.emacs.pkgs.callPackage ./packages/emacs/qutebrowser.nix {
+        qutebrowser = (prev.emacs.pkgs.callPackage ../packages/emacs/qutebrowser.nix {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild dash consult exwm password-store evil;
         });
-        doom-nano-modeline = (prev.emacs.pkgs.callPackage ./packages/emacs/doom-nano-modeline.nix {
+        doom-nano-modeline = (prev.emacs.pkgs.callPackage ../packages/emacs/doom-nano-modeline.nix {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild doom-themes;
         });
-        dired-single = (prev.emacs.pkgs.callPackage ./packages/emacs/dired-single.nix {
+        dired-single = (prev.emacs.pkgs.callPackage ../packages/emacs/dired-single.nix {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild;
         });
-        repeaters = (prev.emacs.pkgs.callPackage ./packages/emacs/repeaters.nix {
+        repeaters = (prev.emacs.pkgs.callPackage ../packages/emacs/repeaters.nix {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild;
         });
-        app-launcher = (prev.emacs.pkgs.callPackage ./packages/emacs/app-launcher.nix {
+        app-launcher = (prev.emacs.pkgs.callPackage ../packages/emacs/app-launcher.nix {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild;
         });
-        ezf = (prev.emacs.pkgs.callPackage ./packages/emacs/ezf.nix {
+        ezf = (prev.emacs.pkgs.callPackage ../packages/emacs/ezf.nix {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild;
         });
-        gptel-quick = (prev.emacs.pkgs.callPackage ./packages/emacs/gptel-quick.nix {
+        gptel-quick = (prev.emacs.pkgs.callPackage ../packages/emacs/gptel-quick.nix {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild gptel;
         });
-	macher = (prev.emacs.pkgs.callPackage ./packages/emacs/macher.nix {
+	macher = (prev.emacs.pkgs.callPackage ../packages/emacs/macher.nix {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild gptel;
         });
-	mpc-wrapper = (prev.emacs.pkgs.callPackage ./packages/emacs/mpc-wrapper.nix {
+	mpc-wrapper = (prev.emacs.pkgs.callPackage ../packages/emacs/mpc-wrapper.nix {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild;
         });
@@ -92,5 +92,6 @@ final: prev: pkgs: inputs: {
             };
           }
         ) { };
+	reka = ../packages/emacs/reka.nix;
       }));
 }

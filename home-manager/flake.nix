@@ -5,6 +5,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
     emacs-overlay.url  = "github:nix-community/emacs-overlay";
+    flake-parts.url = "github:hercules-ci/flake-parts";
     
     stylix.url = "github:danth/stylix";
     
@@ -79,42 +80,13 @@
     };
   };
 
-  outputs = { self, home-manager, nixgl, nixpkgs, nixpkgs-stable, stylix, emacs-init, ... }@inputs:
-    let
-      system = "x86_64-linux";
-      
-      pkgs = import nixpkgs {
-        inherit system;
-        config.allowUnfree = true;
-        overlays = [
-          (final: prev: import ./overlay.nix final prev pkgs inputs)
-          inputs.emacs-init.overlay
-          inputs.emacs-overlay.overlay
-        ];
-      };
-      pkgs-stable = import nixpkgs-stable {
-        inherit system;
-        config.allowUnfree = true;
-      };
-    in
-      {
-        gpuWrappers = nixgl.defaultPackage;
-        # gpuWrappers = nixgl.nixGLNvidia;
-        homeConfigurations."holschcc" = home-manager.lib.homeManagerConfiguration {
-          inherit pkgs;
-          extraSpecialArgs = {
-            inherit self;
-            inherit inputs;
-            inherit system;
-            inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline gptel-quick mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
-            inherit pkgs-stable;
-          };
-          modules = [
-            ./home.nix
-            stylix.homeModules.stylix
-            emacs-init.homeModules.emacs-init
-            emacs-init.homeModules.emacs-presets
-          ];
-        } ;
-      };
+  outputs = inputs@{flake-parts, home-manager, nixpkgs, nixgl, nixpkgs-stable, stylix, emacs-init, self, ... }:
+  flake-parts.lib.mkFlake { inherit inputs; } (top@{ config, withSystem, moduleWithSystem, ... }: {
+    imports = [
+      inputs.home-manager.flakeModules.home-manager
+      ./flake/home-manager.nix
+    ];
+    flake.gpuWrappers = nixgl.defaultPackage;
+    systems = ["x86_64-linux"];
+  });
 }

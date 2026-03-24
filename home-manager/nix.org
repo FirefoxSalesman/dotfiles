@@ -10,17 +10,15 @@
     <<Flake Inputs>>
   };
 
-  outputs = { self, home-manager, nixgl, nixpkgs, nixpkgs-stable, stylix, emacs-init, ... }@inputs:
-    let
-      <<Flake Repo Definitions>>
-    in
-      {
-        gpuWrappers = nixgl.defaultPackage;
-        # gpuWrappers = nixgl.nixGLNvidia;
-        homeConfigurations."holschcc" = home-manager.lib.homeManagerConfiguration {
-          <<Flake Home Manager Definition>>
-        } ;
-      };
+  outputs = inputs@{flake-parts, home-manager, nixpkgs, nixgl, nixpkgs-stable, stylix, emacs-init, self, ... }:
+  flake-parts.lib.mkFlake { inherit inputs; } (top@{ config, withSystem, moduleWithSystem, ... }: {
+    imports = [
+      inputs.home-manager.flakeModules.home-manager
+      ./flake/home-manager.nix
+    ];
+    flake.gpuWrappers = nixgl.defaultPackage;
+    systems = ["x86_64-linux"];
+  });
 }
 #+end_src
 
@@ -30,6 +28,7 @@
 nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
 emacs-overlay.url  = "github:nix-community/emacs-overlay";
+flake-parts.url = "github:hercules-ci/flake-parts";
 
 stylix.url = "github:danth/stylix";
 
@@ -104,13 +103,36 @@ exwm-qutebrowser = {
 };
 #+end_src
 
-** Outputs
+** Home Manager Definition
+#+begin_src nix-ts :tangle flake/home-manager.nix :noweb yes
+{ inputs, self, ... }:
+let
+  <<Flake Repo Definitions>>
+in {
+  flake.homeConfigurations.holschcc = inputs.home-manager.lib.homeManagerConfiguration {
+    inherit pkgs;
+    extraSpecialArgs = {
+      inherit self;
+      inherit inputs;
+      inherit system;
+      inherit pkgs-stable;
+    };
+    modules = [
+      ../home.nix
+      inputs.stylix.homeModules.stylix
+      inputs.emacs-init.homeModules.emacs-init
+      inputs.emacs-init.homeModules.emacs-presets
+    ];
+  };
+}
+#+end_src
+
 *** Repo Definitions
 #+NAME: Flake Repo Definitions
 #+begin_src nix-ts
 system = "x86_64-linux";
 
-pkgs = import nixpkgs {
+pkgs = import inputs.nixpkgs {
   inherit system;
   config.allowUnfree = true;
   overlays = [
@@ -119,46 +141,27 @@ pkgs = import nixpkgs {
     inputs.emacs-overlay.overlay
   ];
 };
-pkgs-stable = import nixpkgs-stable {
+pkgs-stable = import inputs.nixpkgs-stable {
   inherit system;
   config.allowUnfree = true;
 };
 #+end_src
 
-*** Home Manager Definition
-#+NAME: Flake Home Manager Definition
-#+begin_src nix-ts
-inherit pkgs;
-extraSpecialArgs = {
-  inherit self;
-  inherit inputs;
-  inherit system;
-  inherit (inputs)  apple-fonts doom-utils repeaters ezf dired-single launcher doom-nano-modeline gptel-quick mpc-wrapper exwm-qutebrowser exwm-outer-gaps;
-  inherit pkgs-stable;
-};
-modules = [
-  ./home.nix
-  stylix.homeModules.stylix
-  emacs-init.homeModules.emacs-init
-  emacs-init.homeModules.emacs-presets
-];
-#+end_src
-
 * Overlay
-#+begin_src nix-ts :tangle overlay.nix
+#+begin_src nix-ts :tangle flake/overlay.nix
 final: prev: pkgs: inputs: {
   # shell scripts
-  ezf = (import ./scripts/ezf.nix { inherit pkgs; });
-  cast = (import ./scripts/cast.nix { inherit pkgs; });
-  doomer = (import ./scripts/doomer.nix { inherit pkgs; });
-  ffmpeg-bulk = (import ./scripts/ffmpeg-bulk.nix { inherit pkgs; });
-  masstube = (import ./scripts/masstube.nix { inherit pkgs; });
-  mpvmacs = (import ./scripts/mpvmacs.nix { inherit pkgs; });
-  hdmihelper = (import ./scripts/hdmi-helper.nix { inherit pkgs; });
-  pkg = (import ./scripts/pkg.nix { inherit pkgs; });
-  udisksmenu = (import ./scripts/udisksmenu.nix { inherit pkgs; });
-  updatefix = (import ./scripts/updatefix.nix { inherit pkgs; });
-  wiki = (import ./scripts/wiki.nix { inherit pkgs; });
+  ezf = (import ../scripts/ezf.nix { inherit pkgs; });
+  cast = (import ../scripts/cast.nix { inherit pkgs; });
+  doomer = (import ../scripts/doomer.nix { inherit pkgs; });
+  ffmpeg-bulk = (import ../scripts/ffmpeg-bulk.nix { inherit pkgs; });
+  masstube = (import ../scripts/masstube.nix { inherit pkgs; });
+  mpvmacs = (import ../scripts/mpvmacs.nix { inherit pkgs; });
+  hdmihelper = (import ../scripts/hdmi-helper.nix { inherit pkgs; });
+  pkg = (import ../scripts/pkg.nix { inherit pkgs; });
+  udisksmenu = (import ../scripts/udisksmenu.nix { inherit pkgs; });
+  updatefix = (import ../scripts/updatefix.nix { inherit pkgs; });
+  wiki = (import ../scripts/wiki.nix { inherit pkgs; });
 
   # overrides
   vesktop = (prev.vesktop.override {withSystemVencord = true;});
@@ -174,39 +177,39 @@ final: prev: pkgs: inputs: {
   emacsPackagesFor = emacs: (
     (prev.emacsPackagesFor emacs).overrideScope (
       nfinal: nprev: {
-        qutebrowser = (prev.emacs.pkgs.callPackage ./packages/emacs/qutebrowser.nix {
+        qutebrowser = (prev.emacs.pkgs.callPackage ../packages/emacs/qutebrowser.nix {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild dash consult exwm password-store evil;
         });
-        doom-nano-modeline = (prev.emacs.pkgs.callPackage ./packages/emacs/doom-nano-modeline.nix {
+        doom-nano-modeline = (prev.emacs.pkgs.callPackage ../packages/emacs/doom-nano-modeline.nix {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild doom-themes;
         });
-        dired-single = (prev.emacs.pkgs.callPackage ./packages/emacs/dired-single.nix {
+        dired-single = (prev.emacs.pkgs.callPackage ../packages/emacs/dired-single.nix {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild;
         });
-        repeaters = (prev.emacs.pkgs.callPackage ./packages/emacs/repeaters.nix {
+        repeaters = (prev.emacs.pkgs.callPackage ../packages/emacs/repeaters.nix {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild;
         });
-        app-launcher = (prev.emacs.pkgs.callPackage ./packages/emacs/app-launcher.nix {
+        app-launcher = (prev.emacs.pkgs.callPackage ../packages/emacs/app-launcher.nix {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild;
         });
-        ezf = (prev.emacs.pkgs.callPackage ./packages/emacs/ezf.nix {
+        ezf = (prev.emacs.pkgs.callPackage ../packages/emacs/ezf.nix {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild;
         });
-        gptel-quick = (prev.emacs.pkgs.callPackage ./packages/emacs/gptel-quick.nix {
+        gptel-quick = (prev.emacs.pkgs.callPackage ../packages/emacs/gptel-quick.nix {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild gptel;
         });
-	macher = (prev.emacs.pkgs.callPackage ./packages/emacs/macher.nix {
+	macher = (prev.emacs.pkgs.callPackage ../packages/emacs/macher.nix {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild gptel;
         });
-	mpc-wrapper = (prev.emacs.pkgs.callPackage ./packages/emacs/mpc-wrapper.nix {
+	mpc-wrapper = (prev.emacs.pkgs.callPackage ../packages/emacs/mpc-wrapper.nix {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild;
         });
@@ -240,6 +243,7 @@ final: prev: pkgs: inputs: {
             };
           }
         ) { };
+	reka = ../packages/emacs/reka.nix;
       }));
 }
 #+end_src
@@ -373,6 +377,66 @@ trivialBuild rec {
 }
 #+end_src
 
+*** Reka
+https://github.com/dmkhitaryan/river-next-nix-module/blob/5205ebf2b5f820c3a9221f472c78c548a4a84aad/window-managers/reka/package.nix
+#+begin_src nix-ts :tangle packages/emacs/reka.nix
+{
+  lib,
+  rustPlatform,
+  fetchFromCodeberg,
+  pkg-config,
+  wayland-scanner,
+  wayland,
+  libxkbcommon,
+  wayland-protocols,
+  emacsPackages,
+  fetchurl,
+}: # Packaging approach adopted from https://codeberg.org/tazjin/reka/src/branch/canon/default.nix
+
+let
+reka = rustPlatform.buildRustPackage {
+    pname = "reka-lib";
+    version = "unstable-2026-03-16";
+
+    src = fetchFromCodeberg {
+      owner = "tazjin";
+      repo = "reka";
+      rev = "8441e6eaf4b76f7085a25d3dafa0ef281d4cb009";
+      hash = "sha256-KXAClKjYfkit6n89YTZ83qzp4n81bEXZ2cFGliZZOxQ=";
+    };
+
+    cargoHash = "sha256-qSyx2tzWMBr56Lbdjy+DJVuaHJmtxzKlFZivG7VA1d8=";
+
+    nativeBuildInputs = [
+      pkg-config
+      wayland-scanner
+    ];
+
+    buildInputs = [
+      wayland
+      libxkbcommon
+      wayland-protocols
+    ];
+
+    postInstall = ''
+      mkdir -p $out/share/emacs/site-lisp
+      ln -s $out/lib/libreka.so $out/share/emacs/site-lisp/libreka.so
+    '';
+  };
+in
+emacsPackages.trivialBuild {
+  pname = "reka";
+  version = "unstable-2026-03-16";
+  src = fetchurl {
+    url = "https://codeberg.org/tazjin/reka/raw/branch/canon/lisp/reka.el";
+    hash = "sha256-K4uk1Zuct0xpth/MyJNbhJ+qm2yia0zDoNplA/YX1kU=";
+  };
+  packageRequires = [ reka ];
+
+  passthru.reka-lib = reka;
+}
+#+end_src
+
 ** Scripts
 *** Cast
 For moving massive quantities of Jordan Peterson's podcast into my mp3 player
@@ -419,7 +483,6 @@ Meant to be run with doas
 { pkgs, ... }:
 
 pkgs.writeShellScriptBin "updatefix" ''
-  dracut -f --regenerate-all
   cp /usr/lib/systemd/system/getty@.bak /usr/lib/systemd/system/getty@.service
 ''
 #+end_src
@@ -4520,6 +4583,8 @@ programs.emacs.init.usePackage.mpc-wrapper = {
     "mp" = '''("replay file" . mpc-play)'';
     "mm" = '''("menu" . music-menu)'';
     "ms" = '''("stop" . mpc-stop)'';
+    "m+" = "'mpc-inc-by-five";
+    "m-" = "'mpc-dec-by-five";
   };
   deferIncrementally = true;
   config = ''
@@ -4539,6 +4604,18 @@ programs.emacs.init.usePackage.mpc-wrapper = {
   (mpc-clear)
   (mpc-add (completing-read "Choose a song: " (mpc-ls)))
   (mpc-play))
+(defun mpc-inc-by-five ()
+  "Increase the volume by 5."
+  (interactive)
+  (mpc-volume-inc 5))
+(defun mpc-dec-by-five ()
+  "Decrease the volume by 5."
+  (interactive)
+  (mpc-volume-dec 5))
+(repeaters-define-maps
+ '(("music"
+    mpc-volume-dec-by-five "-"
+    mpc-volume-inc-by-five "+")))
 #+end_src
 
 *** MPV
