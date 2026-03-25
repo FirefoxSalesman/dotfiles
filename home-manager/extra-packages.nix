@@ -1,4 +1,4 @@
-{ config, pkgs, pkgs-stable, ... }:
+{ config, pkgs, ... }:
 
 {
   home.packages = with pkgs; [
@@ -17,7 +17,6 @@
     # comms
     (config.lib.nixGL.wrap teams-for-linux)
     (config.lib.nixGL.wrap thunderbird)
-    pkgs-stable.vesktop
     # things emacs appreciates
     xclip
     xsel

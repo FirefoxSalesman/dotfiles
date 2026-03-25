@@ -15,9 +15,13 @@
     imports = [
       inputs.home-manager.flakeModules.home-manager
       ./flake/home-manager.nix
+      ./flake/overlay.nix
     ];
     flake.gpuWrappers = nixgl.defaultPackage;
     systems = ["x86_64-linux"];
+    perSystem = { config, pkgs, ... }: {
+      packages.ezf = (import ./scripts/ezf.nix { inherit pkgs; });
+    };
   });
 }
 #+end_src
@@ -111,17 +115,14 @@ semel = {
 
 ** Home Manager Definition
 #+begin_src nix-ts :tangle flake/home-manager.nix :noweb yes
-{ inputs, self, ... }:
+{ self, inputs, ... }:
 let
   <<Flake Repo Definitions>>
 in {
   flake.homeConfigurations.holschcc = inputs.home-manager.lib.homeManagerConfiguration {
     inherit pkgs;
     extraSpecialArgs = {
-      inherit self;
       inherit inputs;
-      inherit system;
-      inherit pkgs-stable;
     };
     modules = [
       ../home.nix
@@ -137,124 +138,128 @@ in {
 #+NAME: Flake Repo Definitions
 #+begin_src nix-ts
 system = "x86_64-linux";
-
-pkgs = import inputs.nixpkgs {
+  pkgs = import inputs.nixpkgs {
   inherit system;
   config.allowUnfree = true;
   overlays = [
-    (final: prev: import ./overlay.nix final prev pkgs inputs)
+    (final: prev: self.overlay final prev pkgs inputs)
     inputs.emacs-init.overlay
     inputs.emacs-overlay.overlay
   ];
-};
-pkgs-stable = import inputs.nixpkgs-stable {
-  inherit system;
-  config.allowUnfree = true;
 };
 #+end_src
 
 * Overlay
 #+begin_src nix-ts :tangle flake/overlay.nix
-final: prev: pkgs: inputs: {
-  # shell scripts
-  ezf = (import ../scripts/ezf.nix { inherit pkgs; });
-  cast = (import ../scripts/cast.nix { inherit pkgs; });
-  doomer = (import ../scripts/doomer.nix { inherit pkgs; });
-  ffmpeg-bulk = (import ../scripts/ffmpeg-bulk.nix { inherit pkgs; });
-  masstube = (import ../scripts/masstube.nix { inherit pkgs; });
-  mpvmacs = (import ../scripts/mpvmacs.nix { inherit pkgs; });
-  hdmihelper = (import ../scripts/hdmi-helper.nix { inherit pkgs; });
-  pkg = (import ../scripts/pkg.nix { inherit pkgs; });
-  udisksmenu = (import ../scripts/udisksmenu.nix { inherit pkgs; });
-  updatefix = (import ../scripts/updatefix.nix { inherit pkgs; });
-  wiki = (import ../scripts/wiki.nix { inherit pkgs; });
+{ inputs, ... }:
 
-  # overrides
-  vesktop = (prev.vesktop.override {withSystemVencord = true;});
-  mpv = (prev.mpv.override {
-    scripts = with prev.mpvScripts; [
-      thumbfast
-      sponsorblock
-      quality-menu
-    ];
-  });
+let
+  system = "x86_64-linux";
+  pkgs-stable = import inputs.nixpkgs-stable {
+    inherit system;
+    config.allowUnfree = true;
+  };
+in {
+  flake.overlay = final: prev: pkgs: inputs: {
+    # shell scripts
+    ezf = (import ../scripts/ezf.nix { inherit pkgs; });
+    cast = (import ../scripts/cast.nix { inherit pkgs; });
+    doomer = (import ../scripts/doomer.nix { inherit pkgs; });
+    ffmpeg-bulk = (import ../scripts/ffmpeg-bulk.nix { inherit pkgs; });
+    masstube = (import ../scripts/masstube.nix { inherit pkgs; });
+    mpvmacs = (import ../scripts/mpvmacs.nix { inherit pkgs; });
+    hdmihelper = (import ../scripts/hdmi-helper.nix { inherit pkgs; });
+    pkg = (import ../scripts/pkg.nix { inherit pkgs; });
+    udisksmenu = (import ../scripts/udisksmenu.nix { inherit pkgs; });
+    updatefix = (import ../scripts/updatefix.nix { inherit pkgs; });
+    wiki = (import ../scripts/wiki.nix { inherit pkgs; });
 
-  #emacs packages
-  emacsPackagesFor = emacs: (
-    (prev.emacsPackagesFor emacs).overrideScope (
-      nfinal: nprev: {
-        qutebrowser = (prev.emacs.pkgs.callPackage ../packages/emacs/qutebrowser.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild dash consult exwm password-store evil;
-        });
-        doom-nano-modeline = (prev.emacs.pkgs.callPackage ../packages/emacs/doom-nano-modeline.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild doom-themes;
-        });
-        dired-single = (prev.emacs.pkgs.callPackage ../packages/emacs/dired-single.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild;
-        });
-        repeaters = (prev.emacs.pkgs.callPackage ../packages/emacs/repeaters.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild;
-        });
-        app-launcher = (prev.emacs.pkgs.callPackage ../packages/emacs/app-launcher.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild;
-        });
-        ezf = (prev.emacs.pkgs.callPackage ../packages/emacs/ezf.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild;
-        });
-        gptel-quick = (prev.emacs.pkgs.callPackage ../packages/emacs/gptel-quick.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild gptel;
-        });
-	macher = (prev.emacs.pkgs.callPackage ../packages/emacs/macher.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild gptel;
-        });
-	mpc-wrapper = (prev.emacs.pkgs.callPackage ../packages/emacs/mpc-wrapper.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild;
-        });
-	semel = (prev.emacs.pkgs.callPackage ../packages/emacs/semel.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild;
-        });
-        embark = prev.emacs.pkgs.callPackage (
-          {
-            org,
-            consult,
-            avy,
-            compat,
-            elpaBuild,
-            fetchurl,
-            lib,
-          }:
-          elpaBuild {
-            pname = "embark";
-            ename = "embark";
-            version = "1.1";
-            src = fetchurl {
-              url = "https://elpa.gnu.org/packages/embark-1.1.tar";
-              sha256 = "074ggh7dkr5jdkwcndl6znhkq48jmc62rp7mc6vjidr6yxf8d1rn";
-            };
-            packageRequires = [
-              org
-              consult
-              avy
-              compat
-            ];
-            meta = {
-              homepage = "https://elpa.gnu.org/packages/embark.html";
-              license = lib.licenses.free;
-            };
-          }
-        ) { };
-	reka = ../packages/emacs/reka.nix;
-      }));
+    # overrides
+    mpv = (prev.mpv.override {
+      scripts = with prev.mpvScripts; [
+	thumbfast
+	sponsorblock
+	quality-menu
+      ];
+    });
+
+    #emacs packages
+    emacsPackagesFor = emacs: (
+      (prev.emacsPackagesFor emacs).overrideScope (
+	nfinal: nprev: {
+          qutebrowser = (prev.emacs.pkgs.callPackage ../packages/emacs/qutebrowser.nix {
+            inherit inputs;
+            inherit (prev.emacs.pkgs) trivialBuild dash consult exwm password-store evil;
+          });
+          doom-nano-modeline = (prev.emacs.pkgs.callPackage ../packages/emacs/doom-nano-modeline.nix {
+            inherit inputs;
+            inherit (prev.emacs.pkgs) trivialBuild doom-themes;
+          });
+          dired-single = (prev.emacs.pkgs.callPackage ../packages/emacs/dired-single.nix {
+            inherit inputs;
+            inherit (prev.emacs.pkgs) trivialBuild;
+          });
+          repeaters = (prev.emacs.pkgs.callPackage ../packages/emacs/repeaters.nix {
+            inherit inputs;
+            inherit (prev.emacs.pkgs) trivialBuild;
+          });
+          app-launcher = (prev.emacs.pkgs.callPackage ../packages/emacs/app-launcher.nix {
+            inherit inputs;
+            inherit (prev.emacs.pkgs) trivialBuild;
+          });
+          ezf = (prev.emacs.pkgs.callPackage ../packages/emacs/ezf.nix {
+            inherit inputs;
+            inherit (prev.emacs.pkgs) trivialBuild;
+          });
+          gptel-quick = (prev.emacs.pkgs.callPackage ../packages/emacs/gptel-quick.nix {
+            inherit inputs;
+            inherit (prev.emacs.pkgs) trivialBuild gptel;
+          });
+	  macher = (prev.emacs.pkgs.callPackage ../packages/emacs/macher.nix {
+            inherit inputs;
+            inherit (prev.emacs.pkgs) trivialBuild gptel;
+          });
+	  mpc-wrapper = (prev.emacs.pkgs.callPackage ../packages/emacs/mpc-wrapper.nix {
+            inherit inputs;
+            inherit (prev.emacs.pkgs) trivialBuild;
+          });
+	  semel = (prev.emacs.pkgs.callPackage ../packages/emacs/semel.nix {
+            inherit inputs;
+            inherit (prev.emacs.pkgs) trivialBuild;
+          });
+          embark = prev.emacs.pkgs.callPackage (
+            {
+              org,
+              consult,
+              avy,
+              compat,
+              elpaBuild,
+              fetchurl,
+              lib,
+            }:
+            elpaBuild {
+              pname = "embark";
+              ename = "embark";
+              version = "1.1";
+              src = fetchurl {
+		url = "https://elpa.gnu.org/packages/embark-1.1.tar";
+		sha256 = "074ggh7dkr5jdkwcndl6znhkq48jmc62rp7mc6vjidr6yxf8d1rn";
+              };
+              packageRequires = [
+		org
+		consult
+		avy
+		compat
+              ];
+              meta = {
+		homepage = "https://elpa.gnu.org/packages/embark.html";
+		license = lib.licenses.free;
+              };
+            }
+          ) { };
+	  reka = ../packages/emacs/reka.nix;
+	}));
+  } ;
 }
 #+end_src
 
@@ -1339,35 +1344,60 @@ in mkIf cfg.enable {
 ** Aesthetics
 *** Inputs
 #+begin_src nix-ts :noweb yes :tangle aesthetics.nix
-  { config, inputs, lib, pkgs, pkgs-stable, ... }:
+  { config, inputs, lib, pkgs, ... }:
 
   {
     <<Stylix Config>>
 
     <<Aesthetics Picom>>
 
-    programs.emacs.init = {
-      aesthetics = {
-        dashboard.enable = true;
-        icons = {
-          enable = true;
-          forceInstallAllTheIcons = true;
+    programs = {
+      vesktop = {
+        enable = true;
+        settings = {
+          minimizeToTray = false;
+          tray = false;
+          hardwareAcceleration = true;
+        };
+        vencord = {
+          useSystem = true;
+          settings = {
+            autoUpdate = false;
+            autoUpdateNotification = false;
+            plugins = {
+              FakeNitro.enabled = true;
+              AnonymizeFileNames.enabled = true;
+              BetterSettings.enabled = true;
+              FixYoutubeEmbeds.enabled = true;
+              ImageZoom.enabled = true;
+              YoutubeAdblock.enabled = true;
+            };
+          };
         };
       };
-      usePackage = {
-        <<Aesthetics Prettify Symbols>>
+      emacs.init = {
+        aesthetics = {
+          dashboard.enable = true;
+          icons = {
+            enable = true;
+            forceInstallAllTheIcons = true;
+          };
+        };
+        usePackage = {
+          <<Aesthetics Prettify Symbols>>
 
-        dashboard.setopt.dashboard-banner-logo-title = ''"Emacs: The one true desktop environment"'';
+          dashboard.setopt.dashboard-banner-logo-title = ''"Emacs: The one true desktop environment"'';
       
-        <<Emacs Ricing Nano>>
+          <<Emacs Ricing Nano>>
 
-        <<Emacs Ricing Theme>>
+          <<Emacs Ricing Theme>>
       
-        <<Emacs Ricing Solaire>>
+          <<Emacs Ricing Solaire>>
       
-        <<Emacs Ricing Posframes>>
+          <<Emacs Ricing Posframes>>
 
-        <<Emacs Ricing Shrface>>
+          <<Emacs Ricing Shrface>>
+        };
       };
     };
   }
@@ -1426,7 +1456,7 @@ Pywal integration: https://github.com/danth/stylix/issues/99
     };
     fonts = with pkgs; rec {
       monospace = {
-        package = pkgs-stable.jetbrains-mono;
+        package = pkgs.jetbrains-mono;
         name = "JetBrains Mono";
       };
       sansSerif = {
@@ -1902,7 +1932,7 @@ shrface = {
 
 ** Extra Packages
 #+begin_src nix-ts :tangle extra-packages.nix
-{ config, pkgs, pkgs-stable, ... }:
+{ config, pkgs, ... }:
 
 {
   home.packages = with pkgs; [
@@ -1921,7 +1951,6 @@ shrface = {
     # comms
     (config.lib.nixGL.wrap teams-for-linux)
     (config.lib.nixGL.wrap thunderbird)
-    pkgs-stable.vesktop
     # things emacs appreciates
     xclip
     xsel
@@ -4577,13 +4606,13 @@ ace-window = {
 ** Multimedia
 This is where all the audio/video stuff goes
 #+begin_src nix-ts :tangle multimedia.nix :noweb yes
-{ pkgs, pkgs-stable, config, inputs, ... }:
+{ pkgs, config, inputs, ... }:
 
 {
   home.packages = with pkgs; [
     # yt-dlp
     (config.lib.nixGL.wrap obs-studio)
-    pkgs-stable.lmms
+    lmms
     audacity
     doomer
     masstube
@@ -4715,9 +4744,9 @@ pulseaudio-control = {
 ** Sagemath
 Sagemath is my goto for dealing with complex math. It makes for a wonderful maple replacement.
 #+begin_src nix-ts :tangle sage.nix :noweb yes
-{ pkgs-stable, ... }:
+{ pkgs, ... }:
 {
-  home.packages = with pkgs-stable; [ sage ];
+  home.packages = with pkgs; [ sage ];
 
   <<Sage Emacs>>
 

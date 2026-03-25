@@ -1,6 +1,6 @@
-{ pkgs-stable, ... }:
+{ pkgs, ... }:
 {
-  home.packages = with pkgs-stable; [ sage ];
+  home.packages = with pkgs; [ sage ];
 
   programs.emacs.init.usePackage = {
     sage-shell-mode = {

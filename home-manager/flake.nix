@@ -91,8 +91,12 @@
     imports = [
       inputs.home-manager.flakeModules.home-manager
       ./flake/home-manager.nix
+      ./flake/overlay.nix
     ];
     flake.gpuWrappers = nixgl.defaultPackage;
     systems = ["x86_64-linux"];
+    perSystem = { config, pkgs, ... }: {
+      packages.ezf = (import ./scripts/ezf.nix { inherit pkgs; });
+    };
   });
 }

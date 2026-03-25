@@ -1,101 +1,110 @@
-final: prev: pkgs: inputs: {
-  # shell scripts
-  ezf = (import ../scripts/ezf.nix { inherit pkgs; });
-  cast = (import ../scripts/cast.nix { inherit pkgs; });
-  doomer = (import ../scripts/doomer.nix { inherit pkgs; });
-  ffmpeg-bulk = (import ../scripts/ffmpeg-bulk.nix { inherit pkgs; });
-  masstube = (import ../scripts/masstube.nix { inherit pkgs; });
-  mpvmacs = (import ../scripts/mpvmacs.nix { inherit pkgs; });
-  hdmihelper = (import ../scripts/hdmi-helper.nix { inherit pkgs; });
-  pkg = (import ../scripts/pkg.nix { inherit pkgs; });
-  udisksmenu = (import ../scripts/udisksmenu.nix { inherit pkgs; });
-  updatefix = (import ../scripts/updatefix.nix { inherit pkgs; });
-  wiki = (import ../scripts/wiki.nix { inherit pkgs; });
+{ inputs, ... }:
 
-  # overrides
-  vesktop = (prev.vesktop.override {withSystemVencord = true;});
-  mpv = (prev.mpv.override {
-    scripts = with prev.mpvScripts; [
-      thumbfast
-      sponsorblock
-      quality-menu
-    ];
-  });
+let
+  system = "x86_64-linux";
+  pkgs-stable = import inputs.nixpkgs-stable {
+    inherit system;
+    config.allowUnfree = true;
+  };
+in {
+  flake.overlay = final: prev: pkgs: inputs: {
+    # shell scripts
+    ezf = (import ../scripts/ezf.nix { inherit pkgs; });
+    cast = (import ../scripts/cast.nix { inherit pkgs; });
+    doomer = (import ../scripts/doomer.nix { inherit pkgs; });
+    ffmpeg-bulk = (import ../scripts/ffmpeg-bulk.nix { inherit pkgs; });
+    masstube = (import ../scripts/masstube.nix { inherit pkgs; });
+    mpvmacs = (import ../scripts/mpvmacs.nix { inherit pkgs; });
+    hdmihelper = (import ../scripts/hdmi-helper.nix { inherit pkgs; });
+    pkg = (import ../scripts/pkg.nix { inherit pkgs; });
+    udisksmenu = (import ../scripts/udisksmenu.nix { inherit pkgs; });
+    updatefix = (import ../scripts/updatefix.nix { inherit pkgs; });
+    wiki = (import ../scripts/wiki.nix { inherit pkgs; });
 
-  #emacs packages
-  emacsPackagesFor = emacs: (
-    (prev.emacsPackagesFor emacs).overrideScope (
-      nfinal: nprev: {
-        qutebrowser = (prev.emacs.pkgs.callPackage ../packages/emacs/qutebrowser.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild dash consult exwm password-store evil;
-        });
-        doom-nano-modeline = (prev.emacs.pkgs.callPackage ../packages/emacs/doom-nano-modeline.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild doom-themes;
-        });
-        dired-single = (prev.emacs.pkgs.callPackage ../packages/emacs/dired-single.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild;
-        });
-        repeaters = (prev.emacs.pkgs.callPackage ../packages/emacs/repeaters.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild;
-        });
-        app-launcher = (prev.emacs.pkgs.callPackage ../packages/emacs/app-launcher.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild;
-        });
-        ezf = (prev.emacs.pkgs.callPackage ../packages/emacs/ezf.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild;
-        });
-        gptel-quick = (prev.emacs.pkgs.callPackage ../packages/emacs/gptel-quick.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild gptel;
-        });
-	macher = (prev.emacs.pkgs.callPackage ../packages/emacs/macher.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild gptel;
-        });
-	mpc-wrapper = (prev.emacs.pkgs.callPackage ../packages/emacs/mpc-wrapper.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild;
-        });
-	semel = (prev.emacs.pkgs.callPackage ../packages/emacs/semel.nix {
-          inherit inputs;
-          inherit (prev.emacs.pkgs) trivialBuild;
-        });
-        embark = prev.emacs.pkgs.callPackage (
-          {
-            org,
-            consult,
-            avy,
-            compat,
-            elpaBuild,
-            fetchurl,
-            lib,
-          }:
-          elpaBuild {
-            pname = "embark";
-            ename = "embark";
-            version = "1.1";
-            src = fetchurl {
-              url = "https://elpa.gnu.org/packages/embark-1.1.tar";
-              sha256 = "074ggh7dkr5jdkwcndl6znhkq48jmc62rp7mc6vjidr6yxf8d1rn";
-            };
-            packageRequires = [
-              org
-              consult
-              avy
-              compat
-            ];
-            meta = {
-              homepage = "https://elpa.gnu.org/packages/embark.html";
-              license = lib.licenses.free;
-            };
-          }
-        ) { };
-	reka = ../packages/emacs/reka.nix;
-      }));
+    # overrides
+    mpv = (prev.mpv.override {
+      scripts = with prev.mpvScripts; [
+	thumbfast
+	sponsorblock
+	quality-menu
+      ];
+    });
+
+    #emacs packages
+    emacsPackagesFor = emacs: (
+      (prev.emacsPackagesFor emacs).overrideScope (
+	nfinal: nprev: {
+          qutebrowser = (prev.emacs.pkgs.callPackage ../packages/emacs/qutebrowser.nix {
+            inherit inputs;
+            inherit (prev.emacs.pkgs) trivialBuild dash consult exwm password-store evil;
+          });
+          doom-nano-modeline = (prev.emacs.pkgs.callPackage ../packages/emacs/doom-nano-modeline.nix {
+            inherit inputs;
+            inherit (prev.emacs.pkgs) trivialBuild doom-themes;
+          });
+          dired-single = (prev.emacs.pkgs.callPackage ../packages/emacs/dired-single.nix {
+            inherit inputs;
+            inherit (prev.emacs.pkgs) trivialBuild;
+          });
+          repeaters = (prev.emacs.pkgs.callPackage ../packages/emacs/repeaters.nix {
+            inherit inputs;
+            inherit (prev.emacs.pkgs) trivialBuild;
+          });
+          app-launcher = (prev.emacs.pkgs.callPackage ../packages/emacs/app-launcher.nix {
+            inherit inputs;
+            inherit (prev.emacs.pkgs) trivialBuild;
+          });
+          ezf = (prev.emacs.pkgs.callPackage ../packages/emacs/ezf.nix {
+            inherit inputs;
+            inherit (prev.emacs.pkgs) trivialBuild;
+          });
+          gptel-quick = (prev.emacs.pkgs.callPackage ../packages/emacs/gptel-quick.nix {
+            inherit inputs;
+            inherit (prev.emacs.pkgs) trivialBuild gptel;
+          });
+	  macher = (prev.emacs.pkgs.callPackage ../packages/emacs/macher.nix {
+            inherit inputs;
+            inherit (prev.emacs.pkgs) trivialBuild gptel;
+          });
+	  mpc-wrapper = (prev.emacs.pkgs.callPackage ../packages/emacs/mpc-wrapper.nix {
+            inherit inputs;
+            inherit (prev.emacs.pkgs) trivialBuild;
+          });
+	  semel = (prev.emacs.pkgs.callPackage ../packages/emacs/semel.nix {
+            inherit inputs;
+            inherit (prev.emacs.pkgs) trivialBuild;
+          });
+          embark = prev.emacs.pkgs.callPackage (
+            {
+              org,
+              consult,
+              avy,
+              compat,
+              elpaBuild,
+              fetchurl,
+              lib,
+            }:
+            elpaBuild {
+              pname = "embark";
+              ename = "embark";
+              version = "1.1";
+              src = fetchurl {
+		url = "https://elpa.gnu.org/packages/embark-1.1.tar";
+		sha256 = "074ggh7dkr5jdkwcndl6znhkq48jmc62rp7mc6vjidr6yxf8d1rn";
+              };
+              packageRequires = [
+		org
+		consult
+		avy
+		compat
+              ];
+              meta = {
+		homepage = "https://elpa.gnu.org/packages/embark.html";
+		license = lib.licenses.free;
+              };
+            }
+          ) { };
+	  reka = ../packages/emacs/reka.nix;
+	}));
+  } ;
 }

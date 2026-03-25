@@ -1,10 +1,10 @@
-{ pkgs, pkgs-stable, config, inputs, ... }:
+{ pkgs, config, inputs, ... }:
 
 {
   home.packages = with pkgs; [
     # yt-dlp
     (config.lib.nixGL.wrap obs-studio)
-    pkgs-stable.lmms
+    lmms
     audacity
     doomer
     masstube
