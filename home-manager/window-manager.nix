@@ -66,6 +66,8 @@
 	  "?\\s-." = "other-frame";
 
 	  # Arrangement
+	  "?\\s-\\C-e" = "efs/nirify-forwards";
+	  "?\\s-\\C-o" = "efs/nirify-backwards";
 	  "?\\s-E" = "elwm-rotate-window";
 	  "?\\s-O" = "elwm-derotate-window";
 	  "?\\s-c" = "elwm-split-window";
@@ -441,6 +443,20 @@
             NEG subtracts if it is true."
               (setopt efs/monitor-brightness (funcall (if neg '- '+) efs/monitor-brightness inc))
               (async-shell-command (concat "brightnessctl -d intel_backlight set " (int-to-string efs/monitor-brightness) "%")))
+            
+            (defun efs/nirify-forwards ()
+              "Rotate the workspace, then rotate the buffers."
+              (interactive)
+              (elwm-rotate-window (prefix-numeric-value 1))
+              (with-selected-window (previous-window (frame-first-window))
+                (bufler-cycle-buffers-forward)))
+            
+            (defun efs/nirify-backwards ()
+              "Rotate the workspace, then rotate the buffers."
+              (interactive)
+              (elwm-derotate-window)
+              (with-selected-window (frame-first-window)
+                (bufler-cycle-buffers-forward)))
           '';
           config = ''
             (winner-mode)

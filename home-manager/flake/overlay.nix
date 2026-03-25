@@ -62,6 +62,10 @@ final: prev: pkgs: inputs: {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild;
         });
+	semel = (prev.emacs.pkgs.callPackage ../packages/emacs/semel.nix {
+          inherit inputs;
+          inherit (prev.emacs.pkgs) trivialBuild;
+        });
         embark = prev.emacs.pkgs.callPackage (
           {
             org,

@@ -12,7 +12,7 @@
 }: # Packaging approach adopted from https://codeberg.org/tazjin/reka/src/branch/canon/default.nix
 
 let
-reka = rustPlatform.buildRustPackage {
+  reka = rustPlatform.buildRustPackage {
     pname = "reka-lib";
     version = "unstable-2026-03-16";
 
@@ -42,14 +42,14 @@ reka = rustPlatform.buildRustPackage {
     '';
   };
 in
-emacsPackages.trivialBuild {
-  pname = "reka";
-  version = "unstable-2026-03-16";
-  src = fetchurl {
-    url = "https://codeberg.org/tazjin/reka/raw/branch/canon/lisp/reka.el";
-    hash = "sha256-K4uk1Zuct0xpth/MyJNbhJ+qm2yia0zDoNplA/YX1kU=";
-  };
-  packageRequires = [ reka ];
+  emacsPackages.trivialBuild {
+    pname = "reka";
+    version = "unstable-2026-03-16";
+    src = fetchurl {
+      url = "https://codeberg.org/tazjin/reka/raw/branch/canon/lisp/reka.el";
+      hash = "sha256-K4uk1Zuct0xpth/MyJNbhJ+qm2yia0zDoNplA/YX1kU=";
+    };
+    packageRequires = [ reka ];
 
-  passthru.reka-lib = reka;
-}
+    passthru.reka-lib = reka;
+  }

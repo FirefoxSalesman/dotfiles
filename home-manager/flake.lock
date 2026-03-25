@@ -736,7 +736,24 @@
         "nixpkgs": "nixpkgs_3",
         "nixpkgs-stable": "nixpkgs-stable_2",
         "repeaters": "repeaters",
+        "semel": "semel",
         "stylix": "stylix"
+      }
+    },
+    "semel": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1758617713,
+        "narHash": "sha256-mOTqc08fw8EJG9VyGto3MaGKsbguxMs2vuEDr9v4FZo=",
+        "owner": "eshelyaron",
+        "repo": "semel",
+        "rev": "649cb73aa8bcc5fe06869fa09e83992639fcf07b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "eshelyaron",
+        "repo": "semel",
+        "type": "github"
       }
     },
     "sf-arabic": {

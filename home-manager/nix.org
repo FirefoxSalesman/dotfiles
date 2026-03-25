@@ -10,7 +10,7 @@
     <<Flake Inputs>>
   };
 
-  outputs = inputs@{flake-parts, home-manager, nixpkgs, nixgl, nixpkgs-stable, stylix, emacs-init, self, ... }:
+  outputs = inputs@{flake-parts, nixgl, self, ... }:
   flake-parts.lib.mkFlake { inherit inputs; } (top@{ config, withSystem, moduleWithSystem, ... }: {
     imports = [
       inputs.home-manager.flakeModules.home-manager
@@ -99,6 +99,12 @@ mpc-wrapper = {
 
 exwm-qutebrowser = {
   url = "github:lrustand/qutebrowser.el/18f98f0";
+  flake = false;
+};
+
+
+semel = {
+  url = "github:eshelyaron/semel";
   flake = false;
 };
 #+end_src
@@ -210,6 +216,10 @@ final: prev: pkgs: inputs: {
           inherit (prev.emacs.pkgs) trivialBuild gptel;
         });
 	mpc-wrapper = (prev.emacs.pkgs.callPackage ../packages/emacs/mpc-wrapper.nix {
+          inherit inputs;
+          inherit (prev.emacs.pkgs) trivialBuild;
+        });
+	semel = (prev.emacs.pkgs.callPackage ../packages/emacs/semel.nix {
           inherit inputs;
           inherit (prev.emacs.pkgs) trivialBuild;
         });
@@ -377,6 +387,17 @@ trivialBuild rec {
 }
 #+end_src
 
+*** Semel
+#+begin_src nix-ts :tangle packages/emacs/semel.nix
+{ trivialBuild, inputs } :
+
+trivialBuild rec {
+  pname = "semel";
+  version = "current";
+  src = inputs.semel;
+}
+#+end_src
+
 *** Reka
 https://github.com/dmkhitaryan/river-next-nix-module/blob/5205ebf2b5f820c3a9221f472c78c548a4a84aad/window-managers/reka/package.nix
 #+begin_src nix-ts :tangle packages/emacs/reka.nix
@@ -394,7 +415,7 @@ https://github.com/dmkhitaryan/river-next-nix-module/blob/5205ebf2b5f820c3a9221f
 }: # Packaging approach adopted from https://codeberg.org/tazjin/reka/src/branch/canon/default.nix
 
 let
-reka = rustPlatform.buildRustPackage {
+  reka = rustPlatform.buildRustPackage {
     pname = "reka-lib";
     version = "unstable-2026-03-16";
 
@@ -424,17 +445,17 @@ reka = rustPlatform.buildRustPackage {
     '';
   };
 in
-emacsPackages.trivialBuild {
-  pname = "reka";
-  version = "unstable-2026-03-16";
-  src = fetchurl {
-    url = "https://codeberg.org/tazjin/reka/raw/branch/canon/lisp/reka.el";
-    hash = "sha256-K4uk1Zuct0xpth/MyJNbhJ+qm2yia0zDoNplA/YX1kU=";
-  };
-  packageRequires = [ reka ];
+  emacsPackages.trivialBuild {
+    pname = "reka";
+    version = "unstable-2026-03-16";
+    src = fetchurl {
+      url = "https://codeberg.org/tazjin/reka/raw/branch/canon/lisp/reka.el";
+      hash = "sha256-K4uk1Zuct0xpth/MyJNbhJ+qm2yia0zDoNplA/YX1kU=";
+    };
+    packageRequires = [ reka ];
 
-  passthru.reka-lib = reka;
-}
+    passthru.reka-lib = reka;
+  }
 #+end_src
 
 ** Scripts
@@ -2047,6 +2068,11 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
       <<Development Java>>
 
       <<Development C>>
+
+      semel = {
+	enable = true;
+	ghookf = ["('emacs-lisp-mode 'semel-mode)"];
+      };
     };
   };
 }
@@ -3803,6 +3829,8 @@ flyspell = {
 	  "?\\s-." = "other-frame";
 
 	  # Arrangement
+	  "?\\s-\\C-e" = "efs/nirify-forwards";
+	  "?\\s-\\C-o" = "efs/nirify-backwards";
 	  "?\\s-E" = "elwm-rotate-window";
 	  "?\\s-O" = "elwm-derotate-window";
 	  "?\\s-c" = "elwm-split-window";
@@ -4254,6 +4282,20 @@ INC is the percent to increment the volume by.
 NEG subtracts if it is true."
   (setopt efs/monitor-brightness (funcall (if neg '- '+) efs/monitor-brightness inc))
   (async-shell-command (concat "brightnessctl -d intel_backlight set " (int-to-string efs/monitor-brightness) "%")))
+
+(defun efs/nirify-forwards ()
+  "Rotate the workspace, then rotate the buffers."
+  (interactive)
+  (elwm-rotate-window (prefix-numeric-value 1))
+  (with-selected-window (previous-window (frame-first-window))
+    (bufler-cycle-buffers-forward)))
+
+(defun efs/nirify-backwards ()
+  "Rotate the workspace, then rotate the buffers."
+  (interactive)
+  (elwm-derotate-window)
+  (with-selected-window (frame-first-window)
+    (bufler-cycle-buffers-forward)))
 #+end_src
 
 #+NAME: Emacs Exwm Config

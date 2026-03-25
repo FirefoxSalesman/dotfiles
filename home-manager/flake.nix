@@ -78,9 +78,15 @@
       url = "github:lrustand/qutebrowser.el/18f98f0";
       flake = false;
     };
+    
+    
+    semel = {
+      url = "github:eshelyaron/semel";
+      flake = false;
+    };
   };
 
-  outputs = inputs@{flake-parts, home-manager, nixpkgs, nixgl, nixpkgs-stable, stylix, emacs-init, self, ... }:
+  outputs = inputs@{flake-parts, nixgl, self, ... }:
   flake-parts.lib.mkFlake { inherit inputs; } (top@{ config, withSystem, moduleWithSystem, ... }: {
     imports = [
       inputs.home-manager.flakeModules.home-manager

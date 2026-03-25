@@ -162,6 +162,11 @@
           "o" = "'evil-previous-visual-line";
           "O" = "'evil-scroll-up";
       };
+
+      semel = {
+	enable = true;
+	ghookf = ["('emacs-lisp-mode 'semel-mode)"];
+      };
     };
   };
 }
