@@ -14,28 +14,28 @@
   flake-parts.lib.mkFlake { inherit inputs; } (top@{ config, withSystem, moduleWithSystem, ... }: {
     imports = [
       inputs.home-manager.flakeModules.home-manager
-      ./packages
-      ./emacs.nix
-      ./emacs/completion-system.nix
-      ./emacs/early-init.nix
-      ./emacs/evil.nix
-      ./emacs/help-system.nix
-      ./emacs/writing.nix
-      ./aesthetics.nix
-      ./dash.nix
-      ./development.nix
-      ./extra-packages.nix
-      ./file-management.nix
-      ./gptel.nix
-      ./gui.nix
-      ./home.nix
-      ./internet.nix
-      ./keyboard.nix
-      ./multimedia.nix
-      ./passwords.nix
-      ./sage.nix
-      ./shells.nix
-      ./window-manager.nix
+      ./modules/packages
+      ./modules/emacs.nix
+      ./modules/emacs/completion-system.nix
+      ./modules/emacs/early-init.nix
+      ./modules/emacs/evil.nix
+      ./modules/emacs/help-system.nix
+      ./modules/emacs/writing.nix
+      ./modules/aesthetics.nix
+      ./modules/dash.nix
+      ./modules/development.nix
+      ./modules/extra-packages.nix
+      ./modules/file-management.nix
+      ./modules/gptel.nix
+      ./modules/gui.nix
+      ./modules/home.nix
+      ./modules/internet.nix
+      ./modules/keyboard.nix
+      ./modules/multimedia.nix
+      ./modules/passwords.nix
+      ./modules/sage.nix
+      ./modules/shells.nix
+      ./modules/window-manager.nix
     ];
     flake.gpuWrappers = nixgl.defaultPackage;
     systems = ["x86_64-linux"];
@@ -127,7 +127,7 @@ semel = {
 
 ** Packages
 *** Importer
-#+begin_src nix-ts :tangle packages/default.nix
+#+begin_src nix-ts :tangle modules/packages/default.nix
 { ... }:
 
 {
@@ -140,7 +140,7 @@ semel = {
 #+end_src
 
 *** Overlay
-#+begin_src nix-ts :tangle packages/overlay.nix
+#+begin_src nix-ts :tangle modules/packages/overlay.nix
 { inputs, self, ... }:
 
 let
@@ -198,7 +198,7 @@ in {
 
 *** Emacs
 **** Importer
-#+begin_src nix-ts :tangle packages/emacs/default.nix
+#+begin_src nix-ts :tangle modules/packages/emacs/default.nix
 { ... }:
 
 {
@@ -218,7 +218,7 @@ in {
 #+end_src
 
 **** Doom Nano Modeline
-#+begin_src nix-ts :tangle packages/emacs/doom-nano-modeline.nix
+#+begin_src nix-ts :tangle modules/packages/emacs/doom-nano-modeline.nix
 { inputs, ... }:
 
 {
@@ -241,7 +241,7 @@ in {
 }
 #+end_src
 **** Dired Single
-#+begin_src nix-ts :tangle packages/emacs/dired-single.nix
+#+begin_src nix-ts :tangle modules/packages/emacs/dired-single.nix
 { inputs, ... } :
 
 {
@@ -259,7 +259,7 @@ in {
 #+end_src
 
 **** Repeaters
-#+begin_src nix-ts :tangle packages/emacs/repeaters.nix
+#+begin_src nix-ts :tangle modules/packages/emacs/repeaters.nix
 { inputs, ... } :
 
 {
@@ -277,7 +277,7 @@ in {
 #+end_src
 
 **** App Launcher
-#+begin_src nix-ts :tangle packages/emacs/app-launcher.nix
+#+begin_src nix-ts :tangle modules/packages/emacs/app-launcher.nix
 { inputs, ... } :
 
 {
@@ -295,7 +295,7 @@ in {
 #+end_src
 
 **** Ezf
-#+begin_src nix-ts :tangle packages/emacs/ezf.nix
+#+begin_src nix-ts :tangle modules/packages/emacs/ezf.nix
 { inputs, ... } :
 
 {
@@ -313,7 +313,7 @@ in {
 #+end_src
 
 **** GPT.el quick
-#+begin_src nix-ts :tangle packages/emacs/gptel-quick.nix
+#+begin_src nix-ts :tangle modules/packages/emacs/gptel-quick.nix
 { inputs, ... }:
 
 {
@@ -337,7 +337,7 @@ in {
 #+end_src
 
 **** MPC Wrapper
-#+begin_src nix-ts :tangle packages/emacs/mpc-wrapper.nix
+#+begin_src nix-ts :tangle modules/packages/emacs/mpc-wrapper.nix
 { inputs, ... } :
 
 {
@@ -355,7 +355,7 @@ in {
 #+end_src
 
 **** Qutebrowser
-#+begin_src nix-ts :tangle packages/emacs/qutebrowser.nix
+#+begin_src nix-ts :tangle modules/packages/emacs/qutebrowser.nix
 { inputs, ... } :
 
 {
@@ -384,7 +384,7 @@ in {
 #+end_src
 
 **** Semel
-#+begin_src nix-ts :tangle packages/emacs/semel.nix
+#+begin_src nix-ts :tangle modules/packages/emacs/semel.nix
 { inputs, ... } :
 
 {
@@ -403,7 +403,7 @@ in {
 
 **** Reka
 https://github.com/dmkhitaryan/river-next-nix-module/blob/5205ebf2b5f820c3a9221f472c78c548a4a84aad/window-managers/reka/package.nix
-#+begin_src nix-ts :tangle packages/emacs/reka.nix
+#+begin_src nix-ts :tangle modules/packages/emacs/reka.nix
 {
   lib,
   rustPlatform,
@@ -463,7 +463,7 @@ in
 
 **** Embark
 The version of embark in nixpkgs doesn't work right with org mode because it's missing some inputs
-#+begin_src nix-ts :tangle packages/emacs/embark.nix
+#+begin_src nix-ts :tangle modules/packages/emacs/embark.nix
 { inputs, ... }:
 
 {
@@ -507,7 +507,7 @@ The version of embark in nixpkgs doesn't work right with org mode because it's m
 
 *** Scripts
 **** Importer
-#+begin_src nix-ts :tangle packages/scripts/default.nix
+#+begin_src nix-ts :tangle modules/packages/scripts/default.nix
 { ... }:
 
 {
@@ -531,7 +531,7 @@ The version of embark in nixpkgs doesn't work right with org mode because it's m
 
 **** Cast
 For moving massive quantities of Jordan Peterson's podcast into my mp3 player
-#+begin_src nix-ts :tangle packages/scripts/cast.nix
+#+begin_src nix-ts :tangle modules/packages/scripts/cast.nix
 { inputs, ... }:
 {
   perSystem = { pkgs, self', ... }: let packages = self'.packages;
@@ -564,7 +564,7 @@ For moving massive quantities of Jordan Peterson's podcast into my mp3 player
 
 **** mpvmacs
 Play a file with mpv, controllable by emacs
-#+begin_src nix-ts :tangle packages/scripts/mpvmacs.nix
+#+begin_src nix-ts :tangle modules/packages/scripts/mpvmacs.nix
 { inputs, ... }:
 
 {
@@ -579,7 +579,7 @@ Play a file with mpv, controllable by emacs
 **** Updatefix
 Script to automate fixing my setup after an update breaks certain parts.
 Meant to be run with doas
-#+begin_src nix-ts :tangle packages/scripts/updatefix.nix
+#+begin_src nix-ts :tangle modules/packages/scripts/updatefix.nix
 { inputs, ... }:
 
 {
@@ -592,7 +592,7 @@ Meant to be run with doas
 #+end_src
 
 **** Doomer
-#+begin_src nix-ts :tangle packages/scripts/doomer.nix
+#+begin_src nix-ts :tangle modules/packages/scripts/doomer.nix
 { inputs, ... }:
 
 {
@@ -607,7 +607,7 @@ Meant to be run with doas
 
 **** Ezf
 Borrowed from here: https://github.com/mickeynp/ezf
-#+begin_src nix-ts :tangle packages/scripts/ezf.nix
+#+begin_src nix-ts :tangle modules/packages/scripts/ezf.nix
 { inputs, ... }:
 
 {
@@ -654,7 +654,7 @@ Borrowed from here: https://github.com/mickeynp/ezf
 
 **** Ffmpeg-bulk
 I stole this from this git repo https://github.com/sylsau/ffmpeg-bulk
-#+begin_src nix-ts :tangle packages/scripts/ffmpeg-bulk.nix
+#+begin_src nix-ts :tangle modules/packages/scripts/ffmpeg-bulk.nix
 { inputs, ... }:
 
 {
@@ -814,7 +814,7 @@ exit
 #+end_src
 
 **** HDMI Helper
-#+begin_src nix-ts :tangle packages/scripts/hdmi-helper.nix
+#+begin_src nix-ts :tangle modules/packages/scripts/hdmi-helper.nix
 { inputs, ... }:
 
 {
@@ -832,7 +832,7 @@ exit
 #+end_src
 
 **** Masstube
-#+begin_src nix-ts :tangle packages/scripts/masstube.nix
+#+begin_src nix-ts :tangle modules/packages/scripts/masstube.nix
 { inputs, ... }:
 
 {
@@ -848,7 +848,7 @@ exit
 #+end_src
 
 **** Start-ollama
-#+begin_src nix-ts :tangle packages/scripts/start-ollama.nix
+#+begin_src nix-ts :tangle modules/packages/scripts/start-ollama.nix
 { inputs, ... }:
 
 {
@@ -868,7 +868,7 @@ exit
 A package manager manager
 
 Dev templates: https://github.com/the-nix-way/dev-templates
-#+begin_src nix-ts :tangle packages/scripts/pkg.nix
+#+begin_src nix-ts :tangle modules/packages/scripts/pkg.nix
 { inputs, ... }:
 {
   perSystem = { pkgs, self', ... }: {
@@ -923,7 +923,7 @@ Dev templates: https://github.com/the-nix-way/dev-templates
 }
 #+end_src
 **** i3status-rust
-#+begin_src nix-ts :tangle packages/scripts/i3status-rust.nix
+#+begin_src nix-ts :tangle modules/packages/scripts/i3status-rust.nix
 { inputs, ... }:
 
 {
@@ -935,7 +935,7 @@ Dev templates: https://github.com/the-nix-way/dev-templates
 }
 #+end_src
 **** Udisksmenu
-#+begin_src nix-ts :tangle packages/scripts/udisksmenu.nix
+#+begin_src nix-ts :tangle modules/packages/scripts/udisksmenu.nix
 { inputs, ... }:
 
 {
@@ -955,7 +955,7 @@ Dev templates: https://github.com/the-nix-way/dev-templates
 Requires arch-wiki-docs to be installed
 
 Stole it from Derek Taylor
-#+begin_src nix-ts :tangle packages/scripts/wiki.nix
+#+begin_src nix-ts :tangle modules/packages/scripts/wiki.nix
 { inputs, ... }:
 
 {
@@ -983,7 +983,7 @@ Stole it from Derek Taylor
 * Home Manager
 ** Main Config
 *** Inputs & Imports
-#+begin_src nix-ts :noweb yes :tangle home.nix
+#+begin_src nix-ts :tangle modules/home.nix :noweb yes 
 { self, inputs, ... }:
 let
   system = "x86_64-linux";
@@ -1101,7 +1101,7 @@ xdg.userDirs = {
 
 ** shells
 *** boilerplate
-#+begin_src nix-ts :noweb yes :tangle shells.nix
+#+begin_src nix-ts :tangle modules/shells.nix :noweb yes
 {
   flake.homeModules.shellConfig = { pkgs, lib, ... }:
   {
@@ -1315,7 +1315,7 @@ This one borrows heavily from the bash module
 Special note: The profile settings here take precedence over bash's, because I'm too dumb to make them coexist
 
 ***** Premble
-#+begin_src nix-ts :noweb yes :tangle dash.nix
+#+begin_src nix-ts :tangle modules/dash.nix :noweb yes 
 {
   flake.homeModules.dashTemplate = { config, lib, pkgs, ... }:
 
@@ -1477,7 +1477,7 @@ home.sessionVariables = {
 
 ** Aesthetics
 *** Inputs
-#+begin_src nix-ts :noweb yes :tangle aesthetics.nix
+#+begin_src nix-ts :tangle modules/aesthetics.nix :noweb yes 
 { inputs, ... }:
 
 {
@@ -1579,7 +1579,7 @@ stylix = {
     vesktop.enable = true;
     emacs.enable = false;
   };
-  image = ./wallpaper.png;
+  image = ../wallpaper.png;
   cursor = {
     package = pkgs.nordzy-cursor-theme;
     name = "Nordzy-cursors-white";
@@ -2037,7 +2037,7 @@ shrface = {
 #+end_src
 
 *** Mustache File
-#+begin_src json-ts :tangle pywal.json.mustache
+#+begin_src json-ts :tangle modules/pywal.json.mustache
 {
   "special": {
     "background": "#{{base00-hex}}",
@@ -2066,7 +2066,7 @@ shrface = {
 #+end_src
 
 ** Extra Packages
-#+begin_src nix-ts :tangle extra-packages.nix
+#+begin_src nix-ts :tangle modules/extra-packages.nix
 {
   flake.homeModules.extraPackages = { config, pkgs, ... }:
 
@@ -2102,7 +2102,7 @@ shrface = {
 #+end_src
 
 ** Gui
-#+begin_src nix-ts :noweb yes :tangle gui.nix
+#+begin_src nix-ts :tangle modules/gui.nix :noweb yes
 {
   flake.homeModules.startx = { pkgs, ... }:
 
@@ -2145,7 +2145,7 @@ This was more directly stolen than the other parts
 I think most of it was from the github page for lsp mode, but it's been a while, & I don't remember much.
 https://github.com/joaotavora/eglot/discussions/888
 https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
-#+begin_src nix-ts :noweb yes :tangle development.nix
+#+begin_src nix-ts :tangle modules/development.nix :noweb yes 
 {
   flake.homeModules.development = { config, pkgs, lib, ... }:
 
@@ -2378,7 +2378,7 @@ python-ts-mode.setopt = {
 
 ** File Management
 I'm running dired with a couple of small packages that improve on it
-#+begin_src nix-ts :noweb yes :tangle file-management.nix
+#+begin_src nix-ts :tangle modules/file-management.nix :noweb yes 
 { inputs, ... }:
 {
 flake.homeModules.fileManager = { pkgs, ... }:
@@ -2467,7 +2467,7 @@ flake.homeModules.fileManager = { pkgs, ... }:
 ** Emacs
 *** Main
 **** Inputs & Imports
-#+begin_src nix-ts :tangle emacs.nix :noweb yes
+#+begin_src nix-ts :tangle modules/emacs.nix :noweb yes
 { inputs, ... }:
 
 {
@@ -2738,7 +2738,7 @@ postlude = ''
 
 *** Early Init
 All of the repeaters config was origally stolen from Karthinks. I don't think any of the code I stole is actually here anymore, though.
-#+begin_src nix-ts :noweb yes :tangle emacs/early-init.nix
+#+begin_src nix-ts :tangle modules/emacs/early-init.nix :noweb yes 
 {
   flake.homeModules.emacs = { ... }:
 
@@ -2786,7 +2786,7 @@ All of the repeaters config was origally stolen from Karthinks. I don't think an
 My keybinds have been rearranged to work with Canary. Evil is used for the purposes of ergonomics, & all my bindings revolve around it.
 
 Evil mode provides vim-like keybinds.
-#+begin_src nix-ts :noweb yes :tangle emacs/evil.nix
+#+begin_src nix-ts :tangle modules/emacs/evil.nix :noweb yes 
 { inputs, ... }:
 
 {
@@ -3314,7 +3314,7 @@ ewal-evil-cursors = {
 
 *** Completion System
 My completions system is based around vertico, because that's what all the cool kids use nowadays.
-#+begin_src nix-ts :noweb yes :tangle emacs/completion-system.nix
+#+begin_src nix-ts :tangle modules/emacs/completion-system.nix :noweb yes 
 { inputs, ... }:
 
 {
@@ -3632,7 +3632,7 @@ ezf = {
 *** Help System
 An improved help system that I lifted from emacs from scratch.
 Helpful gives more information, & which-key tells what keybinds you have available
-#+begin_src nix-ts :noweb yes :tangle emacs/help-system.nix
+#+begin_src nix-ts :tangle modules/emacs/help-system.nix :noweb yes 
 {
   flake.homeModules.emacs = { ... }:
 
@@ -3677,8 +3677,8 @@ Helpful gives more information, & which-key tells what keybinds you have availab
 			     "C-o" 'evil-scroll-page-up))
 #+end_src
 
-*** Writing
-#+begin_src nix-ts :noweb yes :tangle emacs/writing.nix
+** Writing
+#+begin_src nix-ts :tangle modules/writing.nix :noweb yes 
 { inputs, ... }:
 {
   flake.homeModules.writing = { config, pkgs, ... }:
@@ -3741,8 +3741,8 @@ Helpful gives more information, & which-key tells what keybinds you have availab
 }
 #+end_src
 
-**** Org
-***** Main Config
+*** Org
+**** Main Config
 The org agenda syntax:
 DEADLINE:<year-month-date>
 How to add a latex package
@@ -3789,7 +3789,7 @@ org = {
           ((equal export-type "html") (org-html-export-to-html)))))
 #+end_src
 
-***** Extensions
+**** Extensions
 #+NAME: Emacs Org Extensions
 #+begin_src nix-ts :noweb yes
 org-auto-tangle = {
@@ -3809,7 +3809,7 @@ biblio = {
 };
 #+end_src
 
-**** Latex
+*** Latex
 Auctex turns emacs into a LaTeX IDE.
 
 This configuration was taken from the emacs wiki. [[https://www.emacswiki.org/emacs/RefTeX][Reftex]] 
@@ -3856,7 +3856,7 @@ evil-tex.generalOneConfig.":ov" = {
 };
 #+end_src
 
-**** Markdown
+*** Markdown
 #+NAME: Emacs Markdown
 #+begin_src nix-ts :noweb yes
 markdown = {
@@ -3891,7 +3891,7 @@ markdown = {
     (set-face-attribute (car face) nil :font "SF Pro" :weight 'regular :height (cdr face))))
 #+end_src
 
-**** Writeroom
+*** Writeroom
 I couldn't get olivetti to work.
 #+NAME: Emacs Writeroom
 #+begin_src nix-ts
@@ -3908,7 +3908,7 @@ writeroom-mode = {
 };
 #+end_src
 
-**** Spellcheck
+*** Spellcheck
 #+NAME: Emacs Spellcheck
 #+begin_src nix-ts
 flyspell = {
@@ -3921,7 +3921,7 @@ flyspell = {
 #+end_src
 
 ** Password Management
-#+begin_src nix-ts :noweb yes :tangle passwords.nix
+#+begin_src nix-ts :tangle modules/passwords.nix :noweb yes 
 {
   flake.homeModules.passwordManagement = { pkgs, ... }:
 
@@ -4003,7 +4003,7 @@ home.file.".local/share/gnupg/gpg.conf".text = ''
 '';
 #+end_src
 ** Window Management
-#+begin_src nix-ts :noweb yes :tangle window-manager.nix
+#+begin_src nix-ts :tangle modules/window-manager.nix :noweb yes 
 {
 flake.homeModules.exwm = { pkgs, config, lib, ... }:
 
@@ -4698,7 +4698,7 @@ ace-window = {
 #+end_src
 
 ** Gptel
-#+begin_src nix-ts :noweb yes :tangle gptel.nix
+#+begin_src nix-ts :tangle modules/gptel.nix :noweb yes 
 { inputs, ... }:
 
 {
@@ -4779,7 +4779,7 @@ ace-window = {
 
 ** Multimedia
 This is where all the audio/video stuff goes
-#+begin_src nix-ts :tangle multimedia.nix :noweb yes
+#+begin_src nix-ts :tangle modules/multimedia.nix :noweb yes
 { inputs, ... }:
 
 {
@@ -4921,7 +4921,7 @@ pulseaudio-control = {
 
 ** Sagemath
 Sagemath is my goto for dealing with complex math. It makes for a wonderful maple replacement.
-#+begin_src nix-ts :tangle sage.nix :noweb yes
+#+begin_src nix-ts :tangle modules/sage.nix :noweb yes
 {
   flake.homeModules.sage = { pkgs, ... }:
   {
@@ -5008,7 +5008,7 @@ programs.emacs.init.usePackage = {
 ** Keyboard
 I use kmonad to manage my keybinds.
 Canary is my layout of choice.
-#+begin_src nix-ts :tangle keyboard.nix :noweb yes
+#+begin_src nix-ts :tangle modules/keyboard.nix :noweb yes
 {
   flake.homeModules.canary = { ... }:
 
@@ -5121,7 +5121,7 @@ Canary is my layout of choice.
 #+end_src
 
 ** Internet
-#+begin_src nix-ts :tangle internet.nix :noweb yes
+#+begin_src nix-ts :tangle modules/internet.nix :noweb yes
 { inputs, config, pkgs, lib, ... }:
 
 {

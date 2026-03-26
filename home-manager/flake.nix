@@ -85,28 +85,28 @@
   flake-parts.lib.mkFlake { inherit inputs; } (top@{ config, withSystem, moduleWithSystem, ... }: {
     imports = [
       inputs.home-manager.flakeModules.home-manager
-      ./packages
-      ./emacs.nix
-      ./emacs/completion-system.nix
-      ./emacs/early-init.nix
-      ./emacs/evil.nix
-      ./emacs/help-system.nix
-      ./emacs/writing.nix
-      ./aesthetics.nix
-      ./dash.nix
-      ./development.nix
-      ./extra-packages.nix
-      ./file-management.nix
-      ./gptel.nix
-      ./gui.nix
-      ./home.nix
-      ./internet.nix
-      ./keyboard.nix
-      ./multimedia.nix
-      ./passwords.nix
-      ./sage.nix
-      ./shells.nix
-      ./window-manager.nix
+      ./modules/packages
+      ./modules/emacs.nix
+      ./modules/emacs/completion-system.nix
+      ./modules/emacs/early-init.nix
+      ./modules/emacs/evil.nix
+      ./modules/emacs/help-system.nix
+      ./modules/emacs/writing.nix
+      ./modules/aesthetics.nix
+      ./modules/dash.nix
+      ./modules/development.nix
+      ./modules/extra-packages.nix
+      ./modules/file-management.nix
+      ./modules/gptel.nix
+      ./modules/gui.nix
+      ./modules/home.nix
+      ./modules/internet.nix
+      ./modules/keyboard.nix
+      ./modules/multimedia.nix
+      ./modules/passwords.nix
+      ./modules/sage.nix
+      ./modules/shells.nix
+      ./modules/window-manager.nix
     ];
     flake.gpuWrappers = nixgl.defaultPackage;
     systems = ["x86_64-linux"];

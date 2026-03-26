@@ -12,7 +12,7 @@
         vesktop.enable = true;
         emacs.enable = false;
       };
-      image = ./wallpaper.png;
+      image = ../wallpaper.png;
       cursor = {
         package = pkgs.nordzy-cursor-theme;
         name = "Nordzy-cursors-white";
