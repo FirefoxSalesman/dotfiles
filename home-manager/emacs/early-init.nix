@@ -1,8 +1,8 @@
-{ ... }:
-
 {
-  programs.emacs.init = {
-    earlyInit = ''
+  flake.homeModules.emacs = { ... }:
+
+  {
+    programs.emacs.init.earlyInit = ''
       (scroll-bar-mode -1) ; Disable visible scrollbar
       (tool-bar-mode -1) ; Disable the toolbar
       (menu-bar-mode -1)

@@ -1,15 +1,18 @@
-{ pkgs, config, inputs, ... }:
+{ inputs, ... }:
 
 {
-  home.packages = with pkgs; [
-    # yt-dlp
-    (config.lib.nixGL.wrap obs-studio)
-    lmms
-    audacity
-    doomer
-    masstube
-    cast
-  ];
+  flake.homeModules.media = { pkgs, config, ... }:
+
+  {
+    home.packages = with pkgs; [
+      yt-dlp
+      (config.lib.nixGL.wrap obs-studio)
+      lmms
+      audacity
+      doomer
+      masstube
+      cast
+    ];
 
   services.mpd = {
     enable = true;
@@ -98,6 +101,7 @@
         "s-v" = "'pulseaudio-control-default-sink-mode";
       };
       config = "(pulseaudio-control-default-sink-mode)";
+    };
     };
   };
 }

@@ -1,4 +1,5 @@
-{ pkgs, config, lib, ... }:
+{
+flake.homeModules.exwm = { pkgs, config, lib, ... }:
 
 {
   programs = {
@@ -596,4 +597,5 @@
       };
     };
   };
+};
 }

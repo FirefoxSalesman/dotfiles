@@ -1,4 +1,6 @@
-{ inputs, pkgs, ... }:
+{ inputs, ... }:
+{
+flake.homeModules.fileManager = { pkgs, ... }:
 
 {
   programs.emacs.init = {
@@ -70,6 +72,7 @@
 	};
 	setopt.image-animate-loop = true;
       };
-    } ;
+    };
   };
+};
 }

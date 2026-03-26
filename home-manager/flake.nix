@@ -85,8 +85,28 @@
   flake-parts.lib.mkFlake { inherit inputs; } (top@{ config, withSystem, moduleWithSystem, ... }: {
     imports = [
       inputs.home-manager.flakeModules.home-manager
-      ./flake/home-manager.nix
       ./packages
+      ./emacs.nix
+      ./emacs/completion-system.nix
+      ./emacs/early-init.nix
+      ./emacs/evil.nix
+      ./emacs/help-system.nix
+      ./emacs/writing.nix
+      ./aesthetics.nix
+      ./dash.nix
+      ./development.nix
+      ./extra-packages.nix
+      ./file-management.nix
+      ./gptel.nix
+      ./gui.nix
+      ./home.nix
+      ./internet.nix
+      ./keyboard.nix
+      ./multimedia.nix
+      ./passwords.nix
+      ./sage.nix
+      ./shells.nix
+      ./window-manager.nix
     ];
     flake.gpuWrappers = nixgl.defaultPackage;
     systems = ["x86_64-linux"];

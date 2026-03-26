@@ -14,8 +14,28 @@
   flake-parts.lib.mkFlake { inherit inputs; } (top@{ config, withSystem, moduleWithSystem, ... }: {
     imports = [
       inputs.home-manager.flakeModules.home-manager
-      ./flake/home-manager.nix
       ./packages
+      ./emacs.nix
+      ./emacs/completion-system.nix
+      ./emacs/early-init.nix
+      ./emacs/evil.nix
+      ./emacs/help-system.nix
+      ./emacs/writing.nix
+      ./aesthetics.nix
+      ./dash.nix
+      ./development.nix
+      ./extra-packages.nix
+      ./file-management.nix
+      ./gptel.nix
+      ./gui.nix
+      ./home.nix
+      ./internet.nix
+      ./keyboard.nix
+      ./multimedia.nix
+      ./passwords.nix
+      ./sage.nix
+      ./shells.nix
+      ./window-manager.nix
     ];
     flake.gpuWrappers = nixgl.defaultPackage;
     systems = ["x86_64-linux"];
@@ -105,38 +125,8 @@ semel = {
 };
 #+end_src
 
-** Home Manager Definition
-#+begin_src nix-ts :tangle flake/home-manager.nix :noweb yes
-{ self, inputs, ... }:
-let
-  system = "x86_64-linux";
-  pkgs = import inputs.nixpkgs {
-    inherit system;
-    config.allowUnfree = true;
-    overlays = [
-      (final: prev: self.overlay final prev pkgs inputs)
-      inputs.emacs-init.overlay
-      inputs.emacs-overlay.overlay
-    ];
-  };
-in {
-  flake.homeConfigurations.holschcc = inputs.home-manager.lib.homeManagerConfiguration {
-    inherit pkgs;
-    extraSpecialArgs = {
-      inherit inputs;
-    };
-    modules = [
-      ../home.nix
-      inputs.stylix.homeModules.stylix
-      inputs.emacs-init.homeModules.emacs-init
-      inputs.emacs-init.homeModules.emacs-presets
-    ];
-  };
-}
-#+end_src
-
-* Packages
-** Importer
+** Packages
+*** Importer
 #+begin_src nix-ts :tangle packages/default.nix
 { ... }:
 
@@ -149,7 +139,7 @@ in {
 }
 #+end_src
 
-** Overlay
+*** Overlay
 #+begin_src nix-ts :tangle packages/overlay.nix
 { inputs, self, ... }:
 
@@ -206,8 +196,8 @@ in {
 }
 #+end_src
 
-** Emacs
-*** Importer
+*** Emacs
+**** Importer
 #+begin_src nix-ts :tangle packages/emacs/default.nix
 { ... }:
 
@@ -227,7 +217,7 @@ in {
 }
 #+end_src
 
-*** Doom Nano Modeline
+**** Doom Nano Modeline
 #+begin_src nix-ts :tangle packages/emacs/doom-nano-modeline.nix
 { inputs, ... }:
 
@@ -247,10 +237,10 @@ in {
 	buildInputs = propagatedUserEnvPkgs;
       }
     );
-};
+  };
 }
 #+end_src
-*** Dired Single
+**** Dired Single
 #+begin_src nix-ts :tangle packages/emacs/dired-single.nix
 { inputs, ... } :
 
@@ -268,7 +258,7 @@ in {
 }
 #+end_src
 
-*** Repeaters
+**** Repeaters
 #+begin_src nix-ts :tangle packages/emacs/repeaters.nix
 { inputs, ... } :
 
@@ -286,7 +276,7 @@ in {
 }
 #+end_src
 
-*** App Launcher
+**** App Launcher
 #+begin_src nix-ts :tangle packages/emacs/app-launcher.nix
 { inputs, ... } :
 
@@ -304,7 +294,7 @@ in {
 }
 #+end_src
 
-*** Ezf
+**** Ezf
 #+begin_src nix-ts :tangle packages/emacs/ezf.nix
 { inputs, ... } :
 
@@ -322,7 +312,7 @@ in {
 }
 #+end_src
 
-*** GPT.el quick
+**** GPT.el quick
 #+begin_src nix-ts :tangle packages/emacs/gptel-quick.nix
 { inputs, ... }:
 
@@ -346,7 +336,7 @@ in {
 }
 #+end_src
 
-*** MPC Wrapper
+**** MPC Wrapper
 #+begin_src nix-ts :tangle packages/emacs/mpc-wrapper.nix
 { inputs, ... } :
 
@@ -364,7 +354,7 @@ in {
 }
 #+end_src
 
-*** Qutebrowser
+**** Qutebrowser
 #+begin_src nix-ts :tangle packages/emacs/qutebrowser.nix
 { inputs, ... } :
 
@@ -393,7 +383,7 @@ in {
 }
 #+end_src
 
-*** Semel
+**** Semel
 #+begin_src nix-ts :tangle packages/emacs/semel.nix
 { inputs, ... } :
 
@@ -411,7 +401,7 @@ in {
 }
 #+end_src
 
-*** Reka
+**** Reka
 https://github.com/dmkhitaryan/river-next-nix-module/blob/5205ebf2b5f820c3a9221f472c78c548a4a84aad/window-managers/reka/package.nix
 #+begin_src nix-ts :tangle packages/emacs/reka.nix
 {
@@ -471,7 +461,7 @@ in
   }
 #+end_src
 
-*** Embark
+**** Embark
 The version of embark in nixpkgs doesn't work right with org mode because it's missing some inputs
 #+begin_src nix-ts :tangle packages/emacs/embark.nix
 { inputs, ... }:
@@ -515,8 +505,8 @@ The version of embark in nixpkgs doesn't work right with org mode because it's m
 
 #+end_src
 
-** Scripts
-*** Importer
+*** Scripts
+**** Importer
 #+begin_src nix-ts :tangle packages/scripts/default.nix
 { ... }:
 
@@ -539,7 +529,7 @@ The version of embark in nixpkgs doesn't work right with org mode because it's m
 }
 #+end_src
 
-*** Cast
+**** Cast
 For moving massive quantities of Jordan Peterson's podcast into my mp3 player
 #+begin_src nix-ts :tangle packages/scripts/cast.nix
 { inputs, ... }:
@@ -572,7 +562,7 @@ For moving massive quantities of Jordan Peterson's podcast into my mp3 player
 }
 #+end_src
 
-*** mpvmacs
+**** mpvmacs
 Play a file with mpv, controllable by emacs
 #+begin_src nix-ts :tangle packages/scripts/mpvmacs.nix
 { inputs, ... }:
@@ -586,7 +576,7 @@ Play a file with mpv, controllable by emacs
 }
 #+end_src
 
-*** Updatefix
+**** Updatefix
 Script to automate fixing my setup after an update breaks certain parts.
 Meant to be run with doas
 #+begin_src nix-ts :tangle packages/scripts/updatefix.nix
@@ -601,7 +591,7 @@ Meant to be run with doas
 }
 #+end_src
 
-*** Doomer
+**** Doomer
 #+begin_src nix-ts :tangle packages/scripts/doomer.nix
 { inputs, ... }:
 
@@ -615,7 +605,7 @@ Meant to be run with doas
 }
 #+end_src
 
-*** Ezf
+**** Ezf
 Borrowed from here: https://github.com/mickeynp/ezf
 #+begin_src nix-ts :tangle packages/scripts/ezf.nix
 { inputs, ... }:
@@ -662,7 +652,7 @@ Borrowed from here: https://github.com/mickeynp/ezf
 }
 #+end_src
 
-*** Ffmpeg-bulk
+**** Ffmpeg-bulk
 I stole this from this git repo https://github.com/sylsau/ffmpeg-bulk
 #+begin_src nix-ts :tangle packages/scripts/ffmpeg-bulk.nix
 { inputs, ... }:
@@ -823,7 +813,7 @@ exit
 }
 #+end_src
 
-*** HDMI Helper
+**** HDMI Helper
 #+begin_src nix-ts :tangle packages/scripts/hdmi-helper.nix
 { inputs, ... }:
 
@@ -841,7 +831,7 @@ exit
 }
 #+end_src
 
-*** Masstube
+**** Masstube
 #+begin_src nix-ts :tangle packages/scripts/masstube.nix
 { inputs, ... }:
 
@@ -857,7 +847,7 @@ exit
 }
 #+end_src
 
-*** Start-ollama
+**** Start-ollama
 #+begin_src nix-ts :tangle packages/scripts/start-ollama.nix
 { inputs, ... }:
 
@@ -874,7 +864,7 @@ exit
 }
 #+end_src
 
-*** Pkg
+**** Pkg
 A package manager manager
 
 Dev templates: https://github.com/the-nix-way/dev-templates
@@ -932,7 +922,7 @@ Dev templates: https://github.com/the-nix-way/dev-templates
   };
 }
 #+end_src
-*** i3status-rust
+**** i3status-rust
 #+begin_src nix-ts :tangle packages/scripts/i3status-rust.nix
 { inputs, ... }:
 
@@ -944,7 +934,7 @@ Dev templates: https://github.com/the-nix-way/dev-templates
   };
 }
 #+end_src
-*** Udisksmenu
+**** Udisksmenu
 #+begin_src nix-ts :tangle packages/scripts/udisksmenu.nix
 { inputs, ... }:
 
@@ -961,7 +951,7 @@ Dev templates: https://github.com/the-nix-way/dev-templates
 }
 #+end_src
 
-*** Wiki
+**** Wiki
 Requires arch-wiki-docs to be installed
 
 Stole it from Derek Taylor
@@ -994,52 +984,77 @@ Stole it from Derek Taylor
 ** Main Config
 *** Inputs & Imports
 #+begin_src nix-ts :noweb yes :tangle home.nix
-{ lib, config, inputs, ... }:
+{ self, inputs, ... }:
+let
+  system = "x86_64-linux";
+  pkgs = import inputs.nixpkgs {
+    inherit system;
+    config.allowUnfree = true;
+    overlays = [
+      (final: prev: self.overlay final prev pkgs inputs)
+      inputs.emacs-init.overlay
+      inputs.emacs-overlay.overlay
+    ];
+  };
+in {
+  flake = {
+    homeConfigurations.holschcc = inputs.home-manager.lib.homeManagerConfiguration {
+      inherit pkgs;
+      extraSpecialArgs = {
+	inherit inputs;
+      };
+      modules = [
+	inputs.self.homeModules.aesthetics
+	inputs.self.homeModules.ai
+	inputs.self.homeModules.basic
+	inputs.self.homeModules.canary
+	inputs.self.homeModules.dashTemplate
+	inputs.self.homeModules.development
+	inputs.self.homeModules.emacs
+	inputs.self.homeModules.extraPackages
+	inputs.self.homeModules.exwm
+	inputs.self.homeModules.fileManager
+	inputs.self.homeModules.media
+	inputs.self.homeModules.passwordManagement
+	inputs.self.homeModules.sage
+	inputs.self.homeModules.shellConfig
+	inputs.self.homeModules.startx
+	inputs.self.homeModules.web
+	inputs.self.homeModules.writing
+	inputs.stylix.homeModules.stylix
+	inputs.emacs-init.homeModules.emacs-init
+	inputs.emacs-init.homeModules.emacs-presets
+      ];
+    };
+    homeModules.basic = { lib, config, ... }:
 
-{
-  # Home Manager needs a bit of information about you and the paths it should
-  # manage.
-  home.username = "holschcc";
-  home.homeDirectory = "/home/holschcc";
+    {
+      # Home Manager needs a bit of information about you and the paths it should
+      # manage.
+      home.username = "holschcc";
+      home.homeDirectory = "/home/holschcc";
 
-  # This value determines the Home Manager release that your configuration is
-  # compatible with. This helps avoid breakage when a new Home Manager release
-  # introduces backwards incompatible changes.
-  #
-  # You should not change this value, even if you update Home Manager. If you do
-  # want to update the value, then make sure to first check the Home Manager
-  # release notes.
-  home.stateVersion = "23.05"; # Please read the comment before changing.
+      # This value determines the Home Manager release that your configuration is
+      # compatible with. This helps avoid breakage when a new Home Manager release
+      # introduces backwards incompatible changes.
+      #
+      # You should not change this value, even if you update Home Manager. If you do
+      # want to update the value, then make sure to first check the Home Manager
+      # release notes.
+      home.stateVersion = "23.05"; # Please read the comment before changing.
 
-  # Let Home Manager install and manage itself.
-  programs.home-manager.enable = true;
+      # Let Home Manager install and manage itself.
+      programs.home-manager.enable = true;
 
-  imports = [ 
-    ./window-manager.nix
-    ./internet.nix
-    ./multimedia.nix
-    ./aesthetics.nix
-    ./extra-packages.nix
-    ./development.nix
-    ./gui.nix
-    ./emacs.nix
-    ./shells.nix
-    ./gptel.nix
-    ./sage.nix
-    ./keyboard.nix
-  ];
+      nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
 
-  nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
+      <<glx>>
 
-  <<glx>>
+      <<alsoftrc>>
 
-  <<GPG>>
-
-  <<alsoftrc>>
-
-  <<Environment Variables>>
-
-  <<User Dirs>>
+      <<User Dirs>>
+    };
+  };
 }
 #+end_src
 
@@ -1057,22 +1072,6 @@ home.activation = {
 };
 #+end_src
 
-*** gpg
-#+NAME: GPG
-#+begin_src nix-ts
-home.file.".local/share/gnupg/gpg-agent.conf".text = ''
-   pinentry-program /usr/bin/pinentry-emacs
-   allow-loopback-pinentry
-   allow-emacs-pinentry
-   default-cache-ttl 600
-   max-cache-ttl 7200
-   enable-ssh-support
-'';
-home.file.".local/share/gnupg/gpg.conf".text = ''
-   use-agent
-'';
-#+end_src
-
 *** alsoftrc
 #+NAME: alsoftrc
 #+begin_src nix-ts
@@ -1081,25 +1080,6 @@ home.file.".alsoftrc".text = ''
   drivers=pulse
   hrtf=true
 '';
-#+end_src
-
-*** Environment variables
-#+NAME: Environment Variables
-#+begin_src nix-ts
-home.sessionVariables = {
-  XDG_DATA_HOME="$HOME/.local";
-  XDG_STATE_HOME="$HOME/.local/state";
-  XDG_CACHE_HOME="$HOME/.cache";
-  XDG_CONFIG_HOME="$HOME/.config";
-  XDG_DATA_DIRS= lib.mkForce "$HOME/.nix-profile/share:$XDG_DATA_DIRS";
-  # EDITOR = "emacsclient";
-  BROWSER="qutebrowser";
-  _JAVA_OPTIONS="-Djava.util.prefs.userRoot=$XDG_CONFIG_HOME/java";
-  GTK2_RC_FILES="/home/holschcc/.gtkrc-2.0";
-  SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)";
-  _JAVA_AWT_WM_NONREPARENTING = "1";
-  PATH="/run/system-manager/sw/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/holschcc/bin:/home/holschcc/.nix-profile/bin";
-};
 #+end_src
 
 *** User Dirs
@@ -1122,31 +1102,34 @@ xdg.userDirs = {
 ** shells
 *** boilerplate
 #+begin_src nix-ts :noweb yes :tangle shells.nix
-{ pkgs, ... }:
 {
-  imports = [./dash.nix];
+  flake.homeModules.shellConfig = { pkgs, lib, ... }:
+  {
+    <<Shell Aliases>>
 
-  <<Shell Aliases>>
+    <<Environment Variables>>
 
-  programs = {
-    <<Fish Shell>>
+    programs = {
+      <<Fish Shell>>
 
-    <<Bash Shell>>
+      <<Bash Shell>>
 
-    <<Starship>>
+      <<Starship>>
 
-    direnv.enableBashIntegration = true;
+      direnv.enableBashIntegration = true;
 
-    <<Dash Shell>>
+      <<Dash Shell>>
 
-    emacs.init = {
-      completions.tempel.templates.eshell-mode.gbc = ''"(get-buffer-create \"" q "\")"'';
-      terminals = {
-	eshell = true;
-	eat = true;
-      };
-      usePackage = {
-        <<Eshell>>
+
+      emacs.init = {
+	completions.tempel.templates.eshell-mode.gbc = ''"(get-buffer-create \"" q "\")"'';
+	terminals = {
+	  eshell = true;
+	  eat = true;
+	};
+	usePackage = {
+          <<Eshell>>
+	};
       };
     };
   };
@@ -1333,27 +1316,29 @@ Special note: The profile settings here take precedence over bash's, because I'm
 
 ***** Premble
 #+begin_src nix-ts :noweb yes :tangle dash.nix
-{ config, lib, pkgs, ... }:
+{
+  flake.homeModules.dashTemplate = { config, lib, pkgs, ... }:
 
-with lib;
+  with lib;
 
-let
+  let
 
-  cfg = config.programs.dash;
+    cfg = config.programs.dash;
 
-  writeBashScript = name: text:
+    writeBashScript = name: text:
     pkgs.writeTextFile {
       inherit name text;
       checkPhase = ''
-        ${pkgs.stdenv.shellDryRun} "$target"
+          ${pkgs.stdenv.shellDryRun} "$target"
       '';
     };
 
-in {
-  meta.maintainers = [ maintainers.rycee ];
-  <<Dash Option Definitions>>
+  in {
+    meta.maintainers = [ maintainers.rycee ];
+    <<Dash Option Definitions>>
   
-  <<Dash File Generation>>
+    <<Dash File Generation>>
+  };
 }
 #+end_src
 
@@ -1471,10 +1456,32 @@ in mkIf cfg.enable {
 };
 #+end_src
 
+*** Environment variables
+#+NAME: Environment Variables
+#+begin_src nix-ts
+home.sessionVariables = {
+  XDG_DATA_HOME="$HOME/.local";
+  XDG_STATE_HOME="$HOME/.local/state";
+  XDG_CACHE_HOME="$HOME/.cache";
+  XDG_CONFIG_HOME="$HOME/.config";
+  XDG_DATA_DIRS= lib.mkForce "$HOME/.nix-profile/share:$XDG_DATA_DIRS";
+  # EDITOR = "emacsclient";
+  BROWSER="qutebrowser";
+  _JAVA_OPTIONS="-Djava.util.prefs.userRoot=$XDG_CONFIG_HOME/java";
+  GTK2_RC_FILES="/home/holschcc/.gtkrc-2.0";
+  SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)";
+  _JAVA_AWT_WM_NONREPARENTING = "1";
+  PATH="/run/system-manager/sw/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/holschcc/bin:/home/holschcc/.nix-profile/bin";
+};
+#+end_src
+
 ** Aesthetics
 *** Inputs
 #+begin_src nix-ts :noweb yes :tangle aesthetics.nix
-  { config, inputs, lib, pkgs, ... }:
+{ inputs, ... }:
+
+{
+  flake.homeModules.aesthetics = { config, lib, pkgs, ... }:
 
   {
     <<Stylix Config>>
@@ -1530,33 +1537,32 @@ in mkIf cfg.enable {
         };
       };
     };
-  }
+  };
+}
 #+end_src
 
 *** Picom
 For making emacs transparent
 #+NAME: Aesthetics Picom
 #+begin_src nix-ts
-  services.picom = {
-    enable = true;
-    package = (config.lib.nixGL.wrap pkgs.picom);
-    backend = "glx";
-    opacityRules = [ "70:class_g = 'lmms'" ];
-    settings = {
-      # glx-no-stencil = true;
-      # glx-no-rebind-pixmap = true;
-      use-damage = true;
-      vsync = true;
-      blur = {
-        method = "gaussian";
-        size = 5;
-        deviation = 2.0;
-      };
-      shadow-exclude = [ "class_g != 'emacs'"
-      ];
+services.picom = {
+  enable = true;
+  package = (config.lib.nixGL.wrap pkgs.picom);
+  backend = "glx";
+  opacityRules = [ "70:class_g = 'lmms'" ];
+  settings = {
+    use-damage = true;
+    vsync = true;
+    blur = {
+      method = "gaussian";
+      size = 5;
+      deviation = 2.0;
     };
-    shadow = true;
+    shadow-exclude = [ "class_g != 'emacs'"
+    ];
   };
+  shadow = true;
+};
 #+end_src
 
 *** Stylix
@@ -1565,52 +1571,52 @@ Stylix does a bad job of theming emacs, so we use pywal instead
 Pywal integration: https://github.com/danth/stylix/issues/99
 #+NAME: Stylix Config
 #+begin_src nix-ts
-  stylix = {
-    enable = true;
-    polarity = "dark";
-    targets = {
-      vencord.enable = false;
-      vesktop.enable = true;
-      emacs.enable = false;
-    };
-    image = ./wallpaper.png;
-    cursor = {
-      package = pkgs.nordzy-cursor-theme;
-      name = "Nordzy-cursors-white";
-      size = 16;
-    };
-    opacity = {
-      applications = 0.9;
-      popups = 0.9;
-      terminal = 0.9;
-    };
-    fonts = with pkgs; rec {
-      monospace = {
-        package = pkgs.jetbrains-mono;
-        name = "JetBrains Mono";
-      };
-      sansSerif = {
-        package = inputs.apple-fonts.packages.${system}.sf-pro;
-        name = "SF Pro";
-      };
-      serif = sansSerif;
-    };
+stylix = {
+  enable = true;
+  polarity = "dark";
+  targets = {
+    vencord.enable = false;
+    vesktop.enable = true;
+    emacs.enable = false;
   };
-
-  home.file = {
-    ".cache/colors.json".source = config.lib.stylix.colors {
-      template = builtins.readFile ./pywal.json.mustache;
-      extension = ".json";
-    };
+  image = ./wallpaper.png;
+  cursor = {
+    package = pkgs.nordzy-cursor-theme;
+    name = "Nordzy-cursors-white";
+    size = 16;
   };
+  opacity = {
+    applications = 0.9;
+    popups = 0.9;
+    terminal = 0.9;
+  };
+  fonts = with pkgs; rec {
+    monospace = {
+      package = pkgs.jetbrains-mono;
+      name = "JetBrains Mono";
+    };
+    sansSerif = {
+      package = inputs.apple-fonts.packages.${system}.sf-pro;
+      name = "SF Pro";
+    };
+    serif = sansSerif;
+  };
+};
 
-  home.activation =  #ALSO ACTIVATES AT REBOOT
-    {
-      generate_pywal_colors = lib.hm.dag.entryAfter ["writeBoundary"] ''
-         $DRY_RUN_CMD ${pkgs.pywal}/bin/wal -f ~/.cache/colors.json
-         $DRY_RUN_CMD ${pkgs.pywal}/bin/wal -R
-       '';
-    } ;
+home.file = {
+  ".cache/colors.json".source = config.lib.stylix.colors {
+    template = builtins.readFile ./pywal.json.mustache;
+    extension = ".json";
+  };
+};
+
+home.activation =  #ALSO ACTIVATES AT REBOOT
+  {
+    generate_pywal_colors = lib.hm.dag.entryAfter ["writeBoundary"] ''
+       $DRY_RUN_CMD ${pkgs.pywal}/bin/wal -f ~/.cache/colors.json
+       $DRY_RUN_CMD ${pkgs.pywal}/bin/wal -R
+     '';
+  } ;
 #+end_src
 
 *** Prettify Symbols
@@ -1829,37 +1835,37 @@ ewal-doom-themes = {
 
 #+NAME: Emacs Ewal Config
 #+begin_src emacs-lisp
-  (load-theme 'ewal-doom-one t)
-  ;; Stolen from Noctuid
-  (let (custom--inhibit-theme-enable)
-    (custom-theme-set-faces
-     'ewal-doom-one
-     `(font-lock-number-face ((t (:foreground ,(ewal-get-color 'blue)))))
-     `(markdown-header-face ((t (:foreground ,(ewal-get-color 'blue)))))
-     `(markdown-header-delimiter-face ((t (:foreground ,(ewal-get-color 'blue)))))
-     `(markdown-bold-face ((t (:foreground ,(ewal-get-color 'green)))))
-     `(markdown-list-face ((t (:foreground ,(ewal-get-color 'green)))))
-     `(org-code ((t (:foreground ,(ewal-get-color 'green)))))
-     `(line-number ((t (:foreground ,(ewal-get-color 'blue)))))
-     `(eshell-git-prompt-powerline-dir-face ((t (:background ,(ewal-get-color 'blue)))))
-     `(hl-line-face ((t (:background ,(ewal-get-color 'green)))))
-     `(solaire-hl-line-face ((t (:background ,(ewal-get-color 'green)))))
-     `(tab-bar ((t :inherit mode-line)))
-     `(eshell-git-prompt-powerline-clean-face ((t (:background ,(ewal-get-color 'green)))))
-     `(eshell-git-prompt-powerline-not-clean-face ((t (:background ,(ewal-get-color 'red)))))))
-  (doom-themes-visual-bell-config)
-  (doom-themes-org-config)
+(load-theme 'ewal-doom-one t)
+;; Stolen from Noctuid
+(let (custom--inhibit-theme-enable)
+  (custom-theme-set-faces
+   'ewal-doom-one
+   `(font-lock-number-face ((t (:foreground ,(ewal-get-color 'blue)))))
+   `(markdown-header-face ((t (:foreground ,(ewal-get-color 'blue)))))
+   `(markdown-header-delimiter-face ((t (:foreground ,(ewal-get-color 'blue)))))
+   `(markdown-bold-face ((t (:foreground ,(ewal-get-color 'green)))))
+   `(markdown-list-face ((t (:foreground ,(ewal-get-color 'green)))))
+   `(org-code ((t (:foreground ,(ewal-get-color 'green)))))
+   `(line-number ((t (:foreground ,(ewal-get-color 'blue)))))
+   `(eshell-git-prompt-powerline-dir-face ((t (:background ,(ewal-get-color 'blue)))))
+   `(hl-line-face ((t (:background ,(ewal-get-color 'green)))))
+   `(solaire-hl-line-face ((t (:background ,(ewal-get-color 'green)))))
+   `(tab-bar ((t :inherit mode-line)))
+   `(eshell-git-prompt-powerline-clean-face ((t (:background ,(ewal-get-color 'green)))))
+   `(eshell-git-prompt-powerline-not-clean-face ((t (:background ,(ewal-get-color 'red)))))))
+(doom-themes-visual-bell-config)
+(doom-themes-org-config)
 #+end_src
 
 *** Solaire
 Solaire dims certain parts of the frame.
 #+NAME: Emacs Ricing Solaire
 #+begin_src nix-ts
-  solaire-mode = {
-    enable = true;
-    demand = true;
-    config = ''(solaire-global-mode)'';
-  };
+solaire-mode = {
+  enable = true;
+  demand = true;
+  config = ''(solaire-global-mode)'';
+};
 #+end_src
 
 *** Posframes
@@ -2032,70 +2038,82 @@ shrface = {
 
 *** Mustache File
 #+begin_src json-ts :tangle pywal.json.mustache
-  {
-    "special": {
-      "background": "#{{base00-hex}}",
-      "foreground": "#{{base07-hex}}",
-      "cursor": "#{{base07-hex}}"
-    },
-    "colors": {
-      "color0": "#{{base00-hex}}",
-      "color1": "#{{base01-hex}}",
-      "color2": "#{{base02-hex}}",
-      "color3": "#{{base03-hex}}",
-      "color4": "#{{base04-hex}}",
-      "color5": "#{{base05-hex}}",
-      "color6": "#{{base06-hex}}",
-      "color7": "#{{base07-hex}}",
-      "color8": "#{{base08-hex}}",
-      "color9": "#{{base09-hex}}",
-      "color10": "#{{base0A-hex}}",
-      "color11": "#{{base0B-hex}}",
-      "color12": "#{{base0C-hex}}",
-      "color13": "#{{base0D-hex}}",
-      "color14": "#{{base0E-hex}}",
-      "color15": "#{{base0F-hex}}"
-    }
+{
+  "special": {
+    "background": "#{{base00-hex}}",
+    "foreground": "#{{base07-hex}}",
+    "cursor": "#{{base07-hex}}"
+  },
+  "colors": {
+    "color0": "#{{base00-hex}}",
+    "color1": "#{{base01-hex}}",
+    "color2": "#{{base02-hex}}",
+    "color3": "#{{base03-hex}}",
+    "color4": "#{{base04-hex}}",
+    "color5": "#{{base05-hex}}",
+    "color6": "#{{base06-hex}}",
+    "color7": "#{{base07-hex}}",
+    "color8": "#{{base08-hex}}",
+    "color9": "#{{base09-hex}}",
+    "color10": "#{{base0A-hex}}",
+    "color11": "#{{base0B-hex}}",
+    "color12": "#{{base0C-hex}}",
+    "color13": "#{{base0D-hex}}",
+    "color14": "#{{base0E-hex}}",
+    "color15": "#{{base0F-hex}}"
   }
-
+}
 #+end_src
 
 ** Extra Packages
 #+begin_src nix-ts :tangle extra-packages.nix
-{ config, pkgs, ... }:
-
 {
-  home.packages = with pkgs; [
-    i3status-rs
-    (config.lib.nixGL.wrap gimp)
-    (config.lib.nixGL.wrap blockbench)
-    (config.lib.nixGL.wrap tor-browser)
-    wget
-    zip
-    unzip
-    zbar
-    (config.lib.nixGL.wrap steam)
-    (config.lib.nixGL.wrap lutris)
-    (config.lib.nixGL.wrap retroarch)
-    (config.lib.nixGL.wrap gamemode)
-    (config.lib.nixGL.wrap prismlauncher)
-    # comms
-    (config.lib.nixGL.wrap teams-for-linux)
-    (config.lib.nixGL.wrap thunderbird)
-    # things emacs appreciates
-    xclip
-    xsel
-    xdotool
-    # scripts
-    ezf
-    pkg
-    updatefix
-    hdmihelper
-  ];
+  flake.homeModules.extraPackages = { config, pkgs, ... }:
+
+  {
+    home.packages = with pkgs; [
+      (config.lib.nixGL.wrap gimp)
+      (config.lib.nixGL.wrap blockbench)
+      (config.lib.nixGL.wrap tor-browser)
+      wget
+      zip
+      unzip
+      zbar
+      (config.lib.nixGL.wrap steam)
+      (config.lib.nixGL.wrap lutris)
+      (config.lib.nixGL.wrap retroarch)
+      (config.lib.nixGL.wrap gamemode)
+      (config.lib.nixGL.wrap prismlauncher)
+      # comms
+      (config.lib.nixGL.wrap teams-for-linux)
+      (config.lib.nixGL.wrap thunderbird)
+      # things emacs appreciates
+      xclip
+      xsel
+      xdotool
+      # scripts
+      ezf
+      pkg
+      updatefix
+      hdmihelper
+    ];
+  };
 }
 #+end_src
 
 ** Gui
+#+begin_src nix-ts :noweb yes :tangle gui.nix
+{
+  flake.homeModules.startx = { pkgs, ... }:
+
+  {
+    home.file.".config/X11/xinitrc".text = '' 
+      <<xinitrc-config>>
+    '';
+  };
+}
+#+end_src
+
 #+NAME: xinitrc-config
 #+begin_src shell
 #!/usr/bin/sh
@@ -2122,116 +2140,107 @@ fi
 exec dbus-launch --exit-with-session emacs -mm --debug-init
 #+end_src
 
-#+begin_src nix-ts :noweb yes :tangle gui.nix
-{ pkgs, ... }:
-
-{
-  home.file.".config/X11/xinitrc".text = '' 
-    <<xinitrc-config>>
-  '' ;
-}
-#+end_src
-
 ** Development
 This was more directly stolen than the other parts
 I think most of it was from the github page for lsp mode, but it's been a while, & I don't remember much.
 https://github.com/joaotavora/eglot/discussions/888
 https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 #+begin_src nix-ts :noweb yes :tangle development.nix
-{ config, pkgs, lib, ... }:
-
 {
-  programs.emacs.init = {
-    completions.tempel.templates = {
-      nix-ts-mode.upackage = ''p "= {" n "  enable = true;" q "  }"'';
-      ledger-mode = {
-	payroll = ''p "Rose-Hulman Payroll" n> "Income:TeachingAssistant" > "-" p n> "*Assets:Checking"'';
-	checking = ''"Assets:Checking"'';
+  flake.homeModules.development = { config, pkgs, lib, ... }:
+
+  {
+    programs.emacs.init = {
+      completions.tempel.templates = {
+	nix-ts-mode.upackage = ''p "= {" n "  enable = true;" q "  }"'';
+	ledger-mode = {
+	  payroll = ''p "Rose-Hulman Payroll" n> "Income:TeachingAssistant" > "-" p n> "*Assets:Checking"'';
+	  checking = ''"Assets:Checking"'';
+	};
+	emacs-lisp-mode = {
+	  wcd = ''"(with-current-buffer " "q)"'';
+	  gbc = ''"(get-buffer-create " "q)"'';
+	};
       };
-      emacs-lisp-mode = {
-	wcd = ''"(with-current-buffer " "q)"'';
-	gbc = ''"(get-buffer-create " "q)"'';
-      };
-    };
-    ide = {
-      project = true;
-      dape.enable = true;
-      magit = {
-	enable = true;
-	forge = true;
-	todo = true;
-      };
-      copilot = {
-	enable = true;
-	keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode" "zenscript-mode"];
-      };
-      flymake = {
-        enable = true;
-        preset = true;
-      };
-      symex = true;  
-      hoverDoc = true;
-      eglot = {
-        enable = true;
-        preset = true;
-      };
-      direnv = true;
-      treesit-fold.enable = true;
-      languages = {
-        bash.enable = true;
-        gradle.enable = true;
-        java = {
+      ide = {
+	project = true;
+	dape.enable = true;
+	magit = {
+	  enable = true;
+	  forge = true;
+	  todo = true;
+	};
+	copilot = {
+	  enable = true;
+	  keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode" "zenscript-mode"];
+	};
+	flymake = {
           enable = true;
-          moreEglot = true;
-        };
-        json.enable = true;
-        nix.enable = true;
-        toml.enable = true;
-        xml.enable = true;
-        zenscript.enable = true;
-        emacs-lisp.enable = true;
-        javascript.enable = true;
-        ledger.enable = true;
-	makefile.enable = true;
-	yaml.enable = true;
-        html = {
-	  enable = true;
-	  emmet = true;
+          preset = true;
 	};
-        css = {
-	  enable = true;
-	  emmet = true;
+	symex = true;  
+	hoverDoc = true;
+	eglot = {
+          enable = true;
+          preset = true;
+	};
+	direnv = true;
+	treesit-fold.enable = true;
+	languages = {
+          bash.enable = true;
+          gradle.enable = true;
+          java = {
+            enable = true;
+            moreEglot = true;
+          };
+          json.enable = true;
+          nix.enable = true;
+          toml.enable = true;
+          xml.enable = true;
+          zenscript.enable = true;
+          emacs-lisp.enable = true;
+          javascript.enable = true;
+          ledger.enable = true;
+	  makefile.enable = true;
+	  yaml.enable = true;
+          html = {
+	    enable = true;
+	    emmet = true;
+	  };
+          css = {
+	    enable = true;
+	    emmet = true;
+	  };
 	};
       };
-    };
 
-    usePackage = {
-      <<Development Misc>>
+      usePackage = {
+	<<Development Misc>>
       
-      # lsp-java.setopt.lsp-java-content-provider-preferred = ''"fernflower"'';
-      <<Development Direnv>>
+        <<Development Direnv>>
 
-      <<Development Project>>
+        <<Development Project>>
 
-      <<Development Eglot>>
+        <<Development Eglot>>
 
-      <<Development Python>>
+        <<Development Python>>
 
-      racket-mode.gfhookf = ["('racket-mode 'hs-minor-mode)"];
+	racket-mode.gfhookf = ["('racket-mode 'hs-minor-mode)"];
 
-      elisp-mode.gfhookf = ["('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"];
+	elisp-mode.gfhookf = ["('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"];
 
-      flymake-popon.setopt.flymake-popon-posframe-extra-arguments = [ "':poshandler" "'posframe-poshandler-point-bottom-left-corner-upward"
-	"':parent-frame" false
-        "':refposhandler" "'posframe-refposhandler-xwininfo" ];
+	flymake-popon.setopt.flymake-popon-posframe-extra-arguments = [ "':poshandler" "'posframe-poshandler-point-bottom-left-corner-upward"
+	  "':parent-frame" false
+          "':refposhandler" "'posframe-refposhandler-xwininfo" ];
 
-      <<Development Java>>
+	<<Development Java>>
 
-      <<Development C>>
+        <<Development C>>
 
-      semel = {
-	enable = true;
-	ghookf = ["('emacs-lisp-mode 'semel-mode)"];
+	semel = {
+	  enable = true;
+	  ghookf = ["('emacs-lisp-mode 'semel-mode)"];
+	};
       };
     };
   };
@@ -2369,8 +2378,10 @@ python-ts-mode.setopt = {
 
 ** File Management
 I'm running dired with a couple of small packages that improve on it
-#+begin_src nix-ts :noweb yes :tangle emacs/file-management.nix
-{ inputs, pkgs, ... }:
+#+begin_src nix-ts :noweb yes :tangle file-management.nix
+{ inputs, ... }:
+{
+flake.homeModules.fileManager = { pkgs, ... }:
 
 {
   programs.emacs.init = {
@@ -2426,8 +2437,9 @@ I'm running dired with a couple of small packages that improve on it
 	};
 	setopt.image-animate-loop = true;
       };
-    } ;
+    };
   };
+};
 }
 #+end_src
 
@@ -2456,54 +2468,48 @@ I'm running dired with a couple of small packages that improve on it
 *** Main
 **** Inputs & Imports
 #+begin_src nix-ts :tangle emacs.nix :noweb yes
-{ config, pkgs, inputs, ... }:
+{ inputs, ... }:
 
 {
-  imports = [
-    ./emacs/early-init.nix
-    ./emacs/evil.nix
-    ./emacs/file-management.nix
-    ./emacs/help-system.nix
-    ./emacs/completion-system.nix
-    ./emacs/passwords.nix
-    ./emacs/writing.nix
-  ];
+  flake.homeModules.emacs = { config, pkgs, ... }:
 
-  programs.emacs = {
-    enable = true;
-    package = (config.lib.nixGL.wrap pkgs.emacs30-gtk3);
-    extraPackages = epkgs: with epkgs; [ 
-      repeaters
-      hydra
-      pretty-hydra
-    ];
-    init = {
+  {
+    programs.emacs = {
       enable = true;
-      packageQuickstart = false;
-      recommendedGcSettings = true;
-      usePackageVerbose = false;
-      largeFileHandling = true;
+      package = (config.lib.nixGL.wrap pkgs.emacs30-gtk3);
+      extraPackages = epkgs: with epkgs; [ 
+        repeaters
+        hydra
+        pretty-hydra
+      ];
+      init = {
+        enable = true;
+        packageQuickstart = false;
+        recommendedGcSettings = true;
+        usePackageVerbose = false;
+        largeFileHandling = true;
+  
+        <<Emacs Prelude>>
 
-      <<Emacs Prelude>>
+        usePackage = {
 
-      usePackage = {
+          <<Emacs UI Improvements>>
+  
+          <<Emacs Cleanup>>
 
-        <<Emacs UI Improvements>>
+          <<Emacs Trust>>
 
-        <<Emacs Cleanup>>
+          <<Emacs Async>>
 
-        <<Emacs Trust>>
+          <<Emacs Wgrep>>
 
-        <<Emacs Async>>
-
-        <<Emacs Wgrep>>
-
-        <<Emacs Notifications>>
+          <<Emacs Notifications>>
         
-        <<Emacs Mutype>>
-      };
+          <<Emacs Mutype>>
+        };
 
-      <<Emacs Postlude>>
+        <<Emacs Postlude>>
+      };
     };
   };
 }
@@ -2733,11 +2739,11 @@ postlude = ''
 *** Early Init
 All of the repeaters config was origally stolen from Karthinks. I don't think any of the code I stole is actually here anymore, though.
 #+begin_src nix-ts :noweb yes :tangle emacs/early-init.nix
-{ ... }:
-
 {
-  programs.emacs.init = {
-    earlyInit = ''
+  flake.homeModules.emacs = { ... }:
+
+  {
+    programs.emacs.init.earlyInit = ''
       <<Emacs Early Init>>
     '';
   };
@@ -2781,22 +2787,25 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
 
 Evil mode provides vim-like keybinds.
 #+begin_src nix-ts :noweb yes :tangle emacs/evil.nix
-{ lib, pkgs, inputs, config, ... }:
+{ inputs, ... }:
 
 {
-  programs.emacs.init = {
-    keybinds = {
-      evil = {
-        enable = true;
-        surround = true;
-        keys = {
-          forward = "i";
-          backward = "n";
-          up = "o";
-          down = "e";
-          prefer-visual-line = true;
-          evil-collection-swap-keys = ''
-          "x" "B"
+  flake.homeModules.emacs = { lib, pkgs, config, ... }:
+
+  {
+    programs.emacs.init = {
+      keybinds = {
+	evil = {
+          enable = true;
+          surround = true;
+          keys = {
+            forward = "i";
+            backward = "n";
+            up = "o";
+            down = "e";
+            prefer-visual-line = true;
+            evil-collection-swap-keys = ''
+              "x" "B"
           "X" "b"
           "u" "W"
           "U" "w"
@@ -2806,38 +2815,39 @@ Evil mode provides vim-like keybinds.
           "M" "N"
           "h" "m"
           "b" "g"
-        '';
-        };
-      };
-      leader-key = {
-        enable = true;
-        globalPrefix = "s";
-      };
-      doomEscape.enable = true;
-      undo.enable = true;
-      whichKey = {
-        enable = true;
-        posframe = {
+            '';
+          };
+	};
+	leader-key = {
           enable = true;
-          unparent = true;
-        };
+          globalPrefix = "s";
+	};
+	doomEscape.enable = true;
+	undo.enable = true;
+	whichKey = {
+          enable = true;
+          posframe = {
+            enable = true;
+            unparent = true;
+          };
+	};
+	god.enable = true;
+	electricPair.enable = true;
+	evilNerdCommenter.enable = true;
+	avy = {
+          enable = true;
+          evilModifierKey = "H";
+	};
       };
-      god.enable = true;
-      electricPair.enable = true;
-      evilNerdCommenter.enable = true;
-      avy = {
-        enable = true;
-        evilModifierKey = "H";
-      };
-    };
-    usePackage = {
-      <<Emacs Evil Main>>
+      usePackage = {
+	<<Emacs Evil Main>>
     
-      <<Emacs Evil Extensions>>
+        <<Emacs Evil Extensions>>
     
-      <<Emacs Evil Symex>>
+        <<Emacs Evil Symex>>
 
-      <<Emacs Evil Compats>>
+        <<Emacs Evil Compats>>
+      };
     };
   };
 }
@@ -3305,43 +3315,47 @@ ewal-evil-cursors = {
 *** Completion System
 My completions system is based around vertico, because that's what all the cool kids use nowadays.
 #+begin_src nix-ts :noweb yes :tangle emacs/completion-system.nix
-{ inputs, pkgs, ... }:
+{ inputs, ... }:
 
 {
-  programs.emacs.init = {
-    completions = {
-      prescient = true;
-      orderless = true;
-      vertico.enable = true;
-      smallExtras = {
-	enable = true;
-	embark = true;
-	evilConsultLine = true;
-      };
-      corfu = {
-        enable = true;
-        wantTabComplete = false;
-        wantRetConfirm = false;
-        wantMinibuffer = true;
-        popupInfo = true;
-      };
-      tempel.enable = true;
-    };
+  flake.homeModules.emacs = { pkgs, ... }:
 
-    usePackage = {
-      <<Emacs Vertico>>
+  {
+    programs.emacs.init = {
+      completions = {
+        prescient = true;
+        orderless = true;
+        vertico.enable = true;
+        smallExtras = {
+	  enable = true;
+	  embark = true;
+	  evilConsultLine = true;
+        };
+        corfu = {
+          enable = true;
+          wantTabComplete = false;
+          wantRetConfirm = false;
+          wantMinibuffer = true;
+          popupInfo = true;
+        };
+        tempel.enable = true;
+      };
+
+      usePackage = {
+        <<Emacs Vertico>>
       
-      <<Emacs Corfu>>
+        <<Emacs Corfu>>
 
-      <<Emacs Consult>>
+        <<Emacs Consult>>
 
-      <<Emacs Embark>>
+        <<Emacs Embark>>
 
-      <<Emacs App Launcher>>
+        <<Emacs App Launcher>>
 
-      <<Emacs Search>>
+        <<Emacs Search>>
 
-      <<Emacs Ezf>>
+        <<Emacs Ezf>>
+      };
     };
   };
 }
@@ -3619,36 +3633,38 @@ ezf = {
 An improved help system that I lifted from emacs from scratch.
 Helpful gives more information, & which-key tells what keybinds you have available
 #+begin_src nix-ts :noweb yes :tangle emacs/help-system.nix
-{ ... }:
-
 {
-  programs.emacs.init.usePackage = {
-    helpful = {
-      enable = true;
-      defer = true;
-      generalOne = {
-        global-leader = {
-          "hf" = "'helpful-function";
-          "hs" = "'helpful-symbol";
-          "hv" = "'helpful-variable";
-          "hx" = "'helpful-command";
-          "hk" = "'helpful-key";
-          "hm" = "'helpful-macro";
-        };
-        embark-become-help-map = {
-          "f" = "'helpful-function";
-          "s" = "'helpful-symbol";
-          "v" = "'helpful-variable";
-        };
-        embark-symbol-map."h" = "'helpful-symbol";
-      };
-    };
+  flake.homeModules.emacs = { ... }:
 
-    info = {
-      enable = true;
-      config = ''
-	<<Emacs Info Config>>
-      '';
+  {
+    programs.emacs.init.usePackage = {
+      helpful = {
+	enable = true;
+	defer = true;
+	generalOne = {
+          global-leader = {
+            "hf" = "'helpful-function";
+            "hs" = "'helpful-symbol";
+            "hv" = "'helpful-variable";
+            "hx" = "'helpful-command";
+            "hk" = "'helpful-key";
+            "hm" = "'helpful-macro";
+          };
+          embark-become-help-map = {
+            "f" = "'helpful-function";
+            "s" = "'helpful-symbol";
+            "v" = "'helpful-variable";
+          };
+          embark-symbol-map."h" = "'helpful-symbol";
+	};
+      };
+
+      info = {
+	enable = true;
+	config = ''
+	  <<Emacs Info Config>>
+	'';
+      };
     };
   };
 }
@@ -3661,125 +3677,65 @@ Helpful gives more information, & which-key tells what keybinds you have availab
 			     "C-o" 'evil-scroll-page-up))
 #+end_src
 
-*** Password Management
-#+begin_src nix-ts :noweb yes :tangle emacs/passwords.nix
-{ pkgs, ... }:
-
-{
-  home.packages = with pkgs; [ (pass.withExtensions (exts:
-    with exts; [ pass-otp ]
-  ))];
-
-  programs.emacs.init.usePackage = {
-    <<Emacs Pass>>
-    
-    <<Emacs Pinentry>>
-  };
-}
-#+end_src
-
-**** Pass
-This is an emacs wrapper for pass.
-Password-store-otp has more functions, if they are of intrest.
-Everything is bound to SPC p
-#+NAME: Emacs Pass
-#+begin_src nix-ts
-password-store = {
-  enable = true;
-  defer = true;
-  generalOne.global-leader = {
-    "p" = '''(:ignore t :which-key "pass")'';
-    "py" = '''("yank" . password-store-copy)'';
-    "pi" = '''("insert" . password-store-insert)'';
-    "pg" = '''("generate" . password-store-generate)'';
-    "pe" = '''("edit" . password-store-edit)'';
-    "pd" = '''("delete" . password-store-delete)'';
-  };
-  extraConfig = ":autoload pass-entries password-store-list";
-};
-
-password-store-otp = {
-  enable = true;
-  defer = true;
-  generalOne.global-leader."po" = '''("copy otp" . password-store-otp-token-copy)'';
-};
-
-auth-source-pass = {
-  enable = true;
-  after = ["magit"];
-  config = "(auth-source-pass-enable)";
-};
-#+end_src
-
-**** Pinentry
-This is a pinentry program (alternative to pinentry-dmenu)
-When you're prompted for your gpg password, the place for entry will be your modeline.
-#+NAME: Emacs Pinentry
-#+begin_src nix-ts
-pinentry = {
-  enable = true;
-  setopt.epa-pinentry-mode = "'loopback";
-  deferIncrementally = true;
-  config = "(pinentry-start)";
-};
-#+end_src
-
 *** Writing
 #+begin_src nix-ts :noweb yes :tangle emacs/writing.nix
-{ config, inputs, pkgs, ... }:
-
+{ inputs, ... }:
 {
-  home.packages = with pkgs; [
-    libreoffice-fresh
-    hunspell
-    hunspellDicts.en-us-large
-    texlive.combined.scheme-full
-  ];
+  flake.homeModules.writing = { config, pkgs, ... }:
 
-  programs.emacs.init = {
-    tools = {
-      nov = true;
-      pdf = true;
-    };
-    writing = {
-      denote = true;
-      citar = true;
-    };
-    completions.tempel.templates.org-mode = {
-      ci = ''"* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q'';
-      exp = ''"#+export: " q'';
-    };
-    ide.languages = {
-      markdown.enable = true;
-      latex = {
-        enable = true;
-        magicLatexBuffer = true;
-        cdlatex = true;
+  {
+    home.packages = with pkgs; [
+      libreoffice-fresh
+      hunspell
+      hunspellDicts.en-us-large
+      texlive.combined.scheme-full
+    ];
+
+    programs.emacs.init = {
+      tools = {
+        nov = true;
+        pdf = true;
       };
-      org = {
-        enable = true;
-        aesthetics = {
+      writing = {
+        denote = true;
+        citar = true;
+      };
+      completions.tempel.templates.org-mode = {
+        ci = ''"* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q'';
+        exp = ''"#+export: " q'';
+      };
+      ide.languages = {
+        markdown.enable = true;
+        latex = {
           enable = true;
-          headerFont = config.stylix.fonts.sansSerif.name;
+          magicLatexBuffer = true;
+          cdlatex = true;
         };
-        captureTemplates.enable = true;
+        org = {
+          enable = true;
+          aesthetics = {
+            enable = true;
+            headerFont = config.stylix.fonts.sansSerif.name;
+          };
+          captureTemplates.enable = true;
+        };
       };
-    };
 
-    usePackage = {
-      <<Emacs Org Main>>
+      usePackage = {
+        <<Emacs Org Main>>
+  
+        <<Emacs Org Extensions>>
+      
+        <<Emacs Latex>>
+      
+        <<Emacs Markdown>>
+      
+        <<Emacs Writeroom>>
 
-      <<Emacs Org Extensions>>
+        <<Emacs Spellcheck>>
       
-      <<Emacs Latex>>
-      
-      <<Emacs Markdown>>
-      
-      <<Emacs Writeroom>>
-
-      <<Emacs Spellcheck>>
-      
-      citar.setopt.citar-bibliography = [''"~/doc/uni.bib"''];
+        citar.setopt.citar-bibliography = [''"~/doc/uni.bib"''];
+      };
     };
   };
 }
@@ -3964,9 +3920,92 @@ flyspell = {
 };
 #+end_src
 
+** Password Management
+#+begin_src nix-ts :noweb yes :tangle passwords.nix
+{
+  flake.homeModules.passwordManagement = { pkgs, ... }:
+
+  {
+    home.packages = with pkgs; [ (pass.withExtensions (exts:
+      with exts; [ pass-otp ]
+    ))];
+
+    <<GPG>>
+
+    programs.emacs.init.usePackage = {
+      <<Emacs Pass>>
+    
+      <<Emacs Pinentry>>
+    };
+  };
+}
+#+end_src
+
+*** Pass
+This is an emacs wrapper for pass.
+Password-store-otp has more functions, if they are of intrest.
+Everything is bound to SPC p
+#+NAME: Emacs Pass
+#+begin_src nix-ts
+password-store = {
+  enable = true;
+  defer = true;
+  generalOne.global-leader = {
+    "p" = '''(:ignore t :which-key "pass")'';
+    "py" = '''("yank" . password-store-copy)'';
+    "pi" = '''("insert" . password-store-insert)'';
+    "pg" = '''("generate" . password-store-generate)'';
+    "pe" = '''("edit" . password-store-edit)'';
+    "pd" = '''("delete" . password-store-delete)'';
+  };
+  extraConfig = ":autoload pass-entries password-store-list";
+};
+
+password-store-otp = {
+  enable = true;
+  defer = true;
+  generalOne.global-leader."po" = '''("copy otp" . password-store-otp-token-copy)'';
+};
+
+auth-source-pass = {
+  enable = true;
+  after = ["magit"];
+  config = "(auth-source-pass-enable)";
+};
+#+end_src
+
+*** Pinentry
+This is a pinentry program (alternative to pinentry-dmenu)
+When you're prompted for your gpg password, the place for entry will be your modeline.
+#+NAME: Emacs Pinentry
+#+begin_src nix-ts
+pinentry = {
+  enable = true;
+  setopt.epa-pinentry-mode = "'loopback";
+  deferIncrementally = true;
+  config = "(pinentry-start)";
+};
+#+end_src
+
+*** gpg
+#+NAME: GPG
+#+begin_src nix-ts
+home.file.".local/share/gnupg/gpg-agent.conf".text = ''
+   pinentry-program /usr/bin/pinentry-emacs
+   allow-loopback-pinentry
+   allow-emacs-pinentry
+   default-cache-ttl 600
+   max-cache-ttl 7200
+   enable-ssh-support
+'';
+home.file.".local/share/gnupg/gpg.conf".text = ''
+   use-agent
+'';
+#+end_src
 ** Window Management
 #+begin_src nix-ts :noweb yes :tangle window-manager.nix
-{ pkgs, config, lib, ... }:
+{
+flake.homeModules.exwm = { pkgs, config, lib, ... }:
 
 {
   programs = {
@@ -4031,6 +4070,7 @@ flyspell = {
       };
     };
   };
+};
 }
 #+end_src
 
@@ -4659,69 +4699,73 @@ ace-window = {
 
 ** Gptel
 #+begin_src nix-ts :noweb yes :tangle gptel.nix
-{ config, pkgs, inputs, ... }:
+{ inputs, ... }:
 
 {
-  programs.emacs.init.usePackage = {
-    gptel = {
-      enable = true;
-      defer = true;
-      command = ["start-ollama"];
-      setopt = {
-	gptel-default-mode = "'org-mode";
-	gptel-max-tokens = 10000000;
-	gptel-prompt-prefix-alist = [
-	  ''`(markdown-mode . ,(concat "meatbag ›  "))''
-          ''`(org-mode . ,(concat  "meatbag ›  "))''
-          ''`(text-mode . ,(concat "meatbag ›  "))''
-	];
-	gptel-response-prefix-alist = [
-	  '''(markdown-mode . "HK-47  ")''
-          '''(org-mode . "HK-47  ")''
-          '''(text-mode . "HK-47  ")''
-	];
-	gptel-model = "'llama3.2:3b";
-	# gptel-model = "'qwen3:latest";
-	gptel-backend = ''
-	  (gptel-make-ollama "Ollama"
+  flake.homeModules.ai = { config, pkgs, ... }:
+
+  {
+    programs.emacs.init.usePackage = {
+      gptel = {
+	enable = true;
+	defer = true;
+	command = ["start-ollama"];
+	setopt = {
+	  gptel-default-mode = "'org-mode";
+	  gptel-max-tokens = 10000000;
+	  gptel-prompt-prefix-alist = [
+	    ''`(markdown-mode . ,(concat "meatbag ›  "))''
+            ''`(org-mode . ,(concat  "meatbag ›  "))''
+            ''`(text-mode . ,(concat "meatbag ›  "))''
+	  ];
+	  gptel-response-prefix-alist = [
+	    '''(markdown-mode . "HK-47  ")''
+            '''(org-mode . "HK-47  ")''
+            '''(text-mode . "HK-47  ")''
+	  ];
+	  gptel-model = "'llama3.2:3b";
+	  # gptel-model = "'qwen3:latest";
+	  gptel-backend = ''
+	    (gptel-make-ollama "Ollama"
 	    :stream t
 	    :protocol "http"
 	    :host "localhost:11434"
 	    :models '(qwen3:latest llama3.2:3b))
+	  '';
+	  # gptel-backend = ''(gptel-make-gh-copilot "Copilot")'';
+	};
+	generalOne.global-leader = {
+	  "g" = '''(:ignore t :which-key "gptel")'';
+	  "gs" = '''("start" . start-ollama)'';
+	  "gp" = '''("prompt" . gptel)'';
+	};
+	generalTwoConfig.":n".gptel-mode-map."S-RET" = "'gptel-menu";
+	preface = ''
+	  <<Emacs Gptel Preface>>
 	'';
-	# gptel-backend = ''(gptel-make-gh-copilot "Copilot")'';
+	config = "(start-ollama)";
       };
-      generalOne.global-leader = {
-	"g" = '''(:ignore t :which-key "gptel")'';
-	"gs" = '''("start" . start-ollama)'';
-	"gp" = '''("prompt" . gptel)'';
-      };
-      generalTwoConfig.":n".gptel-mode-map."S-RET" = "'gptel-menu";
-      preface = ''
-	<<Emacs Gptel Preface>>
-      '';
-      config = "(start-ollama)";
-    };
 
-    macher = {
-      enable = true;
-      command = ["macher-install"];
-      generalOne.global-leader = {
-	"gi" = "'macher-implement";
-	"gr" = "'macher-revise";
-	"gd" = "'macher-discuss";
-	"ga" = "'macher-abort";
+      macher = {
+	enable = true;
+	command = ["macher-install"];
+	generalOne.global-leader = {
+	  "gi" = "'macher-implement";
+	  "gr" = "'macher-revise";
+	  "gd" = "'macher-discuss";
+	  "ga" = "'macher-abort";
+	};
       };
-    };
 
-    # mcp = {
-    #   enable = true;
-    #   after = ["gptel"];
-    #   config = ''
-    # 	(require 'mcp-hub)
-    #     (require 'gptel-integrations)
-    #   '';
-    # };
+      # mcp = {
+      #   enable = true;
+      #   after = ["gptel"];
+      #   config = ''
+      # 	(require 'mcp-hub)
+      #     (require 'gptel-integrations)
+      #   '';
+      # };
+    };
   };
 }
 #+end_src
@@ -4736,18 +4780,21 @@ ace-window = {
 ** Multimedia
 This is where all the audio/video stuff goes
 #+begin_src nix-ts :tangle multimedia.nix :noweb yes
-{ pkgs, config, inputs, ... }:
+{ inputs, ... }:
 
 {
-  home.packages = with pkgs; [
-    # yt-dlp
-    (config.lib.nixGL.wrap obs-studio)
-    lmms
-    audacity
-    doomer
-    masstube
-    cast
-  ];
+  flake.homeModules.media = { pkgs, config, ... }:
+
+  {
+    home.packages = with pkgs; [
+      yt-dlp
+      (config.lib.nixGL.wrap obs-studio)
+      lmms
+      audacity
+      doomer
+      masstube
+      cast
+    ];
 
   <<Mpd>>
 
@@ -4755,6 +4802,7 @@ This is where all the audio/video stuff goes
 
   programs.emacs.init.usePackage = {
     <<Emacs Pulseaudio Control>>
+    };
   };
 }
 #+end_src
@@ -4874,15 +4922,17 @@ pulseaudio-control = {
 ** Sagemath
 Sagemath is my goto for dealing with complex math. It makes for a wonderful maple replacement.
 #+begin_src nix-ts :tangle sage.nix :noweb yes
-{ pkgs, ... }:
 {
-  home.packages = with pkgs; [ sage ];
+  flake.homeModules.sage = { pkgs, ... }:
+  {
+    home.packages = with pkgs; [ sage ];
 
-  <<Sage Emacs>>
+    <<Sage Emacs>>
 
-  home.file.".config/sage/ipython-5.0.0/profile_default/startup/00nix.py".text = ''
-    <<sage-config>>
-  '';
+    home.file.".config/sage/ipython-5.0.0/profile_default/startup/00nix.py".text = ''
+      <<sage-config>>
+    '';
+  };
 }
 #+end_src
 
@@ -4958,109 +5008,116 @@ programs.emacs.init.usePackage = {
 ** Keyboard
 I use kmonad to manage my keybinds.
 Canary is my layout of choice.
-#+begin_src nix-ts :tangle keyboard.nix
-{ ... }:
-
+#+begin_src nix-ts :tangle keyboard.nix :noweb yes
 {
-  home.file = {
-    ".config/kmonad/kmonad.kbd".text = ''
-      ;; ** For Linux **
-      (defcfg
-      input  (device-file "/dev/input/by-path/platform-i8042-serio-0-event-kbd") ;; Change this line for your device
-      output (uinput-sink "KMonad output")
+  flake.homeModules.canary = { ... }:
 
-      fallthrough true)
-
-      (defsrc
-        esc     f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12            prnt    slck    pause
-        grv     1    2    3    4    5    6    7    8    9    0    -    =    bspc      ins     home    pgup
-        tab     q    w    e    r    t    y    u    i    o    p    [    ]    \         del     end     pgdn
-        caps    a    s    d    f    g    h    j    k    l    ;    '    ret
-        lsft    z    x    c    v    b    n    m    ,    .    /    rsft                         up
-        lctl    lmet lalt           spc            ralt    rctl                       left    down    right)
-
-      (defalias
-        def  (tap-macro nlck (layer-switch canary)) ;; Bind 'def' to canary Layer
-        caps  (tap-macro nlck (layer-switch canary-shift)) ;; Bind 'def' to canary Layer
-        cesc (tap-hold 200 esc (layer-toggle extend))
-        sesc (tap-hold 200 S-esc (layer-toggle extend))
-        num (sticky-key 500 (layer-toggle num))
-        qwerty (tap-macro nlck (layer-switch qwerty)) ;; Bind 'def' to canary Layer
-        smet (sticky-key 500 lmet)
-        salt (sticky-key 500 lalt)
-        sshft (sticky-key 500 lshft)
-        spc (tap-hold 200 spc caps)
-        SPC (tap-hold 200 S-spc caps)
-        c (tap-hold 200 c lmet)
-        r (tap-hold 200 r lalt)
-        s (tap-hold 200 s lctl)
-        t (tap-hold 200 t (layer-toggle canary-shift))
-        a (tap-hold 200 a lmet)
-        i (tap-hold 200 i lalt)
-        e (tap-hold 200 e lctl)
-        n (tap-hold 200 n (layer-toggle canary-shift))
-        C (tap-hold 200 C lmet)
-        R (tap-hold 200 R lalt)
-        S (tap-hold 200 S lctl)
-        A (tap-hold 200 A lmet)
-        I (tap-hold 200 I lalt)
-        E (tap-hold 200 E lctl)
-        wlft C-left
-        wrht C-right
-        bhst A-left
-        fhst A-right)
-      (deflayer canary
-        esc     f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12            prnt    slck    pause
-        $       &    [    {    }    \(   =    *    \)   +    ]    !    `    bspc      ins     home    pgup
-        tab     w    l    y    p    k    z    x    o    u    ;    -    @    \         del     end     pgdn
-        @cesc   @c   @r   @s   @t   b    f    @n   @e   @i   @a   '    ret
-        shft   j    v    d    g    q    m    h    /    ,    .    @sshft                      up
-        caps   @smet @num           @spc             caps     rctl                    left    down    right)
-
-      (deflayer canary-shift
-        S-esc   S-f1 S-f2 S-f3 S-f4 S-f5 S-f6 S-f7 S-f8 S-f9 S-f10 S-f11 S-f12        S-prnt  S-slck  S-pause
-        ~       %    7    5    3    1    9    0    2    4    6    8    #  S-bspc      S-ins   S-home  S-pgup
-        S-tab   W    L    Y    P    K    Z    X    O    U    :    \_   ^    S-\        S-del   S-end   S-pgdn
-        @sesc   @C   @R   @S   T    B    F    N   @E   @I   @A    "    S-ret
-        @sshft   J    V    D    G    Q    M    H    ?    <    >    @sshft                     S-up
-        caps   @smet @def           @SPC             caps    rctl                   S-left S-down S-right)
-
-      (deflayer qwerty
-        esc     f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12            prnt    slck    pause
-        grv     1    2    3    4    5    6    7    8    9    0    -    =    bspc      ins     home    pgup
-        tab     q    w    e    r    t    y    u    i    o    p    [    ]    \         del     end     pgdn
-        caps    a    s    d    f    g    h    j    k    l    ;    '    ret
-        lsft    z    x    c    v    b    n    m    ,    .    /    rsft                         up
-        lctl    lmet lalt           spc            @def     rctl                     left    down    right)
-
-      (deflayer extend
-        _       _    _    _    _    _    _    _    _    _    _    _    _              _    _    _
-        _     f11    f7   f5   f3   f1   f9  f10   f2   f4   f6   f8  f12   _         _    _    _
-        _   @bhst @fhst  C-z  C-x   C-c  C-z @wlft up  @wrht  _    _    _    _         _    _    _
-        _   @smet @salt lctl @sshft del bspc left down right _    _    _
-        _         _    _  @caps    _    _    _    h    _    _    _    _                      _
-        _       _    _               ret              @qwerty        _                     _    _    _)
-    
-      (deflayer num
-        _       _    _    _    _    _    _    _    _    _    _    _    _              _    _    _
-        _     f11    f7   f5   f3   f1   f9  f10   f2   f4   f6   f8  f12   _         _    _    _
-        _       \_    =    +    -    [    ]    7    8    9   &    ^    _    _         _    _    _
-        _   @smet @salt lctl @sshft  {    }    4    5    6   0    *    _
-        _        @    !    $     \(  ~  \)    1    2    3    #    _                      _
-        _       _    _               ret              _        _                     _    _    _)
-    '';
+  {
+    home.file = {
+      ".config/kmonad/kmonad.kbd".text = ''
+	<<Kmonad>>
+      '' ;
       
-    ".Xmodmap".text = ''
-      clear lock
-      clear mod3
-      clear mod4
-      keycode 66 = Hyper_R
-      keycode 105 = Caps_Lock
-      add mod3 = Hyper_L Hyper_R
-      add mod4 = Super_L Super_R
-    '';
+      ".Xmodmap".text = ''
+	clear lock
+        clear mod3
+        clear mod4
+        keycode 66 = Hyper_R
+        keycode 105 = Caps_Lock
+        add mod3 = Hyper_L Hyper_R
+        add mod4 = Super_L Super_R
+      '';
+    };
   };
 }
+#+end_src
+
+#+NAME: Kmonad
+#+begin_src lisp
+;; ** For Linux **
+(defcfg
+    input  (device-file "/dev/input/by-path/platform-i8042-serio-0-event-kbd") ;; Change this line for your device
+  output (uinput-sink "KMonad output")
+
+  fallthrough true)
+
+(defsrc
+    esc     f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12            prnt    slck    pause
+    grv     1    2    3    4    5    6    7    8    9    0    -    =    bspc      ins     home    pgup
+    tab     q    w    e    r    t    y    u    i    o    p    [    ]    \         del     end     pgdn
+    caps    a    s    d    f    g    h    j    k    l    ;    '    ret
+    lsft    z    x    c    v    b    n    m    ,    .    /    rsft                         up
+    lctl    lmet lalt           spc            ralt    rctl                       left    down    right)
+
+(defalias
+    def  (tap-macro nlck (layer-switch canary)) ;; Bind 'def' to canary Layer
+  caps  (tap-macro nlck (layer-switch canary-shift)) ;; Bind 'def' to canary Layer
+  cesc (tap-hold 200 esc (layer-toggle extend))
+  sesc (tap-hold 200 S-esc (layer-toggle extend))
+  num (sticky-key 500 (layer-toggle num))
+  qwerty (tap-macro nlck (layer-switch qwerty)) ;; Bind 'def' to canary Layer
+  smet (sticky-key 500 lmet)
+  salt (sticky-key 500 lalt)
+  sshft (sticky-key 500 lshft)
+  spc (tap-hold 200 spc caps)
+  SPC (tap-hold 200 S-spc caps)
+  c (tap-hold 200 c lmet)
+  r (tap-hold 200 r lalt)
+  s (tap-hold 200 s lctl)
+  t (tap-hold 200 t (layer-toggle canary-shift))
+  a (tap-hold 200 a lmet)
+  i (tap-hold 200 i lalt)
+  e (tap-hold 200 e lctl)
+  n (tap-hold 200 n (layer-toggle canary-shift))
+  C (tap-hold 200 C lmet)
+  R (tap-hold 200 R lalt)
+  S (tap-hold 200 S lctl)
+  A (tap-hold 200 A lmet)
+  I (tap-hold 200 I lalt)
+  E (tap-hold 200 E lctl)
+  wlft C-left
+  wrht C-right
+  bhst A-left
+  fhst A-right)
+(deflayer canary
+    esc     f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12            prnt    slck    pause
+    $       &    [    {    }    \(   =    *    \)   +    ]    !    `    bspc      ins     home    pgup
+    tab     w    l    y    p    k    z    x    o    u    ;    -    @    \         del     end     pgdn
+    @cesc   @c   @r   @s   @t   b    f    @n   @e   @i   @a   '    ret
+    shft   j    v    d    g    q    m    h    /    ,    .    @sshft                      up
+    caps   @smet @num           @spc             caps     rctl                    left    down    right)
+
+(deflayer canary-shift
+  S-esc   S-f1 S-f2 S-f3 S-f4 S-f5 S-f6 S-f7 S-f8 S-f9 S-f10 S-f11 S-f12        S-prnt  S-slck  S-pause
+  ~       %    7    5    3    1    9    0    2    4    6    8    #  S-bspc      S-ins   S-home  S-pgup
+  S-tab   W    L    Y    P    K    Z    X    O    U    :    \_   ^    S-\        S-del   S-end   S-pgdn
+  @sesc   @C   @R   @S   T    B    F    N   @E   @I   @A    "    S-ret
+  @sshft   J    V    D    G    Q    M    H    ?    <    >    @sshft                     S-up
+  caps   @smet @def           @SPC             caps    rctl                   S-left S-down S-right)
+
+(deflayer qwerty
+  esc     f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12            prnt    slck    pause
+  grv     1    2    3    4    5    6    7    8    9    0    -    =    bspc      ins     home    pgup
+  tab     q    w    e    r    t    y    u    i    o    p    [    ]    \         del     end     pgdn
+  caps    a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft    z    x    c    v    b    n    m    ,    .    /    rsft                         up
+  lctl    lmet lalt           spc            @def     rctl                     left    down    right)
+
+(deflayer extend
+  _       _    _    _    _    _    _    _    _    _    _    _    _              _    _    _
+  _     f11    f7   f5   f3   f1   f9  f10   f2   f4   f6   f8  f12   _         _    _    _
+  _   @bhst @fhst  C-z  C-x   C-c  C-z @wlft up  @wrht  _    _    _    _         _    _    _
+  _   @smet @salt lctl @sshft del bspc left down right _    _    _
+  _         _    _  @caps    _    _    _    h    _    _    _    _                      _
+  _       _    _               ret              @qwerty        _                     _    _    _)
+
+(deflayer num
+  _       _    _    _    _    _    _    _    _    _    _    _    _              _    _    _
+  _     f11    f7   f5   f3   f1   f9  f10   f2   f4   f6   f8  f12   _         _    _    _
+  _       \_    =    +    -    [    ]    7    8    9   &    ^    _    _         _    _    _
+  _   @smet @salt lctl @sshft  {    }    4    5    6   0    *    _
+  _        @    !    $     \(  ~  \)    1    2    3    #    _                      _
+  _       _    _               ret              _        _                     _    _    _)
 #+end_src
 
 ** Internet
@@ -5068,30 +5125,33 @@ Canary is my layout of choice.
 { inputs, config, pkgs, lib, ... }:
 
 {
-  home.packages = with pkgs; [
-    python313Packages.adblock
-    libfido2
-    yubikey-manager
-    # brave
-  ];
+  flake.homeModules.web = { config, pkgs, lib, ... }:
 
-  programs.emacs.init.usePackage = {
-    <<Emacs Internet Browse URL>>
+  {
+    home.packages = with pkgs; [
+      python313Packages.adblock
+      libfido2
+      yubikey-manager
+    ];
 
-    <<Emacs Internet EWW>>
+    programs.emacs.init.usePackage = {
+      <<Emacs Internet Browse URL>>
 
-    <<Emacs Internet Yeetube>>
+      <<Emacs Internet EWW>>
 
-    # <<Emacs Internet Ement>>
+      <<Emacs Internet Yeetube>>
 
-    <<Emacs Internet Webjump>>
+      # <<Emacs Internet Ement>>
 
-    <<Emacs Internet Elfeed>>
+      <<Emacs Internet Webjump>>
+
+      <<Emacs Internet Elfeed>>
     
-    <<Emacs Internet Mu4e>>
-  };
+      <<Emacs Internet Mu4e>>
+    };
 
-  <<Internet Qutebrowser>>
+    <<Internet Qutebrowser>>
+  };
 }
 #+end_src
 

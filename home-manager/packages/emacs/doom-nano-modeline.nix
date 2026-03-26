@@ -16,5 +16,5 @@
 	buildInputs = propagatedUserEnvPkgs;
       }
     );
-};
+  };
 }
