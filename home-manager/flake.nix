@@ -6,6 +6,7 @@
     nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
     emacs-overlay.url  = "github:nix-community/emacs-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    import-tree.url = "github:vic/import-tree";
     
     stylix.url = "github:danth/stylix";
     
@@ -81,34 +82,5 @@
     };
   };
 
-  outputs = inputs@{flake-parts, nixgl, self, ... }:
-  flake-parts.lib.mkFlake { inherit inputs; } (top@{ config, withSystem, moduleWithSystem, ... }: {
-    imports = [
-      inputs.home-manager.flakeModules.home-manager
-      ./modules/packages
-      ./modules/emacs.nix
-      ./modules/emacs/completion-system.nix
-      ./modules/emacs/early-init.nix
-      ./modules/emacs/evil.nix
-      ./modules/emacs/help-system.nix
-      ./modules/emacs/writing.nix
-      ./modules/aesthetics.nix
-      ./modules/dash.nix
-      ./modules/development.nix
-      ./modules/extra-packages.nix
-      ./modules/file-management.nix
-      ./modules/gptel.nix
-      ./modules/gui.nix
-      ./modules/home.nix
-      ./modules/internet.nix
-      ./modules/keyboard.nix
-      ./modules/multimedia.nix
-      ./modules/passwords.nix
-      ./modules/sage.nix
-      ./modules/shells.nix
-      ./modules/window-manager.nix
-    ];
-    flake.gpuWrappers = nixgl.defaultPackage;
-    systems = ["x86_64-linux"];
-  });
+  outputs = inputs: inputs.flake-parts.lib.mkFlake {inherit inputs;} (inputs.import-tree ./modules);
 }

@@ -11,7 +11,10 @@ let
     ];
   };
 in {
+  imports = [ inputs.home-manager.flakeModules.home-manager ];
+  systems = ["x86_64-linux"];
   flake = {
+    gpuWrappers = inputs.nixgl.defaultPackage;
     homeConfigurations.holschcc = inputs.home-manager.lib.homeManagerConfiguration {
       inherit pkgs;
       extraSpecialArgs = {

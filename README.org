@@ -50,7 +50,6 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] https://github.com/cosmicz/clime
   I'd like to see if I could integrate this into the nix framework
 + [ ] https://codeberg.org/tazjin/reka
-+ [ ] Switch to the dendritic pattern
 + [ ] Investigate javelin
   https://github.com/DamianB-BitFlipper/javelin.el
 + [ ] https://github.com/bbatsov/super-save

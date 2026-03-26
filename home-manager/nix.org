@@ -10,36 +10,7 @@
     <<Flake Inputs>>
   };
 
-  outputs = inputs@{flake-parts, nixgl, self, ... }:
-  flake-parts.lib.mkFlake { inherit inputs; } (top@{ config, withSystem, moduleWithSystem, ... }: {
-    imports = [
-      inputs.home-manager.flakeModules.home-manager
-      ./modules/packages
-      ./modules/emacs.nix
-      ./modules/emacs/completion-system.nix
-      ./modules/emacs/early-init.nix
-      ./modules/emacs/evil.nix
-      ./modules/emacs/help-system.nix
-      ./modules/emacs/writing.nix
-      ./modules/aesthetics.nix
-      ./modules/dash.nix
-      ./modules/development.nix
-      ./modules/extra-packages.nix
-      ./modules/file-management.nix
-      ./modules/gptel.nix
-      ./modules/gui.nix
-      ./modules/home.nix
-      ./modules/internet.nix
-      ./modules/keyboard.nix
-      ./modules/multimedia.nix
-      ./modules/passwords.nix
-      ./modules/sage.nix
-      ./modules/shells.nix
-      ./modules/window-manager.nix
-    ];
-    flake.gpuWrappers = nixgl.defaultPackage;
-    systems = ["x86_64-linux"];
-  });
+  outputs = inputs: inputs.flake-parts.lib.mkFlake {inherit inputs;} (inputs.import-tree ./modules);
 }
 #+end_src
 
@@ -50,6 +21,7 @@ nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
 emacs-overlay.url  = "github:nix-community/emacs-overlay";
 flake-parts.url = "github:hercules-ci/flake-parts";
+import-tree.url = "github:vic/import-tree";
 
 stylix.url = "github:danth/stylix";
 
@@ -126,19 +98,6 @@ semel = {
 #+end_src
 
 ** Packages
-*** Importer
-#+begin_src nix-ts :tangle modules/packages/default.nix
-{ ... }:
-
-{
-  imports = [
-    ./scripts
-    ./emacs
-    ./overlay.nix
-  ];
-}
-#+end_src
-
 *** Overlay
 #+begin_src nix-ts :tangle modules/packages/overlay.nix
 { inputs, self, ... }:
@@ -197,26 +156,6 @@ in {
 #+end_src
 
 *** Emacs
-**** Importer
-#+begin_src nix-ts :tangle modules/packages/emacs/default.nix
-{ ... }:
-
-{
-  imports = [
-    ./app-launcher.nix
-    ./embark.nix
-    ./ezf.nix
-    ./gptel-quick.nix
-    ./dired-single.nix
-    ./doom-nano-modeline.nix
-    ./mpc-wrapper.nix
-    ./repeaters.nix
-    ./semel.nix
-    ./qutebrowser.nix
-  ];
-}
-#+end_src
-
 **** Doom Nano Modeline
 #+begin_src nix-ts :tangle modules/packages/emacs/doom-nano-modeline.nix
 { inputs, ... }:
@@ -403,63 +342,66 @@ in {
 
 **** Reka
 https://github.com/dmkhitaryan/river-next-nix-module/blob/5205ebf2b5f820c3a9221f472c78c548a4a84aad/window-managers/reka/package.nix
-#+begin_src nix-ts :tangle modules/packages/emacs/reka.nix
-{
-  lib,
-  rustPlatform,
-  fetchFromCodeberg,
-  pkg-config,
-  wayland-scanner,
-  wayland,
-  libxkbcommon,
-  wayland-protocols,
-  emacsPackages,
-  fetchurl,
-}: # Packaging approach adopted from https://codeberg.org/tazjin/reka/src/branch/canon/default.nix
+# #+begin_src nix-ts :tangle modules/packages/emacs/reka.nix
+# {
+#   perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
+#   packages.reka = {
+#     lib,
+#     rustPlatform,
+#     fetchFromCodeberg,
+#     pkg-config,
+#     wayland-scanner,
+#     wayland,
+#     libxkbcommon,
+#     wayland-protocols,
+#     emacsPackages,
+#     fetchurl,
+#   }: # Packaging approach adopted from https://codeberg.org/tazjin/reka/src/branch/canon/default.nix
 
-let
-  reka = rustPlatform.buildRustPackage {
-    pname = "reka-lib";
-    version = "unstable-2026-03-16";
+#   let
+#     reka = rustPlatform.buildRustPackage {
+#       pname = "reka-lib";
+#       version = "unstable-2026-03-16";
 
-    src = fetchFromCodeberg {
-      owner = "tazjin";
-      repo = "reka";
-      rev = "8441e6eaf4b76f7085a25d3dafa0ef281d4cb009";
-      hash = "sha256-KXAClKjYfkit6n89YTZ83qzp4n81bEXZ2cFGliZZOxQ=";
-    };
+#       src = fetchFromCodeberg {
+# 	owner = "tazjin";
+# 	repo = "reka";
+# 	rev = "8441e6eaf4b76f7085a25d3dafa0ef281d4cb009";
+# 	hash = "sha256-KXAClKjYfkit6n89YTZ83qzp4n81bEXZ2cFGliZZOxQ=";
+#       };
 
-    cargoHash = "sha256-qSyx2tzWMBr56Lbdjy+DJVuaHJmtxzKlFZivG7VA1d8=";
+#       cargoHash = "sha256-qSyx2tzWMBr56Lbdjy+DJVuaHJmtxzKlFZivG7VA1d8=";
 
-    nativeBuildInputs = [
-      pkg-config
-      wayland-scanner
-    ];
+#       nativeBuildInputs = [
+# 	pkg-config
+# 	wayland-scanner
+#       ];
 
-    buildInputs = [
-      wayland
-      libxkbcommon
-      wayland-protocols
-    ];
+#       buildInputs = [
+# 	wayland
+# 	libxkbcommon
+# 	wayland-protocols
+#       ];
 
-    postInstall = ''
-      mkdir -p $out/share/emacs/site-lisp
-      ln -s $out/lib/libreka.so $out/share/emacs/site-lisp/libreka.so
-    '';
-  };
-in
-  emacsPackages.trivialBuild {
-    pname = "reka";
-    version = "unstable-2026-03-16";
-    src = fetchurl {
-      url = "https://codeberg.org/tazjin/reka/raw/branch/canon/lisp/reka.el";
-      hash = "sha256-K4uk1Zuct0xpth/MyJNbhJ+qm2yia0zDoNplA/YX1kU=";
-    };
-    packageRequires = [ reka ];
+#       postInstall = ''
+# 	mkdir -p $out/share/emacs/site-lisp
+#       ln -s $out/lib/libreka.so $out/share/emacs/site-lisp/libreka.so
+#       '';
+#     };
+#   in
+#     epkgs.trivialBuild {
+#       pname = "reka";
+#       version = "unstable-2026-03-16";
+#       src = fetchurl {
+# 	url = "https://codeberg.org/tazjin/reka/raw/branch/canon/lisp/reka.el";
+# 	hash = "sha256-K4uk1Zuct0xpth/MyJNbhJ+qm2yia0zDoNplA/YX1kU=";
+#       };
+#       packageRequires = [ reka ];
 
-    passthru.reka-lib = reka;
-  }
-#+end_src
+#       passthru.reka-lib = reka;
+#     };
+# }
+# #+end_src
 
 **** Embark
 The version of embark in nixpkgs doesn't work right with org mode because it's missing some inputs
@@ -506,29 +448,6 @@ The version of embark in nixpkgs doesn't work right with org mode because it's m
 #+end_src
 
 *** Scripts
-**** Importer
-#+begin_src nix-ts :tangle modules/packages/scripts/default.nix
-{ ... }:
-
-{
-  imports = [
-    ./cast.nix
-    ./doomer.nix
-    ./ezf.nix
-    ./ffmpeg-bulk.nix
-    ./hdmi-helper.nix
-    ./i3status-rust.nix
-    ./masstube.nix
-    ./mpvmacs.nix
-    ./pkg.nix
-    ./start-ollama.nix
-    ./udisksmenu.nix
-    ./updatefix.nix
-    ./wiki.nix
-  ];
-}
-#+end_src
-
 **** Cast
 For moving massive quantities of Jordan Peterson's podcast into my mp3 player
 #+begin_src nix-ts :tangle modules/packages/scripts/cast.nix
@@ -997,7 +916,10 @@ let
     ];
   };
 in {
+  imports = [ inputs.home-manager.flakeModules.home-manager ];
+  systems = ["x86_64-linux"];
   flake = {
+    gpuWrappers = inputs.nixgl.defaultPackage;
     homeConfigurations.holschcc = inputs.home-manager.lib.homeManagerConfiguration {
       inherit pkgs;
       extraSpecialArgs = {
