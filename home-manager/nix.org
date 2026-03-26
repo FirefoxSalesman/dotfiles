@@ -150,29 +150,6 @@ in {
 #+end_src
 
 ** Emacs
-*** Doom Nano Modeline
-#+begin_src nix-ts :tangle modules/packages/emacs/doom-nano-modeline.nix
-{ inputs, ... }:
-
-{
-  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages.doom-nano-modeline = (epkgs.callPackage
-      epkgs.trivialBuild rec {
-	pname = "doom-nano-modeline";
-	version = "current";
-	src = inputs.doom-nano-modeline;
-
-	propagatedUserEnvPkgs = [
-	  epkgs.doom-themes
-	];
-
-	buildInputs = propagatedUserEnvPkgs;
-      }
-    );
-  };
-}
-#+end_src
 *** Dired Single
 #+begin_src nix-ts :tangle modules/packages/emacs/dired-single.nix
 { inputs, ... } :
@@ -835,18 +812,6 @@ Dev templates: https://github.com/the-nix-way/dev-templates
   };
 }
 #+end_src
-*** i3status-rust
-#+begin_src nix-ts :tangle modules/packages/scripts/i3status-rust.nix
-{ inputs, ... }:
-
-{
-  perSystem = { pkgs, ... }: {
-    packages.i3status-rs = pkgs.writeShellScriptBin "i3status-rust" ''
-      ${pkgs.i3status-rust}/bin/i3status-rs ~/.config/i3status-rust/config-default.toml
-    '';
-  };
-}
-#+end_src
 *** Udisksmenu
 #+begin_src nix-ts :tangle modules/packages/scripts/udisksmenu.nix
 { inputs, ... }:
@@ -924,6 +889,7 @@ in {
 	inputs.self.homeModules.ai
 	inputs.self.homeModules.basic
 	inputs.self.homeModules.canary
+	inputs.self.homeModules.chat
 	inputs.self.homeModules.dashTemplate
 	inputs.self.homeModules.development
 	inputs.self.homeModules.emacs
@@ -1302,174 +1268,255 @@ config = let
 #+end_src
 
 ** Aesthetics
-*** Inputs
-#+begin_src nix-ts :tangle modules/aesthetics.nix :noweb yes 
-{ inputs, ... }:
-
+*** Icons
+#+begin_src nix-ts :tangle modules/aesthetics/icons.nix :noweb yes 
 {
-  flake.homeModules.aesthetics = { config, lib, pkgs, ... }:
+  flake.homeModules.aesthetics = { ... }:
 
   {
-    <<Stylix Config>>
-
-    <<Aesthetics Picom>>
-
-    programs = {
-      vesktop = {
-        enable = true;
-        settings = {
-          minimizeToTray = false;
-          tray = false;
-          hardwareAcceleration = true;
-        };
-        vencord = {
-          useSystem = true;
-          settings = {
-            autoUpdate = false;
-            autoUpdateNotification = false;
-            plugins = {
-              FakeNitro.enabled = true;
-              AnonymizeFileNames.enabled = true;
-              BetterSettings.enabled = true;
-              FixYoutubeEmbeds.enabled = true;
-              ImageZoom.enabled = true;
-              YoutubeAdblock.enabled = true;
-            };
-          };
+    programs.emacs.init = {
+      aesthetics = {
+        dashboard.enable = true;
+        icons = {
+          enable = true;
+          forceInstallAllTheIcons = true;
         };
       };
-      emacs.init = {
-        aesthetics = {
-          dashboard.enable = true;
-          icons = {
-            enable = true;
-            forceInstallAllTheIcons = true;
-          };
-        };
-        usePackage = {
-          <<Aesthetics Prettify Symbols>>
+      usePackage = {
+	prettify-symbols = {
+	  enable = true;
+	  ghookf = ["('prog-mode 'prettify-symbols-mode)"];
+	};
 
-          dashboard.setopt.dashboard-banner-logo-title = ''"Emacs: The one true desktop environment"'';
-      
-          <<Emacs Ricing Nano>>
-
-          <<Emacs Ricing Theme>>
-      
-          <<Emacs Ricing Solaire>>
-      
-          <<Emacs Ricing Posframes>>
-
-          <<Emacs Ricing Shrface>>
-        };
+        dashboard.setopt.dashboard-banner-logo-title = ''"Emacs: The one true desktop environment"'';
       };
     };
   };
 }
 #+end_src
 
-*** Picom
-For making emacs transparent
-#+NAME: Aesthetics Picom
-#+begin_src nix-ts
-services.picom = {
-  enable = true;
-  package = (config.lib.nixGL.wrap pkgs.picom);
-  backend = "glx";
-  opacityRules = [ "70:class_g = 'lmms'" ];
-  settings = {
-    use-damage = true;
-    vsync = true;
-    blur = {
-      method = "gaussian";
-      size = 5;
-      deviation = 2.0;
+*** Transparency
+At the moment we're using picom
+#+begin_src nix-ts :tangle modules/aesthetics/transparency.nix
+{
+  flake.homeModules.aesthetics = {config, pkgs, ... }: {
+    services.picom = {
+      enable = true;
+      package = (config.lib.nixGL.wrap pkgs.picom);
+      backend = "glx";
+      opacityRules = [ "70:class_g = 'lmms'" ];
+      settings = {
+	use-damage = true;
+	vsync = true;
+	blur = {
+	  method = "gaussian";
+	  size = 5;
+	  deviation = 2.0;
+	};
+	shadow-exclude = [ "class_g != 'emacs'" ];
+      };
+      shadow = true;
     };
-    shadow-exclude = [ "class_g != 'emacs'"
-    ];
+    programs.emacs.init = {
+      usePackage.solaire-mode = {
+	enable = true;
+	demand = true;
+	config = "(solaire-global-mode)";
+      };
+      # Stolen from Derek Taylor's config.
+      postlude = "(add-to-list 'default-frame-alist '(alpha-background . 90))";
+    };
   };
-  shadow = true;
-};
+}
 #+end_src
 
-*** Stylix
+*** Color scheme
 Stylix does a bad job of theming emacs, so we use pywal instead
 
 Pywal integration: https://github.com/danth/stylix/issues/99
-#+NAME: Stylix Config
-#+begin_src nix-ts
-stylix = {
-  enable = true;
-  polarity = "dark";
-  targets = {
-    vencord.enable = false;
-    vesktop.enable = true;
-    emacs.enable = false;
-  };
-  image = ../wallpaper.png;
-  cursor = {
-    package = pkgs.nordzy-cursor-theme;
-    name = "Nordzy-cursors-white";
-    size = 16;
-  };
-  opacity = {
-    applications = 0.9;
-    popups = 0.9;
-    terminal = 0.9;
-  };
-  fonts = with pkgs; rec {
-    monospace = {
-      package = pkgs.jetbrains-mono;
-      name = "JetBrains Mono";
-    };
-    sansSerif = {
-      package = inputs.apple-fonts.packages.${system}.sf-pro;
-      name = "SF Pro";
-    };
-    serif = sansSerif;
-  };
-};
+#+begin_src nix-ts :tangle modules/aesthetics/colors.nix :noweb yes
+{ inputs, ... }:
 
-home.file = {
-  ".cache/colors.json".source = config.lib.stylix.colors {
-    template = builtins.readFile ./pywal.json.mustache;
-    extension = ".json";
-  };
-};
+{
+  flake.homeModules.aesthetics = { config, lib, pkgs, ... }: {
+    stylix = {
+      enable = true;
+      polarity = "dark";
+      targets.emacs.enable = false;
+      image = ../../wallpaper.png;
+      cursor = {
+	package = pkgs.nordzy-cursor-theme;
+	name = "Nordzy-cursors-white";
+	size = 16;
+      };
+      opacity = {
+	applications = 0.9;
+	popups = 0.9;
+	terminal = 0.9;
+      };
+      fonts = with pkgs; rec {
+	monospace = {
+	  package = pkgs.jetbrains-mono;
+	  name = "JetBrains Mono";
+	};
+	sansSerif = {
+	  package = inputs.apple-fonts.packages.${system}.sf-pro;
+	  name = "SF Pro";
+	};
+	serif = sansSerif;
+      };
+    };
 
-home.activation =  #ALSO ACTIVATES AT REBOOT
-  {
-    generate_pywal_colors = lib.hm.dag.entryAfter ["writeBoundary"] ''
-       $DRY_RUN_CMD ${pkgs.pywal}/bin/wal -f ~/.cache/colors.json
-       $DRY_RUN_CMD ${pkgs.pywal}/bin/wal -R
-     '';
-  } ;
+    home.file = {
+      ".cache/colors.json".source = config.lib.stylix.colors {
+	template = builtins.readFile ./pywal.json.mustache;
+	extension = ".json";
+      };
+    };
+
+    home.activation =  #ALSO ACTIVATES AT REBOOT
+      {
+	generate_pywal_colors = lib.hm.dag.entryAfter ["writeBoundary"] ''
+	  $DRY_RUN_CMD ${lib.getExe pkgs.pywal} -f ~/.cache/colors.json
+       $DRY_RUN_CMD ${lib.getExe pkgs.pywal} -R
+	'';
+      };
+
+    programs.emacs.init.usePackage.ewal-doom-themes = {
+      enable = true;
+      demand = true;
+      config = ''
+	<<Emacs Colors>>
+      '';
+      setopt = {
+	ewal-use-built-in-always-p = false;
+	ewal-use-built-in-on-failure-p = true;
+	ewal-built-in-palette = ''"sexy-material"'';
+	doom-themes-enable-bold = true;
+	doom-themes-enable-italic = true;
+      };
+    };
+  };
+}
 #+end_src
 
-*** Prettify Symbols
-#+NAME: Aesthetics Prettify Symbols
-#+begin_src nix-ts
-prettify-symbols = {
-  enable = true;
-  ghookf = ["('prog-mode 'prettify-symbols-mode)"];
-};
+#+NAME: Emacs Colors
+#+begin_src emacs-lisp
+(load-theme 'ewal-doom-one t)
+;; Stolen from Noctuid
+(let (custom--inhibit-theme-enable)
+  (custom-theme-set-faces
+   'ewal-doom-one
+   `(font-lock-number-face ((t (:foreground ,(ewal-get-color 'blue)))))
+   `(markdown-header-face ((t (:foreground ,(ewal-get-color 'blue)))))
+   `(markdown-header-delimiter-face ((t (:foreground ,(ewal-get-color 'blue)))))
+   `(markdown-bold-face ((t (:foreground ,(ewal-get-color 'green)))))
+   `(markdown-list-face ((t (:foreground ,(ewal-get-color 'green)))))
+   `(org-code ((t (:foreground ,(ewal-get-color 'green)))))
+   `(line-number ((t (:foreground ,(ewal-get-color 'blue)))))
+   `(eshell-git-prompt-powerline-dir-face ((t (:background ,(ewal-get-color 'blue)))))
+   `(hl-line-face ((t (:background ,(ewal-get-color 'green)))))
+   `(solaire-hl-line-face ((t (:background ,(ewal-get-color 'green)))))
+   `(tab-bar ((t :inherit mode-line)))
+   `(eshell-git-prompt-powerline-clean-face ((t (:background ,(ewal-get-color 'green)))))
+   `(eshell-git-prompt-powerline-not-clean-face ((t (:background ,(ewal-get-color 'red)))))))
+(doom-themes-visual-bell-config)
+(doom-themes-org-config)
 #+end_src
 
-*** Nano
+*** Modeline
 Using nano modeline to cut down clutter.
 
 I'm not using the minor mode, because its text is being sent to the tab bar.
 
 The powerline separators were borrowed from punchline, because I think they look cool
-#+NAME: Emacs Ricing Nano
-#+begin_src nix-ts :noweb yes
-doom-nano-modeline = {
-  enable = true;
-  afterCall = ["after-init-hook"];
-  setopt.mode-line-format = false;
-  config = ''
-    <<Emacs Doom Nano Modeline Config>>
-  '';
-};
+#+begin_src nix-ts :tangle modules/aesthetics/modeline.nix :noweb yes
+{ inputs, ... }:
+
+{
+  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages = {doom-nano-modeline = (epkgs.callPackage
+      epkgs.trivialBuild rec {
+	pname = "doom-nano-modeline";
+	version = "current";
+	src = inputs.doom-nano-modeline;
+
+	propagatedUserEnvPkgs = [
+	  epkgs.doom-themes
+	];
+
+	buildInputs = propagatedUserEnvPkgs;
+      }
+    );
+    i3status-rs = pkgs.writeShellScriptBin "i3status-rust" ''
+      ${pkgs.i3status-rust}/bin/i3status-rs ~/.config/i3status-rust/config-default.toml
+    '';
+    };
+  };
+
+  flake.homeModules.aesthetics = { pkgs, lib, config, ... }:
+  {
+    programs = {
+      i3status-rust = {
+	enable = true;
+	bars."default" = {
+	  blocks = [
+            {
+              block = "time";
+              format =  "$icon $timestamp.datetime(f:'%a %d/%m %R')";
+              interval = 60;
+            }
+	    {
+              block = "battery";
+              format =  "$icon $percentage";
+              interval = 60;
+            }
+	  ];
+	  icons = "awesome6";
+	  settings.theme.overrides = {
+	    idle_bg = "#" + config.lib.stylix.colors.base00;
+	    idle_fg = "#" + config.lib.stylix.colors.base05;
+	    info_bg = "#" + config.lib.stylix.colors.base00;
+	    info_fg = "#" + config.lib.stylix.colors.base05;
+	    good_bg = "#" + config.lib.stylix.colors.base00;
+	    good_fg = "#" + config.lib.stylix.colors.base05;
+	    warning_bg = "#" + config.lib.stylix.colors.base00;
+	    warning_fg = "#" + config.lib.stylix.colors.base05;
+	    critical_bg = "#" + config.lib.stylix.colors.base00;
+	    critical_fg = "#" + config.lib.stylix.colors.base05;
+	    separator_bg = "#" + config.lib.stylix.colors.base00;
+	    separator_fg = "#" + config.lib.stylix.colors.base05;
+	    separator = "  ";
+	  };
+	};
+      };
+
+      emacs.init.usePackage = {
+	doom-nano-modeline = {
+	  enable = true;
+	  afterCall = ["after-init-hook"];
+	  setopt.mode-line-format = false;
+	  config = ''
+	    <<Emacs Doom Nano Modeline Config>>
+	  '';
+	};
+	i3bar = {
+	  enable = true;
+	  ghookf = ["('tab-bar-mode 'i3bar-mode)"];
+	  setopt.i3bar-command = ''"${lib.getExe pkgs.i3status-rs}"'';
+	};
+	tab-bar = {
+	  custom.tab-bar-format = ["'tab-bar-format-tabs-groups" "'tab-bar-separator" "'doom-nano-tabline" "'tab-bar-format-align-right" "'tab-bar-format-global"];
+	  setopt = {
+	    tab-bar-close-button-show = false;
+	    tab-bar-auto-width-max = ["'(150)" "20"];
+	  };
+	};
+      };
+    };
+  };
+}
 #+end_src
 
 This is just overriding a bunch of functions so that I can put all the info in the tab bar
@@ -1639,71 +1686,26 @@ This is just overriding a bunch of functions so that I can put all the info in t
     `((global menu-item ,(format-mode-line the-format) ignore))))
 #+end_src
 
-*** Emacs Theme
-Makes emacs' theme mimic the wallpaper. A good pywal config will get most things to match.
-#+NAME: Emacs Ricing Theme
-#+begin_src nix-ts :noweb yes
-ewal-doom-themes = {
-  enable = true;
-  demand = true;
-  config = ''
-    <<Emacs Ewal Config>>
-  '';
-  setopt = {
-    ewal-use-built-in-always-p = false;
-    ewal-use-built-in-on-failure-p = true;
-    ewal-built-in-palette = ''"sexy-material"'';
-    doom-themes-enable-bold = true;
-    doom-themes-enable-italic = true;
-  };
-};
-#+end_src
-
-#+NAME: Emacs Ewal Config
-#+begin_src emacs-lisp
-(load-theme 'ewal-doom-one t)
-;; Stolen from Noctuid
-(let (custom--inhibit-theme-enable)
-  (custom-theme-set-faces
-   'ewal-doom-one
-   `(font-lock-number-face ((t (:foreground ,(ewal-get-color 'blue)))))
-   `(markdown-header-face ((t (:foreground ,(ewal-get-color 'blue)))))
-   `(markdown-header-delimiter-face ((t (:foreground ,(ewal-get-color 'blue)))))
-   `(markdown-bold-face ((t (:foreground ,(ewal-get-color 'green)))))
-   `(markdown-list-face ((t (:foreground ,(ewal-get-color 'green)))))
-   `(org-code ((t (:foreground ,(ewal-get-color 'green)))))
-   `(line-number ((t (:foreground ,(ewal-get-color 'blue)))))
-   `(eshell-git-prompt-powerline-dir-face ((t (:background ,(ewal-get-color 'blue)))))
-   `(hl-line-face ((t (:background ,(ewal-get-color 'green)))))
-   `(solaire-hl-line-face ((t (:background ,(ewal-get-color 'green)))))
-   `(tab-bar ((t :inherit mode-line)))
-   `(eshell-git-prompt-powerline-clean-face ((t (:background ,(ewal-get-color 'green)))))
-   `(eshell-git-prompt-powerline-not-clean-face ((t (:background ,(ewal-get-color 'red)))))))
-(doom-themes-visual-bell-config)
-(doom-themes-org-config)
-#+end_src
-
-*** Solaire
-Solaire dims certain parts of the frame.
-#+NAME: Emacs Ricing Solaire
-#+begin_src nix-ts
-solaire-mode = {
-  enable = true;
-  demand = true;
-  config = ''(solaire-global-mode)'';
-};
-#+end_src
-
 *** Posframes
 Vertico Posframe puts vertico in a separate frame, causing it to actually look like dmenu.
-#+NAME: Emacs Ricing Posframes
-#+begin_src nix-ts
-vertico-posframe = {
-  enable = true;
-  defer = true;
-  ghookf = ["('vertico-mode 'vertico-posframe-mode)"];
-  config = ''(set-face-attribute 'vertico-posframe-face nil :family 'variable-pitch)'';
-};
+#+begin_src nix-ts :tangle modules/aesthetics/posframe.nix
+{
+  flake.homeModules.aesthetics = { ... }:
+  {
+    programs.emacs.init = {
+      keybinds.whichKey.posframe = {
+        enable = true;
+        unparent = true;
+      };
+      usePackage.vertico-posframe = {
+	enable = true;
+	defer = true;
+	ghookf = ["('vertico-mode 'vertico-posframe-mode)"];
+	config = ''(set-face-attribute 'vertico-posframe-face nil :family 'variable-pitch)'';
+      };
+    };
+  };
+}
 #+end_src
 
 *** Shrface
@@ -1711,34 +1713,40 @@ Shrface is an extension to shr that lets eww, elfeed, & nov do their rendering a
 A great deal was borrowed from:
 + https://github.com/chenyanming/shrface/blob/master/config.el
 + https://github.com/Panadestein/emacsd/
-#+NAME: Emacs Ricing Shrface
-#+begin_src nix-ts :noweb yes
-shr-tag-pre-highlight = {
-  enable = true;
-  after = ["shrface"];
-  preface = ''
-    <<Emacs Ricing Shr Tag Pre Highlight Preface>>
-  '';
-  config = ''
-    <<Emacs Ricing Shr Tag Pre Highlight Config>>
-  '';
-};
+#+begin_src nix-ts :tangle modules/aesthetics/shrface.nix :noweb yes
+{
+  flake.homeModules.aesthetics = { ... }:
+  {
+    programs.emacs.init.usePackage = {
+      shr-tag-pre-highlight = {
+	enable = true;
+	after = ["shrface"];
+	preface = ''
+	  <<Emacs Ricing Shr Tag Pre Highlight Preface>>
+	'';
+	config = ''
+	  <<Emacs Ricing Shr Tag Pre Highlight Config>>
+	'';
+      };
 
-shrface = {
-  enable = true;    
-  ghookf = ["('(eww-mode elfeed-show-mode nov-mode) 'shrface-mode)"];
-  setopt.shrface-header-line-max-level = 0;
-  config = ''
-    <<Emacs Ricing Shrface Config>>
-  '';
-  generalOneConfig.shr-map."RET" = "`,(cmd! (if (major-mode? 'eww-mode) (eww-follow-link) (shr-browse-url)))";
-  generalTwoConfig.local-leader.shrface-mode-map = {
-    "l" = "'shrface-links-consult";
-    "o" = "'shrface-headline-consult";
-    "]c" = "'org-next-block";
-    "[c" = "'org-previous-block";
+      shrface = {
+	enable = true;    
+	ghookf = ["('(eww-mode elfeed-show-mode nov-mode) 'shrface-mode)"];
+	setopt.shrface-header-line-max-level = 0;
+	config = ''
+	  <<Emacs Ricing Shrface Config>>
+	'';
+	generalOneConfig.shr-map."RET" = "`,(cmd! (if (major-mode? 'eww-mode) (eww-follow-link) (shr-browse-url)))";
+	generalTwoConfig.local-leader.shrface-mode-map = {
+	  "l" = "'shrface-links-consult";
+	  "o" = "'shrface-headline-consult";
+	  "]c" = "'org-next-block";
+	  "[c" = "'org-previous-block";
+	};
+      };
+    };
   };
-};
+}
 #+end_src
 
 #+NAME: Emacs Ricing Shr Tag Pre Highlight Preface
@@ -1863,7 +1871,7 @@ shrface = {
 #+end_src
 
 *** Mustache File
-#+begin_src json-ts :tangle modules/pywal.json.mustache
+#+begin_src json-ts :tangle modules/aesthetics/pywal.json.mustache
 {
   "special": {
     "background": "#{{base00-hex}}",
@@ -1910,9 +1918,6 @@ shrface = {
       (config.lib.nixGL.wrap retroarch)
       (config.lib.nixGL.wrap gamemode)
       (config.lib.nixGL.wrap prismlauncher)
-      # comms
-      (config.lib.nixGL.wrap teams-for-linux)
-      (config.lib.nixGL.wrap thunderbird)
       # things emacs appreciates
       xclip
       xsel
@@ -2555,8 +2560,6 @@ postlude = ''
 
 #+NAME: Emacs Postlude Config
 #+begin_src emacs-lisp
-;; Stolen from Derek Taylor's config.
-(add-to-list 'default-frame-alist '(alpha-background . 90))
 ;; Display buffer rules
 (cl-pushnew (list (rx "*Async Shell Command*" (0+ any)) #'display-buffer-no-window) display-buffer-alist)
 (cl-pushnew (list (rx "*Shell Command Output*" (0+ any)) #'display-buffer-no-window) display-buffer-alist)
@@ -2650,13 +2653,7 @@ Evil mode provides vim-like keybinds.
 	};
 	doomEscape.enable = true;
 	undo.enable = true;
-	whichKey = {
-          enable = true;
-          posframe = {
-            enable = true;
-            unparent = true;
-          };
-	};
+	whichKey.enable = true;
 	god.enable = true;
 	electricPair.enable = true;
 	evilNerdCommenter.enable = true;
@@ -3831,13 +3828,10 @@ home.file.".local/share/gnupg/gpg.conf".text = ''
 ** Window Management
 #+begin_src nix-ts :tangle modules/window-manager.nix :noweb yes 
 {
-flake.homeModules.exwm = { pkgs, config, lib, ... }:
+  flake.homeModules.exwm = { pkgs, config, lib, ... }:
 
-{
-  programs = {
-    <<i3status>>
-
-    emacs.init = {
+  {
+    programs.emacs.init = {
       tools.exwm = {
 	enable = true;
 	wantMouseWarping = true;
@@ -3896,7 +3890,6 @@ flake.homeModules.exwm = { pkgs, config, lib, ... }:
       };
     };
   };
-};
 }
 #+end_src
 
@@ -3916,12 +3909,7 @@ tab-bar = {
   '';
   ghookf = ["('exwm-init 'tab-bar-mode)"];
   general."s-u" = "'tab-bar-hydra/body";
-  setopt = {
-    tab-bar-close-button-show = false;
-    tab-bar-select-restore-windows = false;
-    tab-bar-auto-width-max = ["'(150)" "20"];
-  };
-  custom.tab-bar-format = ["'tab-bar-format-tabs-groups" "'tab-bar-separator" "'doom-nano-tabline" "'tab-bar-format-align-right" "'tab-bar-format-global"];
+  setopt.tab-bar-select-restore-windows = false;
   extraConfig = ''
     :pretty-hydra
     ((:color amaranth)
@@ -4385,57 +4373,6 @@ proced = {
 };
 #+end_src
 
-*** i3status
-#+NAME: i3status
-#+begin_src nix-ts
-i3status-rust = {
-  enable = true;
-  bars."default" = {
-    blocks = [
-		  {
-			  block = "time";
-			  format =  "$icon $timestamp.datetime(f:'%a %d/%m %R')";
-			  interval = 60;
-		  }
-      # {
-      #   block = "music";
-      # }
-      {
-			  block = "battery";
-			  format =  "$icon $percentage";
-			  interval = 60;
-		  }
-	  ];
-    icons = "awesome6";
-    settings.theme.overrides = {
-      idle_bg = "#" + config.lib.stylix.colors.base00;
-      idle_fg = "#" + config.lib.stylix.colors.base05;
-      info_bg = "#" + config.lib.stylix.colors.base00;
-      info_fg = "#" + config.lib.stylix.colors.base05;
-      good_bg = "#" + config.lib.stylix.colors.base00;
-      good_fg = "#" + config.lib.stylix.colors.base05;
-      warning_bg = "#" + config.lib.stylix.colors.base00;
-      warning_fg = "#" + config.lib.stylix.colors.base05;
-      critical_bg = "#" + config.lib.stylix.colors.base00;
-      critical_fg = "#" + config.lib.stylix.colors.base05;
-      # alternating_tint_bg = "#" + config.lib.stylix.colors.base00;
-      separator_bg = "#" + config.lib.stylix.colors.base00;
-      separator_fg = "#" + config.lib.stylix.colors.base05;
-      separator = "  ";
-    };
-  };
-};
-
-emacs.init.usePackage.i3bar = {
-  enable = true;
-  ghookf = ["('tab-bar-mode 'i3bar-mode)"];
-  
-  setopt = {
-    i3bar-command = ''"${pkgs.i3status-rs}/bin/i3status-rust"'';
-  };
-};
-#+end_src
-
 *** Ace Window
 #+NAME: Emacs Ace Window
 #+begin_src nix-ts :noweb yes
@@ -4449,7 +4386,7 @@ ace-window = {
     <<Emacs Ace Window Preface>>
   '';
   init = ''(setopt aw-dispatch-alist '((?k aw-delete-window "Delete Window")
-                                       (?K efs-aw-kill-buffer-and-window "Delete Buffer and Window")
+    (?K efs-aw-kill-buffer-and-window "Delete Buffer and Window")
                                        (?m aw-swap-window "Swap Windows")
                                        (?M aw-move-window "Move Window")
                                        (?d aw-copy-window "Copy Window")
@@ -5463,4 +5400,43 @@ programs.emacs.init.usePackage = {
     (kill-buffer)
     (add-hook 'dired-mode-hook 'qute-dired-mode)
     (setq qute-dired-buffers (list (dired "~/")))))
+#+end_src
+
+** Chat
+#+begin_src nix-ts :tangle modules/chat.nix
+{ inputs, ... }:
+
+{
+  flake.homeModules.chat = { config, pkgs, ... }:
+  {
+    home.packages = with pkgs; [
+      (config.lib.nixGL.wrap teams-for-linux)
+      (config.lib.nixGL.wrap thunderbird)
+    ];
+
+    programs.vesktop = {
+      enable = true;
+      settings = {
+        minimizeToTray = false;
+        tray = false;
+        hardwareAcceleration = true;
+      };
+      vencord = {
+        useSystem = true;
+        settings = {
+          autoUpdate = false;
+          autoUpdateNotification = false;
+          plugins = {
+            FakeNitro.enabled = true;
+            AnonymizeFileNames.enabled = true;
+            BetterSettings.enabled = true;
+            FixYoutubeEmbeds.enabled = true;
+            ImageZoom.enabled = true;
+            YoutubeAdblock.enabled = true;
+          };
+        };
+      };
+    };
+  };
+}
 #+end_src

@@ -160,8 +160,6 @@
         };
 
         postlude = ''
-          ;; Stolen from Derek Taylor's config.
-          (add-to-list 'default-frame-alist '(alpha-background . 90))
           ;; Display buffer rules
           (cl-pushnew (list (rx "*Async Shell Command*" (0+ any)) #'display-buffer-no-window) display-buffer-alist)
           (cl-pushnew (list (rx "*Shell Command Output*" (0+ any)) #'display-buffer-no-window) display-buffer-alist)

@@ -35,13 +35,7 @@
 	};
 	doomEscape.enable = true;
 	undo.enable = true;
-	whichKey = {
-          enable = true;
-          posframe = {
-            enable = true;
-            unparent = true;
-          };
-	};
+	whichKey.enable = true;
 	god.enable = true;
 	electricPair.enable = true;
 	evilNerdCommenter.enable = true;

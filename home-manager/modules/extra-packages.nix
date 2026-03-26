@@ -15,9 +15,6 @@
       (config.lib.nixGL.wrap retroarch)
       (config.lib.nixGL.wrap gamemode)
       (config.lib.nixGL.wrap prismlauncher)
-      # comms
-      (config.lib.nixGL.wrap teams-for-linux)
-      (config.lib.nixGL.wrap thunderbird)
       # things emacs appreciates
       xclip
       xsel

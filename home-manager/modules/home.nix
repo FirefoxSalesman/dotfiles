@@ -25,6 +25,7 @@ in {
 	inputs.self.homeModules.ai
 	inputs.self.homeModules.basic
 	inputs.self.homeModules.canary
+	inputs.self.homeModules.chat
 	inputs.self.homeModules.dashTemplate
 	inputs.self.homeModules.development
 	inputs.self.homeModules.emacs

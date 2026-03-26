@@ -1,56 +1,8 @@
 {
-flake.homeModules.exwm = { pkgs, config, lib, ... }:
+  flake.homeModules.exwm = { pkgs, config, lib, ... }:
 
-{
-  programs = {
-    i3status-rust = {
-      enable = true;
-      bars."default" = {
-        blocks = [
-    		  {
-    			  block = "time";
-    			  format =  "$icon $timestamp.datetime(f:'%a %d/%m %R')";
-    			  interval = 60;
-    		  }
-          # {
-          #   block = "music";
-          # }
-          {
-    			  block = "battery";
-    			  format =  "$icon $percentage";
-    			  interval = 60;
-    		  }
-    	  ];
-        icons = "awesome6";
-        settings.theme.overrides = {
-          idle_bg = "#" + config.lib.stylix.colors.base00;
-          idle_fg = "#" + config.lib.stylix.colors.base05;
-          info_bg = "#" + config.lib.stylix.colors.base00;
-          info_fg = "#" + config.lib.stylix.colors.base05;
-          good_bg = "#" + config.lib.stylix.colors.base00;
-          good_fg = "#" + config.lib.stylix.colors.base05;
-          warning_bg = "#" + config.lib.stylix.colors.base00;
-          warning_fg = "#" + config.lib.stylix.colors.base05;
-          critical_bg = "#" + config.lib.stylix.colors.base00;
-          critical_fg = "#" + config.lib.stylix.colors.base05;
-          # alternating_tint_bg = "#" + config.lib.stylix.colors.base00;
-          separator_bg = "#" + config.lib.stylix.colors.base00;
-          separator_fg = "#" + config.lib.stylix.colors.base05;
-          separator = "  ";
-        };
-      };
-    };
-    
-    emacs.init.usePackage.i3bar = {
-      enable = true;
-      ghookf = ["('tab-bar-mode 'i3bar-mode)"];
-      
-      setopt = {
-        i3bar-command = ''"${pkgs.i3status-rs}/bin/i3status-rust"'';
-      };
-    };
-
-    emacs.init = {
+  {
+    programs.emacs.init = {
       tools.exwm = {
 	enable = true;
 	wantMouseWarping = true;
@@ -105,12 +57,7 @@ flake.homeModules.exwm = { pkgs, config, lib, ... }:
           '';
           ghookf = ["('exwm-init 'tab-bar-mode)"];
           general."s-u" = "'tab-bar-hydra/body";
-          setopt = {
-            tab-bar-close-button-show = false;
-            tab-bar-select-restore-windows = false;
-            tab-bar-auto-width-max = ["'(150)" "20"];
-          };
-          custom.tab-bar-format = ["'tab-bar-format-tabs-groups" "'tab-bar-separator" "'doom-nano-tabline" "'tab-bar-format-align-right" "'tab-bar-format-global"];
+          setopt.tab-bar-select-restore-windows = false;
           extraConfig = ''
             :pretty-hydra
             ((:color amaranth)
@@ -539,7 +486,7 @@ flake.homeModules.exwm = { pkgs, config, lib, ... }:
               (aw-delete-window window t))
           '';
           init = ''(setopt aw-dispatch-alist '((?k aw-delete-window "Delete Window")
-                                               (?K efs-aw-kill-buffer-and-window "Delete Buffer and Window")
+            (?K efs-aw-kill-buffer-and-window "Delete Buffer and Window")
                                                (?m aw-swap-window "Swap Windows")
                                                (?M aw-move-window "Move Window")
                                                (?d aw-copy-window "Copy Window")
@@ -597,5 +544,4 @@ flake.homeModules.exwm = { pkgs, config, lib, ... }:
       };
     };
   };
-};
 }
