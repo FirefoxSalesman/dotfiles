@@ -1,5 +1,9 @@
-{ pkgs, ... }:
+{ inputs, ... }:
 
-pkgs.writeShellScriptBin "mpvmacs" ''
-  emacsclient -e "(mpv-play \"$1\")"
-''
+{
+  perSystem = {pkgs, ... }: {
+    packages.mpvmacs = pkgs.writeShellScriptBin "mpvmacs" ''
+      emacsclient -e "(mpv-play \"$1\")"
+    '';
+  };
+}

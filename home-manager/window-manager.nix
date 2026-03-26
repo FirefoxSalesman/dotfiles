@@ -45,7 +45,7 @@
       ghookf = ["('tab-bar-mode 'i3bar-mode)"];
       
       setopt = {
-        i3bar-command = ''"${(import scripts/i3status-rust.nix {inherit pkgs;})}/bin/i3status-rust"'';
+        i3bar-command = ''"${pkgs.i3status-rs}/bin/i3status-rust"'';
       };
     };
 

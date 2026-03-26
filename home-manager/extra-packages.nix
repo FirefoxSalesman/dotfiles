@@ -2,6 +2,7 @@
 
 {
   home.packages = with pkgs; [
+    i3status-rs
     (config.lib.nixGL.wrap gimp)
     (config.lib.nixGL.wrap blockbench)
     (config.lib.nixGL.wrap tor-browser)

@@ -16,12 +16,23 @@
       inputs.home-manager.flakeModules.home-manager
       ./flake/home-manager.nix
       ./flake/overlay.nix
+      ./flake/epkgs.nix
+      ./scripts/cast.nix
+      ./scripts/doomer.nix
+      ./scripts/ezf.nix
+      ./scripts/ffmpeg-bulk.nix
+      ./scripts/hdmi-helper.nix
+      ./scripts/i3status-rust.nix
+      ./scripts/masstube.nix
+      ./scripts/mpvmacs.nix
+      ./scripts/pkg.nix
+      ./scripts/start-ollama.nix
+      ./scripts/udisksmenu.nix
+      ./scripts/updatefix.nix
+      ./scripts/wiki.nix
     ];
     flake.gpuWrappers = nixgl.defaultPackage;
     systems = ["x86_64-linux"];
-    perSystem = { config, pkgs, ... }: {
-      packages.ezf = (import ./scripts/ezf.nix { inherit pkgs; });
-    };
   });
 }
 #+end_src
@@ -117,7 +128,16 @@ semel = {
 #+begin_src nix-ts :tangle flake/home-manager.nix :noweb yes
 { self, inputs, ... }:
 let
-  <<Flake Repo Definitions>>
+  system = "x86_64-linux";
+  pkgs = import inputs.nixpkgs {
+    inherit system;
+    config.allowUnfree = true;
+    overlays = [
+      (final: prev: self.overlay final prev pkgs inputs)
+      inputs.emacs-init.overlay
+      inputs.emacs-overlay.overlay
+    ];
+  };
 in {
   flake.homeConfigurations.holschcc = inputs.home-manager.lib.homeManagerConfiguration {
     inherit pkgs;
@@ -134,24 +154,9 @@ in {
 }
 #+end_src
 
-*** Repo Definitions
-#+NAME: Flake Repo Definitions
-#+begin_src nix-ts
-system = "x86_64-linux";
-  pkgs = import inputs.nixpkgs {
-  inherit system;
-  config.allowUnfree = true;
-  overlays = [
-    (final: prev: self.overlay final prev pkgs inputs)
-    inputs.emacs-init.overlay
-    inputs.emacs-overlay.overlay
-  ];
-};
-#+end_src
-
-* Overlay
+** Overlay
 #+begin_src nix-ts :tangle flake/overlay.nix
-{ inputs, ... }:
+{ inputs, self, ... }:
 
 let
   system = "x86_64-linux";
@@ -160,19 +165,23 @@ let
     config.allowUnfree = true;
   };
 in {
-  flake.overlay = final: prev: pkgs: inputs: {
+  flake.overlay = final: prev: pkgs: inputs:
+  let packages = self.packages.${pkgs.system};
+    in {
     # shell scripts
-    ezf = (import ../scripts/ezf.nix { inherit pkgs; });
-    cast = (import ../scripts/cast.nix { inherit pkgs; });
-    doomer = (import ../scripts/doomer.nix { inherit pkgs; });
-    ffmpeg-bulk = (import ../scripts/ffmpeg-bulk.nix { inherit pkgs; });
-    masstube = (import ../scripts/masstube.nix { inherit pkgs; });
-    mpvmacs = (import ../scripts/mpvmacs.nix { inherit pkgs; });
-    hdmihelper = (import ../scripts/hdmi-helper.nix { inherit pkgs; });
-    pkg = (import ../scripts/pkg.nix { inherit pkgs; });
-    udisksmenu = (import ../scripts/udisksmenu.nix { inherit pkgs; });
-    updatefix = (import ../scripts/updatefix.nix { inherit pkgs; });
-    wiki = (import ../scripts/wiki.nix { inherit pkgs; });
+    ezf = packages.ezf;
+    cast = packages.cast;
+    doomer = packages.doomer;
+    ffmpeg-bulk = packages.ffmpeg-bulk;
+    masstube = packages.masstube;
+    mpvmacs = packages.mpvmacs;
+    hdmihelper = packages.hdmihelper;
+    i3status-rs = packages.i3status-rs;
+    pkg = packages.pkg;
+    startOllama = packages.startOllama;
+    udisksmenu = packages.udisksmenu;
+    updatefix = packages.updatefix;
+    wiki = packages.wiki;
 
     # overrides
     mpv = (prev.mpv.override {
@@ -187,79 +196,104 @@ in {
     emacsPackagesFor = emacs: (
       (prev.emacsPackagesFor emacs).overrideScope (
 	nfinal: nprev: {
-          qutebrowser = (prev.emacs.pkgs.callPackage ../packages/emacs/qutebrowser.nix {
-            inherit inputs;
-            inherit (prev.emacs.pkgs) trivialBuild dash consult exwm password-store evil;
-          });
-          doom-nano-modeline = (prev.emacs.pkgs.callPackage ../packages/emacs/doom-nano-modeline.nix {
-            inherit inputs;
-            inherit (prev.emacs.pkgs) trivialBuild doom-themes;
-          });
-          dired-single = (prev.emacs.pkgs.callPackage ../packages/emacs/dired-single.nix {
-            inherit inputs;
-            inherit (prev.emacs.pkgs) trivialBuild;
-          });
-          repeaters = (prev.emacs.pkgs.callPackage ../packages/emacs/repeaters.nix {
-            inherit inputs;
-            inherit (prev.emacs.pkgs) trivialBuild;
-          });
-          app-launcher = (prev.emacs.pkgs.callPackage ../packages/emacs/app-launcher.nix {
-            inherit inputs;
-            inherit (prev.emacs.pkgs) trivialBuild;
-          });
-          ezf = (prev.emacs.pkgs.callPackage ../packages/emacs/ezf.nix {
-            inherit inputs;
-            inherit (prev.emacs.pkgs) trivialBuild;
-          });
-          gptel-quick = (prev.emacs.pkgs.callPackage ../packages/emacs/gptel-quick.nix {
-            inherit inputs;
-            inherit (prev.emacs.pkgs) trivialBuild gptel;
-          });
-	  macher = (prev.emacs.pkgs.callPackage ../packages/emacs/macher.nix {
-            inherit inputs;
-            inherit (prev.emacs.pkgs) trivialBuild gptel;
-          });
-	  mpc-wrapper = (prev.emacs.pkgs.callPackage ../packages/emacs/mpc-wrapper.nix {
-            inherit inputs;
-            inherit (prev.emacs.pkgs) trivialBuild;
-          });
-	  semel = (prev.emacs.pkgs.callPackage ../packages/emacs/semel.nix {
-            inherit inputs;
-            inherit (prev.emacs.pkgs) trivialBuild;
-          });
-          embark = prev.emacs.pkgs.callPackage (
-            {
-              org,
-              consult,
-              avy,
-              compat,
-              elpaBuild,
-              fetchurl,
-              lib,
-            }:
-            elpaBuild {
-              pname = "embark";
-              ename = "embark";
-              version = "1.1";
-              src = fetchurl {
-		url = "https://elpa.gnu.org/packages/embark-1.1.tar";
-		sha256 = "074ggh7dkr5jdkwcndl6znhkq48jmc62rp7mc6vjidr6yxf8d1rn";
-              };
-              packageRequires = [
-		org
-		consult
-		avy
-		compat
-              ];
-              meta = {
-		homepage = "https://elpa.gnu.org/packages/embark.html";
-		license = lib.licenses.free;
-              };
-            }
-          ) { };
-	  reka = ../packages/emacs/reka.nix;
+          qutebrowser = packages.qutebrowser-emacs;
+          doom-nano-modeline = packages.doom-nano-modeline;
+          dired-single = packages.dired-single;
+          repeaters = packages.repeaters;
+          app-launcher = packages.app-launcher;
+          ezf = packages.emacs-ezf;
+          gptel-quick = packages.gptel-quick;
+	  macher = packages.macher;
+	  mpc-wrapper = packages.mpc-wrapper;
+	  semel = packages.semel;
+          embark = packages.embark;
+	  reka = packages.reka;
 	}));
-  } ;
+  };
+}
+#+end_src
+
+** Emacs Package Instantiation
+#+begin_src nix-ts :tangle flake/epkgs.nix
+{ inputs, ... }:
+
+{
+  perSystem = { pkgs, ... }:
+  let epkgs = pkgs.emacs.pkgs;
+  in {
+    # emacs packages
+    packages.qutebrowser-emacs = (epkgs.callPackage ../packages/emacs/qutebrowser.nix {
+      inherit inputs;
+      inherit (epkgs) trivialBuild dash consult exwm password-store evil;
+    });
+    packages.doom-nano-modeline = (epkgs.callPackage ../packages/emacs/doom-nano-modeline.nix {
+      inherit inputs;
+      inherit (epkgs) trivialBuild doom-themes;
+    });
+    packages.dired-single = (epkgs.callPackage ../packages/emacs/dired-single.nix {
+      inherit inputs;
+      inherit (epkgs) trivialBuild;
+    });
+    packages.repeaters = (epkgs.callPackage ../packages/emacs/repeaters.nix {
+      inherit inputs;
+      inherit (epkgs) trivialBuild;
+    });
+    packages.app-launcher = (epkgs.callPackage ../packages/emacs/app-launcher.nix {
+      inherit inputs;
+      inherit (epkgs) trivialBuild;
+    });
+    packages.emacs-ezf = (epkgs.callPackage ../packages/emacs/ezf.nix {
+      inherit inputs;
+      inherit (epkgs) trivialBuild;
+    });
+    packages.gptel-quick = (epkgs.callPackage ../packages/emacs/gptel-quick.nix {
+      inherit inputs;
+      inherit (epkgs) trivialBuild gptel;
+    });
+    packages.macher = (epkgs.callPackage ../packages/emacs/macher.nix {
+      inherit inputs;
+      inherit (epkgs) trivialBuild gptel;
+    });
+    packages.mpc-wrapper = (epkgs.callPackage ../packages/emacs/mpc-wrapper.nix {
+      inherit inputs;
+      inherit (epkgs) trivialBuild;
+    });
+    packages.semel = (epkgs.callPackage ../packages/emacs/semel.nix {
+      inherit inputs;
+      inherit (epkgs) trivialBuild;
+    });
+    packages.embark = epkgs.callPackage (
+      {
+        org,
+        consult,
+        avy,
+        compat,
+        elpaBuild,
+        fetchurl,
+        lib,
+      }:
+      elpaBuild {
+        pname = "embark";
+        ename = "embark";
+        version = "1.1";
+        src = fetchurl {
+	  url = "https://elpa.gnu.org/packages/embark-1.1.tar";
+	  sha256 = "074ggh7dkr5jdkwcndl6znhkq48jmc62rp7mc6vjidr6yxf8d1rn";
+        };
+        packageRequires = [
+	  org
+	  consult
+	  avy
+	  compat
+        ];
+        meta = {
+	  homepage = "https://elpa.gnu.org/packages/embark.html";
+	  license = lib.licenses.free;
+        };
+      }
+    ) { };
+    packages.reka = ../packages/emacs/reka.nix;
+  };
 }
 #+end_src
 
@@ -467,110 +501,134 @@ in
 *** Cast
 For moving massive quantities of Jordan Peterson's podcast into my mp3 player
 #+begin_src nix-ts :tangle scripts/cast.nix
-{ pkgs }:
+{ inputs, ... }:
+{
+  perSystem = { pkgs, self', ... }: let packages = self'.packages;
+  in {
+    packages.cast = (pkgs.writeShellScriptBin "cast" ''
+      #Exit on fail
+      set -e
 
-  pkgs.writeShellScriptBin "cast" ''
-    #Exit on fail
-    set -e
+      #Set Input & Output Filetypes
+      in=$(${pkgs.coreutils}/bin/printf 'm4a\nopus\nmp4\nmkv\nwebm' | ${packages.ezf}/bin/ezf)
+      out=$(${pkgs.coreutils}/bin/printf 'mp3\nflac\nwav\nogg' | ${packages.ezf}/bin/ezf)
 
-    #Set Input & Output Filetypes
-    in=$(${pkgs.coreutils}/bin/printf 'm4a\nopus\nmp4\nmkv\nwebm' | ${pkgs.ezf}/bin/ezf)
-    out=$(${pkgs.coreutils}/bin/printf 'mp3\nflac\nwav\nogg' | ${pkgs.ezf}/bin/ezf)
+      #Choose device to transfer to
+      device=$(${pkgs.coreutils}/bin/ls /run/media/$USER | ${packages.ezf}/bin/ezf)
 
-    #Choose device to transfer to
-    device=$(${pkgs.coreutils}/bin/ls /run/media/$USER | ${pkgs.ezf}/bin/ezf)
+      #Convert files
+      ${packages.ffmpeg-bulk}/bin/ffmpeg-bulk *.$in -t $out
+      ${pkgs.coreutils}/bin/rm *.$in
 
-    #Convert files
-    ${pkgs.ffmpeg-bulk}/bin/ffmpeg-bulk *.$in -t $out
-    ${pkgs.coreutils}/bin/rm *.$in
+      #Remove metadata so the glowies don't see it.
+      ${pkgs.python312Packages.mat2}/bin/mat2 *.$out
 
-    #Remove metadata so the glowies don't see it.
-    ${pkgs.python312Packages.mat2}/bin/mat2 *.$out
-
-    #Transfer
-    ${pkgs.coreutils}/bin/mv ~/*.cleaned.$out /run/media/$USER/$device/Podcasts
-    ${pkgs.coreutils}/bin/rm ~/*.$out
-  ''
+      #Transfer
+      ${pkgs.coreutils}/bin/mv ~/*.cleaned.$out /run/media/$USER/$device/Podcasts
+      ${pkgs.coreutils}/bin/rm ~/*.$out
+    '');
+  };
+}
 #+end_src
+
 *** mpvmacs
 Play a file with mpv, controllable by emacs
 #+begin_src nix-ts :tangle scripts/mpvmacs.nix
-{ pkgs, ... }:
+{ inputs, ... }:
 
-pkgs.writeShellScriptBin "mpvmacs" ''
-  emacsclient -e "(mpv-play \"$1\")"
-''
+{
+  perSystem = {pkgs, ... }: {
+    packages.mpvmacs = pkgs.writeShellScriptBin "mpvmacs" ''
+      emacsclient -e "(mpv-play \"$1\")"
+    '';
+  };
+}
 #+end_src
 
 *** Updatefix
 Script to automate fixing my setup after an update breaks certain parts.
 Meant to be run with doas
 #+begin_src nix-ts :tangle scripts/updatefix.nix
-{ pkgs, ... }:
+{ inputs, ... }:
 
-pkgs.writeShellScriptBin "updatefix" ''
-  cp /usr/lib/systemd/system/getty@.bak /usr/lib/systemd/system/getty@.service
-''
+{
+  perSystem = { pkgs, ... }: {
+    packages.updatefix = pkgs.writeShellScriptBin "updatefix" ''
+      cp /usr/lib/systemd/system/getty@.bak /usr/lib/systemd/system/getty@.service
+    '';
+  };
+}
 #+end_src
 
 *** Doomer
 #+begin_src nix-ts :tangle scripts/doomer.nix
-{ pkgs }:
+{ inputs, ... }:
 
-  pkgs.writeShellScriptBin "doomer" ''
-    ${pkgs.sox}/bin/sox "$1" "$1.flac" pitch -500 treble -20 pad 0 3 reverb 80 tempo .8 highpass 1000 lowpass 700 compand 0.3,0.8 0
-  ''
+{
+  perSystem = { config, pkgs, self', ... }:
+  {
+    packages.doomer = pkgs.writeShellScriptBin "doomer" ''
+      ${pkgs.sox}/bin/sox "$1" "$1.flac" pitch -500 treble -20 pad 0 3 reverb 80 tempo .8 highpass 1000 lowpass 700 compand 0.3,0.8 0
+    '';
+  };
+}
 #+end_src
 
 *** Ezf
 Borrowed from here: https://github.com/mickeynp/ezf
 #+begin_src nix-ts :tangle scripts/ezf.nix
-{ pkgs }:
+{ inputs, ... }:
 
-  pkgs.writeShellScriptBin "ezf" ''
-    set -o nounset -o errexit -o pipefail
+{
+  perSystem = { config, pkgs, self', ... }: {
+    packages.ezf = pkgs.writeShellScriptBin "ezf" ''
+      set -o nounset -o errexit -o pipefail
 
-  field=0-
-  # the elisp function to use for completing read
-  candidate_fn=ezf-default
-  while getopts c:f: OPT; do
-      case $OPT in
-          c)
-              candidate_fn=$OPTARG
-              ;;
-          f)
-              field=$OPTARG
-              ;;
-          ,*)
-              ${pkgs.coreutils}/bin/echo "usage: ezf [-f field] [-c candidate-fn]"
-              exit 2
-      esac
-  done
-  shift $(( OPTIND - 1 ))
-  OPTIND=1
+      field=0-
+      # the elisp function to use for completing read
+      candidate_fn=ezf-default
+      while getopts c:f: OPT; do
+          case $OPT in
+              c)
+                  candidate_fn=$OPTARG
+                  ;;
+              f)
+                  field=$OPTARG
+                  ;;
+              ,*)
+                  ${pkgs.coreutils}/bin/echo "usage: ezf [-f field] [-c candidate-fn]"
+                  exit 2
+          esac
+      done
+      shift $(( OPTIND - 1 ))
+      OPTIND=1
 
-  ezftmp="$(mktemp)"
-  trap 'rm -f -- "$ezftmp"' EXIT
-  > "$ezftmp" cat -
-  # xargs is there to strip the "" from the beginning and end of the
-  # output from Emacs.  Ensure "field" is always passed as a string by
-  # quoting it.
-  selection=$(emacsclient -e "(progn (require 'ezf) (ezf \"$ezftmp\" \"$field\" #'$candidate_fn))" | xargs)
-  if [[ "$selection" == "nil" ]]; then
-      exit 1
-  else
-     ${pkgs.coreutils}/bin/echo "$selection"
-  fi
+      ezftmp="$(mktemp)"
+      trap 'rm -f -- "$ezftmp"' EXIT
+      > "$ezftmp" cat -
+      # xargs is there to strip the "" from the beginning and end of the
+      # output from Emacs.  Ensure "field" is always passed as a string by
+      # quoting it.
+      selection=$(emacsclient -e "(progn (require 'ezf) (ezf \"$ezftmp\" \"$field\" #'$candidate_fn))" | xargs)
+      if [[ "$selection" == "nil" ]]; then
+          exit 1
+      else
+         ${pkgs.coreutils}/bin/echo "$selection"
+      fi
 
-  ''
+    '';
+  };
+}
 #+end_src
 
 *** Ffmpeg-bulk
 I stole this from this git repo https://github.com/sylsau/ffmpeg-bulk
 #+begin_src nix-ts :tangle scripts/ffmpeg-bulk.nix
-{ pkgs }:
+{ inputs, ... }:
 
-pkgs.writeShellScriptBin "ffmpeg-bulk" ''
+{
+  perSystem = { config, pkgs, self', ... }: {
+    packages.ffmpeg-bulk = pkgs.writeShellScriptBin "ffmpeg-bulk" ''
 #!/bin/bash - 
 #===============================================================================
 #
@@ -719,45 +777,60 @@ for F in "''${INPUT[@]}"; do # Actually execute
 done
 
 exit
-''
+    '';
+  };
+}
 #+end_src
 
 *** HDMI Helper
 #+begin_src nix-ts :tangle scripts/hdmi-helper.nix
-{ pkgs }:
+{ inputs, ... }:
 
-pkgs.writeShellScriptBin "hdmihelper" ''
-  case "$1" in
-    dual ) xrandr --output HDMI-1-0 --right-of eDP-1 --mode 1920x1080 --output eDP-1 --primary --mode 1920x1080 ;;
-    mirror ) xrandr --output HDMI-1-0 --mode 1920x1080 --output eDP-1 --mode 1920x1080 ;;
-    off ) xrandr --output eDP-1 --mode 2560x1600 ;;
-  esac
-''
+{
+  perSystem = { pkgs, ... }: {
+
+    packages.hdmihelper = pkgs.writeShellScriptBin "hdmihelper" ''
+      case "$1" in
+        dual ) xrandr --output HDMI-1-0 --right-of eDP-1 --mode 1920x1080 --output eDP-1 --primary --mode 1920x1080 ;;
+        mirror ) xrandr --output HDMI-1-0 --mode 1920x1080 --output eDP-1 --mode 1920x1080 ;;
+        off ) xrandr --output eDP-1 --mode 2560x1600 ;;
+      esac
+    '';
+  };
+}
 #+end_src
 
 *** Masstube
 #+begin_src nix-ts :tangle scripts/masstube.nix
-{ pkgs }:
+{ inputs, ... }:
 
-pkgs.writeShellScriptBin "masstube" ''
-  emacsclient ~/.download.txt
-  # ${pkgs.yt-dlp}/bin/yt-dlp $1 --verbose -ci --batch-file=~/.download.txt --proxy socks://localhost:9050
-  ${pkgs.yt-dlp}/bin/yt-dlp $1 --verbose -ci --batch-file=~/.download.txt 
-  ${pkgs.coreutils}/bin/rm ~/.download.txt
-''
+{
+  perSystem = { config, pkgs, self', ... }: {
+    packages.masstube = pkgs.writeShellScriptBin "masstube" ''
+      emacsclient ~/.download.txt
+      # ${pkgs.yt-dlp}/bin/yt-dlp $1 --verbose -ci --batch-file=~/.download.txt --proxy socks://localhost:9050
+      ${pkgs.yt-dlp}/bin/yt-dlp $1 --verbose -ci --batch-file=~/.download.txt 
+      ${pkgs.coreutils}/bin/rm ~/.download.txt
+    '';
+  };
+}
 #+end_src
 
 *** Start-ollama
 #+begin_src nix-ts :tangle scripts/start-ollama.nix
-{ config, pkgs }:
+{ inputs, ... }:
 
-pkgs.writeShellScriptBin "start-ollama" ''
-  if [[ "$(pidof ollama)" -gt 0 ]]; then
-      echo "ollama already running"
-  else
-      ollama serve
-  fi
-''
+{
+  perSystem = { pkgs, ... }: {
+    packages.startOllama = pkgs.writeShellScriptBin "start-ollama" ''
+      if [[ "$(pidof ollama)" -gt 0 ]]; then
+        echo "ollama already running"
+      else
+        ollama serve
+      fi
+    '';
+  };
+}
 #+end_src
 
 *** Pkg
@@ -765,74 +838,86 @@ A package manager manager
 
 Dev templates: https://github.com/the-nix-way/dev-templates
 #+begin_src nix-ts :tangle scripts/pkg.nix
-{ pkgs }:
+{ inputs, ... }:
+{
+  perSystem = { pkgs, self', ... }: {
+    packages.pkg = pkgs.writeShellScriptBin "pkg" ''
+      optimize() {
+        nix-collect-garbage -d
+        nix-store --optimise
+        doas pacman -Sc --noconfirm
+      }
 
-pkgs.writeShellScriptBin "pkg" ''
-  optimize() {
-    nix-collect-garbage -d
-    nix-store --optimise
-    doas pacman -Sc --noconfirm
-  }
+      update() {
+        nix flake update --flake ~/.config/home-manager/
+        home-manager switch --flake ~/.config/home-manager/#holschcc
+        doas nix flake update --flake /etc/system-manager/
+        doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'
+        yay -Syu
+      }
 
-  update() {
-    nix flake update --flake ~/.config/home-manager/
-    home-manager switch --flake ~/.config/home-manager/#holschcc
-    doas nix flake update --flake /etc/system-manager/
-    doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'
-    yay -Syu
-  }
+      help() {
+        ${pkgs.coreutils}/bin/echo "help: display this message"
+        ${pkgs.coreutils}/bin/echo "install [packages]: install packages with yay"
+        ${pkgs.coreutils}/bin/echo "optimize: clean up package cache"
+        ${pkgs.coreutils}/bin/echo "update: update all packages"
+        ${pkgs.coreutils}/bin/echo "add: install a package"
+        ${pkgs.coreutils}/bin/echo "rm: uninstall a package"
+        ${pkgs.coreutils}/bin/echo "flake: perform a nix flake operation"
+        ${pkgs.coreutils}/bin/echo "template: set up a devshell template"
+        ${pkgs.coreutils}/bin/echo "tmp: temporarily install a package"
+      }
 
-  help() {
-    ${pkgs.coreutils}/bin/echo "help: display this message"
-    ${pkgs.coreutils}/bin/echo "install [packages]: install packages with yay"
-    ${pkgs.coreutils}/bin/echo "optimize: clean up package cache"
-    ${pkgs.coreutils}/bin/echo "update: update all packages"
-    ${pkgs.coreutils}/bin/echo "add: install a package"
-    ${pkgs.coreutils}/bin/echo "rm: uninstall a package"
-    ${pkgs.coreutils}/bin/echo "flake: perform a nix flake operation"
-    ${pkgs.coreutils}/bin/echo "template: set up a devshell template"
-    ${pkgs.coreutils}/bin/echo "tmp: temporarily install a package"
-  }
+      getTemplates() {
+        ${pkgs.coreutils}/bin/printf "bun\nc-cpp\nclojure\ncsharp\ncue\ndhall\nelixir\nelm\nempty\ngleam\ngo\nhashi\nhaskell\nhaxe\njava\njupyter\nkotlin\nlatex\nnickel\nnim\nnix\nnode\nocaml\nopa\nphp\nplatformio\nprotobuf\npulumi\npurescript\npython\nr\nruby\nrust\nrust-toolchain\nscala\nshell\nswi-prolog\nswift\nvlang\nzig" | ${self'.packages.ezf}/bin/ezf
+      }
 
-  getTemplates() {
-    ${pkgs.coreutils}/bin/printf "bun\nc-cpp\nclojure\ncsharp\ncue\ndhall\nelixir\nelm\nempty\ngleam\ngo\nhashi\nhaskell\nhaxe\njava\njupyter\nkotlin\nlatex\nnickel\nnim\nnix\nnode\nocaml\nopa\nphp\nplatformio\nprotobuf\npulumi\npurescript\npython\nr\nruby\nrust\nrust-toolchain\nscala\nshell\nswi-prolog\nswift\nvlang\nzig" | ${pkgs.ezf}/bin/ezf
-  }
+      template() {
+        nix flake init --template "https://flakehub.com/f/the-nix-way/dev-templates/*#$(getTemplates)" 
+        ${pkgs.direnv}/bin/direnv allow
+      }
 
-  template() {
-    nix flake init --template "https://flakehub.com/f/the-nix-way/dev-templates/*#$(getTemplates)" 
-    ${pkgs.direnv}/bin/direnv allow
-  }
-
-  case "$1" in
-    optimize ) optimize ;;
-    update ) update ;;
-    add ) yay -S ''${@:2} ;;
-    rm ) yay -Rs ''${@:2} ;;
-    flake ) nix flake ''${@:2} ;;
-    tmp ) nix-shell -p ''${@:2};;
-    template ) template;;
-    help ) help ;;
-  esac
-''
+      case "$1" in
+        optimize ) optimize ;;
+        update ) update ;;
+        add ) yay -S ''${@:2} ;;
+        rm ) yay -Rs ''${@:2} ;;
+        flake ) nix flake ''${@:2} ;;
+        tmp ) nix-shell -p ''${@:2};;
+        template ) template;;
+        help ) help ;;
+      esac
+    '';
+  };
+}
 #+end_src
 *** i3status-rust
 #+begin_src nix-ts :tangle scripts/i3status-rust.nix
-{ pkgs }:
+{ inputs, ... }:
 
-pkgs.writeShellScriptBin "i3status-rust" ''
-${pkgs.i3status-rust}/bin/i3status-rs config-default.toml
-''
+{
+  perSystem = { pkgs, ... }: {
+    packages.i3status-rs = pkgs.writeShellScriptBin "i3status-rust" ''
+      ${pkgs.i3status-rust}/bin/i3status-rs ~/.config/i3status-rust/config-default.toml
+    '';
+  };
+}
 #+end_src
 *** Udisksmenu
 #+begin_src nix-ts :tangle scripts/udisksmenu.nix
-{ pkgs }:
+{ inputs, ... }:
 
-pkgs.writeShellScriptBin "udisksmenu" ''
-action=$(${pkgs.coreutils}/bin/printf 'mount\nunmount' | ${pkgs.ezf}/bin/ezf)
-disk=$(${pkgs.coreutils}/bin/ls /dev | ${pkgs.ripgrep}/bin/rg sd[a-z] | ${pkgs.ezf}/bin/ezf)
+{
+  perSystem = { pkgs, self', ... }: let ezf = self'.packages.ezf;
+  in {
+    packages.udisksmenu = pkgs.writeShellScriptBin "udisksmenu" ''
+      action=$(${pkgs.coreutils}/bin/printf 'mount\nunmount' | ${ezf}/bin/ezf)
+      disk=$(${pkgs.coreutils}/bin/ls /dev | ${pkgs.ripgrep}/bin/rg sd[a-z] | ${ezf}/bin/ezf)
 
-${pkgs.udisks}/bin/udisksctl $action -b /dev/$disk
-''
+      ${pkgs.udisks}/bin/udisksctl $action -b /dev/$disk
+    '';
+  };
+}
 #+end_src
 
 *** Wiki
@@ -840,20 +925,24 @@ Requires arch-wiki-docs to be installed
 
 Stole it from Derek Taylor
 #+begin_src nix-ts :tangle scripts/wiki.nix
-{ pkgs }:
+{ inputs, ... }:
 
-pkgs.writeShellScriptBin "wiki" ''
-dir="/usr/share/doc/arch-wiki/html/en/"
-doc="$(${pkgs.findutils}/bin/find $dir -iname "*.html" | \
-       ${pkgs.coreutils}/bin/cut -d '/' -f8- | \
-${pkgs.ezf}/bin/ezf)"
+{
+  perSystem = { pkgs, self', ... }: {
+    packages.wiki = pkgs.writeShellScriptBin "wiki" ''
+      dir="/usr/share/doc/arch-wiki/html/en/"
+      doc="$(${pkgs.findutils}/bin/find $dir -iname "*.html" | \
+      ${pkgs.coreutils}/bin/cut -d '/' -f8- | \
+      ${self'.packages.ezf}/bin/ezf)"
 
-if [ "''${dir}$doc" ]; then
-    emacsclient -e "(eww-open-file \"''${dir}$doc\")"
-else
-    ${pkgs.coreutils}/bin/echo "Program terminated." && exit 0
-fi
-''
+      if [ "''${dir}$doc" ]; then
+        emacsclient -e "(eww-open-file \"''${dir}$doc\")"
+      else
+        ${pkgs.coreutils}/bin/echo "Program terminated." && exit 0
+      fi
+    '';
+  };
+}
 #+end_src
 
 * Notes to my future self
@@ -1936,6 +2025,7 @@ shrface = {
 
 {
   home.packages = with pkgs; [
+    i3status-rs
     (config.lib.nixGL.wrap gimp)
     (config.lib.nixGL.wrap blockbench)
     (config.lib.nixGL.wrap tor-browser)
@@ -4435,7 +4525,7 @@ emacs.init.usePackage.i3bar = {
   ghookf = ["('tab-bar-mode 'i3bar-mode)"];
   
   setopt = {
-    i3bar-command = ''"${(import scripts/i3status-rust.nix {inherit pkgs;})}/bin/i3status-rust"'';
+    i3bar-command = ''"${pkgs.i3status-rs}/bin/i3status-rust"'';
   };
 };
 #+end_src
@@ -4600,7 +4690,7 @@ ace-window = {
 #+begin_src emacs-lisp
 (defun start-ollama ()
   (interactive)
-  (start-process-shell-command "start-ollama" nil "${(import ./scripts/start-ollama.nix { inherit pkgs config; })}/bin/start-ollama"))
+  (start-process-shell-command "startOllama" nil "${pkgs.startOllama}/bin/start-ollama"))
 #+end_src
 
 ** Multimedia
@@ -5448,4 +5538,3 @@ programs.emacs.init.usePackage = {
     (add-hook 'dired-mode-hook 'qute-dired-mode)
     (setq qute-dired-buffers (list (dired "~/")))))
 #+end_src
-

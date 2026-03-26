@@ -1,6 +1,8 @@
-{ pkgs }:
+{ inputs, ... }:
 
-pkgs.writeShellScriptBin "ffmpeg-bulk" ''
+{
+  perSystem = { config, pkgs, self', ... }: {
+    packages.ffmpeg-bulk = pkgs.writeShellScriptBin "ffmpeg-bulk" ''
 #!/bin/bash - 
 #===============================================================================
 #
@@ -149,4 +151,6 @@ for F in "''${INPUT[@]}"; do # Actually execute
 done
 
 exit
-''
+    '';
+  };
+}

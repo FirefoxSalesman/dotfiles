@@ -92,11 +92,22 @@
       inputs.home-manager.flakeModules.home-manager
       ./flake/home-manager.nix
       ./flake/overlay.nix
+      ./flake/epkgs.nix
+      ./scripts/cast.nix
+      ./scripts/doomer.nix
+      ./scripts/ezf.nix
+      ./scripts/ffmpeg-bulk.nix
+      ./scripts/hdmi-helper.nix
+      ./scripts/i3status-rust.nix
+      ./scripts/masstube.nix
+      ./scripts/mpvmacs.nix
+      ./scripts/pkg.nix
+      ./scripts/start-ollama.nix
+      ./scripts/udisksmenu.nix
+      ./scripts/updatefix.nix
+      ./scripts/wiki.nix
     ];
     flake.gpuWrappers = nixgl.defaultPackage;
     systems = ["x86_64-linux"];
-    perSystem = { config, pkgs, ... }: {
-      packages.ezf = (import ./scripts/ezf.nix { inherit pkgs; });
-    };
   });
 }

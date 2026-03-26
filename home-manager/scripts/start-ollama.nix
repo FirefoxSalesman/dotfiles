@@ -1,9 +1,13 @@
-{ config, pkgs }:
+{ inputs, ... }:
 
-pkgs.writeShellScriptBin "start-ollama" ''
-  if [[ "$(pidof ollama)" -gt 0 ]]; then
-      echo "ollama already running"
-  else
-      ollama serve
-  fi
-''
+{
+  perSystem = { pkgs, ... }: {
+    packages.startOllama = pkgs.writeShellScriptBin "start-ollama" ''
+      if [[ "$(pidof ollama)" -gt 0 ]]; then
+        echo "ollama already running"
+      else
+        ollama serve
+      fi
+    '';
+  };
+}
