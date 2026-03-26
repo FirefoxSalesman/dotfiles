@@ -86,14 +86,14 @@
   
     config = let
       aliasesStr = concatStringsSep "\n"
-        ((mapAttrsToList (k: v: "alias ${k}=${escapeShellArg v}")
-          cfg.shellAliases) ++ 
+      ((mapAttrsToList (k: v: "alias ${k}=${escapeShellArg v}")
+        cfg.shellAliases) ++ 
         (mapAttrsToList (k: v: "alias ${k}=${escapeShellArg v}")
           config.home.shellAliases));
     
       globalAliasesStr = concatStringsSep "\n"
-        (mapAttrsToList (k: v: "alias ${k}=${escapeShellArg v}")
-          home.shellAliases);
+      (mapAttrsToList (k: v: "alias ${k}=${escapeShellArg v}")
+        home.shellAliases);
     
       shoptsStr = let switch = v: if hasPrefix "-" v then "-u" else "-s";
       in concatStringsSep "\n"
@@ -101,26 +101,26 @@
     
       sessionVarsStr = config.lib.shell.exportAll cfg.sessionVariables;
     
-    in mkIf cfg.enable {
-      home.file.".profile".source = lib.mkForce (writeBashScript "profile" ''
-        . "${config.home.profileDirectory}/etc/profile.d/hm-session-vars.sh"
+      in mkIf cfg.enable {
+        home.file.".profile".source = lib.mkForce (writeBashScript "profile" ''
+          . "${config.home.profileDirectory}/etc/profile.d/hm-session-vars.sh"
     
         ${sessionVarsStr}
     
         ${cfg.profileExtra}
-      '');
+        '');
     
-      home.file.".dashrc".source = writeBashScript "dashrc" ''
-        ${cfg.dashrcExtra}
+        home.file.".dashrc".source = writeBashScript "dashrc" ''
+          ${cfg.dashrcExtra}
     
         ${shoptsStr}
     
         ${aliasesStr}
     
         ${cfg.initExtra}
-      '' ;
+        '' ;
     
-      home.sessionVariables.ENV = "$HOME/.dashrc";
-    };
+        home.sessionVariables.ENV = "$HOME/.dashrc";
+      };
   };
 }
