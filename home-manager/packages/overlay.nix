@@ -9,7 +9,7 @@ let
 in {
   flake.overlay = final: prev: pkgs: inputs:
   let packages = self.packages.${pkgs.system};
-    in {
+  in {
     # shell scripts
     ezf = packages.ezf;
     cast = packages.cast;
@@ -45,11 +45,9 @@ in {
           app-launcher = packages.app-launcher;
           ezf = packages.emacs-ezf;
           gptel-quick = packages.gptel-quick;
-	  macher = packages.macher;
 	  mpc-wrapper = packages.mpc-wrapper;
 	  semel = packages.semel;
           embark = packages.embark;
-	  reka = packages.reka;
 	}));
   };
 }

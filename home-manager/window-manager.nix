@@ -411,8 +411,7 @@
               (if (= (count-windows) 1)
                   (when single-window--last-configuration
             	(setq elwm-current-layout 'tile-vertical-left)
-                    (set-window-configuration single-window--last-configuration)
-            	(when treesitter-context-mode (treesitter-context-focus-mode -1)))
+                    (set-window-configuration single-window--last-configuration))
                 (setq single-window--last-configuration (current-window-configuration))
                 (setq elwm-current-layout 'monocle)
                 (delete-other-windows)))

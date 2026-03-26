@@ -34,11 +34,6 @@
       flake = false;
     };
     
-    macher = {
-      url = "github:kmontag/macher";
-      flake = false;
-    };
-    
     repeaters = {
       url = "github:mmarshall540/repeaters";
       flake = false;
@@ -91,21 +86,7 @@
     imports = [
       inputs.home-manager.flakeModules.home-manager
       ./flake/home-manager.nix
-      ./flake/overlay.nix
-      ./flake/epkgs.nix
-      ./scripts/cast.nix
-      ./scripts/doomer.nix
-      ./scripts/ezf.nix
-      ./scripts/ffmpeg-bulk.nix
-      ./scripts/hdmi-helper.nix
-      ./scripts/i3status-rust.nix
-      ./scripts/masstube.nix
-      ./scripts/mpvmacs.nix
-      ./scripts/pkg.nix
-      ./scripts/start-ollama.nix
-      ./scripts/udisksmenu.nix
-      ./scripts/updatefix.nix
-      ./scripts/wiki.nix
+      ./packages
     ];
     flake.gpuWrappers = nixgl.defaultPackage;
     systems = ["x86_64-linux"];

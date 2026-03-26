@@ -1,18 +1,25 @@
-{ trivialBuild, inputs, consult, exwm, password-store, dash, evil, doom-modeline } :
+{ inputs, ... } :
 
-trivialBuild rec {
-  pname = "qutebrowser";
-  version = "current";
-  src = inputs.exwm-qutebrowser;
+{
+  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages.qutebrowser-emacs = (epkgs.callPackage
+      epkgs.trivialBuild rec {
+	pname = "qutebrowser";
+	version = "current";
+	src = inputs.exwm-qutebrowser;
 
-  propagatedUserEnvPkgs = [
-    consult
-    exwm
-    password-store
-    dash
-    evil
-    doom-modeline
-  ];
+	propagatedUserEnvPkgs = with epkgs; [
+	  consult
+	  exwm
+	  password-store
+	  dash
+	  evil
+	  doom-modeline
+	];
 
-  buildInputs = propagatedUserEnvPkgs;
+	buildInputs = propagatedUserEnvPkgs;
+      }
+    );
+  };
 }

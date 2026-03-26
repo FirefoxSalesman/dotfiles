@@ -15,21 +15,7 @@
     imports = [
       inputs.home-manager.flakeModules.home-manager
       ./flake/home-manager.nix
-      ./flake/overlay.nix
-      ./flake/epkgs.nix
-      ./scripts/cast.nix
-      ./scripts/doomer.nix
-      ./scripts/ezf.nix
-      ./scripts/ffmpeg-bulk.nix
-      ./scripts/hdmi-helper.nix
-      ./scripts/i3status-rust.nix
-      ./scripts/masstube.nix
-      ./scripts/mpvmacs.nix
-      ./scripts/pkg.nix
-      ./scripts/start-ollama.nix
-      ./scripts/udisksmenu.nix
-      ./scripts/updatefix.nix
-      ./scripts/wiki.nix
+      ./packages
     ];
     flake.gpuWrappers = nixgl.defaultPackage;
     systems = ["x86_64-linux"];
@@ -69,11 +55,6 @@ kmonad = {
 # packages
 gptel-quick = {
   url = "github:karthink/gptel-quick";
-  flake = false;
-};
-
-macher = {
-  url = "github:kmontag/macher";
   flake = false;
 };
 
@@ -154,8 +135,22 @@ in {
 }
 #+end_src
 
+* Packages
+** Importer
+#+begin_src nix-ts :tangle packages/default.nix
+{ ... }:
+
+{
+  imports = [
+    ./scripts
+    ./emacs
+    ./overlay.nix
+  ];
+}
+#+end_src
+
 ** Overlay
-#+begin_src nix-ts :tangle flake/overlay.nix
+#+begin_src nix-ts :tangle packages/overlay.nix
 { inputs, self, ... }:
 
 let
@@ -167,7 +162,7 @@ let
 in {
   flake.overlay = final: prev: pkgs: inputs:
   let packages = self.packages.${pkgs.system};
-    in {
+  in {
     # shell scripts
     ezf = packages.ezf;
     cast = packages.cast;
@@ -203,237 +198,216 @@ in {
           app-launcher = packages.app-launcher;
           ezf = packages.emacs-ezf;
           gptel-quick = packages.gptel-quick;
-	  macher = packages.macher;
 	  mpc-wrapper = packages.mpc-wrapper;
 	  semel = packages.semel;
           embark = packages.embark;
-	  reka = packages.reka;
 	}));
   };
 }
 #+end_src
 
-** Emacs Package Instantiation
-#+begin_src nix-ts :tangle flake/epkgs.nix
+** Emacs
+*** Importer
+#+begin_src nix-ts :tangle packages/emacs/default.nix
+{ ... }:
+
+{
+  imports = [
+    ./app-launcher.nix
+    ./embark.nix
+    ./ezf.nix
+    ./gptel-quick.nix
+    ./dired-single.nix
+    ./doom-nano-modeline.nix
+    ./mpc-wrapper.nix
+    ./repeaters.nix
+    ./semel.nix
+    ./qutebrowser.nix
+  ];
+}
+#+end_src
+
+*** Doom Nano Modeline
+#+begin_src nix-ts :tangle packages/emacs/doom-nano-modeline.nix
 { inputs, ... }:
 
 {
-  perSystem = { pkgs, ... }:
-  let epkgs = pkgs.emacs.pkgs;
+  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
   in {
-    # emacs packages
-    packages.qutebrowser-emacs = (epkgs.callPackage ../packages/emacs/qutebrowser.nix {
-      inherit inputs;
-      inherit (epkgs) trivialBuild dash consult exwm password-store evil;
-    });
-    packages.doom-nano-modeline = (epkgs.callPackage ../packages/emacs/doom-nano-modeline.nix {
-      inherit inputs;
-      inherit (epkgs) trivialBuild doom-themes;
-    });
-    packages.dired-single = (epkgs.callPackage ../packages/emacs/dired-single.nix {
-      inherit inputs;
-      inherit (epkgs) trivialBuild;
-    });
-    packages.repeaters = (epkgs.callPackage ../packages/emacs/repeaters.nix {
-      inherit inputs;
-      inherit (epkgs) trivialBuild;
-    });
-    packages.app-launcher = (epkgs.callPackage ../packages/emacs/app-launcher.nix {
-      inherit inputs;
-      inherit (epkgs) trivialBuild;
-    });
-    packages.emacs-ezf = (epkgs.callPackage ../packages/emacs/ezf.nix {
-      inherit inputs;
-      inherit (epkgs) trivialBuild;
-    });
-    packages.gptel-quick = (epkgs.callPackage ../packages/emacs/gptel-quick.nix {
-      inherit inputs;
-      inherit (epkgs) trivialBuild gptel;
-    });
-    packages.macher = (epkgs.callPackage ../packages/emacs/macher.nix {
-      inherit inputs;
-      inherit (epkgs) trivialBuild gptel;
-    });
-    packages.mpc-wrapper = (epkgs.callPackage ../packages/emacs/mpc-wrapper.nix {
-      inherit inputs;
-      inherit (epkgs) trivialBuild;
-    });
-    packages.semel = (epkgs.callPackage ../packages/emacs/semel.nix {
-      inherit inputs;
-      inherit (epkgs) trivialBuild;
-    });
-    packages.embark = epkgs.callPackage (
-      {
-        org,
-        consult,
-        avy,
-        compat,
-        elpaBuild,
-        fetchurl,
-        lib,
-      }:
-      elpaBuild {
-        pname = "embark";
-        ename = "embark";
-        version = "1.1";
-        src = fetchurl {
-	  url = "https://elpa.gnu.org/packages/embark-1.1.tar";
-	  sha256 = "074ggh7dkr5jdkwcndl6znhkq48jmc62rp7mc6vjidr6yxf8d1rn";
-        };
-        packageRequires = [
-	  org
-	  consult
-	  avy
-	  compat
-        ];
-        meta = {
-	  homepage = "https://elpa.gnu.org/packages/embark.html";
-	  license = lib.licenses.free;
-        };
+    packages.doom-nano-modeline = (epkgs.callPackage
+      epkgs.trivialBuild rec {
+	pname = "doom-nano-modeline";
+	version = "current";
+	src = inputs.doom-nano-modeline;
+
+	propagatedUserEnvPkgs = [
+	  epkgs.doom-themes
+	];
+
+	buildInputs = propagatedUserEnvPkgs;
       }
-    ) { };
-    packages.reka = ../packages/emacs/reka.nix;
+    );
+};
+}
+#+end_src
+*** Dired Single
+#+begin_src nix-ts :tangle packages/emacs/dired-single.nix
+{ inputs, ... } :
+
+{
+  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages.dired-single = (epkgs.callPackage
+      epkgs.trivialBuild rec {
+	pname = "dired-single";
+	version = "current";
+	src = inputs.dired-single;
+      }
+    );
   };
 }
 #+end_src
 
-* Packages
-** Emacs
-*** Doom Nano Modeline
-#+begin_src nix-ts :tangle packages/emacs/doom-nano-modeline.nix
-{ inputs, trivialBuild, doom-themes } :
-
-trivialBuild rec {
-  pname = "doom-nano-modeline";
-  version = "current";
-  src = inputs.doom-nano-modeline;
-
-  propagatedUserEnvPkgs = [
-    doom-themes
-  ];
-
-  buildInputs = propagatedUserEnvPkgs;
-}
-#+end_src
-
-*** Dired Single
-#+begin_src nix-ts :tangle packages/emacs/dired-single.nix
-{ trivialBuild, inputs } :
-
-trivialBuild rec {
-  pname = "dired-single";
-  version = "current";
-  src = inputs.dired-single;
-}
-#+end_src
 *** Repeaters
 #+begin_src nix-ts :tangle packages/emacs/repeaters.nix
-{ trivialBuild, inputs } :
+{ inputs, ... } :
 
-trivialBuild rec {
-  pname = "repeaters";
-  version = "current";
-  src = inputs.repeaters;
+{
+  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages.repeaters = (epkgs.callPackage
+      epkgs.trivialBuild rec {
+	pname = "repeaters";
+	version = "current";
+	src = inputs.repeaters;
+      }
+    );
+  };
 }
 #+end_src
 
 *** App Launcher
 #+begin_src nix-ts :tangle packages/emacs/app-launcher.nix
-{ trivialBuild, inputs } :
+{ inputs, ... } :
 
-trivialBuild rec {
-  pname = "app-launcher";
-  version = "current";
-  src = inputs.app-launcher;
+{
+  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages.app-launcher = (epkgs.callPackage
+      epkgs.trivialBuild rec {
+	pname = "app-launcher";
+	version = "current";
+	src = inputs.app-launcher;
+      }
+    );
+  };
 }
 #+end_src
 
 *** Ezf
 #+begin_src nix-ts :tangle packages/emacs/ezf.nix
-{ trivialBuild, inputs } :
+{ inputs, ... } :
 
-trivialBuild rec {
-  pname = "ezf";
-  version = "current";
-  src = inputs.ezf;
+{
+  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages.emacs-ezf = (epkgs.callPackage
+      epkgs.trivialBuild rec {
+	pname = "ezf";
+	version = "current";
+	src = inputs.ezf;
+      }
+    );
+  };
 }
 #+end_src
 
 *** GPT.el quick
 #+begin_src nix-ts :tangle packages/emacs/gptel-quick.nix
-{ inputs, trivialBuild, gptel } :
+{ inputs, ... }:
 
-trivialBuild rec {
-  pname = "gptel-quick";
-  version = "current";
-  src = inputs.gptel-quick;
+{
+  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages.gptel-quick = (epkgs.callPackage
+      epkgs.trivialBuild rec {
+	pname = "gptel-quick";
+	version = "current";
+	src = inputs.gptel-quick;
 
-  propagatedUserEnvPkgs = [
-    gptel
-  ];
+	propagatedUserEnvPkgs = [
+	  epkgs.gptel
+	];
 
-  buildInputs = propagatedUserEnvPkgs;
-}
-#+end_src
-
-*** Macher
-#+begin_src nix-ts :tangle packages/emacs/macher.nix
-{ inputs, trivialBuild, gptel } :
-
-trivialBuild rec {
-  pname = "macher";
-  version = "current";
-  src = inputs.macher;
-
-  propagatedUserEnvPkgs = [
-    gptel
-  ];
-
-  buildInputs = propagatedUserEnvPkgs;
+	buildInputs = propagatedUserEnvPkgs;
+      }
+    );
+  };
 }
 #+end_src
 
 *** MPC Wrapper
 #+begin_src nix-ts :tangle packages/emacs/mpc-wrapper.nix
-{ trivialBuild, inputs } :
+{ inputs, ... } :
 
-trivialBuild rec {
-  pname = "mpc-wrapper";
-  version = "current";
-  src = inputs.mpc-wrapper;
+{
+  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages.mpc-wrapper = (epkgs.callPackage
+      epkgs.trivialBuild rec {
+	pname = "mpc-wrapper";
+	version = "current";
+	src = inputs.mpc-wrapper;
+      }
+    );
+  };
 }
 #+end_src
 
 *** Qutebrowser
 #+begin_src nix-ts :tangle packages/emacs/qutebrowser.nix
-{ trivialBuild, inputs, consult, exwm, password-store, dash, evil, doom-modeline } :
+{ inputs, ... } :
 
-trivialBuild rec {
-  pname = "qutebrowser";
-  version = "current";
-  src = inputs.exwm-qutebrowser;
+{
+  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages.qutebrowser-emacs = (epkgs.callPackage
+      epkgs.trivialBuild rec {
+	pname = "qutebrowser";
+	version = "current";
+	src = inputs.exwm-qutebrowser;
 
-  propagatedUserEnvPkgs = [
-    consult
-    exwm
-    password-store
-    dash
-    evil
-    doom-modeline
-  ];
+	propagatedUserEnvPkgs = with epkgs; [
+	  consult
+	  exwm
+	  password-store
+	  dash
+	  evil
+	  doom-modeline
+	];
 
-  buildInputs = propagatedUserEnvPkgs;
+	buildInputs = propagatedUserEnvPkgs;
+      }
+    );
+  };
 }
 #+end_src
 
 *** Semel
 #+begin_src nix-ts :tangle packages/emacs/semel.nix
-{ trivialBuild, inputs } :
+{ inputs, ... } :
 
-trivialBuild rec {
-  pname = "semel";
-  version = "current";
-  src = inputs.semel;
+{
+  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages.semel = (epkgs.callPackage
+      epkgs.trivialBuild rec {
+	pname = "semel";
+	version = "current";
+	src = inputs.semel;
+      }
+    );
+  };
 }
 #+end_src
 
@@ -497,10 +471,77 @@ in
   }
 #+end_src
 
+*** Embark
+The version of embark in nixpkgs doesn't work right with org mode because it's missing some inputs
+#+begin_src nix-ts :tangle packages/emacs/embark.nix
+{ inputs, ... }:
+
+{
+  perSystem = { pkgs, ... }:
+  let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages.embark = epkgs.callPackage (
+      {
+        org,
+        consult,
+        avy,
+        compat,
+        elpaBuild,
+        fetchurl,
+        lib,
+      }:
+      elpaBuild {
+        pname = "embark";
+        ename = "embark";
+        version = "1.1";
+        src = fetchurl {
+	  url = "https://elpa.gnu.org/packages/embark-1.1.tar";
+	  sha256 = "074ggh7dkr5jdkwcndl6znhkq48jmc62rp7mc6vjidr6yxf8d1rn";
+        };
+        packageRequires = [
+	  org
+	  consult
+	  avy
+	  compat
+        ];
+        meta = {
+	  homepage = "https://elpa.gnu.org/packages/embark.html";
+	  license = lib.licenses.free;
+        };
+      }
+    ) { };
+  };
+}
+
+#+end_src
+
 ** Scripts
+*** Importer
+#+begin_src nix-ts :tangle packages/scripts/default.nix
+{ ... }:
+
+{
+  imports = [
+    ./cast.nix
+    ./doomer.nix
+    ./ezf.nix
+    ./ffmpeg-bulk.nix
+    ./hdmi-helper.nix
+    ./i3status-rust.nix
+    ./masstube.nix
+    ./mpvmacs.nix
+    ./pkg.nix
+    ./start-ollama.nix
+    ./udisksmenu.nix
+    ./updatefix.nix
+    ./wiki.nix
+  ];
+}
+#+end_src
+
 *** Cast
 For moving massive quantities of Jordan Peterson's podcast into my mp3 player
-#+begin_src nix-ts :tangle scripts/cast.nix
+#+begin_src nix-ts :tangle packages/scripts/cast.nix
 { inputs, ... }:
 {
   perSystem = { pkgs, self', ... }: let packages = self'.packages;
@@ -533,7 +574,7 @@ For moving massive quantities of Jordan Peterson's podcast into my mp3 player
 
 *** mpvmacs
 Play a file with mpv, controllable by emacs
-#+begin_src nix-ts :tangle scripts/mpvmacs.nix
+#+begin_src nix-ts :tangle packages/scripts/mpvmacs.nix
 { inputs, ... }:
 
 {
@@ -548,7 +589,7 @@ Play a file with mpv, controllable by emacs
 *** Updatefix
 Script to automate fixing my setup after an update breaks certain parts.
 Meant to be run with doas
-#+begin_src nix-ts :tangle scripts/updatefix.nix
+#+begin_src nix-ts :tangle packages/scripts/updatefix.nix
 { inputs, ... }:
 
 {
@@ -561,7 +602,7 @@ Meant to be run with doas
 #+end_src
 
 *** Doomer
-#+begin_src nix-ts :tangle scripts/doomer.nix
+#+begin_src nix-ts :tangle packages/scripts/doomer.nix
 { inputs, ... }:
 
 {
@@ -576,7 +617,7 @@ Meant to be run with doas
 
 *** Ezf
 Borrowed from here: https://github.com/mickeynp/ezf
-#+begin_src nix-ts :tangle scripts/ezf.nix
+#+begin_src nix-ts :tangle packages/scripts/ezf.nix
 { inputs, ... }:
 
 {
@@ -623,7 +664,7 @@ Borrowed from here: https://github.com/mickeynp/ezf
 
 *** Ffmpeg-bulk
 I stole this from this git repo https://github.com/sylsau/ffmpeg-bulk
-#+begin_src nix-ts :tangle scripts/ffmpeg-bulk.nix
+#+begin_src nix-ts :tangle packages/scripts/ffmpeg-bulk.nix
 { inputs, ... }:
 
 {
@@ -783,7 +824,7 @@ exit
 #+end_src
 
 *** HDMI Helper
-#+begin_src nix-ts :tangle scripts/hdmi-helper.nix
+#+begin_src nix-ts :tangle packages/scripts/hdmi-helper.nix
 { inputs, ... }:
 
 {
@@ -801,7 +842,7 @@ exit
 #+end_src
 
 *** Masstube
-#+begin_src nix-ts :tangle scripts/masstube.nix
+#+begin_src nix-ts :tangle packages/scripts/masstube.nix
 { inputs, ... }:
 
 {
@@ -817,7 +858,7 @@ exit
 #+end_src
 
 *** Start-ollama
-#+begin_src nix-ts :tangle scripts/start-ollama.nix
+#+begin_src nix-ts :tangle packages/scripts/start-ollama.nix
 { inputs, ... }:
 
 {
@@ -837,7 +878,7 @@ exit
 A package manager manager
 
 Dev templates: https://github.com/the-nix-way/dev-templates
-#+begin_src nix-ts :tangle scripts/pkg.nix
+#+begin_src nix-ts :tangle packages/scripts/pkg.nix
 { inputs, ... }:
 {
   perSystem = { pkgs, self', ... }: {
@@ -892,7 +933,7 @@ Dev templates: https://github.com/the-nix-way/dev-templates
 }
 #+end_src
 *** i3status-rust
-#+begin_src nix-ts :tangle scripts/i3status-rust.nix
+#+begin_src nix-ts :tangle packages/scripts/i3status-rust.nix
 { inputs, ... }:
 
 {
@@ -904,7 +945,7 @@ Dev templates: https://github.com/the-nix-way/dev-templates
 }
 #+end_src
 *** Udisksmenu
-#+begin_src nix-ts :tangle scripts/udisksmenu.nix
+#+begin_src nix-ts :tangle packages/scripts/udisksmenu.nix
 { inputs, ... }:
 
 {
@@ -924,7 +965,7 @@ Dev templates: https://github.com/the-nix-way/dev-templates
 Requires arch-wiki-docs to be installed
 
 Stole it from Derek Taylor
-#+begin_src nix-ts :tangle scripts/wiki.nix
+#+begin_src nix-ts :tangle packages/scripts/wiki.nix
 { inputs, ... }:
 
 {
@@ -4369,8 +4410,7 @@ exwm-mff = {
   (if (= (count-windows) 1)
       (when single-window--last-configuration
 	(setq elwm-current-layout 'tile-vertical-left)
-        (set-window-configuration single-window--last-configuration)
-	(when treesitter-context-mode (treesitter-context-focus-mode -1)))
+        (set-window-configuration single-window--last-configuration))
     (setq single-window--last-configuration (current-window-configuration))
     (setq elwm-current-layout 'monocle)
     (delete-other-windows)))

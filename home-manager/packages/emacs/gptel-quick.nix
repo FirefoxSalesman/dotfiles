@@ -1,13 +1,20 @@
-{ inputs, trivialBuild, gptel } :
+{ inputs, ... }:
 
-trivialBuild rec {
-  pname = "gptel-quick";
-  version = "current";
-  src = inputs.gptel-quick;
+{
+  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages.gptel-quick = (epkgs.callPackage
+      epkgs.trivialBuild rec {
+	pname = "gptel-quick";
+	version = "current";
+	src = inputs.gptel-quick;
 
-  propagatedUserEnvPkgs = [
-    gptel
-  ];
+	propagatedUserEnvPkgs = [
+	  epkgs.gptel
+	];
 
-  buildInputs = propagatedUserEnvPkgs;
+	buildInputs = propagatedUserEnvPkgs;
+      }
+    );
+  };
 }

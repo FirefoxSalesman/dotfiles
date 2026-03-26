@@ -1,13 +1,20 @@
-{ inputs, trivialBuild, doom-themes } :
+{ inputs, ... }:
 
-trivialBuild rec {
-  pname = "doom-nano-modeline";
-  version = "current";
-  src = inputs.doom-nano-modeline;
+{
+  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages.doom-nano-modeline = (epkgs.callPackage
+      epkgs.trivialBuild rec {
+	pname = "doom-nano-modeline";
+	version = "current";
+	src = inputs.doom-nano-modeline;
 
-  propagatedUserEnvPkgs = [
-    doom-themes
-  ];
+	propagatedUserEnvPkgs = [
+	  epkgs.doom-themes
+	];
 
-  buildInputs = propagatedUserEnvPkgs;
+	buildInputs = propagatedUserEnvPkgs;
+      }
+    );
+};
 }
