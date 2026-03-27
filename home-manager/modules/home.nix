@@ -29,15 +29,19 @@ in {
 	inputs.self.homeModules.dashTemplate
 	inputs.self.homeModules.development
 	inputs.self.homeModules.emacs
+	inputs.self.homeModules.elisp
 	inputs.self.homeModules.extraPackages
 	inputs.self.homeModules.exwm
 	inputs.self.homeModules.fileManager
+	inputs.self.homeModules.java
+	inputs.self.homeModules.ledger
 	inputs.self.homeModules.media
 	inputs.self.homeModules.passwordManagement
 	inputs.self.homeModules.sage
 	inputs.self.homeModules.shellConfig
 	inputs.self.homeModules.startx
 	inputs.self.homeModules.web
+	inputs.self.homeModules.webdev
 	inputs.self.homeModules.writing
 	inputs.stylix.homeModules.stylix
 	inputs.emacs-init.homeModules.emacs-init

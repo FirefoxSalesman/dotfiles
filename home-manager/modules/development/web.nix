@@ -1,5 +1,5 @@
 {
-  flake.homeModules.development = { config, pkgs, lib, ... }:
+  flake.homeModules.webdev = { config, pkgs, lib, ... }:
   {
     programs.emacs.init.ide.languages = {
       javascript.enable = true;

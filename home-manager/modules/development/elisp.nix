@@ -1,5 +1,17 @@
+{ inputs, ... } :
+
 {
-  flake.homeModules.development = { ... }:
+  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages.semel = (epkgs.callPackage
+      epkgs.trivialBuild rec {
+	pname = "semel";
+	version = "current";
+	src = inputs.semel;
+      }
+    );
+  };
+  flake.homeModules.elisp = { ... }:
   {
     programs.emacs.init = {
       completions.tempel.templates.emacs-lisp-mode = {

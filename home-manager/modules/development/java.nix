@@ -1,9 +1,12 @@
 {
-flake.homeModules.development = { ... }:
+flake.homeModules.java = { ... }:
   {
     programs.emacs.init = {
       ide.languages = {
-	java.enable = true;
+	java = {
+	  enable = true;
+	  moreEglot = true;
+	};
         gradle.enable = true;
       };
       usePackage.java-ts-mode = {

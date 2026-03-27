@@ -293,24 +293,6 @@ in {
 }
 #+end_src
 
-*** Semel
-#+begin_src nix-ts :tangle modules/packages/emacs/semel.nix
-{ inputs, ... } :
-
-{
-  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages.semel = (epkgs.callPackage
-      epkgs.trivialBuild rec {
-	pname = "semel";
-	version = "current";
-	src = inputs.semel;
-      }
-    );
-  };
-}
-#+end_src
-
 *** Reka
 https://github.com/dmkhitaryan/river-next-nix-module/blob/5205ebf2b5f820c3a9221f472c78c548a4a84aad/window-managers/reka/package.nix
 # #+begin_src nix-ts :tangle modules/packages/emacs/reka.nix
@@ -893,15 +875,19 @@ in {
 	inputs.self.homeModules.dashTemplate
 	inputs.self.homeModules.development
 	inputs.self.homeModules.emacs
+	inputs.self.homeModules.elisp
 	inputs.self.homeModules.extraPackages
 	inputs.self.homeModules.exwm
 	inputs.self.homeModules.fileManager
+	inputs.self.homeModules.java
+	inputs.self.homeModules.ledger
 	inputs.self.homeModules.media
 	inputs.self.homeModules.passwordManagement
 	inputs.self.homeModules.sage
 	inputs.self.homeModules.shellConfig
 	inputs.self.homeModules.startx
 	inputs.self.homeModules.web
+	inputs.self.homeModules.webdev
 	inputs.self.homeModules.writing
 	inputs.stylix.homeModules.stylix
 	inputs.emacs-init.homeModules.emacs-init
@@ -1425,34 +1411,14 @@ Pywal integration: https://github.com/danth/stylix/issues/99
 #+end_src
 
 *** Modeline
-Using nano modeline to cut down clutter.
-
-I'm not using the minor mode, because its text is being sent to the tab bar.
-
-The powerline separators were borrowed from punchline, because I think they look cool
-#+begin_src nix-ts :tangle modules/aesthetics/modeline.nix :noweb yes
-{ inputs, ... }:
-
+**** i3bar
+We use this to format the date, time, & battery percentage in our modeline.
+#+begin_src nix-ts :tangle modules/aesthetics/modeline/i3bar.nix
 {
-  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages = {doom-nano-modeline = (epkgs.callPackage
-      epkgs.trivialBuild rec {
-	pname = "doom-nano-modeline";
-	version = "current";
-	src = inputs.doom-nano-modeline;
-
-	propagatedUserEnvPkgs = [
-	  epkgs.doom-themes
-	];
-
-	buildInputs = propagatedUserEnvPkgs;
-      }
-    );
-    i3status-rs = pkgs.writeShellScriptBin "i3status-rust" ''
+  perSystem = { pkgs, ... }: {
+    packages.i3status-rs = pkgs.writeShellScriptBin "i3status-rust" ''
       ${pkgs.i3status-rust}/bin/i3status-rs ~/.config/i3status-rust/config-default.toml
     '';
-    };
   };
 
   flake.homeModules.aesthetics = { pkgs, lib, config, ... }:
@@ -1492,28 +1458,51 @@ The powerline separators were borrowed from punchline, because I think they look
 	};
       };
 
-      emacs.init.usePackage = {
-	doom-nano-modeline = {
-	  enable = true;
-	  afterCall = ["after-init-hook"];
-	  setopt.mode-line-format = false;
-	  config = ''
-	    <<Emacs Doom Nano Modeline Config>>
-	  '';
-	};
-	i3bar = {
-	  enable = true;
-	  ghookf = ["('tab-bar-mode 'i3bar-mode)"];
-	  setopt.i3bar-command = ''"${lib.getExe pkgs.i3status-rs}"'';
-	};
-	tab-bar = {
-	  custom.tab-bar-format = ["'tab-bar-format-tabs-groups" "'tab-bar-separator" "'doom-nano-tabline" "'tab-bar-format-align-right" "'tab-bar-format-global"];
-	  setopt = {
-	    tab-bar-close-button-show = false;
-	    tab-bar-auto-width-max = ["'(150)" "20"];
-	  };
-	};
+      emacs.init.usePackage.i3bar = {
+	enable = true;
+	ghookf = ["('tab-bar-mode 'i3bar-mode)"];
+	setopt.i3bar-command = ''"${lib.getExe pkgs.i3status-rs}"'';
       };
+    };
+  };
+}
+#+end_src
+
+**** Nano
+Using nano modeline to cut down clutter.
+
+I'm not using the minor mode, because its text is being sent to the tab bar.
+
+The powerline separators were borrowed from punchline, because I think they look cool
+#+begin_src nix-ts :tangle modules/aesthetics/modeline/nano.nix :noweb yes
+{ inputs, ... }:
+
+{
+  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages.doom-nano-modeline = (epkgs.callPackage
+      epkgs.trivialBuild rec {
+	pname = "doom-nano-modeline";
+	version = "current";
+	src = inputs.doom-nano-modeline;
+
+	propagatedUserEnvPkgs = [
+	  epkgs.doom-themes
+	];
+
+	buildInputs = propagatedUserEnvPkgs;
+      }
+    );
+  };
+  flake.homeModules.aesthetics = { ... }:
+  {
+    programs.emacs.init.usePackage.doom-nano-modeline = {
+      enable = true;
+      afterCall = ["after-init-hook"];
+      setopt.mode-line-format = false;
+      config = ''
+	<<Emacs Doom Nano Modeline Config>>
+      '';
     };
   };
 }
@@ -1684,6 +1673,22 @@ This is just overriding a bunch of functions so that I can put all the info in t
 				       (throw 'found format))))))
 			     #'doom-nano-modeline-default-mode-format))))))
     `((global menu-item ,(format-mode-line the-format) ignore))))
+#+end_src
+
+**** Tab Bar
+#+begin_src nix-ts :tangle modules/aesthetics/modeline/tab.nix
+{
+  flake.homeModules.aesthetics = { ... }:
+  {
+    programs.emacs.init.usePackage.tab-bar = {
+      custom.tab-bar-format = ["'tab-bar-format-tabs-groups" "'tab-bar-separator" "'doom-nano-tabline" "'tab-bar-format-align-right" "'tab-bar-format-global"];
+      setopt = {
+	tab-bar-close-button-show = false;
+	tab-bar-auto-width-max = ["'(150)" "20"];
+      };
+    };
+  };
+}
 #+end_src
 
 *** Posframes
@@ -2075,7 +2080,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 *** Web
 #+begin_src nix-ts :tangle modules/development/web.nix
 {
-  flake.homeModules.development = { config, pkgs, lib, ... }:
+  flake.homeModules.webdev = { config, pkgs, lib, ... }:
   {
     programs.emacs.init.ide.languages = {
       javascript.enable = true;
@@ -2094,8 +2099,20 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 
 *** Elisp
 #+begin_src nix-ts :tangle modules/development/elisp.nix 
+{ inputs, ... } :
+
 {
-  flake.homeModules.development = { ... }:
+  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages.semel = (epkgs.callPackage
+      epkgs.trivialBuild rec {
+	pname = "semel";
+	version = "current";
+	src = inputs.semel;
+      }
+    );
+  };
+  flake.homeModules.elisp = { ... }:
   {
     programs.emacs.init = {
       completions.tempel.templates.emacs-lisp-mode = {
@@ -2119,11 +2136,14 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 *** Java
 #+begin_src nix-ts :tangle modules/development/java.nix :noweb yes
 {
-flake.homeModules.development = { ... }:
+flake.homeModules.java = { ... }:
   {
     programs.emacs.init = {
       ide.languages = {
-	java.enable = true;
+	java = {
+	  enable = true;
+	  moreEglot = true;
+	};
         gradle.enable = true;
       };
       usePackage.java-ts-mode = {
@@ -2171,13 +2191,16 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 *** C
 #+begin_src nix-ts :tangle modules/development/c.nix
 {
-  flake.homeModules.development = { ... }:
+  flake.homeModules.c = { ... }:
   {
-    programs.emacs.init.usePackage.c-ts-mode.generalTwoConfig.":n".c-ts-mode-map = {
-      "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "comment"))'';
-      "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "comment"))'';
-      "o" = "'evil-previous-visual-line";
-      "O" = "'evil-scroll-up";
+    programs.emacs.init = {
+      ide.languages.c.enable = true;
+      usePackage.c-ts-mode.generalTwoConfig.":n".c-ts-mode-map = {
+	"S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "comment"))'';
+	"R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "comment"))'';
+	"o" = "'evil-previous-visual-line";
+	"O" = "'evil-scroll-up";
+      };
     };
   };
 }
@@ -2186,9 +2209,13 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 *** Python
 #+begin_src nix-ts :tangle modules/development/python.nix
 {
-  flake.homeModules.development = { ... }:
+  flake.homeModules.python = { ... }:
   {
     programs.emacs.init = {
+      ide.languages.python = {
+	enable = true;
+	language-server = "basedpyright";
+      };
       usePackage.python-ts-mode.setopt = {
 	python-shell-interpreter = ''"ipython"'';
 	python-shell-interpreter-args = ''"-i --simple-prompt"'';
@@ -2212,7 +2239,6 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
           enable = true;
           preset = true;
 	};
-	languages.java.moreEglot = true;
 	flymake = {
           enable = true;
           preset = true;
@@ -2260,7 +2286,7 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 *** Ledger
 #+begin_src nix-ts :tangle modules/development/ledger.nix
 {
-  flake.homeModules.development = { ... }:
+  flake.homeModules.ledger = { ... }:
   {
     programs.emacs.init = {
       completions.tempel.templates.ledger-mode = {

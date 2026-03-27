@@ -1,5 +1,5 @@
 {
-  flake.homeModules.development = { ... }:
+  flake.homeModules.ledger = { ... }:
   {
     programs.emacs.init = {
       completions.tempel.templates.ledger-mode = {

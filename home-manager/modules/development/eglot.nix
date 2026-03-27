@@ -8,7 +8,6 @@
           enable = true;
           preset = true;
 	};
-	languages.java.moreEglot = true;
 	flymake = {
           enable = true;
           preset = true;
