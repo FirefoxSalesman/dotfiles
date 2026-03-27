@@ -921,6 +921,8 @@ in {
       <<alsoftrc>>
 
       <<User Dirs>>
+
+      <<Proced>>
     };
   };
 }
@@ -964,6 +966,19 @@ xdg.userDirs = {
     music = "${config.home.homeDirectory}/mus";
     pictures = "${config.home.homeDirectory}/pic";
     videos = "${config.home.homeDirectory}/vid";
+};
+#+end_src
+
+*** Proced
+#+NAME: Proced
+#+begin_src nix-ts
+programs.emacs.init.usePackage.proced = {
+  enable = true;
+  command = ["proced"];
+  generalTwoConfig.":n".proced-mode-map = {
+    "j" = "'proced-unmark";
+    "k" = "'proced-send-signal";
+  };
 };
 #+end_src
 
@@ -3889,171 +3904,117 @@ Everything is bound to SPC p
 #+end_src
 
 ** Window Management
-#+begin_src nix-ts :tangle modules/window-manager.nix :noweb yes 
+*** Tab Bar
+I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.el
+#+begin_src nix-ts :tangle modules/window-manager/tab-bar.nix
 {
-  flake.homeModules.exwm = { pkgs, config, lib, ... }:
-
+  flake.homeModules.exwm = { ... }:
   {
-    programs.emacs.init = {
-      tools.exwm = {
+    programs.emacs.init.usePackage = {
+      tab-bar = {
 	enable = true;
-	wantMouseWarping = true;
-	useGaps = true;
-	bindings = {
-	  "?\\s-r" = "exwm-reset";
-	  "?\\s-a" = "evil-ex";
-	  "?\\s-d" = "app-launcher-run-app";
-	  "?\\s-t" = "proced";
-	  
-	  # Movement
-	  "?\\s-e" = "elwm-next";
-	  "?\\s-o" = "elwm-prev";
-	  "?\\s-." = "other-frame";
-
-	  # Arrangement
-	  "?\\s-\\C-e" = "efs/nirify-forwards";
-	  "?\\s-\\C-o" = "efs/nirify-backwards";
-	  "?\\s-E" = "elwm-rotate-window";
-	  "?\\s-O" = "elwm-derotate-window";
-	  "?\\s-c" = "elwm-split-window";
-	  "?\\s-n" = "evil-window-move-far-left";
-	  "?\\s-i" = "evil-window-move-far-right";
-	  "?\\s-j" = "winner-undo";
-	  "?\\s-J" = "winner-redo";
-	  "?\\s-m" = "toggle-single-window";
-	  "?\\s-x" = "toggle-follow-mode";
-	  "?\\s-k" = "evil-window-delete";
-	  "?\\s-K" = "evil-delete-buffer-and-window";
-
-	  #Shell bindings
-	  "?\\s-s" = '',(cmd! (shell-command "slock"))'';
-	  "?\\s-y" = '',(cmd! (start-process-shell-command "maim" nil  "${pkgs.maim}/bin/maim ~/pic/screenshot.png"))'';
-	  "XF86MonBrightnessDown" = '',(cmd! (efs/alter-monitor-brightness 5 t))'';
-	  "XF86MonBrightnessUp" = '',(cmd! (efs/alter-monitor-brightness 5))'';
-	};
-	titleAlterations = {
-	  qutebrowser = ''(exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title))'';
-	  mpv = ''(exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title))'';
-	};
+	config = ''
+	  (general-add-advice 'tab-new :after #'dashboard-open)
+          (defun efs/tab-bar-select ()
+             (interactive)
+             (setq tab-bar-tab-hints t)
+             (tab-bar-select-tab (string-to-number (read-string "Tab Number: ")))
+             (setq tab-bar-tab-hints nil))
+	'';
+	ghookf = ["('exwm-init 'tab-bar-mode)"];
+	general."s-u" = "'tab-bar-hydra/body";
+	setopt.tab-bar-select-restore-windows = false;
+	extraConfig = ''
+	  :pretty-hydra
+            ((:color amaranth)
+             ("Navigation"
+              (("e" #'evil-tab-next "next")
+               ("o" #'tab-bar-switch-to-prev-tab "prev")
+               ("v" #'tab-recent "recent")
+               ("b" #'tab-bar-lost-commands-switch-to-first-tab "first")
+               ("B" #'tab-bar-lost-commands-switch-to-last-tab "last")
+               ("/" #'efs/tab-bar-select "search"))
+              "Creation/Deletion"
+              (("s" #'tab-new "new")
+               ("k" #'tab-close "close")
+               ("r" #'tab-rename "rename")
+               ("u" #'tab-undo "undo"))
+              "Groups"
+              (("g" #'tab-group "add to group")
+               ("K" #'tab-close-group "close group"))
+              "Organization"
+              (("E" #'tab-bar-lost-commands-move-tab-forward "forward")
+               ("O" #'tab-bar-lost-commands-move-tab-backward "backward"))
+              "Exit"
+              (("<return>" nil "" :color blue)
+               ("<escape>" nil "" :color blue))))
+	'';
       };
-      usePackage = {
-        <<Emacs Window Management Tab Bar>>
-      
-        <<Emacs Window Management Bufler>>
-      
-        <<Emacs Window Management ELWM>>
-      
-        <<Emacs Window Management Golden Ratio>>
-      
-        <<Emacs Window Management EXWM>>
-      
-        <<Emacs Window Management Popper & Proced>>
-      
-        <<Emacs Ace Window>>
+
+      tab-bar-lost-commands = {
+	enable = true;
+	command = [
+	  "tab-bar-lost-commands-move-tab-forward"
+	  "tab-bar-lost-commands-move-tab-backward" 
+	  "tab-bar-lost-commands-switch-to-first-tab" 
+	  "tab-bar-lost-commands-switch-to-last-tab" 
+	];
       };
     };
   };
 }
 #+end_src
 
-*** Tab Bar
-I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.el
-#+NAME: Emacs Window Management Tab Bar
-#+begin_src nix-ts
-tab-bar = {
-  enable = true;
-  config = ''
-    (general-add-advice 'tab-new :after #'dashboard-open)
-    (defun efs/tab-bar-select ()
-       (interactive)
-       (setq tab-bar-tab-hints t)
-       (tab-bar-select-tab (string-to-number (read-string "Tab Number: ")))
-       (setq tab-bar-tab-hints nil))
-  '';
-  ghookf = ["('exwm-init 'tab-bar-mode)"];
-  general."s-u" = "'tab-bar-hydra/body";
-  setopt.tab-bar-select-restore-windows = false;
-  extraConfig = ''
-    :pretty-hydra
-    ((:color amaranth)
-     ("Navigation"
-      (("e" #'evil-tab-next "next")
-       ("o" #'tab-bar-switch-to-prev-tab "prev")
-       ("v" #'tab-recent "recent")
-       ("b" #'tab-bar-lost-commands-switch-to-first-tab "first")
-       ("B" #'tab-bar-lost-commands-switch-to-last-tab "last")
-       ("/" #'efs/tab-bar-select "search"))
-      "Creation/Deletion"
-      (("s" #'tab-new "new")
-       ("k" #'tab-close "close")
-       ("r" #'tab-rename "rename")
-       ("u" #'tab-undo "undo"))
-      "Groups"
-      (("g" #'tab-group "add to group")
-       ("K" #'tab-close-group "close group"))
-      "Organization"
-      (("E" #'tab-bar-lost-commands-move-tab-forward "forward")
-       ("O" #'tab-bar-lost-commands-move-tab-backward "backward"))
-      "Exit"
-      (("<return>" nil "" :color blue)
-       ("<escape>" nil "" :color blue))))
-  '';
-};
-
-tab-bar-lost-commands = {
-  enable = true;
-  command = [
-    "tab-bar-lost-commands-move-tab-forward"
-    "tab-bar-lost-commands-move-tab-backward" 
-    "tab-bar-lost-commands-switch-to-first-tab" 
-    "tab-bar-lost-commands-switch-to-last-tab" 
-  ];
-};
-#+end_src
-
 *** Bufler
 Bufler is the other half of tab bar. It lets us automatically narrow buffers down to a given workspace
-#+NAME: Emacs Window Management Bufler
-#+begin_src nix-ts :noweb yes
-bufler = {
-  enable = true;
-  ghookf = ["('tab-bar-mode 'bufler-mode)"];
-  general = {
-    "s-b" = "'bufler-hydra/body";
-    "s-f" = "'bufler-workspace-focus-buffer";
-    "s-F" = "'bufler-workspace-set";
-  };
-  generalTwo."'normal".evil-collection-unimpaired-mode-map = {
-    "]b" = "'bufler-cycle-buffers-forward";
-    "[b" = "'bufler-cycle-buffers-backward";
-  };
-  custom.bufler-groups = ''
-    <<Emacs Bufler Defgroups>>
-  '' ;
-  init = ''
-    <<Emacs Bufler Init>>
-  '';
-  extraConfig = ''
-    :pretty-hydra
-    ((:color amaranth)
-      ("Move"
-       (("o" bufler-cycle-buffers-backward "prev")
-        ("e" bufler-cycle-buffers-forward "next"))
-       "Tricks"
-       (("/" consult-buffer "search" :color blue :exit t)
-        ("i" ibuffer "list (ibuffer)" :color blue :exit t)
-        ("k" kill-current-buffer "delete"))
-       "Quit"
-       (("<escape>" nil "quit" :color blue :exit t)
-        ("<return>" nil "quit" :color blue :exit t))))
-  '';
-};
+#+begin_src nix-ts :tangle modules/window-manager/bufler.nix :noweb yes
+{
+  flake.homeModules.exwm = { ... }:
 
-bufler-workspace-tabs = {
-  enable = true;
-  ghookf = ["('bufler-mode 'bufler-workspace-workspaces-as-tabs-mode)"];
-  gfhookf = ["('bufler-workspace-workspaces-as-tabs-mode '(global-tab-line-mode burly-tabs-mode))"];
-};
+  {
+    programs.emacs.init.usePackage = {
+      bufler = {
+	enable = true;
+	ghookf = ["('tab-bar-mode 'bufler-mode)"];
+	general = {
+	  "s-b" = "'bufler-hydra/body";
+	  "s-f" = "'bufler-workspace-focus-buffer";
+	  "s-F" = "'bufler-workspace-set";
+	};
+	generalTwo."'normal".evil-collection-unimpaired-mode-map = {
+	  "]b" = "'bufler-cycle-buffers-forward";
+	  "[b" = "'bufler-cycle-buffers-backward";
+	};
+	custom.bufler-groups = ''
+	  <<Emacs Bufler Defgroups>>
+	'' ;
+	init = ''
+	  <<Emacs Bufler Init>>
+	'';
+	extraConfig = ''
+	  :pretty-hydra
+          ((:color amaranth)
+            ("Move"
+             (("o" bufler-cycle-buffers-backward "prev")
+              ("e" bufler-cycle-buffers-forward "next"))
+             "Tricks"
+             (("/" consult-buffer "search" :color blue :exit t)
+              ("i" ibuffer "list (ibuffer)" :color blue :exit t)
+              ("k" kill-current-buffer "delete"))
+             "Quit"
+             (("<escape>" nil "quit" :color blue :exit t)
+              ("<return>" nil "quit" :color blue :exit t))))
+	'';
+      };
+
+      bufler-workspace-tabs = {
+	enable = true;
+	ghookf = ["('bufler-mode 'bufler-workspace-workspaces-as-tabs-mode)"];
+	gfhookf = ["('bufler-workspace-workspaces-as-tabs-mode '(global-tab-line-mode burly-tabs-mode))"];
+      };
+    };
+  };
+}
 #+end_src
 
 #+NAME: Emacs Bufler Defgroups
@@ -4163,19 +4124,24 @@ bufler-workspace-tabs = {
 #+end_src
 
 *** ELWM
-#+NAME: Emacs Window Management ELWM
 #+begin_src nix-ts :noweb yes
-elwm = {
-  enable = true;
-  defer = true;
-  command = ["elwm-next" "elwm-prev" "elwm-rotate-window" "elwm-derotate-window" "elwm-split-window"];
-  config = ''
-    <<Emacs Elwm Config>>
-  '';
-  preface = ''
-    <<Emacs Elwm Preface>>
-  '';
-};
+{
+  flake.homeModules.exwm = { ... }:
+
+  {
+    programs.emacs.init.usePackage.elwm = {
+      enable = true;
+      defer = true;
+      command = ["elwm-next" "elwm-prev" "elwm-rotate-window" "elwm-derotate-window" "elwm-split-window"];
+      config = ''
+	<<Emacs Elwm Config>>
+      '';
+      preface = ''
+	<<Emacs Elwm Preface>>
+      '';
+    };
+  } ;
+}
 #+end_src
 
 #+NAME: Emacs Elwm Config
@@ -4231,86 +4197,140 @@ elwm = {
 #+end_src
 
 *** Golden Ratio
-#+NAME: Emacs Window Management Golden Ratio
-#+begin_src nix-ts
-golden-ratio = {
-  enable = true;
-  defer = true;
-  ghookf = ["('on-first-input 'golden-ratio-mode)"];
-  config = "(general-add-advice 'golden-ratio :after 'exwm-mff-warp-to-selected)";
-};
+#+begin_src nix-ts :tangle modules/window-manager/golden-ratio.nix
+{
+  flake.homeModules.exwm = { pkgs, config, lib, ... }:
+
+  {
+    programs.emacs.init.usePackage = {
+      golden-ratio = {
+	enable = true;
+	defer = true;
+	ghookf = ["('on-first-input 'golden-ratio-mode)"];
+	config = "(general-add-advice 'golden-ratio :after 'exwm-mff-warp-to-selected)";
+      };
+
+      exwm-mff = {
+	command = ["exwm-mff-warp-to-selected"];
+	hook = lib.mkForce [];
+      };
+    };
+  } ;
+}
 #+end_src
 
 *** EXWM
-#+NAME: Emacs Window Management EXWM
-#+begin_src nix-ts :noweb yes
-exwm = {
-  gfhookf = [
-    # When window "class" updates, use it to set the buffer name
-    "('exwm-update-class (lambda () (exwm-workspace-rename-buffer exwm-class-name)))"
-    # When EXWM starts up, do some extra configuration
-    ''('exwm-init (lambda ()
-                          ;; Show status in the mode line
-                          (start-process-shell-command "xbanish" nil "${pkgs.xbanish}/bin/xbanish")))''
-  ];
-  # Ctrl+q will enable the next key to be sent directly
-  generalOneConfig.exwm-mode-map = {
-    "C-c" = "mode-specific-map";
-  };
-  custom = {
-    exwm-manage-force-tiling = true;
-    # Emacs everywhere
-    exwm-input-simulation-keys = '''(([?\C-h] . [backspace]))'';
-    exwm-workspace-number = 1;
-    # This will need to be updated to the name of a display!  You can find
-    # the names of your displays by looking at arandr or the output of xrandr
-    exwm-randr-workspace-monitor-plist = '''(0 "eDP-1-1") (1 "HDMI-0")'';
-    # Window focus should follow the mouse pointer
-    mouse-autoselect-window = false;
-    focus-follows-mouse = false;
-    # These keys should always pass through to Emacs
-    exwm-input-prefix-keys = lib.mkForce [
-      '''?\M-`''
-      '''?\C-^''
-      '''?\M-&''
-      "?\\s-\\M-'"
-      '''?\s-b''
-      '''?\M-u''
-      '''?\M-:''
-      '''?\s-o''
-      '''?\s-c''
-      '''?\s-v''
-      '''?\s-n''
-      '''?\s-i''
-      '''?\s-e''
-      '''?\s-f''
-      '''?\s-F''
-      '''?\s-u''
-      '''?\s-/''
-      '''?\s-\H-e''
-      '''?\s-\H-o''
-      "?\\s-'"	# popper-toggle-latest
-      '''?\s-\"'' # popper-toggle-type
-      '''?\s-\ ''
-      '''XF86AudioRaiseVolume''
-      '''XF86AudioLowerVolume''
-      '''XF86AudioMute''
-      '''?\M-\ ''
-    ];
-  };
-  init = ''
-    <<Emacs Exwm Init>>
-  '';
-  config = ''
-    <<Emacs Exwm Config>>
-  '';
-  after = ["repeaters"];
-};
+#+begin_src nix-ts :tangle modules/window-manager/exwm.nix :noweb yes
+{
+  flake.homeModules.exwm = { pkgs, lib, ... }:
 
-exwm-mff = {
-  command = ["exwm-mff-warp-to-selected"];
-  hook = lib.mkForce [];
-};
+  {
+  programs.emacs.init = {
+    tools.exwm = {
+      enable = true;
+      wantMouseWarping = true;
+      useGaps = true;
+      bindings = {
+	"?\\s-r" = "exwm-reset";
+	"?\\s-a" = "evil-ex";
+	"?\\s-d" = "app-launcher-run-app";
+	"?\\s-t" = "proced";
+	  
+	# Movement
+	"?\\s-e" = "elwm-next";
+	"?\\s-o" = "elwm-prev";
+	"?\\s-." = "other-frame";
+
+	# Arrangement
+	"?\\s-\\C-e" = "efs/nirify-forwards";
+	"?\\s-\\C-o" = "efs/nirify-backwards";
+	"?\\s-E" = "elwm-rotate-window";
+	"?\\s-O" = "elwm-derotate-window";
+	"?\\s-c" = "elwm-split-window";
+	"?\\s-n" = "evil-window-move-far-left";
+	"?\\s-i" = "evil-window-move-far-right";
+	"?\\s-j" = "winner-undo";
+	"?\\s-J" = "winner-redo";
+	"?\\s-m" = "toggle-single-window";
+	"?\\s-x" = "toggle-follow-mode";
+	"?\\s-k" = "evil-window-delete";
+	"?\\s-K" = "evil-delete-buffer-and-window";
+
+	#Shell bindings
+	"?\\s-s" = '',(cmd! (shell-command "slock"))'';
+	"?\\s-y" = '',(cmd! (start-process-shell-command "maim" nil  "${lib.getExe pkgs.maim} ~/pic/screenshot.png"))'';
+	"XF86MonBrightnessDown" = '',(cmd! (efs/alter-monitor-brightness 5 t))'';
+	"XF86MonBrightnessUp" = '',(cmd! (efs/alter-monitor-brightness 5))'';
+      };
+      titleAlterations = {
+	qutebrowser = ''(exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title))'';
+	mpv = ''(exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title))'';
+      };
+    };
+    usePackage.exwm = {
+      gfhookf = [
+	# When window "class" updates, use it to set the buffer name
+	"('exwm-update-class (lambda () (exwm-workspace-rename-buffer exwm-class-name)))"
+	# When EXWM starts up, do some extra configuration
+	''('exwm-init (lambda ()
+          (start-process-shell-command "xbanish" nil "${lib.getExe pkgs.xbanish}")))''
+      ];
+      # Ctrl+q will enable the next key to be sent directly
+      generalOneConfig.exwm-mode-map = {
+	"C-c" = "mode-specific-map";
+      };
+      custom = {
+	exwm-manage-force-tiling = true;
+	# Emacs everywhere
+	exwm-input-simulation-keys = '''(([?\C-h] . [backspace]))'';
+	exwm-workspace-number = 1;
+	# This will need to be updated to the name of a display!  You can find
+	# the names of your displays by looking at arandr or the output of xrandr
+	exwm-randr-workspace-monitor-plist = '''(0 "eDP-1-1") (1 "HDMI-0")'';
+	# Window focus should follow the mouse pointer
+	mouse-autoselect-window = false;
+	focus-follows-mouse = false;
+	# These keys should always pass through to Emacs
+	exwm-input-prefix-keys = lib.mkForce [
+	  '''?\M-`''
+	  '''?\C-^''
+	  '''?\M-&''
+	  "?\\s-\\M-'"
+	  '''?\s-b''
+	  '''?\M-u''
+	  '''?\M-:''
+	  '''?\s-o''
+	  '''?\s-c''
+	  '''?\s-v''
+	  '''?\s-n''
+	  '''?\s-i''
+	  '''?\s-e''
+	  '''?\s-f''
+	  '''?\s-F''
+	  '''?\s-u''
+	  '''?\s-/''
+	  '''?\s-\H-e''
+	  '''?\s-\H-o''
+	  "?\\s-'"	# popper-toggle-latest
+	  '''?\s-\"'' # popper-toggle-type
+	  '''?\s-\ ''
+	  '''XF86AudioRaiseVolume''
+	  '''XF86AudioLowerVolume''
+	  '''XF86AudioMute''
+	  '''?\M-\ ''
+	];
+      };
+      init = ''
+	<<Emacs Exwm Init>>
+      '';
+      config = ''
+	<<Emacs Exwm Config>>
+      '';
+      after = ["repeaters"];
+    };
+  };
+  };
+}
 #+end_src
 
 #+NAME: Emacs Exwm Init
@@ -4388,87 +4408,86 @@ NEG subtracts if it is true."
 (exwm-input-set-key (kbd "s-<return>") 'efs/make-eshell)
 #+end_src
 
-*** Popper & Proced
-#+NAME: Emacs Window Management Popper & Proced
-#+begin_src nix-ts
-popper = {
-  enable = true;
-  ghookf = ["('on-first-buffer 'popper-mode)"];
-  general = {
-    "s-'" = "'popper-toggle";
-    "s-\\\"" = "'popper-cycle";
-    "C-s-'" = "'popper-toggle-type";
+*** Popper
+#+begin_src nix-ts :tangle modules/window-manager/popper.nix
+{
+  flake.homeModules.exwm = { ... }:
+  {
+    programs.emacs.init.usePackage.popper = {
+      enable = true;
+      ghookf = ["('on-first-buffer 'popper-mode)"];
+      general = {
+	"s-'" = "'popper-toggle";
+	"s-\\\"" = "'popper-cycle";
+	"C-s-'" = "'popper-toggle-type";
+      };
+      setopt = {
+	popper-window-height = 30;
+	popper-group-function = "'popper-group-by-project";
+	popper-reference-buffers = [
+	  "'help-mode"
+	  "'helpful-mode"
+	  "'compilation-mode"
+	  "'inferior-python-mode"
+	  "'occur-mode"
+	  "'grep-mode"
+	  ''"^\\*.*eshell\\*"''
+	  ''"^\\*eat\\*"''
+	  ''"^\\*Sage\\*"''
+	  ''"^\\*prolog\\*"''
+	  "'xref--xref-buffer-mode"
+	  "'flymake-diagnostics-buffer-mode"
+	  "'rustic-cargo-test-mode"
+	  "'rustic-cargo-run-mode"
+	  "'geiser-repl-mode"
+	  "'dape-repl-mode"
+	  "'racket-repl-mode"
+	  "'inferior-ess-r-mode"
+	  "'cider-repl-mode"
+	];
+      };
+    };
   };
-  setopt = {
-    popper-window-height = 30;
-    popper-group-function = "'popper-group-by-project";
-    popper-reference-buffers = [
-      "'help-mode"
-      "'helpful-mode"
-      "'compilation-mode"
-      "'inferior-python-mode"
-      "'occur-mode"
-      "'grep-mode"
-      ''"^\\*.*eshell\\*"''
-      ''"^\\*eat\\*"''
-      ''"^\\*Sage\\*"''
-      ''"^\\*prolog\\*"''
-      "'xref--xref-buffer-mode"
-      "'flymake-diagnostics-buffer-mode"
-      "'rustic-cargo-test-mode"
-      "'rustic-cargo-run-mode"
-      "'geiser-repl-mode"
-      "'dape-repl-mode"
-      "'racket-repl-mode"
-      "'inferior-ess-r-mode"
-      "'cider-repl-mode"
-    ];
-  };
-};
-
-proced = {
-  enable = true;
-  command = ["proced"];
-  generalTwoConfig.":n".proced-mode-map = {
-    "j" = "'proced-unmark";
-    "k" = "'proced-send-signal";
-  };
-};
+}
 #+end_src
 
 *** Ace Window
-#+NAME: Emacs Ace Window
-#+begin_src nix-ts :noweb yes
-ace-window = {
-  enable = true;
-  setopt = {
-    aw-scope = "'frame";
-    aw-keys = "'(?c ?r ?s ?t ?n ?e ?i ?a)";
-  };
-  preface = ''
-    <<Emacs Ace Window Preface>>
-  '';
-  init = ''(setopt aw-dispatch-alist '((?k aw-delete-window "Delete Window")
-    (?K efs-aw-kill-buffer-and-window "Delete Buffer and Window")
-                                       (?m aw-swap-window "Swap Windows")
-                                       (?M aw-move-window "Move Window")
-                                       (?d aw-copy-window "Copy Window")
-                                       (?b aw-switch-buffer-in-window "Select Buffer")
-                                       (?f aw-flip-window)
-                                       (?u aw-switch-buffer-other-window "Switch Buffer Other Window")
-                                       (?x aw-execute-command-other-window "Execute Command Other Window")
-                                       (?v efs-aw-split-window-elwm "Split Window")
-                                       (?o delete-other-windows "Delete Other Windows")
-                                       (?T aw-transpose-frame "Transpose Frame")
-                                       (?? aw-show-dispatch-help)))'';
-  general = {
-    "s-H-o" = "'ace-window";
-    "s-H-e" = "'ace-window";
-  };
-  config = ''
-    <<Emacs Ace Window Config>>
-  '';
-};
+#+begin_src nix-ts :tangle modules/window-manager/ace.nix :noweb yes
+{
+  flake.homeModules.exwm = { ... }:
+  {
+    programs.emacs.init.usePackage.ace-window = {
+      enable = true;
+      setopt = {
+	aw-scope = "'frame";
+	aw-keys = "'(?c ?r ?s ?t ?n ?e ?i ?a)";
+      };
+      preface = ''
+	<<Emacs Ace Window Preface>>
+      '';
+      init = ''(setopt aw-dispatch-alist '((?k aw-delete-window "Delete Window")
+	(?K efs-aw-kill-buffer-and-window "Delete Buffer and Window")
+                                           (?m aw-swap-window "Swap Windows")
+                                           (?M aw-move-window "Move Window")
+                                           (?d aw-copy-window "Copy Window")
+                                           (?b aw-switch-buffer-in-window "Select Buffer")
+                                           (?f aw-flip-window)
+                                           (?u aw-switch-buffer-other-window "Switch Buffer Other Window")
+                                           (?x aw-execute-command-other-window "Execute Command Other Window")
+                                           (?v efs-aw-split-window-elwm "Split Window")
+                                           (?o delete-other-windows "Delete Other Windows")
+                                           (?T aw-transpose-frame "Transpose Frame")
+                                           (?? aw-show-dispatch-help)))'';
+      general = {
+	"s-H-o" = "'ace-window";
+	"s-H-e" = "'ace-window";
+      };
+      config = ''
+	<<Emacs Ace Window Config>>
+      '';
+    };
+  } ;
+}
 #+end_src
 
 #+NAME: Emacs Ace Window Preface
