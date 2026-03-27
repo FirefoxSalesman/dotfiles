@@ -1870,6 +1870,27 @@ A great deal was borrowed from:
                :open-rec nil))
 #+end_src
 
+*** Writeroom
+I couldn't get olivetti to work.
+#+begin_src nix-ts :tangle modules/aesthetics/writeroom.nix
+{
+  flake.homeModules.aesthetics = { ... }:
+  {
+    programs.emacs.init.usePackage.writeroom-mode = {
+      enable = true;
+      ghookf = ["((gen-mode-hooks '(Man org-agenda org Info markdown shrface)) 'writeroom-mode)"];
+      gfhookf = ["('writeroom-mode-enable 'visual-line-mode)"];
+      setopt = {
+	writeroom-mode-line = true;
+	writeroom-maximize-window = false;
+	writeroom-global-effects = false;
+      };
+      generalOne.global-leader."w" = '''("writeroom" . writeroom-mode)'';
+    };
+  };
+}
+#+end_src
+
 *** Mustache File
 #+begin_src json-ts :tangle modules/aesthetics/pywal.json.mustache
 {
@@ -3547,81 +3568,35 @@ Helpful gives more information, & which-key tells what keybinds you have availab
 #+end_src
 
 ** Writing
-#+begin_src nix-ts :tangle modules/writing.nix :noweb yes 
+*** Org
+The org agenda syntax:
+DEADLINE:<year-month-date>
+How to add a latex package
+: #+LATEX_HEADER: \usepackage{times}
+#+begin_src nix-ts :tangle modules/writing/org.nix :noweb yes 
 { inputs, ... }:
 {
   flake.homeModules.writing = { config, pkgs, ... }:
 
   {
-    home.packages = with pkgs; [
-      libreoffice-fresh
-      hunspell
-      hunspellDicts.en-us-large
-      texlive.combined.scheme-full
-    ];
+    home.packages = with pkgs; [ libreoffice-fresh ];
 
     programs.emacs.init = {
-      tools = {
-        nov = true;
-        pdf = true;
-      };
-      writing = {
-        denote = true;
-        citar = true;
-      };
-      completions.tempel.templates.org-mode = {
-        ci = ''"* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q'';
-        exp = ''"#+export: " q'';
-      };
-      ide.languages = {
-        markdown.enable = true;
-        latex = {
+      writing.denote = true;
+      completions.tempel.templates.org-mode.exp = ''"#+export: " q'';
+      ide.languages.org = {
+        enable = true;
+        aesthetics = {
           enable = true;
-          magicLatexBuffer = true;
-          cdlatex = true;
+          headerFont = config.stylix.fonts.sansSerif.name;
         };
-        org = {
-          enable = true;
-          aesthetics = {
-            enable = true;
-            headerFont = config.stylix.fonts.sansSerif.name;
-          };
-          captureTemplates.enable = true;
-        };
+        captureTemplates.enable = true;
       };
 
       usePackage = {
-        <<Emacs Org Main>>
-  
-        <<Emacs Org Extensions>>
-      
-        <<Emacs Latex>>
-      
-        <<Emacs Markdown>>
-      
-        <<Emacs Writeroom>>
-
-        <<Emacs Spellcheck>>
-      
-        citar.setopt.citar-bibliography = [''"~/doc/uni.bib"''];
-      };
-    };
-  };
-}
-#+end_src
-
-*** Org
-**** Main Config
-The org agenda syntax:
-DEADLINE:<year-month-date>
-How to add a latex package
-: #+LATEX_HEADER: \usepackage{times}
-
-#+NAME: Emacs Org Main
-#+begin_src nix-ts :noweb yes
-org = {
-  gfhookf = [''('org-mode (list 'ispell-minor-mode
-    (local! completion-at-point-functions (list (cape-capf-super
+	org = {
+	  gfhookf = [''('org-mode (list 'ispell-minor-mode
+	    (local! completion-at-point-functions (list (cape-capf-super
                                                  #'tempel-complete
 						 #'cape-file)
                                                 #'pcomplete-completions-at-point
@@ -3629,24 +3604,44 @@ org = {
 						#'cape-elisp-block
 						#'cape-dict
                                                 #'cape-dabbrev))))''
-  ];
-  custom.org-directory = ''"~/doc"'';
-  setopt = {
-    org-export-with-section-numbers = false;
-    org-export-with-toc = false;
-  };
-  generalTwoConfig.local-leader.org-mode-map = {
-    "a" = '''("avy" . avy-org-goto-heading-timer)'';
-    "e" = "'smart-export";
-  };
+	  ];
+	  custom.org-directory = ''"~/doc"'';
+	  setopt = {
+	    org-export-with-section-numbers = false;
+	    org-export-with-toc = false;
+	  };
+	  generalTwoConfig.local-leader.org-mode-map = {
+	    "a" = '''("avy" . avy-org-goto-heading-timer)'';
+	    "e" = "'smart-export";
+	  };
 
-  config = ''
-    <<Emacs Org Main Config>>
-  '' ;
-};
+	  config = ''
+	    <<Emacs Org Config>>
+	  '' ;
+	};
+  
+	org-auto-tangle = {
+	  enable = true;
+	  ghookf = ["('org-mode 'org-auto-tangle-mode)"];
+	};
+
+	denote.setopt.denote-known-keywords = [ ''"quotes"'' ''"chem"'' ''"emacs"'' ''"java"'' ''"physics"'' ''"calculus"'' ''"minecraft"'' ''"de"'' ''"proofs"'' ''"csse230"'' ''"os"'' ''"databases"'' ''"scifi"'' ''"softwarerequirements"'' ''"anthropology"'' ''"theoryofcomputation"'' ''"parallelcomp"'' ''"cybersecurity"'' ''"probstats"'' ''"scheme"'' ''"dreams"'' ''"softwaredevelopment"'' ''"ethics"'' ''"plp"'' ''"malwareanalysis"'' ''"bio"'' ''"ai"'' ''"resolve"'' ''"psychology"'' ''"algorithmanalysis"'' ''"music"''];
+
+	biblio = {
+	  enable = true;
+	  generalOne.global-leader = {
+	    "ob" = '''(:ignore t :which-key "biblio")'';
+	    "obl" = "'biblio-lookup";
+	    "obi" = "'biblio-doi-insert-bibtex";
+	  };
+	};
+      };
+    };
+  };
+}
 #+end_src
 
-#+NAME: Emacs Org Main Config
+#+NAME: Emacs Org Config
 #+begin_src emacs-lisp
 (require 'ol-man)
 (defun smart-export ()
@@ -3657,26 +3652,6 @@ org = {
 	  ((equal export-type "odt")  (org-odt-export-to-odt))
 	  ((equal export-type "md")  (org-md-export-to-markdown))
           ((equal export-type "html") (org-html-export-to-html)))))
-#+end_src
-
-**** Extensions
-#+NAME: Emacs Org Extensions
-#+begin_src nix-ts :noweb yes
-org-auto-tangle = {
-  enable = true;
-  ghookf = ["('org-mode 'org-auto-tangle-mode)"];
-};
-
-denote.setopt.denote-known-keywords = [ ''"quotes"'' ''"chem"'' ''"emacs"'' ''"java"'' ''"physics"'' ''"calculus"'' ''"minecraft"'' ''"de"'' ''"proofs"'' ''"csse230"'' ''"os"'' ''"databases"'' ''"scifi"'' ''"softwarerequirements"'' ''"anthropology"'' ''"theoryofcomputation"'' ''"parallelcomp"'' ''"cybersecurity"'' ''"probstats"'' ''"scheme"'' ''"dreams"'' ''"softwaredevelopment"'' ''"ethics"'' ''"plp"'' ''"malwareanalysis"'' ''"bio"'' ''"ai"'' ''"resolve"'' ''"psychology"'' ''"algorithmanalysis"'' ''"music"''];
-
-biblio = {
-  enable = true;
-  generalOne.global-leader = {
-    "ob" = '''(:ignore t :which-key "biblio")'';
-    "obl" = "'biblio-lookup";
-    "obi" = "'biblio-doi-insert-bibtex";
-  };
-};
 #+end_src
 
 *** Latex
@@ -3695,57 +3670,61 @@ No idea what the rest of this is for.
 | equ | becomes an equation after tab     |
 | beg | becomes an environment after tab  |
 
-#+NAME: Emacs Latex
-#+begin_src nix-ts
-pdf-tools = {
-  generalOneConfig.pdf-view-mode-map."C-s" = "'search-forward";
-  gfhookf = ["('pdf-view-mode 'pdf-view-midnight-minor-mode)"];
-};
+#+begin_src nix-ts :tangle modules/writing/latex.nix
+{
+  flake.homeModules.writing = { pkgs, ... }:
+  {
+    home.packages = with pkgs; [ texlive.combined.scheme-full ];
+    programs.emacs.init = {
+      ide.languages.latex = {
+	enable = true;
+	magicLatexBuffer = true;
+	cdlatex = true;
+      };
+      usePackage = {
+	cdlatex.generalTwoConfig.":i" = {
+	  cdlatex-mode-map."TAB" = "'cdlatex-tab";
+	  org-cdlatex-mode-map."TAB" = "'cdlatex-tab";
+	};
 
-evil-collection-pdf = {
-  defer = true;
-  enable = true;
-  generalTwoConfig.":n".pdf-view-mode-map = {
-    "C-e" = "'pdf-view-scroll-up-or-next-page";
-    "E" = "'pdf-view-scroll-up-or-next-page";
-    "C-o" = "'pdf-view-scroll-down-or-previous-page";
-    "O" = "'pdf-view-scroll-down-or-previous-page";
+	tex.generalTwoConfig.local-leader.LaTeX-mode-map."e" = "'TeX-command-run-all";
+
+	evil-tex.generalOneConfig.":ov" = {
+	  "t" = "evil-tex-outer-text-objects-map";
+	  "s" = "evil-tex-inner-text-objects-map";
+	};
+      };
+    };
   };
-};
-
-cdlatex.generalTwoConfig.":i" = {
-  cdlatex-mode-map."TAB" = "'cdlatex-tab";
-  org-cdlatex-mode-map."TAB" = "'cdlatex-tab";
-};
-
-tex.generalTwoConfig.local-leader.LaTeX-mode-map."e" = "'TeX-command-run-all";
-
-evil-tex.generalOneConfig.":ov" = {
-  "t" = "evil-tex-outer-text-objects-map";
-  "s" = "evil-tex-inner-text-objects-map";
-};
+}
 #+end_src
 
 *** Markdown
-#+NAME: Emacs Markdown
-#+begin_src nix-ts :noweb yes
-markdown = {
-  generalOneConfig.markdown-mode-map."C-c C-e" = "'markdown-do";
-  gfhookf = ["('markdown-mode 'efs/markdown-font-setup)"];
-  setopt = {
-    markdown-command = ''"multimarkdown"'';
-    markdown-hide-markup = true;
+#+begin_src nix-ts :tangle modules/writing/markdown.nix :noweb yes
+{
+  flake.homeModules.writing = { ... }: {
+    programs.emacs.init = {
+      ide.languages.markdown.enable = true;
+      usePackage.markdown = {
+	generalOneConfig.markdown-mode-map."C-c C-e" = "'markdown-do";
+	gfhookf = ["('markdown-mode 'efs/markdown-font-setup)"];
+	setopt = {
+	  markdown-command = ''"multimarkdown"'';
+	  markdown-hide-markup = true;
+	};
+	generalTwoConfig = {
+	  ":nm".gfm-mode-map = {
+	    "[h" = "'markdown-previous-visible-heading";
+	    "]h" = "'markdown-next-visible-heading";
+	  };  
+	};
+	preface = ''
+	  <<Emacs Markdown Init>>
+	'';
+      };
+    };
   };
-  generalTwoConfig = {
-    ":nm".gfm-mode-map = {
-      "[h" = "'markdown-previous-visible-heading";
-      "]h" = "'markdown-next-visible-heading";
-    };  
-  };
-  preface = ''
-    <<Emacs Markdown Init>>
-  '';
-};
+}
 #+end_src
 
 #+NAME: Emacs Markdown Init
@@ -3761,33 +3740,52 @@ markdown = {
     (set-face-attribute (car face) nil :font "SF Pro" :weight 'regular :height (cdr face))))
 #+end_src
 
-*** Writeroom
-I couldn't get olivetti to work.
-#+NAME: Emacs Writeroom
-#+begin_src nix-ts
-writeroom-mode = {
-  enable = true;
-  ghookf = ["((gen-mode-hooks '(Man org-agenda org Info markdown shrface)) 'writeroom-mode)"];
-  gfhookf = ["('writeroom-mode-enable 'visual-line-mode)"];
-  setopt = {
-    writeroom-mode-line = true;
-    writeroom-maximize-window = false;
-    writeroom-global-effects = false;
-  };
-  generalOne.global-leader."w" = '''("writeroom" . writeroom-mode)'';
-};
-#+end_src
+*** Tools
+#+begin_src nix-ts :tangle modules/writing/tools.nix
+{
+  flake.homeModules.writing = { pkgs, ... }:
+  {
+    home.packages = with pkgs; [
+      hunspell
+      hunspellDicts.en-us-large
+    ];
+    programs.emacs.init = {
+      tools = {
+	nov = true;
+	pdf = true;
+      };
+      writing.citar = true;
+      completions.tempel.templates.org-mode.ci = ''"* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q'';
+      usePackage = {
+	flyspell = {
+	  enable = true;
+	  ghookf = [
+	    "('text-mode 'flyspell-mode)"
+	    "('prog-mode 'flyspell-prog-mode)"
+	  ];
+	};
 
-*** Spellcheck
-#+NAME: Emacs Spellcheck
-#+begin_src nix-ts
-flyspell = {
-  enable = true;
-  ghookf = [
-    "('text-mode 'flyspell-mode)"
-    "('prog-mode 'flyspell-prog-mode)"
-  ];
-};
+	pdf-tools = {
+	  generalOneConfig.pdf-view-mode-map."C-s" = "'search-forward";
+	  gfhookf = ["('pdf-view-mode 'pdf-view-midnight-minor-mode)"];
+	};
+
+	evil-collection-pdf = {
+	  defer = true;
+	  enable = true;
+	  generalTwoConfig.":n".pdf-view-mode-map = {
+	    "C-e" = "'pdf-view-scroll-up-or-next-page";
+	    "E" = "'pdf-view-scroll-up-or-next-page";
+	    "C-o" = "'pdf-view-scroll-down-or-previous-page";
+	    "O" = "'pdf-view-scroll-down-or-previous-page";
+	  };
+	};
+
+        citar.setopt.citar-bibliography = [''"~/doc/uni.bib"''];
+      };
+    };
+  };
+}
 #+end_src
 
 ** Password Management
