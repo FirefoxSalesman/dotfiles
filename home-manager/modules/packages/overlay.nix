@@ -26,13 +26,7 @@ in {
     wiki = packages.wiki;
 
     # overrides
-    mpv = (prev.mpv.override {
-      scripts = with prev.mpvScripts; [
-	thumbfast
-	sponsorblock
-	quality-menu
-      ];
-    });
+    mpv = packages.mpv;
 
     #emacs packages
     emacsPackagesFor = emacs: (
@@ -44,7 +38,6 @@ in {
           repeaters = packages.repeaters;
           app-launcher = packages.app-launcher;
           ezf = packages.emacs-ezf;
-          gptel-quick = packages.gptel-quick;
 	  mpc-wrapper = packages.mpc-wrapper;
 	  semel = packages.semel;
           embark = packages.embark;

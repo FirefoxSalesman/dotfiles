@@ -35,11 +35,6 @@
     };
 
     # packages
-    gptel-quick = {
-      url = "github:karthink/gptel-quick";
-      flake = false;
-    };
-
     repeaters = {
       url = "github:mmarshall540/repeaters";
       flake = false;
@@ -122,13 +117,7 @@ in {
     wiki = packages.wiki;
 
     # overrides
-    mpv = (prev.mpv.override {
-      scripts = with prev.mpvScripts; [
-	thumbfast
-	sponsorblock
-	quality-menu
-      ];
-    });
+    mpv = packages.mpv;
 
     #emacs packages
     emacsPackagesFor = emacs: (
@@ -140,7 +129,6 @@ in {
           repeaters = packages.repeaters;
           app-launcher = packages.app-launcher;
           ezf = packages.emacs-ezf;
-          gptel-quick = packages.gptel-quick;
 	  mpc-wrapper = packages.mpc-wrapper;
 	  semel = packages.semel;
           embark = packages.embark;
@@ -216,48 +204,6 @@ in {
 	pname = "ezf";
 	version = "current";
 	src = inputs.ezf;
-      }
-    );
-  };
-}
-#+end_src
-
-*** GPT.el quick
-#+begin_src nix-ts :tangle modules/packages/emacs/gptel-quick.nix
-{ inputs, ... }:
-
-{
-  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages.gptel-quick = (epkgs.callPackage
-      epkgs.trivialBuild rec {
-	pname = "gptel-quick";
-	version = "current";
-	src = inputs.gptel-quick;
-
-	propagatedUserEnvPkgs = [
-	  epkgs.gptel
-	];
-
-	buildInputs = propagatedUserEnvPkgs;
-      }
-    );
-  };
-}
-#+end_src
-
-*** MPC Wrapper
-#+begin_src nix-ts :tangle modules/packages/emacs/mpc-wrapper.nix
-{ inputs, ... } :
-
-{
-  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages.mpc-wrapper = (epkgs.callPackage
-      epkgs.trivialBuild rec {
-	pname = "mpc-wrapper";
-	version = "current";
-	src = inputs.mpc-wrapper;
       }
     );
   };
@@ -401,39 +347,6 @@ The version of embark in nixpkgs doesn't work right with org mode because it's m
 #+end_src
 
 ** Scripts
-*** Cast
-For moving massive quantities of Jordan Peterson's podcast into my mp3 player
-#+begin_src nix-ts :tangle modules/packages/scripts/cast.nix
-{ inputs, ... }:
-{
-  perSystem = { pkgs, self', ... }: let packages = self'.packages;
-  in {
-    packages.cast = (pkgs.writeShellScriptBin "cast" ''
-      #Exit on fail
-      set -e
-
-      #Set Input & Output Filetypes
-      in=$(${pkgs.coreutils}/bin/printf 'm4a\nopus\nmp4\nmkv\nwebm' | ${packages.ezf}/bin/ezf)
-      out=$(${pkgs.coreutils}/bin/printf 'mp3\nflac\nwav\nogg' | ${packages.ezf}/bin/ezf)
-
-      #Choose device to transfer to
-      device=$(${pkgs.coreutils}/bin/ls /run/media/$USER | ${packages.ezf}/bin/ezf)
-
-      #Convert files
-      ${packages.ffmpeg-bulk}/bin/ffmpeg-bulk *.$in -t $out
-      ${pkgs.coreutils}/bin/rm *.$in
-
-      #Remove metadata so the glowies don't see it.
-      ${pkgs.python312Packages.mat2}/bin/mat2 *.$out
-
-      #Transfer
-      ${pkgs.coreutils}/bin/mv ~/*.cleaned.$out /run/media/$USER/$device/Podcasts
-      ${pkgs.coreutils}/bin/rm ~/*.$out
-    '');
-  };
-}
-#+end_src
-
 *** mpvmacs
 Play a file with mpv, controllable by emacs
 #+begin_src nix-ts :tangle modules/packages/scripts/mpvmacs.nix
@@ -524,167 +437,6 @@ Borrowed from here: https://github.com/mickeynp/ezf
 }
 #+end_src
 
-*** Ffmpeg-bulk
-I stole this from this git repo https://github.com/sylsau/ffmpeg-bulk
-#+begin_src nix-ts :tangle modules/packages/scripts/ffmpeg-bulk.nix
-{ inputs, ... }:
-
-{
-  perSystem = { config, pkgs, self', ... }: {
-    packages.ffmpeg-bulk = pkgs.writeShellScriptBin "ffmpeg-bulk" ''
-#!/bin/bash - 
-#===============================================================================
-#
-#		  USAGE: ./this.sh --help
-# 
-#	DESCRIPTION: Create a ffmpeg conversion script from a list of input files.
-# 
-#		OPTIONS: ---
-#  REQUIREMENTS: sed, gawk, ffmpeg, tee
-#		   BUGS: ---
-#		  NOTES: ---
-#		 AUTHOR: Sylvain Saubier (ResponSyS), mail@sylsau.com
-#		CREATED: 01/05/16 14:09
-#===============================================================================
-
-[[ $DEBUG ]] && set -o nounset
-set -o pipefail -o errexit -o errtrace
-trap 'echo -e "''${FMT_BOLD}ERROR''${FMT_OFF}: at $FUNCNAME:$LINENO"' ERR
-
-readonly FMT_BOLD='\e[1m'
-readonly FMT_UNDERL='\e[4m'
-readonly FMT_OFF='\e[0m'
-
-readonly PROGRAM_NAME="''${0##*/}"
-readonly SCRIPT_NAME="''${0##*/}"
-RES="$( stat -c %y $0 | cut -d" " -f1 )"
-readonly VERSION=''${RES//-/}
-
-readonly ERR_NO_CMD=60
-
-FFMPEG="''${FFMPEG:-ffmpeg}"
-OPT_EXT=
-OPT_ARGS_IN=
-OPT_ARGS_OUT=
-OPT_FORCE=
-OPT_LOGLEVEL="-loglevel error"
-INPUT=( )
-
-
-# $1 = command to test (string)
-fn_need_cmd() {
-        if ! command -v "$1" > /dev/null 2>&1
-                then fn_err "need '$1' (command not found)" $ERR_NO_CMD
-        fi
-}
-# $1 = message (string)
-m_say() {
-        echo -e "$PROGRAM_NAME: $1"
-}
-# $1 = error message (string), $2 = return code (int)
-fn_err() {
-        m_say "''${FMT_BOLD}ERROR''${FMT_OFF}: $1" >&2
-        exit $2
-}
-
-fn_help() {
-        cat << EOF
-$PROGRAM_NAME v$VERSION
-        Convert multiple media files at once with ffmpeg.
-        In pure and secure bash.
-REQUIREMENTS
-        ffmpeg
-USAGE
-        $PROGRAM_NAME FILES... (--to|-t) EXTENSION [--args-in|-ai INPUT_ARGS] [--args-out|-ao OUTPUT_ARGS] [--force|-f] [--log-level LOG_LEVEL]
-OPTIONS AND ARGUMENTS
-        EXTENSION 		format of output files
-        INPUT_ARGS 		ffmpeg arguments for the input file
-        OUTPUT_ARGS		ffmpeg arguments for the output file
-        --force			overwrite files 
-        LOG_LEVEL		change ffmpeg '-loglevel'
-                                (default: 'error', ffmpeg default: 'info')
-EXAMPLE
-        Convert all flac and wav files in the current directory to opus with the specified options:
-                $ $PROGRAM_NAME *.flac -t opus --args-out "-b:a 320k" *.wav
-SEE ALSO
-        ffmpeg(1)
-AUTHOR
-        Written by Sylvain Saubier
-REPORTING BUGS
-        Mail at: <feedback@sylsau.com>
-EOF
-}
-
-fn_show_params() {
-        m_say "\n input=''${INPUT[*]}\n -t=$OPT_EXT\n -ai=$OPT_ARGS_IN\n -ao=$OPT_ARGS_OUT\n -f=$OPT_FORCE\n -q=$OPT_LOGLEVEL" >&2
-}
-
-
-fn_need_cmd "$FFMPEG"
-
-# Check args
-if [[ -z "$@" ]]; then
-        fn_help
-        exit
-else
-        while [[ $# -gt 0 ]]; do
-                case "$1" in
-                        "--help"|"-h")
-                                fn_help
-                                exit
-                                ;;
-                        "--to"|"-t")
-                                OPT_EXT=$2
-                                shift
-                                ;;
-                        "--args-in"|"-ai")
-                                OPT_ARGS_IN=$2
-                                shift
-                                ;;
-                        "--args-out"|"-ao")
-                                OPT_ARGS_OUT=$2
-                                shift
-                                ;;
-                        "--force"|"-f")
-                                OPT_FORCE="-y"
-                                ;;
-                        "--log-level")
-                                OPT_LOGLEVEL="-loglevel $2"
-                                shift
-                                ;;
-                        ,*)
-                                [[ -e "$1" ]] || fn_err "file '$1' does not exist" 127
-                                INPUT+=( "$1" )
-                                ;;
-                esac	# --- end of case ---
-                shift 	# delete $1
-        done
-fi
-
-[[ $DEBUG ]] && fn_show_params
-
-[[ $OPT_EXT ]] || fn_err "please specify the output extension with -t EXT" 2
-
-# Rajoute un point à l'extension si absent
-if [[ ''${OPT_EXT:0:1} != '.' ]]; then
-        OPT_EXT=.$OPT_EXT
-fi
-
-m_say "converting...\n---"
-for F in "''${INPUT[@]}"; do # Just show the commands
-        ${pkgs.coreutils}/bin/echo $FFMPEG $OPT_ARGS_IN -i "$F" $OPT_ARGS_OUT $OPT_FORCE $OPT_LOGLEVEL "''${F%.*}$OPT_EXT"
-done ;  ${pkgs.coreutils}/bin/echo "---" ; [[ $DEBUG ]] && exit
-for F in "''${INPUT[@]}"; do # Actually execute
-        m_say "converting \"$F\"..."
-             $FFMPEG $OPT_ARGS_IN -i "$F" $OPT_ARGS_OUT $OPT_FORCE $OPT_LOGLEVEL "''${F%.*}$OPT_EXT"
-done
-
-exit
-    '';
-  };
-}
-#+end_src
-
 *** HDMI Helper
 #+begin_src nix-ts :tangle modules/packages/scripts/hdmi-helper.nix
 { inputs, ... }:
@@ -698,39 +450,6 @@ exit
         mirror ) xrandr --output HDMI-1-0 --mode 1920x1080 --output eDP-1 --mode 1920x1080 ;;
         off ) xrandr --output eDP-1 --mode 2560x1600 ;;
       esac
-    '';
-  };
-}
-#+end_src
-
-*** Masstube
-#+begin_src nix-ts :tangle modules/packages/scripts/masstube.nix
-{ inputs, ... }:
-
-{
-  perSystem = { config, pkgs, self', ... }: {
-    packages.masstube = pkgs.writeShellScriptBin "masstube" ''
-      emacsclient ~/.download.txt
-      # ${pkgs.yt-dlp}/bin/yt-dlp $1 --verbose -ci --batch-file=~/.download.txt --proxy socks://localhost:9050
-      ${pkgs.yt-dlp}/bin/yt-dlp $1 --verbose -ci --batch-file=~/.download.txt 
-      ${pkgs.coreutils}/bin/rm ~/.download.txt
-    '';
-  };
-}
-#+end_src
-
-*** Start-ollama
-#+begin_src nix-ts :tangle modules/packages/scripts/start-ollama.nix
-{ inputs, ... }:
-
-{
-  perSystem = { pkgs, ... }: {
-    packages.startOllama = pkgs.writeShellScriptBin "start-ollama" ''
-      if [[ "$(pidof ollama)" -gt 0 ]]; then
-        echo "ollama already running"
-      else
-        ollama serve
-      fi
     '';
   };
 }
@@ -4547,9 +4266,17 @@ NEG subtracts if it is true."
 { inputs, ... }:
 
 {
-  flake.homeModules.ai = { config, pkgs, ... }:
+  perSystem = { pkgs, ... }: {
+    packages.startOllama = pkgs.writeShellScriptBin "start-ollama" ''
+      if [[ "$(pidof ollama)" -gt 0 ]]; then
+        echo "ollama already running"
+      else
+        ollama serve
+      fi
+    '';
+  };
 
-  {
+  flake.homeModules.ai = { config, pkgs, ... }: {
     programs.emacs.init = {
       ide.copilot = {
 	enable = true;
@@ -4577,10 +4304,10 @@ NEG subtracts if it is true."
 	    # gptel-model = "'qwen3:latest";
 	    gptel-backend = ''
 	      (gptel-make-ollama "Ollama"
-	    :stream t
-	    :protocol "http"
-	    :host "localhost:11434"
-	    :models '(qwen3:latest llama3.2:3b))
+	        :stream t
+	        :protocol "http"
+	        :host "localhost:11434"
+	        :models '(qwen3:latest llama3.2:3b))
 	    '';
 	    # gptel-backend = ''(gptel-make-gh-copilot "Copilot")'';
 	  };
@@ -4629,68 +4356,70 @@ NEG subtracts if it is true."
 #+end_src
 
 ** Multimedia
-This is where all the audio/video stuff goes
-#+begin_src nix-ts :tangle modules/multimedia.nix :noweb yes
-{ inputs, ... }:
-
+*** AV Editing
+#+begin_src nix-ts :tangle modules/multimedia/av.nix
 {
-  flake.homeModules.media = { pkgs, config, ... }:
-
-  {
+  flake.homeModules.media = { pkgs, config, ... }: {
     home.packages = with pkgs; [
-      yt-dlp
       (config.lib.nixGL.wrap obs-studio)
       lmms
       audacity
       doomer
-      masstube
-      cast
     ];
-
-  <<Mpd>>
-
-  <<Mpv>>
-
-  programs.emacs.init.usePackage = {
-    <<Emacs Pulseaudio Control>>
-    };
   };
 }
 #+end_src
 
 *** MPD
-#+NAME: Mpd
-#+begin_src nix-ts :noweb yes
-services.mpd = {
-  enable = true;
-  musicDirectory = "${config.home.homeDirectory}/mus/mpd";
-  extraConfig = ''
-    audio_output {
-      type "pipewire"
-      name "My Pipewire Output"
-      mixer_type "hardware"
-      mixer_device "default"
-      mixer_control "PCM"
-    }
-  '';
-};
+#+begin_src nix-ts :tangle modules/multimedia/mpd.nix :noweb yes
+{ inputs, ... }:
 
-programs.emacs.init.usePackage.mpc-wrapper = {
-  enable = true;
-  extraPackages = [pkgs.mpc];
-  generalOne.global-leader = {
-    "m" = '''(:ignore t :which-key "mpd")'';
-    "mp" = '''("replay file" . mpc-play)'';
-    "mm" = '''("menu" . music-menu)'';
-    "ms" = '''("stop" . mpc-stop)'';
-    "m+" = "'mpc-inc-by-five";
-    "m-" = "'mpc-dec-by-five";
+{
+  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages.mpc-wrapper = (epkgs.callPackage
+      epkgs.trivialBuild rec {
+	pname = "mpc-wrapper";
+	version = "current";
+	src = inputs.mpc-wrapper;
+      }
+    );
   };
-  deferIncrementally = true;
-  config = ''
-    <<Emacs Mpc Wrapper Config>>
-  '';
-};
+
+  flake.homeModules.media = { pkgs, config, ... }:
+  {
+    services.mpd = {
+      enable = true;
+      musicDirectory = "${config.home.homeDirectory}/mus/mpd";
+      extraConfig = ''
+	audio_output {
+          type "pipewire"
+          name "My Pipewire Output"
+          mixer_type "hardware"
+          mixer_device "default"
+          mixer_control "PCM"
+        }
+      '';
+    };
+
+    programs.emacs.init.usePackage.mpc-wrapper = {
+      enable = true;
+      extraPackages = [pkgs.mpc];
+      generalOne.global-leader = {
+	"m" = '''(:ignore t :which-key "mpd")'';
+	"mp" = '''("replay file" . mpc-play)'';
+	"mm" = '''("menu" . music-menu)'';
+	"ms" = '''("stop" . mpc-stop)'';
+	"m+" = "'mpc-inc-by-five";
+	"m-" = "'mpc-dec-by-five";
+      };
+      deferIncrementally = true;
+      config = ''
+	<<Emacs Mpc Wrapper Config>>
+      '';
+    };
+  };
+}
 #+end_src
 
 #+NAME: Emacs Mpc Wrapper Config
@@ -4721,26 +4450,42 @@ programs.emacs.init.usePackage.mpc-wrapper = {
 *** MPV
 The mpv package lets us start an mpv process & puppeteer it with emacs. I'm definitely not using it to its full potential.
 =efs/mpv-browse-url= originates from https://karthinks.com/software/lazy-elfeed/
-#+NAME: Mpv
-#+begin_src nix-ts :noweb yes
-programs.emacs.init.usePackage.mpv = {
-  enable = true;
-  command = ["efs/mpv-browse-url" "efs/mpv-eww-url"];
-  config = ''
-  <<Emacs Mpv Config>>
-'';
-};
-
-programs.mpv = {
-  enable = true;
-  package = (config.lib.nixGL.wrap pkgs.mpv);
-  config = {
-    fs = "no";
-    hwdec = "auto";
-    x11-bypass-compositor = "no";
-    volume-max = "250";
+#+begin_src nix-ts :tangle modules/multimedia/mpv.nix :noweb yes
+{
+  perSystem = { pkgs, ... }: {
+    packages.mpv = (pkgs.mpv.override {
+      scripts = with pkgs.mpvScripts; [
+	thumbfast
+	sponsorblock
+	quality-menu
+      ];
+    });
   };
-};
+  
+  flake.homeModules.media = { pkgs, config, ... }: {
+    home.packages = [ pkgs.yt-dlp ];
+    programs = {
+      emacs.init.usePackage.mpv = {
+	enable = true;
+	command = ["efs/mpv-browse-url" "efs/mpv-eww-url"];
+	config = ''
+	  <<Emacs Mpv Config>>
+	'';
+      };
+
+      mpv = {
+	enable = true;
+	package = (config.lib.nixGL.wrap pkgs.mpv);
+	config = {
+	  fs = "no";
+	  hwdec = "auto";
+	  x11-bypass-compositor = "no";
+	  volume-max = "250";
+	};
+      };
+    };
+  } ;
+}
 #+end_src
 
 #+NAME: Emacs Mpv Config
@@ -4754,20 +4499,237 @@ programs.mpv = {
 #+end_src
 
 *** Pulseaudio Control
-#+NAME: Emacs Pulseaudio Control
-#+begin_src nix-ts
-pulseaudio-control = {
-  enable = true;
-  deferIncrementally = true;
-  setopt.pulseaudio-control-volume-step = ''"5%"'';
-  general = {
-    "<XF86AudioRaiseVolume>" = "'pulseaudio-control-increase-sink-volume";
-    "<XF86AudioLowerVolume>" = "'pulseaudio-control-decrease-sink-volume";
-    "<XF86AudioMute>" = "'pulseaudio-control-toggle-current-sink-mute";
-    "s-v" = "'pulseaudio-control-default-sink-mode";
+#+begin_src nix-ts :tangle modules/multimedia/pavucontrol.nix
+{
+  flake.homeModules.media = { pkgs, ... }:
+  {
+    home.packages = [ pkgs.pavucontrol ];
+    programs.emacs.init.usePackage.pulseaudio-control = {
+      enable = true;
+      deferIncrementally = true;
+      setopt.pulseaudio-control-volume-step = ''"5%"'';
+      general = {
+	"<XF86AudioRaiseVolume>" = "'pulseaudio-control-increase-sink-volume";
+	"<XF86AudioLowerVolume>" = "'pulseaudio-control-decrease-sink-volume";
+	"<XF86AudioMute>" = "'pulseaudio-control-toggle-current-sink-mute";
+	"s-v" = "'pulseaudio-control-default-sink-mode";
+      };
+      config = "(pulseaudio-control-default-sink-mode)";
+    };
   };
-  config = "(pulseaudio-control-default-sink-mode)";
-};
+}
+#+end_src
+
+*** Podcast Downloader
+For moving massive quantities of Jordan Peterson's podcast into my mp3 player
+#+begin_src nix-ts :tangle modules/multimedia/podcast.nix :noweb yes
+{
+  perSystem = { pkgs, self', ... }: let packages = self'.packages;
+  in {
+    packages = {
+      cast = (pkgs.writeShellScriptBin "cast" ''
+	<<Cast>>
+      '');
+      ffmpeg-bulk = (pkgs.writeShellScriptBin "ffmpeg-bulk" ''
+	<<Ffmpeg Bulk>>
+      '');
+      masstube = pkgs.writeShellScriptBin "masstube" ''
+	<<Masstube>>
+      '';
+    };
+  } ;
+
+  flake.homeModules.media = { pkgs, ... }: {
+    home.packages = with pkgs; [
+      masstube
+      cast
+    ];
+  };
+}
+#+end_src
+
+#+NAME: Cast
+#+begin_src bash-ts
+#Exit on fail
+set -e
+
+#Set Input & Output Filetypes
+in=$(${pkgs.coreutils}/bin/printf 'm4a\nopus\nmp4\nmkv\nwebm' | ${packages.ezf}/bin/ezf)
+out=$(${pkgs.coreutils}/bin/printf 'mp3\nflac\nwav\nogg' | ${packages.ezf}/bin/ezf)
+
+#Choose device to transfer to
+device=$(${pkgs.coreutils}/bin/ls /run/media/$USER | ${packages.ezf}/bin/ezf)
+
+#Convert files
+${packages.ffmpeg-bulk}/bin/ffmpeg-bulk *.$in -t $out
+${pkgs.coreutils}/bin/rm *.$in
+
+#Remove metadata so the glowies don't see it.
+${pkgs.python312Packages.mat2}/bin/mat2 *.$out
+
+#Transfer
+${pkgs.coreutils}/bin/mv ~/*.cleaned.$out /run/media/$USER/$device/Podcasts
+${pkgs.coreutils}/bin/rm ~/*.$out
+#+end_src
+
+#+NAME: Ffmpeg Bulk
+I stole this from this git repo https://github.com/sylsau/ffmpeg-bulk
+#+begin_src bash-ts
+#===============================================================================
+#
+#		  USAGE: ./this.sh --help
+# 
+#	DESCRIPTION: Create a ffmpeg conversion script from a list of input files.
+# 
+#		OPTIONS: ---
+#  REQUIREMENTS: sed, gawk, ffmpeg, tee
+#		   BUGS: ---
+#		  NOTES: ---
+#		 AUTHOR: Sylvain Saubier (ResponSyS), mail@sylsau.com
+#		CREATED: 01/05/16 14:09
+#===============================================================================
+
+[[ $DEBUG ]] && set -o nounset
+set -o pipefail -o errexit -o errtrace
+trap 'echo -e "${FMT_BOLD}ERROR${FMT_OFF}: at $FUNCNAME:$LINENO"' ERR
+
+readonly FMT_BOLD='\e[1m'
+readonly FMT_UNDERL='\e[4m'
+readonly FMT_OFF='\e[0m'
+
+readonly PROGRAM_NAME="''${0##*/}"
+readonly SCRIPT_NAME="''${0##*/}"
+RES="$( stat -c %y $0 | cut -d" " -f1 )"
+readonly VERSION=${RES//-/}
+
+readonly ERR_NO_CMD=60
+
+FFMPEG="''${FFMPEG:-ffmpeg}"
+OPT_EXT=
+OPT_ARGS_IN=
+OPT_ARGS_OUT=
+OPT_FORCE=
+OPT_LOGLEVEL="-loglevel error"
+INPUT=( )
+
+
+# $1 = command to test (string)
+fn_need_cmd() {
+	if ! command -v "$1" > /dev/null 2>&1
+		then fn_err "need '$1' (command not found)" $ERR_NO_CMD
+	fi
+}
+# $1 = message (string)
+m_say() {
+	echo -e "$PROGRAM_NAME: $1"
+}
+# $1 = error message (string), $2 = return code (int)
+fn_err() {
+	m_say "''${FMT_BOLD}ERROR''${FMT_OFF}: $1" >&2
+	exit $2
+}
+
+fn_help() {
+	${pkgs.coreutils}/bin/cat << EOF
+$PROGRAM_NAME v$VERSION
+	Convert multiple media files at once with ffmpeg.
+	In pure and secure bash.
+REQUIREMENTS
+	ffmpeg
+USAGE
+	$PROGRAM_NAME FILES... (--to|-t) EXTENSION [--args-in|-ai INPUT_ARGS] [--args-out|-ao OUTPUT_ARGS] [--force|-f] [--log-level LOG_LEVEL]
+OPTIONS AND ARGUMENTS
+	EXTENSION 		format of output files
+	INPUT_ARGS 		ffmpeg arguments for the input file
+	OUTPUT_ARGS		ffmpeg arguments for the output file
+	--force			overwrite files 
+	LOG_LEVEL		change ffmpeg '-loglevel'
+				(default: 'error', ffmpeg default: 'info')
+EXAMPLE
+	Convert all flac and wav files in the current directory to opus with the specified options:
+		$ $PROGRAM_NAME *.flac -t opus --args-out "-b:a 320k" *.wav
+SEE ALSO
+	ffmpeg(1)
+AUTHOR
+	Written by Sylvain Saubier
+REPORTING BUGS
+	Mail at: <feedback@sylsau.com>
+EOF
+}
+
+fn_show_params() {
+	m_say "\n input=''${INPUT[*]}\n -t=$OPT_EXT\n -ai=$OPT_ARGS_IN\n -ao=$OPT_ARGS_OUT\n -f=$OPT_FORCE\n -q=$OPT_LOGLEVEL" >&2
+}
+
+
+fn_need_cmd "$FFMPEG"
+
+# Check args
+if [[ -z "$@" ]]; then
+	fn_help
+	exit
+else
+	while [[ $# -gt 0 ]]; do
+		case "$1" in
+			"--help"|"-h")
+				fn_help
+				exit
+				;;
+			"--to"|"-t")
+				OPT_EXT=$2
+				shift
+				;;
+			"--args-in"|"-ai")
+				OPT_ARGS_IN=$2
+				shift
+				;;
+			"--args-out"|"-ao")
+				OPT_ARGS_OUT=$2
+				shift
+				;;
+			"--force"|"-f")
+				OPT_FORCE="-y"
+				;;
+			"--log-level")
+				OPT_LOGLEVEL="-loglevel $2"
+				shift
+				;;
+			,*)
+				[[ -e "$1" ]] || fn_err "file '$1' does not exist" 127
+				INPUT+=( "$1" )
+				;;
+		esac	# --- end of case ---
+		shift 	# delete $1
+	done
+fi
+
+[[ $DEBUG ]] && fn_show_params
+
+[[ $OPT_EXT ]] || fn_err "please specify the output extension with -t EXT" 2
+
+# Rajoute un point à l'extension si absent
+if [[ ${OPT_EXT:0:1} != '.' ]]; then
+	OPT_EXT=.$OPT_EXT
+fi
+
+m_say "converting...\n---"
+for F in "''${INPUT[@]}"; do # Just show the commands
+	${pkgs.coreutils}/bin/echo $FFMPEG $OPT_ARGS_IN -i "$F" $OPT_ARGS_OUT $OPT_FORCE $OPT_LOGLEVEL "''${F%.*}$OPT_EXT"
+done ; ${pkgs.coreutils}/bin/echo "---" ; [[ $DEBUG ]] && exit
+for F in "''${INPUT[@]}"; do # Actually execute
+	m_say "converting \"$F\"..."
+	     $FFMPEG $OPT_ARGS_IN -i "$F" $OPT_ARGS_OUT $OPT_FORCE $OPT_LOGLEVEL "''${F%.*}$OPT_EXT"
+done
+
+exit
+#+end_src
+
+#+NAME: Masstube
+#+begin_src bash-ts
+emacsclient ~/.download.txt
+# ${pkgs.yt-dlp}/bin/yt-dlp $1 --verbose -ci --batch-file=~/.download.txt --proxy socks://localhost:9050
+${pkgs.yt-dlp}/bin/yt-dlp $1 --verbose -ci --batch-file=~/.download.txt 
+${pkgs.coreutils}/bin/rm ~/.download.txt
 #+end_src
 
 ** Sagemath

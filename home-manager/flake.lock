@@ -408,22 +408,6 @@
         "type": "gitlab"
       }
     },
-    "gptel-quick": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1762372717,
-        "narHash": "sha256-7a5+YQifwtVYHP6qQXS1yxA42bVGXmErirra0TrSSQ0=",
-        "owner": "karthink",
-        "repo": "gptel-quick",
-        "rev": "018ff2be8f860a1e8fe3966eec418ad635620c38",
-        "type": "github"
-      },
-      "original": {
-        "owner": "karthink",
-        "repo": "gptel-quick",
-        "type": "github"
-      }
-    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -726,7 +710,6 @@
         "exwm-qutebrowser": "exwm-qutebrowser",
         "ezf": "ezf",
         "flake-parts": "flake-parts",
-        "gptel-quick": "gptel-quick",
         "home-manager": "home-manager",
         "import-tree": "import-tree",
         "kmonad": "kmonad",

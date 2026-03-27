@@ -1,9 +1,17 @@
 { inputs, ... }:
 
 {
-  flake.homeModules.ai = { config, pkgs, ... }:
+  perSystem = { pkgs, ... }: {
+    packages.startOllama = pkgs.writeShellScriptBin "start-ollama" ''
+      if [[ "$(pidof ollama)" -gt 0 ]]; then
+        echo "ollama already running"
+      else
+        ollama serve
+      fi
+    '';
+  };
 
-  {
+  flake.homeModules.ai = { config, pkgs, ... }: {
     programs.emacs.init = {
       ide.copilot = {
 	enable = true;
@@ -31,10 +39,10 @@
 	    # gptel-model = "'qwen3:latest";
 	    gptel-backend = ''
 	      (gptel-make-ollama "Ollama"
-	    :stream t
-	    :protocol "http"
-	    :host "localhost:11434"
-	    :models '(qwen3:latest llama3.2:3b))
+	        :stream t
+	        :protocol "http"
+	        :host "localhost:11434"
+	        :models '(qwen3:latest llama3.2:3b))
 	    '';
 	    # gptel-backend = ''(gptel-make-gh-copilot "Copilot")'';
 	  };

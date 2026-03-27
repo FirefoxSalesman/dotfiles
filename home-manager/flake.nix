@@ -30,11 +30,6 @@
     };
 
     # packages
-    gptel-quick = {
-      url = "github:karthink/gptel-quick";
-      flake = false;
-    };
-
     repeaters = {
       url = "github:mmarshall540/repeaters";
       flake = false;
