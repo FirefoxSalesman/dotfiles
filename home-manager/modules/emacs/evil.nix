@@ -5,6 +5,7 @@
 
   {
     programs.emacs.init = {
+      ide.symex = true;  
       keybinds = {
 	evil = {
           enable = true;

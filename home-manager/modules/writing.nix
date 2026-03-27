@@ -70,6 +70,7 @@
               (let ((export-type (cadr (assoc "EXPORT" (org-collect-keywords '("EXPORT"))))))
                 (cond ((equal export-type "pdf") (org-latex-export-to-pdf))
             	  ((equal export-type "odt")  (org-odt-export-to-odt))
+            	  ((equal export-type "md")  (org-md-export-to-markdown))
                       ((equal export-type "html") (org-html-export-to-html)))))
           '' ;
         };

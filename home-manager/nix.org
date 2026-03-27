@@ -1974,100 +1974,117 @@ exec dbus-launch --exit-with-session emacs -mm --debug-init
 ** Development
 This was more directly stolen than the other parts
 I think most of it was from the github page for lsp mode, but it's been a while, & I don't remember much.
-https://github.com/joaotavora/eglot/discussions/888
-https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
-#+begin_src nix-ts :tangle modules/development.nix :noweb yes 
+*** Misc
+#+begin_src nix-ts :tangle modules/development/misc.nix
 {
-  flake.homeModules.development = { config, pkgs, lib, ... }:
+  flake.homeModules.development = { ... }:
 
   {
     programs.emacs.init = {
-      completions.tempel.templates = {
-	nix-ts-mode.upackage = ''p "= {" n "  enable = true;" q "  }"'';
-	ledger-mode = {
-	  payroll = ''p "Rose-Hulman Payroll" n> "Income:TeachingAssistant" > "-" p n> "*Assets:Checking"'';
-	  checking = ''"Assets:Checking"'';
-	};
-	emacs-lisp-mode = {
-	  wcd = ''"(with-current-buffer " "q)"'';
-	  gbc = ''"(get-buffer-create " "q)"'';
-	};
-      };
       ide = {
-	project = true;
 	dape.enable = true;
-	magit = {
-	  enable = true;
-	  forge = true;
-	  todo = true;
-	};
-	copilot = {
-	  enable = true;
-	  keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode" "zenscript-mode"];
-	};
-	flymake = {
-          enable = true;
-          preset = true;
-	};
-	symex = true;  
-	hoverDoc = true;
-	eglot = {
-          enable = true;
-          preset = true;
-	};
 	direnv = true;
 	treesit-fold.enable = true;
 	languages = {
           bash.enable = true;
-          gradle.enable = true;
-          java = {
-            enable = true;
-            moreEglot = true;
-          };
           json.enable = true;
           nix.enable = true;
           toml.enable = true;
           xml.enable = true;
           zenscript.enable = true;
-          emacs-lisp.enable = true;
-          javascript.enable = true;
-          ledger.enable = true;
-	  makefile.enable = true;
 	  yaml.enable = true;
-          html = {
-	    enable = true;
-	    emmet = true;
-	  };
-          css = {
-	    enable = true;
-	    emmet = true;
-	  };
 	};
       };
 
       usePackage = {
-	<<Development Misc>>
+	rainbow-delimiters = {
+	  enable = true;
+	  ghookf = ["('prog-mode 'rainbow-delimiters-mode)"];
+	};
       
-        <<Development Direnv>>
-
-        <<Development Project>>
-
-        <<Development Eglot>>
-
-        <<Development Python>>
-
 	racket-mode.gfhookf = ["('racket-mode 'hs-minor-mode)"];
+      };
+    };
+  };
+}
+#+end_src
 
+*** Project Management
+#+begin_src nix-ts :tangle modules/development/project-management.nix :noweb yes
+{
+  flake.homeModules.development = { ... }:
+  {
+    programs.emacs.init = {
+      ide = {
+	magit = {
+	  enable = true;
+	  forge = true;
+	  todo = true;
+	};
+	project = true;
+      };
+      usePackage = {
+	magit = {
+	  setopt.magit-process-find-password-functions = ["'magit-process-password-auth-source"];
+	  generalOneConfig = {
+	    magit-mode-map."e" = "'evil-next-visual-line";
+	    magit-status-mode-map."j" = "'magit-unstage-files";
+	  };
+	};
+
+	projection-ibuffer = {
+	  enable = true;
+	  generalOne.project-prefix-map.i = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
+	};
+
+	projection-multi.custom.projection-gradle-use-daemon = false;
+      };
+    };
+  };
+}
+#+end_src
+
+#+NAME: Emacs Development Projection Config
+#+begin_src emacs-lisp
+(require 'projection)
+(global-projection-hook-mode)
+(oset projection-project-type-maven build "mvn -B clean compile")
+#+end_src
+
+*** Web
+#+begin_src nix-ts :tangle modules/development/web.nix
+{
+  flake.homeModules.development = { config, pkgs, lib, ... }:
+  {
+    programs.emacs.init.ide.languages = {
+      javascript.enable = true;
+      html = {
+	enable = true;
+	emmet = true;
+      };
+      css = {
+	enable = true;
+	emmet = true;
+      };
+    };
+  };
+}
+#+end_src
+
+*** Elisp
+#+begin_src nix-ts :tangle modules/development/elisp.nix 
+{
+  flake.homeModules.development = { ... }:
+  {
+    programs.emacs.init = {
+      completions.tempel.templates.emacs-lisp-mode = {
+	wcd = ''"(with-current-buffer " "q)"'';
+	gbc = ''"(get-buffer-create " "q)"'';
+      };
+      ide.languages.emacs-lisp.enable = true;
+      usePackage = {
 	elisp-mode.gfhookf = ["('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"];
-
-	flymake-popon.setopt.flymake-popon-posframe-extra-arguments = [ "':poshandler" "'posframe-poshandler-point-bottom-left-corner-upward"
-	  "':parent-frame" false
-          "':refposhandler" "'posframe-refposhandler-xwininfo" ];
-
-	<<Development Java>>
-
-        <<Development C>>
-
+	
 	semel = {
 	  enable = true;
 	  ghookf = ["('emacs-lisp-mode 'semel-mode)"];
@@ -2078,29 +2095,30 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 }
 #+end_src
 
-*** Misc
-#+NAME: Development Misc
-#+begin_src nix-ts
-rainbow-delimiters = {
-  enable = true;
-  ghookf = ["('prog-mode 'rainbow-delimiters-mode)"];
-};
-#+end_src
-
 *** Java
-#+NAME: Development Java
-#+begin_src nix-ts :noweb yes
-java-ts-mode = {
-  preface = ''
-    <<Java Preface>>
-  '';
-  generalTwoConfig.":n".java-ts-mode-map = {
-      "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "block_comment"))'';
-      "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "block_comment"))'';
-      "o" = "'evil-previous-visual-line";
-      "O" = "'evil-scroll-up";
+#+begin_src nix-ts :tangle modules/development/java.nix :noweb yes
+{
+flake.homeModules.development = { ... }:
+  {
+    programs.emacs.init = {
+      ide.languages = {
+	java.enable = true;
+        gradle.enable = true;
+      };
+      usePackage.java-ts-mode = {
+	preface = ''
+	  <<Java Preface>>
+	'';
+	generalTwoConfig.":n".java-ts-mode-map = {
+	  "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "block_comment"))'';
+	  "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "block_comment"))'';
+	  "o" = "'evil-previous-visual-line";
+	  "O" = "'evil-scroll-up";
+	};
+      };
+    };
   };
-};
+}
 #+end_src
 
 Borrowed from here:
@@ -2130,66 +2148,86 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 #+end_src
 
 *** C
-#+NAME: Development C
-#+begin_src nix-ts
-c-ts-mode.generalTwoConfig.":n".c-ts-mode-map = {
-    "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "comment"))'';
-    "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "comment"))'';
-    "o" = "'evil-previous-visual-line";
-    "O" = "'evil-scroll-up";
-};
-#+end_src
-
-*** Project
-#+NAME: Development Project
-#+begin_src nix-ts :noweb yes
-magit = {
-  setopt.magit-process-find-password-functions = ["'magit-process-password-auth-source"];
-  generalOneConfig = {
-    magit-mode-map."e" = "'evil-next-visual-line";
-    magit-status-mode-map."j" = "'magit-unstage-files";
+#+begin_src nix-ts :tangle modules/development/c.nix
+{
+  flake.homeModules.development = { ... }:
+  {
+    programs.emacs.init.usePackage.c-ts-mode.generalTwoConfig.":n".c-ts-mode-map = {
+      "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "comment"))'';
+      "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "comment"))'';
+      "o" = "'evil-previous-visual-line";
+      "O" = "'evil-scroll-up";
+    };
   };
-};
-
-projection-ibuffer = {
-  enable = true;
-  generalOne.project-prefix-map.i = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
-};
-
-projection-multi.custom.projection-gradle-use-daemon = false;
+}
 #+end_src
 
-#+NAME: Emacs Development Projection Config
-#+begin_src emacs-lisp
-(require 'projection)
-(global-projection-hook-mode)
-(oset projection-project-type-maven build "mvn -B clean compile")
+*** Python
+#+begin_src nix-ts :tangle modules/development/python.nix
+{
+  flake.homeModules.development = { ... }:
+  {
+    programs.emacs.init = {
+      usePackage.python-ts-mode.setopt = {
+	python-shell-interpreter = ''"ipython"'';
+	python-shell-interpreter-args = ''"-i --simple-prompt"'';
+      };
+    };
+  };
+}
 #+end_src
 
 *** Eglot
-#+NAME: Development Eglot
-#+begin_src nix-ts :noweb yes
-eglot = {
-  preface = "(defvar efs/autoformat t)";
-  gfhookf = [
-    ''('eglot-managed-mode (local! completion-at-point-functions (list (cape-capf-super #'tempel-complete
-      #'eglot-completion-at-point
+https://github.com/joaotavora/eglot/discussions/888
+https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
+#+begin_src nix-ts :tangle modules/development/eglot.nix :noweb yes
+{
+  flake.homeModules.development = { ... }:
+  {
+    programs.emacs.init = {
+      ide = {
+	hoverDoc = true;
+	eglot = {
+          enable = true;
+          preset = true;
+	};
+	languages.java.moreEglot = true;
+	flymake = {
+          enable = true;
+          preset = true;
+	};
+      };
+      usePackage = {
+	eglot = {
+	  preface = "(defvar efs/autoformat t) ";
+	  gfhookf = [
+	    ''('eglot-managed-mode (local! completion-at-point-functions (list (cape-capf-super #'tempel-complete
+	      #'eglot-completion-at-point
 											     #'cape-file))))
-    ''
-    "('before-save (lambda () (when (and eglot--managed-mode efs/autoformat) (eglot-format-buffer))))"
-  ];
-  config = ''
-    <<Development Eglot Config>>
-  '';
-};
+	    ''
+	    "('before-save (lambda () (when (and eglot--managed-mode efs/autoformat) (eglot-format-buffer))))"
+	  ];
+	  config = ''
+	    <<Development Eglot Config>>
+	  '';
+	};
 
-eglot-java = {
-  setopt.eglot-java-user-init-opts-fn = "'eglot-java-init-opts";
-  preface = ''
-    (defun eglot-java-init-opts (server eglot-java-eclipse-jdt)
-        '(:bundles ["/usr/share/java-debug/com.microsoft.java.debug.plugin.jar"]))
-  '';
-};
+	flymake-popon.setopt.flymake-popon-posframe-extra-arguments = [
+	  "':poshandler" "'posframe-poshandler-point-bottom-left-corner-upward"
+	  "':parent-frame" false "':refposhandler" "'posframe-refposhandler-xwininfo"
+	];
+
+	eglot-java = {
+	  setopt.eglot-java-user-init-opts-fn = "'eglot-java-init-opts";
+	  preface = ''
+	    (defun eglot-java-init-opts (server eglot-java-eclipse-jdt)
+                   '(:bundles ["/usr/share/java-debug/com.microsoft.java.debug.plugin.jar"]))
+	  '';
+	};
+      };
+    };
+  };
+}
 #+end_src
 
 #+NAME: Development Eglot Config
@@ -2198,13 +2236,20 @@ eglot-java = {
 			   "K" 'evil-substitute)
 #+end_src
 
-*** Python
-#+NAME: Development Python
-#+begin_src nix-ts
-python-ts-mode.setopt = {
-  python-shell-interpreter = ''"ipython"'';
-  python-shell-interpreter-args = ''"-i --simple-prompt"'';
-};
+*** Ledger
+#+begin_src nix-ts :tangle modules/development/ledger.nix
+{
+  flake.homeModules.development = { ... }:
+  {
+    programs.emacs.init = {
+      completions.tempel.templates.ledger-mode = {
+	payroll = ''p "Rose-Hulman Payroll" n> "Income:TeachingAssistant" > "-" p n> "*Assets:Checking"'';
+	checking = ''"Assets:Checking"'';
+      };
+      ide.languages.ledger.enable = true;
+    };
+  };
+}
 #+end_src
 
 ** File Management
@@ -2623,6 +2668,7 @@ Evil mode provides vim-like keybinds.
 
   {
     programs.emacs.init = {
+      ide.symex = true;  
       keybinds = {
 	evil = {
           enable = true;
@@ -3609,6 +3655,7 @@ org = {
   (let ((export-type (cadr (assoc "EXPORT" (org-collect-keywords '("EXPORT"))))))
     (cond ((equal export-type "pdf") (org-latex-export-to-pdf))
 	  ((equal export-type "odt")  (org-odt-export-to-odt))
+	  ((equal export-type "md")  (org-md-export-to-markdown))
           ((equal export-type "html") (org-html-export-to-html)))))
 #+end_src
 
@@ -3825,6 +3872,7 @@ home.file.".local/share/gnupg/gpg.conf".text = ''
    use-agent
 '';
 #+end_src
+
 ** Window Management
 #+begin_src nix-ts :tangle modules/window-manager.nix :noweb yes 
 {
@@ -4468,68 +4516,74 @@ ace-window = {
   flake.homeModules.ai = { config, pkgs, ... }:
 
   {
-    programs.emacs.init.usePackage = {
-      gptel = {
+    programs.emacs.init = {
+      ide.copilot = {
 	enable = true;
-	defer = true;
-	command = ["start-ollama"];
-	setopt = {
-	  gptel-default-mode = "'org-mode";
-	  gptel-max-tokens = 10000000;
-	  gptel-prompt-prefix-alist = [
-	    ''`(markdown-mode . ,(concat "meatbag ›  "))''
-            ''`(org-mode . ,(concat  "meatbag ›  "))''
-            ''`(text-mode . ,(concat "meatbag ›  "))''
-	  ];
-	  gptel-response-prefix-alist = [
-	    '''(markdown-mode . "HK-47  ")''
-            '''(org-mode . "HK-47  ")''
-            '''(text-mode . "HK-47  ")''
-	  ];
-	  gptel-model = "'llama3.2:3b";
-	  # gptel-model = "'qwen3:latest";
-	  gptel-backend = ''
-	    (gptel-make-ollama "Ollama"
+	keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode" "zenscript-mode"];
+      };
+      usePackage = {
+	gptel = {
+	  enable = true;
+	  defer = true;
+	  command = ["start-ollama"];
+	  setopt = {
+	    gptel-default-mode = "'org-mode";
+	    gptel-max-tokens = 10000000;
+	    gptel-prompt-prefix-alist = [
+	      ''`(markdown-mode . ,(concat "meatbag ›  "))''
+              ''`(org-mode . ,(concat  "meatbag ›  "))''
+              ''`(text-mode . ,(concat "meatbag ›  "))''
+	    ];
+	    gptel-response-prefix-alist = [
+	      '''(markdown-mode . "HK-47  ")''
+              '''(org-mode . "HK-47  ")''
+              '''(text-mode . "HK-47  ")''
+	    ];
+	    gptel-model = "'llama3.2:3b";
+	    # gptel-model = "'qwen3:latest";
+	    gptel-backend = ''
+	      (gptel-make-ollama "Ollama"
 	    :stream t
 	    :protocol "http"
 	    :host "localhost:11434"
 	    :models '(qwen3:latest llama3.2:3b))
+	    '';
+	    # gptel-backend = ''(gptel-make-gh-copilot "Copilot")'';
+	  };
+	  generalOne.global-leader = {
+	    "g" = '''(:ignore t :which-key "gptel")'';
+	    "gs" = '''("start" . start-ollama)'';
+	    "gp" = '''("prompt" . gptel)'';
+	  };
+	  generalTwoConfig.":n".gptel-mode-map."S-RET" = "'gptel-menu";
+	  preface = ''
+	    <<Emacs Gptel Preface>>
 	  '';
-	  # gptel-backend = ''(gptel-make-gh-copilot "Copilot")'';
+	  config = "(start-ollama)";
 	};
-	generalOne.global-leader = {
-	  "g" = '''(:ignore t :which-key "gptel")'';
-	  "gs" = '''("start" . start-ollama)'';
-	  "gp" = '''("prompt" . gptel)'';
-	};
-	generalTwoConfig.":n".gptel-mode-map."S-RET" = "'gptel-menu";
-	preface = ''
-	  <<Emacs Gptel Preface>>
-	'';
-	config = "(start-ollama)";
-      };
 
-      macher = {
-	enable = true;
-	command = ["macher-install"];
-	generalOne.global-leader = {
-	  "gi" = "'macher-implement";
-	  "gr" = "'macher-revise";
-	  "gd" = "'macher-discuss";
-	  "ga" = "'macher-abort";
+	macher = {
+	  enable = true;
+	  command = ["macher-install"];
+	  generalOne.global-leader = {
+	    "gi" = "'macher-implement";
+	    "gr" = "'macher-revise";
+	    "gd" = "'macher-discuss";
+	    "ga" = "'macher-abort";
+	  };
 	};
-      };
 
-      # mcp = {
-      #   enable = true;
-      #   after = ["gptel"];
-      #   config = ''
-      # 	(require 'mcp-hub)
-      #     (require 'gptel-integrations)
-      #   '';
-      # };
+	# mcp = {
+	#   enable = true;
+	#   after = ["gptel"];
+	#   config = ''
+	# 	(require 'mcp-hub)
+	#     (require 'gptel-integrations)
+	#   '';
+	# };
+      };
     };
-  };
+  } ;
 }
 #+end_src
 
