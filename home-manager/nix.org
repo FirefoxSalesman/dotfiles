@@ -4124,7 +4124,7 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 #+end_src
 
 *** ELWM
-#+begin_src nix-ts :noweb yes
+#+begin_src nix-ts :tangle modules/window-manager/elwm.nix :noweb yes
 {
   flake.homeModules.exwm = { ... }:
 
