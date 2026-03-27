@@ -3815,21 +3815,31 @@ No idea what the rest of this is for.
 #+end_src
 
 ** Password Management
-#+begin_src nix-ts :tangle modules/passwords.nix :noweb yes 
+*** Pinentry
+This is a pinentry program (alternative to pinentry-dmenu)
+When you're prompted for your gpg password, the place for entry will be your modeline.
+#+begin_src nix-ts :tangle modules/passwords/pinentry.nix
 {
-  flake.homeModules.passwordManagement = { pkgs, ... }:
-
+  flake.homeModules.passwordManagement = { ... }:
   {
-    home.packages = with pkgs; [ (pass.withExtensions (exts:
-      with exts; [ pass-otp ]
-    ))];
-
-    <<GPG>>
-
-    programs.emacs.init.usePackage = {
-      <<Emacs Pass>>
-    
-      <<Emacs Pinentry>>
+    home.file = {
+      ".local/share/gnupg/gpg-agent.conf".text = ''
+	pinentry-program /usr/bin/pinentry-emacs
+        allow-loopback-pinentry
+        allow-emacs-pinentry
+        default-cache-ttl 600
+        max-cache-ttl 7200
+        enable-ssh-support
+      '';
+      ".local/share/gnupg/gpg.conf".text = ''
+	use-agent
+      '';
+    };
+    programs.emacs.init.usePackage.pinentry = {
+	enable = true;
+	setopt.epa-pinentry-mode = "'loopback";
+	deferIncrementally = true;
+	config = "(pinentry-start)";
     };
   };
 }
@@ -3840,61 +3850,42 @@ This is an emacs wrapper for pass.
 Password-store-otp has more functions, if they are of intrest.
 Everything is bound to SPC p
 #+NAME: Emacs Pass
-#+begin_src nix-ts
-password-store = {
-  enable = true;
-  defer = true;
-  generalOne.global-leader = {
-    "p" = '''(:ignore t :which-key "pass")'';
-    "py" = '''("yank" . password-store-copy)'';
-    "pi" = '''("insert" . password-store-insert)'';
-    "pg" = '''("generate" . password-store-generate)'';
-    "pe" = '''("edit" . password-store-edit)'';
-    "pd" = '''("delete" . password-store-delete)'';
+#+begin_src nix-ts :tangle modules/passwords/pass.nix
+{
+  flake.homeModules.passwordManagement = { pkgs, ... }:
+  {
+    home.packages = with pkgs; [ (pass.withExtensions (exts:
+    with exts; [ pass-otp ]
+    ))];
+    programs.emacs.init.usePackage = {
+      password-store = {
+	enable = true;
+	defer = true;
+	generalOne.global-leader = {
+	  "p" = '''(:ignore t :which-key "pass")'';
+	  "py" = '''("yank" . password-store-copy)'';
+	  "pi" = '''("insert" . password-store-insert)'';
+	  "pg" = '''("generate" . password-store-generate)'';
+	  "pe" = '''("edit" . password-store-edit)'';
+	  "pd" = '''("delete" . password-store-delete)'';
+	};
+	extraConfig = ":autoload pass-entries password-store-list";
+      };
+
+      password-store-otp = {
+	enable = true;
+	defer = true;
+	generalOne.global-leader."po" = '''("copy otp" . password-store-otp-token-copy)'';
+      };
+
+      auth-source-pass = {
+	enable = true;
+	after = ["magit"];
+	config = "(auth-source-pass-enable)";
+      };
+    };
   };
-  extraConfig = ":autoload pass-entries password-store-list";
-};
-
-password-store-otp = {
-  enable = true;
-  defer = true;
-  generalOne.global-leader."po" = '''("copy otp" . password-store-otp-token-copy)'';
-};
-
-auth-source-pass = {
-  enable = true;
-  after = ["magit"];
-  config = "(auth-source-pass-enable)";
-};
-#+end_src
-
-*** Pinentry
-This is a pinentry program (alternative to pinentry-dmenu)
-When you're prompted for your gpg password, the place for entry will be your modeline.
-#+NAME: Emacs Pinentry
-#+begin_src nix-ts
-pinentry = {
-  enable = true;
-  setopt.epa-pinentry-mode = "'loopback";
-  deferIncrementally = true;
-  config = "(pinentry-start)";
-};
-#+end_src
-
-*** gpg
-#+NAME: GPG
-#+begin_src nix-ts
-home.file.".local/share/gnupg/gpg-agent.conf".text = ''
-   pinentry-program /usr/bin/pinentry-emacs
-   allow-loopback-pinentry
-   allow-emacs-pinentry
-   default-cache-ttl 600
-   max-cache-ttl 7200
-   enable-ssh-support
-'';
-home.file.".local/share/gnupg/gpg.conf".text = ''
-   use-agent
-'';
+}
 #+end_src
 
 ** Window Management
