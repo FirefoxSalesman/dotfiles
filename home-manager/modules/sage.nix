@@ -1,24 +1,6 @@
 {
   flake.homeModules.sage = { pkgs, ... }:
   {
-    home.packages = with pkgs; [ sage ];
-
-    programs.emacs.init.usePackage = {
-      sage-shell-mode = {
-        enable = true;
-        defer = true;
-        setopt."sage-shell-edit:display-function" = ''"display-buffer"'';
-        config = ''(sage-shell:define-alias)'';
-        generalOne.global-leader."S" = '''("sage" . run-sage)'';
-        generalTwoConfig."local-leader"."sage-shell-mode-map"."h" = "'sage-shell:help";
-      };
-    
-      ob-sagemath = {
-        enable = true;
-        afterCall = ["sage-shell-mode" "ob"];
-      };
-    };
-
     home.file.".config/sage/ipython-5.0.0/profile_default/startup/00nix.py".text = ''
       # Combo functions
       def permutation(n, r):
@@ -61,5 +43,22 @@
            sigma: the variance"""
         return exp(-((x-mu)**2)/(2*sigma))/sqrt(2*pi*sigma)
     '';
+    
+    programs.emacs.init.usePackage = {
+      sage-shell-mode = {
+	enable = true;
+	extraPackages = [ pkgs.sage ];
+	defer = true;
+	setopt."sage-shell-edit:display-function" = ''"display-buffer"'';
+	config = ''(sage-shell:define-alias)'';
+	generalOne.global-leader."S" = '''("sage" . run-sage)'';
+	generalTwoConfig."local-leader"."sage-shell-mode-map"."h" = "'sage-shell:help";
+      };
+
+      ob-sagemath = {
+	enable = true;
+	afterCall = ["sage-shell-mode" "ob"];
+      };
+    };
   };
 }

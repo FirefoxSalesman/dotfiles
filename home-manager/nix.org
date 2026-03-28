@@ -210,35 +210,6 @@ in {
 }
 #+end_src
 
-*** Qutebrowser
-#+begin_src nix-ts :tangle modules/packages/emacs/qutebrowser.nix
-{ inputs, ... } :
-
-{
-  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages.qutebrowser-emacs = (epkgs.callPackage
-      epkgs.trivialBuild rec {
-	pname = "qutebrowser";
-	version = "current";
-	src = inputs.exwm-qutebrowser;
-
-	propagatedUserEnvPkgs = with epkgs; [
-	  consult
-	  exwm
-	  password-store
-	  dash
-	  evil
-	  doom-modeline
-	];
-
-	buildInputs = propagatedUserEnvPkgs;
-      }
-    );
-  };
-}
-#+end_src
-
 *** Reka
 https://github.com/dmkhitaryan/river-next-nix-module/blob/5205ebf2b5f820c3a9221f472c78c548a4a84aad/window-managers/reka/package.nix
 # #+begin_src nix-ts :tangle modules/packages/emacs/reka.nix
@@ -1625,6 +1596,41 @@ I couldn't get olivetti to work.
 	writeroom-global-effects = false;
       };
       generalOne.global-leader."w" = '''("writeroom" . writeroom-mode)'';
+    };
+  };
+}
+#+end_src
+
+*** Qutebrowser
+#+begin_src nix-ts :tangle modules/aesthetics/qutebrowser.nix
+{
+  flake.homeModules.web = { lib, config, ... }: {
+    programs.qutebrowser.settings = {
+      window.transparent = true;
+      colors = {
+	completion = {
+	  category = {
+	    bg = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
+	    border = {
+              bottom = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
+              top = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
+	    };
+	  };
+	  even.bg = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
+	  odd.bg = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
+	};
+	statusbar = {
+	  command = {
+	    bg = lib.mkForce ("#50" + config.lib.stylix.colors.base00);
+	    private.bg = lib.mkForce ("#50" + config.lib.stylix.colors.base00);
+	  };
+	};
+	webpage.darkmode = {
+	  enabled = true;
+	  algorithm = "lightness-cielab";
+	  policy.images = "never";
+	};
+      };
     };
   };
 }
@@ -4734,17 +4740,33 @@ ${pkgs.coreutils}/bin/rm ~/.download.txt
 
 ** Sagemath
 Sagemath is my goto for dealing with complex math. It makes for a wonderful maple replacement.
+Putting =:session= in an org block is necessary for evaluation
+,cgo clears your sage buffer.
+,cc evaluates the sage commands in an org file.
 #+begin_src nix-ts :tangle modules/sage.nix :noweb yes
 {
   flake.homeModules.sage = { pkgs, ... }:
   {
-    home.packages = with pkgs; [ sage ];
-
-    <<Sage Emacs>>
-
     home.file.".config/sage/ipython-5.0.0/profile_default/startup/00nix.py".text = ''
       <<sage-config>>
     '';
+    
+    programs.emacs.init.usePackage = {
+      sage-shell-mode = {
+	enable = true;
+	extraPackages = [ pkgs.sage ];
+	defer = true;
+	setopt."sage-shell-edit:display-function" = ''"display-buffer"'';
+	config = ''(sage-shell:define-alias)'';
+	generalOne.global-leader."S" = '''("sage" . run-sage)'';
+	generalTwoConfig."local-leader"."sage-shell-mode-map"."h" = "'sage-shell:help";
+      };
+
+      ob-sagemath = {
+	enable = true;
+	afterCall = ["sage-shell-mode" "ob"];
+      };
+    };
   };
 }
 #+end_src
@@ -4793,29 +4815,6 @@ def pnormal(x, mu, sigma):
      mu: the expectancy
      sigma: the variance"""
   return exp(-((x-mu)**2)/(2*sigma))/sqrt(2*pi*sigma)
-#+end_src
-
-*** Emacs
-Putting =:session= in an org block is necessary for evaluation
-,cgo clears your sage buffer.
-,cc evaluates the sage commands in an org file.
-#+NAME: Sage Emacs
-#+begin_src nix-ts
-programs.emacs.init.usePackage = {
-  sage-shell-mode = {
-    enable = true;
-    defer = true;
-    setopt."sage-shell-edit:display-function" = ''"display-buffer"'';
-    config = ''(sage-shell:define-alias)'';
-    generalOne.global-leader."S" = '''("sage" . run-sage)'';
-    generalTwoConfig."local-leader"."sage-shell-mode-map"."h" = "'sage-shell:help";
-  };
-
-  ob-sagemath = {
-    enable = true;
-    afterCall = ["sage-shell-mode" "ob"];
-  };
-};
 #+end_src
 
 ** Keyboard
@@ -4934,90 +4933,63 @@ Canary is my layout of choice.
 #+end_src
 
 ** Internet
-#+begin_src nix-ts :tangle modules/internet.nix :noweb yes
-{ inputs, config, pkgs, lib, ... }:
-
-{
-  flake.homeModules.web = { config, pkgs, lib, ... }:
-
-  {
-    home.packages = with pkgs; [
-      python313Packages.adblock
-      libfido2
-      yubikey-manager
-    ];
-
-    programs.emacs.init.usePackage = {
-      <<Emacs Internet Browse URL>>
-
-      <<Emacs Internet EWW>>
-
-      <<Emacs Internet Yeetube>>
-
-      # <<Emacs Internet Ement>>
-
-      <<Emacs Internet Webjump>>
-
-      <<Emacs Internet Elfeed>>
-    
-      <<Emacs Internet Mu4e>>
-    };
-
-    <<Internet Qutebrowser>>
-  };
-}
-#+end_src
-
 *** Browse URL
 This lets us decide how emacs will handle certain urls
 + Under most circumstances, a youtube link will be opened by mpv (notable exception being if we're searching)
 You need regexes to do this, & you can build them easily using =rx=
-#+NAME: Emacs Internet Browse URL
-#+begin_src nix-ts
-browse-url = {
-  enable = true;
-  config = "(defun qutebrowser-browse-url (url &rest args) (qutebrowser-open-url url 'tab))";
-  custom.browse-url-handlers = [
-    '''("https:\\/\\/www\\.youtu\\.*be." . efs/mpv-browse-url)''
-    '''("https:\\/\\/yewtu\\.*be." . efs/mpv-browse-url)''
-    '''("https:\\/\\/inv\\.*nadeko\\.*net\\/watch." . efs/mpv-browse-url)''
-    '''("search\\.nixos\\.org[^z-a]*" . qutebrowser-browse-url)''
-    '''("melpa\.org\.*" . qutebrowser-browse-url)''
-    '''("." . (lambda (url &rest args) (eww url (prefix-numeric-value 4))))''
-  ];
-  setopt.browse-url-secondary-browser-function = "'browse-url-default-browser";
-};
+#+begin_src nix-ts :tangle modules/web/browseurl.nix
+{
+  flake.homeModules.web = { ... }:
+  {
+    programs.emacs.init.usePackage.browse-url = {
+      enable = true;
+      config = "(defun qutebrowser-browse-url (url &rest args) (qutebrowser-open-url url 'tab))";
+      custom.browse-url-handlers = [
+	'''("https:\\/\\/www\\.youtu\\.*be." . efs/mpv-browse-url)''
+	'''("https:\\/\\/yewtu\\.*be." . efs/mpv-browse-url)''
+	'''("https:\\/\\/inv\\.*nadeko\\.*net\\/watch." . efs/mpv-browse-url)''
+	'''("search\\.nixos\\.org[^z-a]*" . qutebrowser-browse-url)''
+	'''("melpa\.org\.*" . qutebrowser-browse-url)''
+	'''("." . (lambda (url &rest args) (eww url (prefix-numeric-value 4))))''
+      ];
+      setopt.browse-url-secondary-browser-function = "'browse-url-default-browser";
+    };
+  };
+}
 #+end_src
 
 *** EWW
-It's a simple text based web browser. I use it for short web searches & for finding youtube videos
-#+NAME: Emacs Internet EWW
-#+begin_src nix-ts :noweb yes
-eww = {
-  enable = true;
-  setopt = {
-    eww-search-prefix = ''"https://search.inetol.net/?q="'';
-    eww-header-line-format = false;
-    eww-desktop-remove-duplicates = true;
-    eww-download-directory = ''(expand-file-name "~/dwn")'';
-    eww-history-limit = 10;
-    # External Browser
-    eww-use-external-browser-for-content-type = ''"\\`\\(video/\\|audio\\)"''; # On GNU/Linux check your mimeapps.list
-    eww-browse-url-new-windowis-tab = false;
-    eww-form-checkbox-selected-symbol = ''"[X]"'';
-    eww-form-checkbox-symbol = ''"[ ]"'';
-    eww-auto-rename-buffer = "'title";
+It's a simple text based web browser. I use it for short web searches
+#+begin_src nix-ts :tangles modules/web/eww.nix :noweb yes
+{
+  flake.homeModules.web = { ... }: {
+    programs.emacs.init.usePackage.eww = {
+      enable = true;
+      setopt = {
+	eww-search-prefix = ''"https://search.inetol.net/?q="'';
+	eww-header-line-format = false;
+	eww-desktop-remove-duplicates = true;
+	eww-download-directory = ''(expand-file-name "~/dwn")'';
+	eww-history-limit = 10;
+	# External Browser
+	eww-use-external-browser-for-content-type = ''"\\`\\(video/\\|audio\\)"''; # On GNU/Linux check your mimeapps.list
+	eww-browse-url-new-windowis-tab = false;
+	eww-form-checkbox-selected-symbol = ''"[X]"'';
+	eww-form-checkbox-symbol = ''"[ ]"'';
+	eww-auto-rename-buffer = "'title";
+      };
+      generalTwoConfig.":n".eww-mode-map = {
+	"N" = "#'eww-back-url";
+	"I" = "#'eww-forward-url";
+	"P" = "#'eww-copy-page-url";
+	"R" = "'eww-readable";
+      };
+      init = ''
+	<<Emacs Internet Eww Config>>
+      '';
+    };
   };
-  generalTwoConfig.":n".eww-mode-map = {
-    "N" = "#'eww-back-url";
-    "I" = "#'eww-forward-url";
-    "P" = "#'eww-copy-page-url";
-    "R" = "'eww-readable";
-  };
-  init = ''
-    <<Emacs Internet Eww Config>>
-  '';
-};
+}
 #+end_src
 
 #+NAME: Emacs Internet Eww Config
@@ -5029,67 +5001,45 @@ eww = {
 #+end_src
 
 *** Yeetube
-#+NAME: Emacs Internet Yeetube
-#+begin_src nix-ts
-yeetube = {
-  enable = true;
-  setopt.yeetube-play-function = "'mpv-play-url";
-  generalOne.global-leader."y" = '''("search" . yeetube-search)'';
-  generalTwoConfig.":n"."yeetube-mode-map" = {
-    "RET" = "'yeetube-play";
-    "r" = "'yeetube-channel-videos";
-    "s" = "'yeetube-channel-search";
-    "d" = "'yeetube-download-video";
-  };
-};
-#+end_src
-
-*** Ement
-Ement username: @holscherhead:matrix.org
-Use S-SPC to load old messages
-#+NAME: Emacs Internet Ement
-#+begin_src nix-ts :noweb yes
-ement = {
-  enable = true;
-  defer = true;
-  generalOne = {
-    global-leader."e" = '''("element" . ement-connect)''; 
-    local-leader."s" = '''("sidebar" . ement-sidebar)'';
-  };
-  init = ''
-    <<Emacs Internet Ement Init>>
-  '';
-};
-#+end_src
-
-#+NAME: Emacs Internet Ement Init
-#+begin_src emacs-lisp
-  (defun ement-sidebar ()
-    (interactive)
-    (ement-room-list-side-window)
-    (with-selected-window (get-buffer-window "*Ement Room List*")
-      (gsetq window-size-fixed 'width)
-      (window-resize (selected-window) (- 45 (window-total-width)) t t)))
+#+begin_src nix-ts :tangle modules/web/yeetube.nix
+{
+  flake.homeModules.web = { pkgs, ... }: {
+    programs.emacs.init.usePackage.yeetube = {
+      enable = true;
+      setopt.yeetube-play-function = "'mpv-play-url";
+      generalOne.global-leader."y" = '''("search" . yeetube-search)'';
+      generalTwoConfig.":n"."yeetube-mode-map" = {
+	"RET" = "'yeetube-play";
+	"r" = "'yeetube-channel-videos";
+	"s" = "'yeetube-channel-search";
+	"d" = "'yeetube-download-video";
+      };
+    };
+  } ;
+}
 #+end_src
 
 *** Webjump
-#+NAME: Emacs Internet Webjump
-#+begin_src nix-ts :noweb yes
-webjump = {
-  enable = true;
-  generalOne.global-leader."s" = "'webjump";
-  setopt.webjump-sites = [
-    '''("DuckDuckGo" . [simple-query "duckduckgo.com" "duckduckgo.com/?q=" ""])''
-    '''("Invidious" . [simple-query "inv.nadeko.net" "inv.nadeko.net/search?q=" ""])''
-    '''("Aur" . [simple-query "aur.archlinux.org" "aur.archlinux.org/packages/?K=" ""])''
-    '''("Nixpkgs" . [simple-query "search.nixos.org" "search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=" ""])''
-    '''("Curseforge" . webjump-to-curseforge)''
-    '''("Modrinth" . webjump-to-modrinth)''
-  ];
-  config = ''
-    <<Emacs Internet Webjump Config>>
-  '';
-};
+#+begin_src nix-ts :tangle modules/web/webjump.nix :noweb yes
+{
+  flake.homeModules.web = { ... }: {
+    programs.emacs.init.usePackage.webjump = {
+      enable = true;
+      generalOne.global-leader."s" = "'webjump";
+      setopt.webjump-sites = [
+	'''("DuckDuckGo" . [simple-query "duckduckgo.com" "duckduckgo.com/?q=" ""])''
+	'''("Invidious" . [simple-query "inv.nadeko.net" "inv.nadeko.net/search?q=" ""])''
+	'''("Aur" . [simple-query "aur.archlinux.org" "aur.archlinux.org/packages/?K=" ""])''
+	'''("Nixpkgs" . [simple-query "search.nixos.org" "search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=" ""])''
+	'''("Curseforge" . webjump-to-curseforge)''
+	'''("Modrinth" . webjump-to-modrinth)''
+      ];
+      config = ''
+	<<Emacs Internet Webjump Config>>
+      '';
+    };
+  };
+}
 #+end_src
 
 #+NAME: Emacs Internet Webjump Config
@@ -5114,256 +5064,80 @@ NAME is the term to search for."
 #+end_src
 
 *** Elfeed
-#+NAME: Emacs Internet Elfeed
 #+begin_src nix-ts
-elfeed = {
-  enable = true;
-  defer = true;
-  setopt.elfeed-feeds = [
-    ''"https://lukesmith.xyz/index.xml"''
-    ''"https://youtube.com/feeds/videos.xml?channel_id=UCSJPFQdZwrOutnmSFYtbstA"''
-    ''"https://planet.emacslife.com/atom.xml"''
-    ''"https://youtube.com/feeds/videos.xml?channel_id=UC_GQ4mac4oN3wl1UdbFuTEA"''
-    ''"https://youtube.com/feeds/videos.xml?channel_id=UC6UBbvEA8uh6Ulc6ax1Zs0g"''
-    ''"https://youtube.com/feeds/videos.xml?channel_id=UCNzZD3otfZVlIdvYYRRqNSw"''
-    ''"https://youtube.com/feeds/videos.xml?channel_id=UCnnkTXnyn0uZzmArZO99Klg"''
-    ''"https://youtube.com/feeds/videos.xml?channel_id=UCq-VIBjS6Ia1r1IR_j-7NUw"''
-    ''"https://youtube.com/feeds/videos.xml?channel_id=UC0E_vIe1e1lVeojYOgVg_5Q"''
-    ''"https://youtube.com/feeds/videos.xml?channel_id=UCUQs6rEz6lRGHn6DWqss0hA"''
-    ''"https://youtube.com/feeds/videos.xml?channel_id=UC_zBdZ0_H_jn41FDRG7q4Tw"''
-    ''"https://notrelated.xyz/rss"''
-  ];
-  generalOne.global-leader."r" = ''`("elfeed" . ,(cmd! (elfeed) (elfeed-update)))'';
-};
+{
+  flake.homeModules.web = { ... }:
+  {
+    programs.emacs.init.usePackage.elfeed = {
+      enable = true;
+      defer = true;
+      setopt.elfeed-feeds = [
+	''"https://lukesmith.xyz/index.xml"''
+	''"https://youtube.com/feeds/videos.xml?channel_id=UCSJPFQdZwrOutnmSFYtbstA"''
+	''"https://planet.emacslife.com/atom.xml"''
+	''"https://youtube.com/feeds/videos.xml?channel_id=UC_GQ4mac4oN3wl1UdbFuTEA"''
+	''"https://youtube.com/feeds/videos.xml?channel_id=UC6UBbvEA8uh6Ulc6ax1Zs0g"''
+	''"https://youtube.com/feeds/videos.xml?channel_id=UCNzZD3otfZVlIdvYYRRqNSw"''
+	''"https://youtube.com/feeds/videos.xml?channel_id=UCnnkTXnyn0uZzmArZO99Klg"''
+	''"https://youtube.com/feeds/videos.xml?channel_id=UCq-VIBjS6Ia1r1IR_j-7NUw"''
+	''"https://youtube.com/feeds/videos.xml?channel_id=UC0E_vIe1e1lVeojYOgVg_5Q"''
+	''"https://youtube.com/feeds/videos.xml?channel_id=UCUQs6rEz6lRGHn6DWqss0hA"''
+	''"https://youtube.com/feeds/videos.xml?channel_id=UC_zBdZ0_H_jn41FDRG7q4Tw"''
+	''"https://notrelated.xyz/rss"''
+      ];
+      generalOne.global-leader."r" = ''`("elfeed" . ,(cmd! (elfeed) (elfeed-update)))'';
+    };
+  };
+}
 #+end_src
 
 *** Qutebrowser
 https://greasyfork.org/en/scripts/374833-yt2invidio
 #+NAME: Internet Qutebrowser
-#+begin_src nix-ts :noweb yes
-programs.qutebrowser = {
-  enable = true;
-  enableDefaultBindings = true;
-  package = (config.lib.nixGL.wrap pkgs.qutebrowser);
+#+begin_src nix-ts :tangle modules/web/qutebrowser/misc.nix :noweb yes
+{
+  flake.homeModules.web = { config, pkgs, ... }:
 
-  <<Internet Qutebrowser Keybinds>>
-
-  <<Internet Qutebrowser Greasemonkey>>
-
-  <<Internet Qutebrowser Aliases>>
-
-  <<Internet Qutebrowser Search>>
-  
-  settings = {
-    <<Internet Qutebrowser Privacy>>
-
-    <<Internet Qutebrowser Dir>>
-
-    <<Internet Qutebrowser Aesthetics>>
-
-    <<Internet Qutebrowser File Selection>>
-
-    <<Internet Qutebrowser Tabs>>
-
-    <<Internet Qutebrowser Links>>
-
-  };
-
-  <<Internet Qutebrowser Extraconfig>>
-};
-
-<<Internet Qutebrowser Emacs Integration>>
-#+end_src
-
-**** Keybinds
-https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_with_emacs_keybindings/
-#+NAME:Internet Qutebrowser Keybinds
-#+begin_src nix-ts
-keyBindings = {
-  normal = {
-    "m" = "search-next";
-    "M" = "search-prev";
-    "e" = "fake-key <Down>";
-    "o" = "fake-key <Up>";
-    "O" = "scroll-page 0 -0.5";
-    "E" = "scroll-page 0 0.5";
-    "<ctrl-o>" = "scroll-page 0 -1";
-    "<ctrl-e>" = "scroll-page 0 1";
-    "t" = "mode-enter insert";
-    "I" = "forward";
-    "i" = "fake-key <Right>";
-    "n" = "fake-key <Left>";
-    "N" = "back";
-    "h" = "spawn --userscript emacsclient-wrapper '(qutebrowser-launcher)'";
-    "H" = "spawn --userscript emacsclient-wrapper '(qutebrowser-launcher-tab)'";
-    ";l" = "spawn --userscript qute-pass";
-    ";u" = "spawn --userscript qute-pass --username-only";
-    ";p" = "spawn --userscript qute-pass --password-only";
-    ";o" = "spawn --userscript qute-pass --otp-only";
-    ";P" = "spawn --userscript emacsclient-wrapper '(qutebrowser-pass \"{url}\")'";
-    "a" = "cmd-set-text :";
-    "k" = "hint links spawn --userscript emacsclient-wrapper '(mpv-play-url \"{hint-url}\")'";
-  };
-};
-#+end_src
-
-**** Greasemonkey Scripts
-#+NAME: Internet Qutebrowser Greasemonkey
-#+begin_src nix-ts :noweb yes
-greasemonkey = [
-  (pkgs.fetchurl {
-		url = "https://raw.githubusercontent.com/afreakk/greasemonkeyscripts/1d1be041a65c251692ee082eda64d2637edf6444/youtube_sponsorblock.js";
-		sha256 = "sha256-e3QgDPa3AOpPyzwvVjPQyEsSUC9goisjBUDMxLwg8ZE=";
-	})
-  (pkgs.fetchurl {
-		url = "https://raw.githubusercontent.com/afreakk/greasemonkeyscripts/refs/heads/master/youtube_adblock.js";
-		sha256 = "sha256-AyD9VoLJbKPfqmDEwFIEBMl//EIV/FYnZ1+ona+VU9c=";
-	})
-];
-#+end_src
-
-**** Aliases
-#+NAME: Internet Qutebrowser Aliases
-#+begin_src nix-ts
-aliases = {
-  "q" = "quit";
-  "w" = "session-save";
-  "wq" = "quit --save";
-};
-#+end_src
-
-**** Autoconfig & Search Engines
-#+NAME: Internet Qutebrowser Search
-#+begin_src nix-ts
-loadAutoconfig = false;
-searchEngines = {
-  "DEFAULT" = "https://duckduckgo.com/?q={}";
-};
-#+end_src
-
-**** Some privacy Settings
-#+NAME: Internet Qutebrowser Privacy
-#+begin_src nix-ts
-content = {
-  blocking = {
-    enabled = true;
-    method = "both";
-    adblock.lists = [
-      "https://easylist.to/easylist/easylist.txt"
-      "https://easylist.to/easylist/easyprivacy.txt"
-      "https://easylist.to/easylist/fanboy-social.txt"
-      "https://secure.fanboy.co.nz/fanboy-annoyance.txt"
-      "https://easylist-downloads.adblockplus.org/abp-filters-anti-cv.txt"
-      #"https://gitlab.com/curben/urlhaus-filter/-/raw/master/urlhaus-filter.txt"
-      "https://pgl.yoyo.org/adservers/serverlist.php?showintro=0;hostformat=hosts"
-      "https://raw.githubusercontent.com/DandelionSprout/adfilt/master/NorwegianExperimentalList%20alternate%20versions/NordicFiltersABP-Inclusion.txt"
-      "https://github.com/uBlockOrigin/uAssets/raw/master/filters/legacy.txt"
-      "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters.txt"
-      "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters-2020.txt"
-      "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters-2021.txt"
-      "https://github.com/uBlockOrigin/uAssets/raw/master/filters/badware.txt"
-      "https://github.com/uBlockOrigin/uAssets/raw/master/filters/privacy.txt"
-      "https://github.com/uBlockOrigin/uAssets/raw/master/filters/badlists.txt"
-      "https://github.com/uBlockOrigin/uAssets/raw/master/filters/annoyances.txt"
-      "https://github.com/uBlockOrigin/uAssets/raw/master/filters/resource-abuse.txt"
-      "https://www.i-dont-care-about-cookies.eu/abp/"
-      "https://secure.fanboy.co.nz/fanboy-cookiemonster.txt"
-      "https://github.com/uBlockOrigin/uAssets/raw/master/filters/unbreak.txt"
-      "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/quick-fixes.txt"
+  {
+    home.packages = with pkgs; [
+      python313Packages.adblock
+      libfido2
+      yubikey-manager
     ];
-  };
-  autoplay = false;
-  cookies.store = false;
-  geolocation = false;
-  private_browsing = true;
-};
-completion = {
-  cmd_history_max_items = 0;
-  web_history.max_items = 0;
-};
-#+end_src
 
-**** Download Dir & Startpage
-#+NAME: Internet Qutebrowser Dir
-#+begin_src nix-ts
-downloads.location.directory = "~/dwn";
-url = {
-  default_page = "https://search.inetol.net";
-  start_pages = "https://search.inetol.net";
-};
-#+end_src
+    programs.qutebrowser = {
+      enable = true;
+      enableDefaultBindings = true;
+      package = (config.lib.nixGL.wrap pkgs.qutebrowser);
+      loadAutoconfig = false;
 
-**** Aesthetics
-This is a very ugly way of doing things
-#+NAME: Internet Qutebrowser Aesthetics
-#+begin_src nix-ts
-window.transparent = true;
-colors = {
-  completion = {
-    category = {
-      bg = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
-      border = {
-        bottom = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
-        top = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
+      aliases = {
+	"q" = "quit";
+	"w" = "session-save";
+	"wq" = "quit --save";
       };
+
+      searchEngines = {
+	"DEFAULT" = "https://duckduckgo.com/?q={}";
+      };
+  
+      settings = {
+	downloads.location.directory = "~/dwn";
+	url = {
+	  default_page = "https://search.inetol.net";
+	  start_pages = "https://search.inetol.net";
+	};
+	hints.chars = "crstbfneia";
+      };
+
+      extraConfig = ''
+	<<Qutebrowser Config>>
+      '';
     };
-    even.bg = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
-    odd.bg = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
   };
-  statusbar = {
-    command = {
-      bg = lib.mkForce ("#50" + config.lib.stylix.colors.base00);
-      private.bg = lib.mkForce ("#50" + config.lib.stylix.colors.base00);
-    };
-  };
-  webpage.darkmode = {
-    enabled = true;
-    algorithm = "lightness-cielab";
-    policy.images = "never";
-  };
-};
+}
 #+end_src
 
-**** File Selection
-#+NAME: Internet Qutebrowser File Selection
-#+begin_src nix-ts
-fileselect = {
-  handler = "external";
-  single_file.command = [
-    "emacsclient"
-    "{}"
-  ];
-  folder.command = [
-    "emacsclient"
-    "{}"
-  ];
-  multiple_files.command = [
-    "emacsclient"
-    "{}"
-  ];
-};
-#+end_src
-
-**** WM Related
-#+NAME: Internet Qutebrowser Tabs
-#+begin_src nix-ts
-tabs = {
-  tabs_are_windows = true;
-  show = "never";
-};
-
-window.title_format = "{current_title}";
-new_instance_open_target = "tab-silent";
-statusbar.show = "never";
-#+end_src
-
-**** Link Hints
-#+NAME: Internet Qutebrowser Links
-#+begin_src nix-ts
-hints.chars = "crstbfneia";
-#+end_src
-
-**** Extra Config
 #+NAME: Qutebrowser Config
 #+begin_src python-ts
 config.set('content.cookies.accept', 'no-3rdparty', 'chrome-devtools://*')
@@ -5391,46 +5165,196 @@ c.fonts.debug_console = '8pt "Source Code Pro"'
 c.fonts.prompts = 'default_size sans-serif'
 #+end_src
 
-#+NAME: Internet Qutebrowser Extraconfig
-#+begin_src nix-ts :noweb yes
-extraConfig = ''
-  <<Qutebrowser Config>>
-'';
+**** Keybinds
+https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_with_emacs_keybindings/
+#+begin_src nix-ts :tangle modules/web/qutebrowser/keybinds.nix
+{
+  flake.homeModules.web = { ... }:
+  {
+    programs.qutebrowser.keyBindings = {
+      normal = {
+	"m" = "search-next";
+	"M" = "search-prev";
+	"e" = "fake-key <Down>";
+	"o" = "fake-key <Up>";
+	"O" = "scroll-page 0 -0.5";
+	"E" = "scroll-page 0 0.5";
+	"<ctrl-o>" = "scroll-page 0 -1";
+	"<ctrl-e>" = "scroll-page 0 1";
+	"t" = "mode-enter insert";
+	"I" = "forward";
+	"i" = "fake-key <Right>";
+	"n" = "fake-key <Left>";
+	"N" = "back";
+	"h" = "spawn --userscript emacsclient-wrapper '(qutebrowser-launcher)'";
+	"H" = "spawn --userscript emacsclient-wrapper '(qutebrowser-launcher-tab)'";
+	";l" = "spawn --userscript qute-pass";
+	";u" = "spawn --userscript qute-pass --username-only";
+	";p" = "spawn --userscript qute-pass --password-only";
+	";o" = "spawn --userscript qute-pass --otp-only";
+	";P" = "spawn --userscript emacsclient-wrapper '(qutebrowser-pass \"{url}\")'";
+	"a" = "cmd-set-text :";
+	"k" = "hint links spawn --userscript emacsclient-wrapper '(mpv-play-url \"{hint-url}\")'";
+      };
+    };
+  };
+}
+#+end_src
+
+**** Greasemonkey Scripts
+#+begin_src nix-ts :tangle modules/web/qutebrowser/greasemonkey.nix
+{
+  flake.homeModules.web = { pkgs, ... }:
+
+  {
+    programs.qutebrowser.greasemonkey = [
+      (pkgs.fetchurl {
+	url = "https://raw.githubusercontent.com/afreakk/greasemonkeyscripts/1d1be041a65c251692ee082eda64d2637edf6444/youtube_sponsorblock.js";
+	sha256 = "sha256-e3QgDPa3AOpPyzwvVjPQyEsSUC9goisjBUDMxLwg8ZE=";
+      })
+      (pkgs.fetchurl {
+	url = "https://raw.githubusercontent.com/afreakk/greasemonkeyscripts/refs/heads/master/youtube_adblock.js";
+	sha256 = "sha256-AyD9VoLJbKPfqmDEwFIEBMl//EIV/FYnZ1+ona+VU9c=";
+      })
+    ];
+  };
+}
+#+end_src
+
+**** Some privacy Settings
+#+begin_src nix-ts :tangle modules/web/qutebrowser/privacy.nix
+{
+  flake.homeModules.web = { ... }: {
+    programs.qutebrowser.settings = {
+      content = {
+	blocking = {
+	  enabled = true;
+	  method = "both";
+	  adblock.lists = [
+	    "https://easylist.to/easylist/easylist.txt"
+	    "https://easylist.to/easylist/easyprivacy.txt"
+	    "https://easylist.to/easylist/fanboy-social.txt"
+	    "https://secure.fanboy.co.nz/fanboy-annoyance.txt"
+	    "https://easylist-downloads.adblockplus.org/abp-filters-anti-cv.txt"
+	    #"https://gitlab.com/curben/urlhaus-filter/-/raw/master/urlhaus-filter.txt"
+	    "https://pgl.yoyo.org/adservers/serverlist.php?showintro=0;hostformat=hosts"
+	    "https://raw.githubusercontent.com/DandelionSprout/adfilt/master/NorwegianExperimentalList%20alternate%20versions/NordicFiltersABP-Inclusion.txt"
+	    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/legacy.txt"
+	    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters.txt"
+	    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters-2020.txt"
+	    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters-2021.txt"
+	    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/badware.txt"
+	    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/privacy.txt"
+	    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/badlists.txt"
+	    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/annoyances.txt"
+	    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/resource-abuse.txt"
+	    "https://www.i-dont-care-about-cookies.eu/abp/"
+	    "https://secure.fanboy.co.nz/fanboy-cookiemonster.txt"
+	    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/unbreak.txt"
+	    "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/quick-fixes.txt"
+	  ];
+	};
+	autoplay = false;
+	cookies.store = false;
+	geolocation = false;
+	private_browsing = true;
+      };
+      completion = {
+	cmd_history_max_items = 0;
+	web_history.max_items = 0;
+      };
+    };
+  };
+}
 #+end_src
 
 **** Emacs Integration
-#+NAME: Internet Qutebrowser Emacs Integration
-#+begin_src nix-ts :noweb yes
-programs.emacs.init.usePackage = {
-  qutebrowser = {
-    enable = true;
-    ghookf = [
-      "('exwm-init 'global-qutebrowser-exwm-mode)"
-    ];
-    gfhookf = [
-      "('server-visit 'qute/dired-hook)"
-      "('qutebrowser-exwm-mode 'evil-normal-state)"
-    ];
-    config = ''
-      <<Emacs Internet Qutebrowser Config>>
-    '';
-    generalOneConfig.qute-dired-mode-map."C-c C-c" = "#'qute/choose-file";
-    generalTwoConfig.":n".qute-dired-mode-map = {
-      "i" = "'dired-find-file";
-      "n" = "'dired-up-directory";
+#+begin_src nix-ts :tangle modules/web/qutebrowser/emacs.nix :noweb yes
+{ inputs, ... } :
+
+{
+  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages.qutebrowser-emacs = (epkgs.callPackage
+      epkgs.trivialBuild rec {
+	pname = "qutebrowser";
+	version = "current";
+	src = inputs.exwm-qutebrowser;
+
+	propagatedUserEnvPkgs = with epkgs; [
+	  consult
+	  exwm
+	  password-store
+	  dash
+	  evil
+	  doom-modeline
+	];
+
+	buildInputs = propagatedUserEnvPkgs;
+      }
+    );
+  };
+
+  flake.homeModules.web = { ... }: {
+    programs = {
+      emacs.init.usePackage = {
+	qutebrowser = {
+	  enable = true;
+	  ghookf = [
+	    "('exwm-init 'global-qutebrowser-exwm-mode)"
+	  ];
+	  gfhookf = [
+	    "('server-visit 'qute/dired-hook)"
+	    "('qutebrowser-exwm-mode 'evil-normal-state)"
+	  ];
+	  config = ''
+	    <<Emacs Qutebrowser Config>>
+	  '';
+	  generalOneConfig.qute-dired-mode-map."C-c C-c" = "#'qute/choose-file";
+	  generalTwoConfig.":n".qute-dired-mode-map = {
+	    "i" = "'dired-find-file";
+	    "n" = "'dired-up-directory";
+	  };
+	};
+	qutebrowser-evil = {
+	  enable = true;
+	  package = epkgs: epkgs.qutebrowser;
+	  ghookf = [
+	    "('global-qutebrowser-exwm-mode 'qutebrowser-evil-state-mode)"
+	  ];
+	};
+      };
+
+      qutebrowser.settings = {
+	tabs = {
+	  tabs_are_windows = true;
+	  show = "never";
+	};
+	window.title_format = "{current_title}";
+	new_instance_open_target = "tab-silent";
+	statusbar.show = "never";
+	fileselect = {
+	  handler = "external";
+	  single_file.command = [
+	    "emacsclient"
+	    "{}"
+	  ];
+	  folder.command = [
+	    "emacsclient"
+	    "{}"
+	  ];
+	  multiple_files.command = [
+	    "emacsclient"
+	    "{}"
+	  ];
+	};
+      };
     };
   };
-  qutebrowser-evil = {
-    enable = true;
-    package = epkgs: epkgs.qutebrowser;
-    ghookf = [
-      "('global-qutebrowser-exwm-mode 'qutebrowser-evil-state-mode)"
-    ];
-  };
-};
+}
 #+end_src
 
-#+NAME: Emacs Internet Qutebrowser Config
+#+NAME: Emacs Qutebrowser Config
 #+begin_src emacs-lisp
 (define-minor-mode qute-dired-mode
   "Used for dired buffers qutebrowser is using as a file picker"
