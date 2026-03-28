@@ -138,24 +138,6 @@ in {
 #+end_src
 
 ** Emacs
-*** Dired Single
-#+begin_src nix-ts :tangle modules/packages/emacs/dired-single.nix
-{ inputs, ... } :
-
-{
-  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages.dired-single = (epkgs.callPackage
-      epkgs.trivialBuild rec {
-	pname = "dired-single";
-	version = "current";
-	src = inputs.dired-single;
-      }
-    );
-  };
-}
-#+end_src
-
 *** Repeaters
 #+begin_src nix-ts :tangle modules/packages/emacs/repeaters.nix
 { inputs, ... } :
@@ -168,42 +150,6 @@ in {
 	pname = "repeaters";
 	version = "current";
 	src = inputs.repeaters;
-      }
-    );
-  };
-}
-#+end_src
-
-*** App Launcher
-#+begin_src nix-ts :tangle modules/packages/emacs/app-launcher.nix
-{ inputs, ... } :
-
-{
-  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages.app-launcher = (epkgs.callPackage
-      epkgs.trivialBuild rec {
-	pname = "app-launcher";
-	version = "current";
-	src = inputs.app-launcher;
-      }
-    );
-  };
-}
-#+end_src
-
-*** Ezf
-#+begin_src nix-ts :tangle modules/packages/emacs/ezf.nix
-{ inputs, ... } :
-
-{
-  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages.emacs-ezf = (epkgs.callPackage
-      epkgs.trivialBuild rec {
-	pname = "ezf";
-	version = "current";
-	src = inputs.ezf;
       }
     );
   };
@@ -273,65 +219,7 @@ https://github.com/dmkhitaryan/river-next-nix-module/blob/5205ebf2b5f820c3a9221f
 # }
 # #+end_src
 
-*** Embark
-The version of embark in nixpkgs doesn't work right with org mode because it's missing some inputs
-#+begin_src nix-ts :tangle modules/packages/emacs/embark.nix
-{ inputs, ... }:
-
-{
-  perSystem = { pkgs, ... }:
-  let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages.embark = epkgs.callPackage (
-      {
-        org,
-        consult,
-        avy,
-        compat,
-        elpaBuild,
-        fetchurl,
-        lib,
-      }:
-      elpaBuild {
-        pname = "embark";
-        ename = "embark";
-        version = "1.1";
-        src = fetchurl {
-	  url = "https://elpa.gnu.org/packages/embark-1.1.tar";
-	  sha256 = "074ggh7dkr5jdkwcndl6znhkq48jmc62rp7mc6vjidr6yxf8d1rn";
-        };
-        packageRequires = [
-	  org
-	  consult
-	  avy
-	  compat
-        ];
-        meta = {
-	  homepage = "https://elpa.gnu.org/packages/embark.html";
-	  license = lib.licenses.free;
-        };
-      }
-    ) { };
-  };
-}
-
-#+end_src
-
 ** Scripts
-*** mpvmacs
-Play a file with mpv, controllable by emacs
-#+begin_src nix-ts :tangle modules/packages/scripts/mpvmacs.nix
-{ inputs, ... }:
-
-{
-  perSystem = {pkgs, ... }: {
-    packages.mpvmacs = pkgs.writeShellScriptBin "mpvmacs" ''
-      emacsclient -e "(mpv-play \"$1\")"
-    '';
-  };
-}
-#+end_src
-
 *** Updatefix
 Script to automate fixing my setup after an update breaks certain parts.
 Meant to be run with doas
@@ -342,67 +230,6 @@ Meant to be run with doas
   perSystem = { pkgs, ... }: {
     packages.updatefix = pkgs.writeShellScriptBin "updatefix" ''
       cp /usr/lib/systemd/system/getty@.bak /usr/lib/systemd/system/getty@.service
-    '';
-  };
-}
-#+end_src
-
-*** Doomer
-#+begin_src nix-ts :tangle modules/packages/scripts/doomer.nix
-{ inputs, ... }:
-
-{
-  perSystem = { config, pkgs, self', ... }:
-  {
-    packages.doomer = pkgs.writeShellScriptBin "doomer" ''
-      ${pkgs.sox}/bin/sox "$1" "$1.flac" pitch -500 treble -20 pad 0 3 reverb 80 tempo .8 highpass 1000 lowpass 700 compand 0.3,0.8 0
-    '';
-  };
-}
-#+end_src
-
-*** Ezf
-Borrowed from here: https://github.com/mickeynp/ezf
-#+begin_src nix-ts :tangle modules/packages/scripts/ezf.nix
-{ inputs, ... }:
-
-{
-  perSystem = { config, pkgs, self', ... }: {
-    packages.ezf = pkgs.writeShellScriptBin "ezf" ''
-      set -o nounset -o errexit -o pipefail
-
-      field=0-
-      # the elisp function to use for completing read
-      candidate_fn=ezf-default
-      while getopts c:f: OPT; do
-          case $OPT in
-              c)
-                  candidate_fn=$OPTARG
-                  ;;
-              f)
-                  field=$OPTARG
-                  ;;
-              ,*)
-                  ${pkgs.coreutils}/bin/echo "usage: ezf [-f field] [-c candidate-fn]"
-                  exit 2
-          esac
-      done
-      shift $(( OPTIND - 1 ))
-      OPTIND=1
-
-      ezftmp="$(mktemp)"
-      trap 'rm -f -- "$ezftmp"' EXIT
-      > "$ezftmp" cat -
-      # xargs is there to strip the "" from the beginning and end of the
-      # output from Emacs.  Ensure "field" is always passed as a string by
-      # quoting it.
-      selection=$(emacsclient -e "(progn (require 'ezf) (ezf \"$ezftmp\" \"$field\" #'$candidate_fn))" | xargs)
-      if [[ "$selection" == "nil" ]]; then
-          exit 1
-      else
-         ${pkgs.coreutils}/bin/echo "$selection"
-      fi
-
     '';
   };
 }
@@ -496,31 +323,6 @@ Dev templates: https://github.com/the-nix-way/dev-templates
       disk=$(${pkgs.coreutils}/bin/ls /dev | ${pkgs.ripgrep}/bin/rg sd[a-z] | ${ezf}/bin/ezf)
 
       ${pkgs.udisks}/bin/udisksctl $action -b /dev/$disk
-    '';
-  };
-}
-#+end_src
-
-*** Wiki
-Requires arch-wiki-docs to be installed
-
-Stole it from Derek Taylor
-#+begin_src nix-ts :tangle modules/packages/scripts/wiki.nix
-{ inputs, ... }:
-
-{
-  perSystem = { pkgs, self', ... }: {
-    packages.wiki = pkgs.writeShellScriptBin "wiki" ''
-      dir="/usr/share/doc/arch-wiki/html/en/"
-      doc="$(${pkgs.findutils}/bin/find $dir -iname "*.html" | \
-      ${pkgs.coreutils}/bin/cut -d '/' -f8- | \
-      ${self'.packages.ezf}/bin/ezf)"
-
-      if [ "''${dir}$doc" ]; then
-        emacsclient -e "(eww-open-file \"''${dir}$doc\")"
-      else
-        ${pkgs.coreutils}/bin/echo "Program terminated." && exit 0
-      fi
     '';
   };
 }
@@ -2044,65 +1846,79 @@ I'm running dired with a couple of small packages that improve on it
 #+begin_src nix-ts :tangle modules/file-management.nix :noweb yes 
 { inputs, ... }:
 {
-flake.homeModules.fileManager = { pkgs, ... }:
-
-{
-  programs.emacs.init = {
-    tools.dired = {
-      enable = true;
-      narrow = true;
-      posframe = true;
+  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages = {
+      dired-single = (epkgs.callPackage
+	epkgs.trivialBuild rec {
+	  pname = "dired-single";
+	  version = "current";
+	  src = inputs.dired-single;
+	}
+      );
+      mpvmacs = pkgs.writeShellScriptBin "mpvmacs" ''
+	emacsclient -e "(mpv-play \"$1\")"
+      '';
     };
-    usePackage = {
-      dired = {
-	generalOne.ctl-x-map."d" = "'consult-dir";
-        # We're doing our best to get rid of that 1st extraneous line
-	setopt.dired-free-space = false;
-	config = ''(with-eval-after-load 'dired-x (gsetq dired-omit-extensions (delete ".class" dired-omit-extensions)))'';
-      };
+  };
 
-      openwith = {
+  flake.homeModules.fileManager = { pkgs, ... }: {
+    programs.emacs.init = {
+      tools.dired = {
 	enable = true;
-	defer = true;
-	ghookf = ["('dired-mode 'openwith-mode)"];
-	config = ''
-          <<Emacs Openwith Config>>
-	'';
+	narrow = true;
+	posframe = true;
       };
+      usePackage = {
+	dired = {
+	  generalOne.ctl-x-map."d" = "'consult-dir";
+          # We're doing our best to get rid of that 1st extraneous line
+	  setopt.dired-free-space = false;
+	  config = ''(with-eval-after-load 'dired-x (gsetq dired-omit-extensions (delete ".class" dired-omit-extensions)))'';
+	};
 
-      dired-single = {
-	enable = true;
-	after = [ "dired" ];
-	ghookf = [''
-          ('dired-mode (lambda () (general-def 'normal dired-mode-map
+	openwith = {
+	  enable = true;
+	  defer = true;
+	  ghookf = ["('dired-mode 'openwith-mode)"];
+	  config = ''
+            <<Emacs Openwith Config>>
+	  '';
+	};
+
+	dired-single = {
+	  enable = true;
+	  after = [ "dired" ];
+	  ghookf = [''
+            ('dired-mode (lambda () (general-def 'normal dired-mode-map
                "B" 'evil-goto-line
                "n" 'dired-single-prev
                "i" 'dired-single-next)))
-	''];
-      };
+	  ''];
+	};
 
-      dired-ranger = {
-	enable = true;
-	ghookf = [''
-          ('dired-mode (lambda () (general-def 'normal dired-mode-map
+	dired-ranger = {
+	  enable = true;
+	  ghookf = [''
+            ('dired-mode (lambda () (general-def 'normal dired-mode-map
                "d" 'dired-ranger-copy
                "O" 'dired-ranger-move
                "G" 'dired-ranger-paste)))
-	''];
-      };
-
-      image = {
-	enable = true;
-	gfhookf = ["('image-mode 'image-transform-fit-to-window)"];
-	generalTwoConfig.":n".image-map = {
-          "E" = "'image-next-file";
-          "O" = "'image-previous-file";
+	  ''];
 	};
-	setopt.image-animate-loop = true;
+
+	image = {
+	  enable = true;
+	  gfhookf = ["('image-mode 'image-transform-fit-to-window)"];
+	  generalTwoConfig.":n".image-map = {
+            "E" = "'image-next-file";
+            "O" = "'image-previous-file";
+	  };
+	  setopt.image-animate-loop = true;
+	};
       };
     };
   };
-};
 }
 #+end_src
 
@@ -2969,78 +2785,44 @@ ewal-evil-cursors = {
 #+end_src
 
 *** Completion System
-My completions system is based around vertico, because that's what all the cool kids use nowadays.
-#+begin_src nix-ts :tangle modules/emacs/completion-system.nix :noweb yes 
-{ inputs, ... }:
+My completion system is based around vertico & corfu, because that's what all the cool kids use nowadays.
 
+**** Vertico
+Vertico is basically dmenu for emacs. It lists out all the options in a command menu.
+#+begin_src nix-ts :tangle modules/emacs/completions/vertico.nix :noweb yes
 {
-  flake.homeModules.emacs = { pkgs, ... }:
-
-  {
+  flake.homeModules.emacs = { ... }: {
     programs.emacs.init = {
       completions = {
-        prescient = true;
-        orderless = true;
-        vertico.enable = true;
-        smallExtras = {
-	  enable = true;
-	  embark = true;
-	  evilConsultLine = true;
-        };
-        corfu = {
-          enable = true;
-          wantTabComplete = false;
-          wantRetConfirm = false;
-          wantMinibuffer = true;
-          popupInfo = true;
-        };
-        tempel.enable = true;
+	vertico.enable = true;
+	prescient = true;
+	orderless = true;
       };
-
       usePackage = {
-        <<Emacs Vertico>>
-      
-        <<Emacs Corfu>>
+	vertico = {
+	  generalTwoConfig.":n".vertico-map = {
+	    "C-o" = "'vertico-scroll-down";
+	    "C-e" = "'vertico-scroll-up";
+	    "j" = "'evil-undo";
+	    "I" = "'vertico-last";
+	    "N" = "'vertico-first";
+	    "B" = "'vertico-last";
+	    "bg" = "'vertico-first";
+	    "G" = "'evil-paste-after";
+	  };
+	  config = ''
+	    <<Emacs Vertico Config>>
+	  '';
+	};
 
-        <<Emacs Consult>>
-
-        <<Emacs Embark>>
-
-        <<Emacs App Launcher>>
-
-        <<Emacs Search>>
-
-        <<Emacs Ezf>>
+	vertico-quick.setopt = {
+	  vertico-quick1 = ''"crst"'';
+	  vertico-quick2 = ''"neia"'';
+	};
       };
     };
   };
 }
-#+end_src
-
-**** Vertico
-Vertico is basically dmenu for emacs. It lists out all the options in a command menu.
-#+NAME: Emacs Vertico
-#+begin_src nix-ts :noweb yes
-vertico = {
-  generalTwoConfig.":n".vertico-map = {
-    "C-o" = "'vertico-scroll-down";
-    "C-e" = "'vertico-scroll-up";
-    "j" = "'evil-undo";
-    "I" = "'vertico-last";
-    "N" = "'vertico-first";
-    "B" = "'vertico-last";
-    "bg" = "'vertico-first";
-    "G" = "'evil-paste-after";
-  };
-  config = ''
-    <<Emacs Vertico Config>>
-  '';
-};
-
-vertico-quick.setopt = {
-  vertico-quick1 = ''"crst"'';
-  vertico-quick2 = ''"neia"'';
-};
 #+end_src
 
 #+NAME: Emacs Vertico Config
@@ -3052,23 +2834,41 @@ vertico-quick.setopt = {
 
 **** Corfu
 I took a lot of this from Gavin Freeborn's config
-#+NAME: Emacs Corfu
-#+begin_src nix-ts :noweb yes
-corfu-quick = {
-  enable = true;
-  setopt = {
-    corfu-quick1 = ''"crst"'';
-    corfu-quick2 = ''"neia"'';
-  };
-};
+#+begin_src nix-ts :tangle modules/emacs/completions/corfu.nix :noweb yes
+{
+  flake.homeModules.emacs = { ... }: {
+    programs.emacs.init = {
+      completions = {
+	tempel.enable = true;
+	corfu = {
+	  enable = true;
+	  wantTabComplete = false;
+	  wantRetConfirm = false;
+	  wantMinibuffer = true;
+	  popupInfo = true;
+	};
+      };
 
-cape = {
-  enable = true;
-  after = ["corfu"];
-  config = ''
-    <<Emacs Cape Config>>
-  '';
-};
+      usePackage = {
+	corfu-quick = {
+	  enable = true;
+	  setopt = {
+	    corfu-quick1 = ''"crst"'';
+	    corfu-quick2 = ''"neia"'';
+	  };
+	};
+
+	cape = {
+	  enable = true;
+	  after = ["corfu"];
+	  config = ''
+	    <<Emacs Cape Config>>
+	  '';
+	};
+      };
+    };
+  } ;
+}
 #+end_src
 
 #+NAME: Emacs Cape Config
@@ -3080,49 +2880,60 @@ cape = {
 **** Consult
 Replaces a bunch of commands with new commands.
 Evil integration is from noctuid & minad
-#+NAME: Emacs Consult
-#+begin_src nix-ts :noweb yes
-consult = {
-  ghookf = ["('minibuffer-setup 'consult-initial-narrow)"];
-  command = ["consult-goto-line" "consult-keep-lines"];
-  setopt = {
-    consult-buffer-sources = "'(consult-source-buffer)";
-    consult-bookmark-narrow = [
-      '''(?b "Bufler" bufler-workspace-bookmark-handler)''
-      '''(?f "File" bookmark-default-handler)''
-      '''(?h "Help" help-bookmark-jump Info-bookmark-jump Man-bookmark-jump woman-bookmark-jump)''
-      '''(?p "Picture" image-bookmark-jump)''
-      '''(?d "Docview" doc-view-bookmark-jump)''
-      '''(?m "Mail" gnus-summary-bookmark-jump)''
-      '''(?s "Eshell" eshell-bookmark-jump)''
-      '''(?w "Web" qutebrowser-bookmark-jump eww-bookmark-jump xwidget-webkit-bookmark-jump-handler)''
-      '''(?v "VC Directory" vc-dir-bookmark-jump)''
-      '''(nil "Other")''
-    ] ;
-  };
-  generalOne = {
-    ":n" = {
-      "M-g" = "'consult-yank-pop"; # orig. evil-paste-pop
-      "M-E" = "'consult-isearch-history "; # orig. isearch-edit-string
-      "H-'" = "'evil-collection-consult-mark";
-      "H--" = "'evil-collection-consult-jump-list";
-      "H-q" = "'consult-flymake"; # Alternative: consult-flycheck
-      "[i" = '''("Previous Imenu" . efs/consult-imenu-previous)'';
-      "]i" = '''("Next Imenu" . efs/consult-imenu-next)'';
-    } ;
-    ctl-x-map."C-f" = "'consult-fd";
-    global-leader."R" = "'consult-recent-file";
-  };
-  bindLocal.help-map."M" = "man";
-  config = ''
-      <<Emacs Consult Config>>
-    '';
-};
+#+begin_src nix-ts :tangle modules/emacs/completions/consult.nix :noweb yes
+{
+  flake.homeModules.emacs = { ... }: {
+    programs.emacs.init = {
+      completions.smallExtras = {
+	enable = true;
+	evilConsultLine = true;
+      };
+      usePackage = {
+	consult = {
+	  ghookf = ["('minibuffer-setup 'consult-initial-narrow)"];
+	  command = ["consult-goto-line" "consult-keep-lines"];
+	  setopt = {
+	    consult-buffer-sources = "'(consult-source-buffer)";
+	    consult-bookmark-narrow = [
+	      '''(?b "Bufler" bufler-workspace-bookmark-handler)''
+	      '''(?f "File" bookmark-default-handler)''
+	      '''(?h "Help" help-bookmark-jump Info-bookmark-jump Man-bookmark-jump woman-bookmark-jump)''
+	      '''(?p "Picture" image-bookmark-jump)''
+	      '''(?d "Docview" doc-view-bookmark-jump)''
+	      '''(?m "Mail" gnus-summary-bookmark-jump)''
+	      '''(?s "Eshell" eshell-bookmark-jump)''
+	      '''(?w "Web" qutebrowser-bookmark-jump eww-bookmark-jump xwidget-webkit-bookmark-jump-handler)''
+	      '''(?v "VC Directory" vc-dir-bookmark-jump)''
+	      '''(nil "Other")''
+	    ] ;
+	  };
+	  generalOne = {
+	    ":n" = {
+	      "M-g" = "'consult-yank-pop"; # orig. evil-paste-pop
+	      "M-E" = "'consult-isearch-history "; # orig. isearch-edit-string
+	      "H-'" = "'evil-collection-consult-mark";
+	      "H--" = "'evil-collection-consult-jump-list";
+	      "H-q" = "'consult-flymake"; # Alternative: consult-flycheck
+	      "[i" = '''("Previous Imenu" . efs/consult-imenu-previous)'';
+	      "]i" = '''("Next Imenu" . efs/consult-imenu-next)'';
+	    } ;
+	    ctl-x-map."C-f" = "'consult-fd";
+	    global-leader."R" = "'consult-recent-file";
+	  };
+	  bindLocal.help-map."M" = "man";
+	  config = ''
+	    <<Emacs Consult Config>>
+	  '';
+	};
 
-bookmark = {
-  enable = true;  
-  generalOne."ctl-x-r-map"."S" = "'bookmark-save";
-};
+	bookmark = {
+	  enable = true;  
+	  generalOne."ctl-x-r-map"."S" = "'bookmark-save";
+	};
+      };
+    };
+  };
+}
 #+end_src
 
 #+NAME: Emacs Consult Config
@@ -3183,36 +2994,80 @@ bookmark = {
 
 **** Embark
 Embark lets you manipulate the content of vertico buffers.
+The version of embark in nixpkgs doesn't work right with org mode because it's missing some inputs
 
 Credits:
 Which-key indicator from the embark wiki
 avy actions from karthink
-#+NAME: Emacs Embark
-#+begin_src nix-ts :noweb yes
-embark = {
-  general."M-a" = "'embark-dwim";
-  generalTwo.":n".vertico-map."a" = "'embark-act";
-  generalOneConfig = {
-    embark-file-map = {
-      "2" = "(my/embark-split-action find-file elwm-split-window)";
-      "t" = "(my/embark-split-action find-file tab-new)";
-      "o" = "(my/embark-ace-action find-file)";
-    };
-    embark-buffer-map = {
-      "2" = "(my/embark-split-action switch-to-buffer elwm-split-window)";
-      "t" = "(my/embark-split-action switch-to-buffer tab-new)";
-      "o" = "(my/embark-ace-action switch-to-buffer)";
-    };
-    embark-bookmark-map = {
-      "2" = "(my/embark-split-action bookmark-jump elwm-split-window)";
-      "t" = "(my/embark-split-action bookmark-jump tab-new)";
-      "o" = "(my/embark-ace-action bookmark-jump)";
+#+begin_src nix-ts :tangle modules/emacs/completions/embark.nix :noweb yes
+{ inputs, ... }:
+
+{
+  perSystem = { pkgs, ... }:
+  let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages.embark = epkgs.callPackage (
+      {
+        org,
+        consult,
+        avy,
+        compat,
+        elpaBuild,
+        fetchurl,
+        lib,
+      }:
+      elpaBuild {
+        pname = "embark";
+        ename = "embark";
+        version = "1.1";
+        src = fetchurl {
+	  url = "https://elpa.gnu.org/packages/embark-1.1.tar";
+	  sha256 = "074ggh7dkr5jdkwcndl6znhkq48jmc62rp7mc6vjidr6yxf8d1rn";
+        };
+        packageRequires = [
+	  org
+	  consult
+	  avy
+	  compat
+        ];
+        meta = {
+	  homepage = "https://elpa.gnu.org/packages/embark.html";
+	  license = lib.licenses.free;
+        };
+      }
+    ) { };
+  };
+
+  flake.homeModules.emacs = { pkgs, ... }: {
+    programs.emacs.init = {
+      completions.smallExtras.embark = true;
+      usePackage.embark = {
+	general."M-a" = "'embark-dwim";
+	generalTwo.":n".vertico-map."a" = "'embark-act";
+	generalOneConfig = {
+	  embark-file-map = {
+	    "2" = "(my/embark-split-action find-file elwm-split-window)";
+	    "t" = "(my/embark-split-action find-file tab-new)";
+	    "o" = "(my/embark-ace-action find-file)";
+	  };
+	  embark-buffer-map = {
+	    "2" = "(my/embark-split-action switch-to-buffer elwm-split-window)";
+	    "t" = "(my/embark-split-action switch-to-buffer tab-new)";
+	    "o" = "(my/embark-ace-action switch-to-buffer)";
+	  };
+	  embark-bookmark-map = {
+	    "2" = "(my/embark-split-action bookmark-jump elwm-split-window)";
+	    "t" = "(my/embark-split-action bookmark-jump tab-new)";
+	    "o" = "(my/embark-ace-action bookmark-jump)";
+	  };
+	};
+	preface = ''
+	  <<Emacs Embark Preface>>
+	'';
+      };
     };
   };
-  preface = ''
-    <<Emacs Embark Preface>>
-  '';
-};
+}
 #+end_src
 
 Borrowed from Karthinks
@@ -3241,58 +3096,148 @@ Borrowed from Karthinks
 #+end_src
 
 **** App Launcher
-#+NAME: Emacs App Launcher
-#+begin_src nix-ts
-app-launcher = {
-  enable = true;
-  defer = true;
-  command = ["app-launcher-run-app"];
-};
+#+begin_src nix-ts :tangle modules/emacs/completions/app-launcher.nix
+{ inputs, ... } :
+
+{
+  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages.app-launcher = (epkgs.callPackage
+      epkgs.trivialBuild rec {
+	pname = "app-launcher";
+	version = "current";
+	src = inputs.app-launcher;
+      }
+    );
+  };
+  
+  flake.homeModules.emacs = { ... }: {
+    programs.emacs.init.usePackage.app-launcher = {
+      enable = true;
+      defer = true;
+      command = ["app-launcher-run-app"];
+    };
+  };
+}
 #+end_src
 
 **** Search
-#+NAME: Emacs Search
-#+begin_src nix-ts
-ace-isearch = {
-  enable = true;
-  demand = true;
-  gfhookf = ["('pdf-view-mode (lambda () (ace-isearch-mode -1)))"];
-  generalOneConfig.isearch-mode-map."C-a" = "'avy-isearch";
-  config = "(global-ace-isearch-mode)";
-  setopt = {
-    ace-isearch-on-evil-mode = true;
-    ace-isearch-input-length = 5;
-    ace-isearch-jump-based-on-one-char = false;
-    isearch-wrap-pause = "'no-ding";
-    isearch-lazy-count = true;
-  };
-};
+#+begin_src nix-ts :tangle modules/emacs/completions/search.nix
+{
+  flake.homeModules.emacs = { pkgs, ... }: {
 
-replace = {
-  enable = true;  
-  defer = true;
-  generalTwoConfig.":n".occur-mode-map."w" = "'occur-edit-mode";
-};
+    programs.emacs.init.usePackage = {
+      ace-isearch = {
+	enable = true;
+	demand = true;
+	gfhookf = ["('pdf-view-mode (lambda () (ace-isearch-mode -1)))"];
+	generalOneConfig.isearch-mode-map."C-a" = "'avy-isearch";
+	config = "(global-ace-isearch-mode)";
+	setopt = {
+	  ace-isearch-on-evil-mode = true;
+	  ace-isearch-input-length = 5;
+	  ace-isearch-jump-based-on-one-char = false;
+	  isearch-wrap-pause = "'no-ding";
+	  isearch-lazy-count = true;
+	};
+      };
+
+      replace = {
+	enable = true;  
+	defer = true;
+	generalTwoConfig.":n".occur-mode-map."w" = "'occur-edit-mode";
+      };
+    };
+  };
+}
 #+end_src
 
 **** Ezf
 An alternative to fzf.
-#+NAME: Emacs Ezf
-#+begin_src nix-ts
-ezf = {
-  enable = true;
-  deferIncrementally = true;
-};
+#+begin_src nix-ts :tangle modules/emacs/completions/ezf.nix :noweb yes
+{ inputs, ... } :
+{
+  perSystem = { pkgs, self', ... }: let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages = {
+      emacs-ezf = (epkgs.callPackage
+	epkgs.trivialBuild rec {
+	  pname = "ezf";
+	  version = "current";
+	  src = inputs.ezf;
+	}
+      );
+      ezf = pkgs.writeShellScriptBin "ezf" ''
+	<<Ezf>>
+      '';
+    };
+  };
+
+  flake.homeModules.emacs = { ... }:
+
+  {
+    programs.emacs.init.usePackage = {
+      ezf = {
+	enable = true;
+	deferIncrementally = true;
+      };
+    };
+  };
+}
+#+end_src
+
+Borrowed from here: https://github.com/mickeynp/ezf
+#+NAME: Ezf
+#+begin_src bash-ts
+set -o nounset -o errexit -o pipefail
+
+field=0-
+# the elisp function to use for completing read
+candidate_fn=ezf-default
+while getopts c:f: OPT; do
+    case $OPT in
+        c)
+            candidate_fn=$OPTARG
+            ;;
+        f)
+            field=$OPTARG
+            ;;
+        ,,*)
+            ${pkgs.coreutils}/bin/echo "usage: ezf [-f field] [-c candidate-fn]"
+            exit 2
+    esac
+done
+shift $(( OPTIND - 1 ))
+OPTIND=1
+
+ezftmp="$(mktemp)"
+trap 'rm -f -- "$ezftmp"' EXIT
+> "$ezftmp" cat -
+# xargs is there to strip the "" from the beginning and end of the
+# output from Emacs.  Ensure "field" is always passed as a string by
+# quoting it.
+selection=$(emacsclient -e "(progn (require 'ezf) (ezf \"$ezftmp\" \"$field\" #'$candidate_fn))" | xargs)
+if [[ "$selection" == "nil" ]]; then
+    exit 1
+else
+   ${pkgs.coreutils}/bin/echo "$selection"
+fi
 #+end_src
 
 *** Help System
 An improved help system that I lifted from emacs from scratch.
 Helpful gives more information, & which-key tells what keybinds you have available
 #+begin_src nix-ts :tangle modules/emacs/help-system.nix :noweb yes 
-{
-  flake.homeModules.emacs = { ... }:
+{ inputs, ... }:
 
-  {
+{
+  perSystem = { pkgs, self', ... }: {
+    packages.wiki = pkgs.writeShellScriptBin "wiki" ''
+      <<Wiki>>
+    '';
+  };
+
+  flake.homeModules.emacs = { ... }: {
     programs.emacs.init.usePackage = {
       helpful = {
 	enable = true;
@@ -3331,6 +3276,23 @@ Helpful gives more information, & which-key tells what keybinds you have availab
 (with-eval-after-load 'evil-collection-info
   (efs/evil-collection-remap 'evil-collection-info-setup '(normal motion) Info-mode-map
 			     "C-o" 'evil-scroll-page-up))
+#+end_src
+
+Requires arch-wiki-docs to be installed
+
+Stole it from Derek Taylor
+#+NAME: Wiki
+#+begin_src bash-ts
+dir="/usr/share/doc/arch-wiki/html/en/"
+doc="$(${pkgs.findutils}/bin/find $dir -iname "*.html" | \
+${pkgs.coreutils}/bin/cut -d '/' -f8- | \
+${self'.packages.ezf}/bin/ezf)"
+
+if [ "''${dir}$doc" ]; then
+  emacsclient -e "(eww-open-file \"''${dir}$doc\")"
+else
+  ${pkgs.coreutils}/bin/echo "Program terminated." && exit 0
+fi
 #+end_src
 
 ** Writing
@@ -4364,7 +4326,16 @@ NEG subtracts if it is true."
 ** Multimedia
 *** AV Editing
 #+begin_src nix-ts :tangle modules/multimedia/av.nix
+{ inputs, ... }:
+
 {
+  perSystem = { pkgs, ... }:
+  {
+    packages.doomer = pkgs.writeShellScriptBin "doomer" ''
+      ${pkgs.sox}/bin/sox "$1" "$1.flac" pitch -500 treble -20 pad 0 3 reverb 80 tempo .8 highpass 1000 lowpass 700 compand 0.3,0.8 0
+    '';
+  };
+
   flake.homeModules.media = { pkgs, config, ... }: {
     home.packages = with pkgs; [
       (config.lib.nixGL.wrap obs-studio)
