@@ -18,6 +18,11 @@
         recommendedGcSettings = true;
         usePackageVerbose = false;
         largeFileHandling = true;
+	keybinds = {
+	  doomEscape.enable = true;
+	  undo.enable = true;
+	  electricPair.enable = true;
+	};
   
         prelude =''
           (defalias 'gsetq #'general-setq)
@@ -78,7 +83,6 @@
         '';
 
         usePackage = {
-
           tooltip = {
             enable = true;
             config = ''
@@ -120,11 +124,6 @@
             setopt.auto-save-file-name-transforms = ''`((".*" ,(no-littering-expand-var-file-name "auto-save/") t))'';
           };
 
-          files = {
-            enable = true;
-            custom.trusted-content = [''"/home/holschcc/projects/RESOLVE/"''];
-          };
-
           async = {
             enable = true;
             config = ''
@@ -157,6 +156,8 @@
             command = ["mutype-mode" "mutype-mode-custom"];
             setopt.mutype-source-directory = ''"~/.config/emacs/mutype"'';
           };
+
+	  evil-collection.setopt.evil-collection-unimpaired-want-repeat-mode-integration = true;
         };
 
         postlude = ''

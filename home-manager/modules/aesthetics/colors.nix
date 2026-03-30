@@ -45,37 +45,45 @@
 	'';
       };
 
-    programs.emacs.init.usePackage.ewal-doom-themes = {
-      enable = true;
-      demand = true;
-      config = ''
-	(load-theme 'ewal-doom-one t)
-	;; Stolen from Noctuid
-	(let (custom--inhibit-theme-enable)
-	  (custom-theme-set-faces
-	   'ewal-doom-one
-	   `(font-lock-number-face ((t (:foreground ,(ewal-get-color 'blue)))))
-	   `(markdown-header-face ((t (:foreground ,(ewal-get-color 'blue)))))
-	   `(markdown-header-delimiter-face ((t (:foreground ,(ewal-get-color 'blue)))))
-	   `(markdown-bold-face ((t (:foreground ,(ewal-get-color 'green)))))
-	   `(markdown-list-face ((t (:foreground ,(ewal-get-color 'green)))))
-	   `(org-code ((t (:foreground ,(ewal-get-color 'green)))))
-	   `(line-number ((t (:foreground ,(ewal-get-color 'blue)))))
-	   `(eshell-git-prompt-powerline-dir-face ((t (:background ,(ewal-get-color 'blue)))))
-	   `(hl-line-face ((t (:background ,(ewal-get-color 'green)))))
-	   `(solaire-hl-line-face ((t (:background ,(ewal-get-color 'green)))))
-	   `(tab-bar ((t :inherit mode-line)))
-	   `(eshell-git-prompt-powerline-clean-face ((t (:background ,(ewal-get-color 'green)))))
-	   `(eshell-git-prompt-powerline-not-clean-face ((t (:background ,(ewal-get-color 'red)))))))
-	(doom-themes-visual-bell-config)
-	(doom-themes-org-config)
-      '';
-      setopt = {
-	ewal-use-built-in-always-p = false;
-	ewal-use-built-in-on-failure-p = true;
-	ewal-built-in-palette = ''"sexy-material"'';
-	doom-themes-enable-bold = true;
-	doom-themes-enable-italic = true;
+    programs.emacs.init.usePackage = {
+      ewal-doom-themes = {
+	enable = true;
+	demand = true;
+	config = ''
+	  (load-theme 'ewal-doom-one t)
+	  ;; Stolen from Noctuid
+	  (let (custom--inhibit-theme-enable)
+	    (custom-theme-set-faces
+	     'ewal-doom-one
+	     `(font-lock-number-face ((t (:foreground ,(ewal-get-color 'blue)))))
+	     `(markdown-header-face ((t (:foreground ,(ewal-get-color 'blue)))))
+	     `(markdown-header-delimiter-face ((t (:foreground ,(ewal-get-color 'blue)))))
+	     `(markdown-bold-face ((t (:foreground ,(ewal-get-color 'green)))))
+	     `(markdown-list-face ((t (:foreground ,(ewal-get-color 'green)))))
+	     `(org-code ((t (:foreground ,(ewal-get-color 'green)))))
+	     `(line-number ((t (:foreground ,(ewal-get-color 'blue)))))
+	     `(eshell-git-prompt-powerline-dir-face ((t (:background ,(ewal-get-color 'blue)))))
+	     `(hl-line-face ((t (:background ,(ewal-get-color 'green)))))
+	     `(solaire-hl-line-face ((t (:background ,(ewal-get-color 'green)))))
+	     `(tab-bar ((t :inherit mode-line)))
+	     `(eshell-git-prompt-powerline-clean-face ((t (:background ,(ewal-get-color 'green)))))
+	     `(eshell-git-prompt-powerline-not-clean-face ((t (:background ,(ewal-get-color 'red)))))))
+	  (doom-themes-visual-bell-config)
+	  (doom-themes-org-config)
+	'';
+	setopt = {
+	  ewal-use-built-in-always-p = false;
+	  ewal-use-built-in-on-failure-p = true;
+	  ewal-built-in-palette = ''"sexy-material"'';
+	  doom-themes-enable-bold = true;
+	  doom-themes-enable-italic = true;
+	};
+      };
+
+      ewal-evil-cursors = {
+	enable = true;
+	demand = true;
+	config = ''(ewal-evil-cursors-get-colors :apply t)'';
       };
     };
   };

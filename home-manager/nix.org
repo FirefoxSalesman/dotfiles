@@ -311,27 +311,10 @@ Dev templates: https://github.com/the-nix-way/dev-templates
   };
 }
 #+end_src
-*** Udisksmenu
-#+begin_src nix-ts :tangle modules/packages/scripts/udisksmenu.nix
-{ inputs, ... }:
-
-{
-  perSystem = { pkgs, self', ... }: let ezf = self'.packages.ezf;
-  in {
-    packages.udisksmenu = pkgs.writeShellScriptBin "udisksmenu" ''
-      action=$(${pkgs.coreutils}/bin/printf 'mount\nunmount' | ${ezf}/bin/ezf)
-      disk=$(${pkgs.coreutils}/bin/ls /dev | ${pkgs.ripgrep}/bin/rg sd[a-z] | ${ezf}/bin/ezf)
-
-      ${pkgs.udisks}/bin/udisksctl $action -b /dev/$disk
-    '';
-  };
-}
-#+end_src
-
 * Notes to my future self
 + To get eduroam working, you need ppp & pptclient
 + Don't let xorg use the nvidia card. It breaks everything
-
+  
 * Home Manager
 ** Main Config
 *** Inputs & Imports
@@ -875,18 +858,26 @@ Pywal integration: https://github.com/danth/stylix/issues/99
 	'';
       };
 
-    programs.emacs.init.usePackage.ewal-doom-themes = {
-      enable = true;
-      demand = true;
-      config = ''
-	<<Emacs Colors>>
-      '';
-      setopt = {
-	ewal-use-built-in-always-p = false;
-	ewal-use-built-in-on-failure-p = true;
-	ewal-built-in-palette = ''"sexy-material"'';
-	doom-themes-enable-bold = true;
-	doom-themes-enable-italic = true;
+    programs.emacs.init.usePackage = {
+      ewal-doom-themes = {
+	enable = true;
+	demand = true;
+	config = ''
+	  <<Emacs Colors>>
+	'';
+	setopt = {
+	  ewal-use-built-in-always-p = false;
+	  ewal-use-built-in-on-failure-p = true;
+	  ewal-built-in-palette = ''"sexy-material"'';
+	  doom-themes-enable-bold = true;
+	  doom-themes-enable-italic = true;
+	};
+      };
+
+      ewal-evil-cursors = {
+	enable = true;
+	demand = true;
+	config = ''(ewal-evil-cursors-get-colors :apply t)'';
       };
     };
   };
@@ -1967,16 +1958,18 @@ I'm running dired with a couple of small packages that improve on it
         recommendedGcSettings = true;
         usePackageVerbose = false;
         largeFileHandling = true;
+	keybinds = {
+	  doomEscape.enable = true;
+	  undo.enable = true;
+	  electricPair.enable = true;
+	};
   
         <<Emacs Prelude>>
 
         usePackage = {
-
           <<Emacs UI Improvements>>
   
           <<Emacs Cleanup>>
-
-          <<Emacs Trust>>
 
           <<Emacs Async>>
 
@@ -1985,6 +1978,8 @@ I'm running dired with a couple of small packages that improve on it
           <<Emacs Notifications>>
         
           <<Emacs Mutype>>
+
+	  evil-collection.setopt.evil-collection-unimpaired-want-repeat-mode-integration = true;
         };
 
         <<Emacs Postlude>>
@@ -2113,15 +2108,6 @@ no-littering = {
   #no-littering doesn't set this by default so we must place
   #auto save files in the same path as it uses for sessions
   setopt.auto-save-file-name-transforms = ''`((".*" ,(no-littering-expand-var-file-name "auto-save/") t))'';
-};
-#+end_src
-
-***** Trust
-#+NAME: Emacs Trust
-#+begin_src nix-ts
-files = {
-  enable = true;
-  custom.trusted-content = [''"/home/holschcc/projects/RESOLVE/"''];
 };
 #+end_src
 
@@ -2261,8 +2247,6 @@ All of the repeaters config was origally stolen from Karthinks. I don't think an
 
 *** Evil Mode
 My keybinds have been rearranged to work with Canary. Evil is used for the purposes of ergonomics, & all my bindings revolve around it.
-
-Evil mode provides vim-like keybinds.
 #+begin_src nix-ts :tangle modules/emacs/evil.nix :noweb yes 
 { inputs, ... }:
 
@@ -2271,203 +2255,22 @@ Evil mode provides vim-like keybinds.
 
   {
     programs.emacs.init = {
-      ide.symex = true;  
       keybinds = {
-	evil = {
-          enable = true;
-          surround = true;
-          keys = {
-            forward = "i";
-            backward = "n";
-            up = "o";
-            down = "e";
-            prefer-visual-line = true;
-            evil-collection-swap-keys = ''
-              "x" "B"
-          "X" "b"
-          "u" "W"
-          "U" "w"
-          "j" "u"
-          "a" ":"
-          "m" "n"
-          "M" "N"
-          "h" "m"
-          "b" "g"
-            '';
-          };
-	};
-	leader-key = {
-          enable = true;
-          globalPrefix = "s";
-	};
-	doomEscape.enable = true;
-	undo.enable = true;
-	whichKey.enable = true;
-	god.enable = true;
-	electricPair.enable = true;
+	evil.enable = true;
 	evilNerdCommenter.enable = true;
-	avy = {
-          enable = true;
-          evilModifierKey = "H";
-	};
+	god.enable = true;
       };
       usePackage = {
-	<<Emacs Evil Main>>
-    
-        <<Emacs Evil Extensions>>
-    
-        <<Emacs Evil Symex>>
-
-        <<Emacs Evil Compats>>
+	evil = {
+	  gfhookf = ["('doom-escape 'evil-normal-state)"];
+	  config = ''
+	    <<Evil Config>>
+	  '';
+	};
       };
     };
   };
 }
-#+end_src
-
-**** TODO Main Config
-+ [ ] ergovim keys
-  https://emacs.stackexchange.com/questions/59223/how-to-assign-a-command-to-g-key-when-using-evil
-https://www.hxa.name/articles/content/ergovim-key-mappings_hxa7241_2010.html
-+ [X] Dashboard
-+ [X] Easymotions
-+ [X] What do we do about consult-yank-pop?
-+ [ ] Symex
-  Very messy
-It should be noted that C-g quits out of insert mode. That, like most of this config, was taken from David Wilson's dotfiles.
-
-Differences from the spec:
-+ numbers & symbols aren't rebound
-#+NAME: Emacs Evil Main
-#+begin_src nix-ts :noweb yes
-evil = {
-  gfhookf = ["('doom-escape 'evil-normal-state)"];
-  config = ''
-    <<Evil Config>>
-  '';
-  extraConfig = ''
-    <<Evil Extra Config>>
-  '';
-  generalOneConfig = {
-    ":n" = {
-      "I" = "'evil-window-top";
-      "C-i" = "'evil-goto-line";
-      "N" = "'evil-window-bottom";
-      "C-n" = "'evil-goto-first-line";
-      "E" = "'evil-scroll-down";
-      "O" = "'evil-scroll-up";
-      "x" = "'evil-backward-WORD-begin";
-      "X" = "'evil-backward-word-begin";
-      "C-x" = "'evil-backward-WORD-end";
-      "j" = "'evil-undo";
-      "J" = "'evil-redo";
-      "a" = "'evil-ex";
-      "r" = "'evil-insert-line";
-      "R" = "'evil-open-above";
-      "s" = "'evil-append-line";
-      "S" = "'evil-open-below";
-      "t" = "'evil-insert";
-      "T" = "'evil-append";
-      "C-t" = "'evil-replace-state";
-      "u" = "'evil-forward-WORD-begin";
-      "U" = "'evil-forward-word-begin";
-      "C-u" = "'evil-forward-WORD-end";
-      "-" = "'evil-jump-backward";
-      "_" = "'evil-jump-forward";
-      "m" = "'evil-search-next";
-      "M" = "'evil-search-previous";
-      "k" = "'evil-delete-char";
-      "K" = "'evil-substitute";
-      "c" = "'evil-visual-char";
-      "C" = "'evil-visual-line";
-      "C-c" = "'evil-visual-block";
-      "v" = "'evil-delete";
-      "V" = "'evil-change";
-      "C-v" = "'evil-delete-line";
-      "d" = "'evil-yank";
-      "D" = "'evil-yank-line";
-      "G" = "'evil-paste-after";
-      ";" = "'evil-end-of-visual-line";
-      ":" = "'evil-end-of-line";
-      "C-;" = "'evil-end-of-line";
-      "p" = "'ergo-word-delete";
-      "P" = "'ergo-word-change";
-      "C-p" = "'ergo-word-change";
-      "$" = "'evil-execute-macro";
-      "~" = "'evil-record-macro";
-      "C-z" = "'evil-goto-last-change-reverse";
-      "w" = "'evil-repeat";
-      "W" = "'evil-ex-repeat";
-      "C-w" = "'evil-ex-repeat";
-      "l" = "'evil-shift-right-line";
-      "L" = "'evil-shift-left-line";
-      "C-l" = "'evil-shift-left-line";
-      "/" = "'isearch-forward-regexp";
-      "?" = "'isearch-backward-regexp";
-      "y" = "'evil-shift-right";
-      "Y" = "'evil-shift-left";
-      "C-s" = "'evil-write";
-    } ;
-    ":m" = {
-      "I" = "'evil-window-top";
-      "C-i" = "'evil-goto-line";
-      "N" = "'evil-window-bottom";
-      "C-n" = "'evil-goto-first-line";
-      "C-e" = "'evil-scroll-page-down";
-      "C-o" = "'evil-scroll-page-up";
-      "a" = "'evil-ex";
-      "h" = "'evil-set-marker";
-      "m" = "'evil-search-next";
-      "M" = "'evil-search-previous";
-      "-" = "'evil-jump-backward";
-      "_" = "'evil-jump-forward";
-      "/" = "'isearch-forward-regexp";
-      "?" = "'isearch-backward-regexp";
-      "f" = "'evil-first-non-blank-of-visual-line";
-      "F" = "'evil-beginning-of-visual-line";
-      "C-f" = "'evil-first-non-blank";
-      "B" = "'evil-goto-line";
-      "C-M-o" = "'scroll-other-window-down";
-      "C-M-e" = "'scroll-other-window";
-    };
-    ":v" = {
-      "U" = "'evil-forward-word-begin";
-      "u" = "'evil-forward-WORD-begin";
-      "X" = "'evil-backward-word-begin";
-      "x" = "'evil-backward-WORD-begin";
-      "v" = "'evil-delete-char";
-      "V" = "'evil-substitute";
-      "C-v" = "'evil-substitute";
-      "t" = "evil-outer-text-objects-map";
-      "s" = "evil-inner-text-objects-map";
-      "l" = "'evil-invert-case";
-      "y" = "'evil-shift-right";
-      "Y" = "'evil-shift-left";
-      "C-t" = "'evil-replace";
-      "R" = "'evil-insert-line";
-      "C-r" = "'evil-append-line";
-      "d" = "'evil-yank-line";
-      "D" = "'evil-yank-line";
-      "C-d" = "'evil-yank-line";
-      "/" = "'isearch-forward-regexp";
-      "?" = "'isearch-backward-regexp";
-      "G" = "'evil-paste";
-    };
-    ":i" = {
-      "C-s" = "'insert-char";
-      "C-k" = "'kill-line";
-    };
-  };
-};
-
-emacs.generalOneConfig = {
-  help-map."A" = ''`("Arch Wiki" . ,(cmd! (async-shell-command "${pkgs.wiki}/bin/wiki")))'';
-  global-leader = {
-    "l" = ''`("Compile" . ,(cmd! (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k")))))'';
-    "L" = ''`("Recompile" . ,(cmd! (if (project-current) (project-recompile) (recompile))))'';
-    "u" = ''`("Mount USB" . ,(cmd! (start-process-shell-command "udisksmenu" nil "${pkgs.udisksmenu}/bin/udisksmenu")))'';
-  };
-};
 #+end_src
 
 #+NAME: Evil Config
@@ -2492,6 +2295,360 @@ emacs.generalOneConfig = {
 		   nix-emacs/consult-header))
   (evil-add-command-properties command :jump t))
 
+(repeaters-define-maps
+ '(("flyspell"
+    evil-prev-flyspell-error "S"
+    evil-next-flyspell-error "s")))
+#+end_src
+
+**** Extensions
+***** Surround
+#+begin_src nix-ts :tangle modules/emacs/evil/surround.nix
+{
+  flake.homeModules.emacs = { ... }: {
+    programs.emacs.init = {
+      keybinds.evil.surround = true;
+      usePackage.evil-surround.generalTwoConfig = {
+	":v".evil-surround-mode-map = {
+	  "r" = "'evil-surround-region";
+	  "R" = "'evil-surround-region";
+	};
+	":o".evil-surround-mode-map = {
+	  "s" = "nil";
+	  "r" = "'evil-surround-edit";
+	  "R" = "'evil-Surround-edit";
+	};
+      };
+    };
+  };
+}
+#+end_src
+
+***** Easymotion
+#+begin_src nix-ts :tangle modules/emacs/evil/easymotion.nix :noweb yes
+{
+  flake.homeModules.emacs = { ... }:
+  {
+    programs.emacs.init = {
+      keybinds.avy = {
+        enable = true;
+        evilModifierKey = "H";
+      };
+      usePackage.evil-easymotion = {
+	generalOne.":nvo" = {
+	  "H-m" = "'evilem-motion-search-next";
+	  "H-U" = "'evilem-motion-forward-word-begin";
+	  "H-u" = "'evilem-motion-forward-WORD-begin";
+	  "H-X" = "'evilem-motion-backward-word-begin";
+	  "H-x" = "'evilem-motion-backward-WORD-begin";
+	  "H-M" = "'evilem-motion-search-previous";
+	  "H-)" = "'evilem-motion-forward-sentence-begin";
+	  "H-(" = "'evilem-motion-backward-sentence-begin";
+	};
+	custom.avy-dispatch-alist = [
+	  "'(?l . avy-action-ispell)"
+	  "'(?o . nix-emacs-avy-action-embark)"
+	  "'(?h . avy-action-helpful)"
+	  "'(?g . avy-action-yank)"
+	  "'(?p . avy-action-teleport)"
+	  "'(?q . nix-emacs-avy-action-fold)"
+	];
+	setopt = {
+	  avy-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
+	  avy-all-windows = false;
+	};
+	config = ''
+	  <<Easymotion Config>>
+	'';
+      };
+    };
+  };
+}
+#+end_src
+
+#+NAME: Emacs Evil Easymotion Config
+#+begin_src emacs-lisp
+(defun avy-action-helpful (pt)
+  "Get documentation for thing at point."
+  (nix-emacs-base-avy-action 'helpful-at-point pt))
+
+(defun avy-action-repeat (pt)
+  "Repeat the last evil command."
+  (nix-emacs-base-avy-action (lambda () (evil-repeat 1)) pt))
+#+end_src
+
+***** Multi Cursor
+Cursors hydra: https://hungyi.net/posts/hydra-for-evil-mc/
+#+begin_src nix-ts :tangle modules/emacs/evil/multicursor.nix :noweb yes
+{
+  flake.homeModules.emacs = { ... }:
+  {
+    programs.emacs.init.usePackage.evil-mc = {
+      enable = true;
+      defer = true;
+      command = ["evil-mc-pause-cursors" "evil-mc-make-cursor-here"];
+      gfhookf = [''('doom-escape (lambda () (when (and (featurep 'evil-mc) (evil-mc-has-cursors-p))
+	(evil-mc-undo-all-cursors)
+						 (evil-mc-resume-cursors) t)))''];
+      generalOne = {
+	":nv"."bz" = "'evil-mc-hydra/body";
+	global-leader."C" = "'evil-mc-hydra/body";
+      };
+      config = ''
+	<<Evil-MC Config>>
+      '';
+      extraConfig = ''
+	:pretty-hydra
+        ((:color pink :pre (evil-mc-pause-cursors))
+         ("Search"
+          (("m" #'evil-mc-make-and-goto-next-match "Search forward")
+           ("M" #'evil-mc-make-and-goto-prev-match "Search backward")
+           ("C-m" #'evil-mc-skip-and-goto-next-match "Skip forward")
+           ("C-M" #'evil-mc-skip-and-goto-prev-match "Skip backward"))
+          "Undo"
+          (("q" #'evil-mc-undo-all-cursors)
+           ("j" #'evil-mc-undo-last-added-cursor))
+          "Pause/Resume"
+          (("r" #'evil-mc-resume-cursors "Resume")
+           ("p" #'evil-mc-pause-cursors "Pause")
+           ("<return>" #'evil-mc-resume-cursors "Quit" :color blue))
+          "Create Cursors"
+          (("h" #'evil-mc-make-all-cursors "All")
+           ("s" #'evil-mc-make-cursor-here "Here")
+           ("E" #'evil-mc-make-cursor-move-next-line "Next Line")
+           ("O" #'evil-mc-make-cursor-move-prev-line "Prev Line"))))
+      '';
+    };
+  };
+}
+#+end_src
+
+#+NAME: Evil-MC Config
+#+begin_src emacs-lisp
+(global-evil-mc-mode)
+
+;; Don't mess with my macros.
+;; https://github.com/gabesoft/evil-mc/issues/83
+(defun ~+multiple-cursors-evil-mc-write-cursor-state-a (state)
+  "Write the state of the real cursor with values from STATE."
+  (let ((names (evil-mc-get-cursor-variables)))
+    (dolist (name names)
+      (when (boundp name)
+        (let ((p (evil-mc-get-cursor-property state name)))
+          (when (not
+                 (or
+                  (eq name 'register-alist)
+                  (eq name 'evil-markers-alist)))
+            (set name p)))))))
+(advice-add #'evil-mc-write-cursor-state :override #'~+multiple-cursors-evil-mc-write-cursor-state-a)
+#+end_src
+
+***** Exchange
+#+begin_src nix-ts :tangle modules/emacs/evil/exchange.nix
+{
+  flake.homeModules.emacs = { ... }:
+  {
+    programs.emacs.init.usePackage.evil-exchange = {
+      enable = true;
+      generalOne = {
+	evil-operator-state-map."k" = "'evil-exchange/cx";
+	evil-visual-state-map."k" = "'evil-exchange";
+      };
+      gfhookf = ["('doom-escape (lambda () (when (featurep 'evil-exchange) (evil-exchange-cancel))))"];
+    };
+  };
+}
+#+end_src
+
+**** Leader Key
+#+begin_src nix-ts :tangle modules/emacs/evil/leader.nix
+{ inputs, ... }:
+
+{
+  perSystem = { pkgs, self', ... }: let ezf = self'.packages.ezf;
+  in {
+    packages.udisksmenu = pkgs.writeShellScriptBin "udisksmenu" ''
+      action=$(${pkgs.coreutils}/bin/printf 'mount\nunmount' | ${ezf}/bin/ezf)
+      disk=$(${pkgs.coreutils}/bin/ls /dev | ${pkgs.ripgrep}/bin/rg sd[a-z] | ${ezf}/bin/ezf)
+
+      ${pkgs.udisks}/bin/udisksctl $action -b /dev/$disk
+    '';
+  };
+
+  flake.homeModules.emacs = { pkgs, lib, ... }: {
+    programs.emacs.init = {
+      keybinds.leader-key = {
+        enable = true;
+        globalPrefix = "s";
+      };
+      usePackage.emacs.generalOneConfig.global-leader = {
+	"l" = ''`("Compile" . ,(cmd! (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k")))))'';
+	"L" = ''`("Recompile" . ,(cmd! (if (project-current) (project-recompile) (recompile))))'';
+	"u" = ''`("Mount USB" . ,(cmd! (start-process-shell-command "udisksmenu" nil "${lib.getExe pkgs.udisksmenu}")))'';
+      };
+    };
+  };
+}
+#+end_src
+
+**** TODO Ergovim
+  https://emacs.stackexchange.com/questions/59223/how-to-assign-a-command-to-g-key-when-using-evil
+https://www.hxa.name/articles/content/ergovim-key-mappings_hxa7241_2010.html
++ [ ] Symex
+  Very messy
+It should be noted that C-g quits out of insert mode. That, like most of this config, was taken from David Wilson's dotfiles.
+
+Differences from the spec:
++ numbers & symbols aren't rebound
+#+begin_src nix-ts :tangle modules/emacs/evil/ergovim.nix :noweb yes
+{
+  flake.homeModules.emacs = { pkgs, ... }: {
+    programs.emacs.init = {
+      keybinds.evil.keys = {
+	forward = "i";
+	backward = "n";
+	up = "o";
+	down = "e";
+	prefer-visual-line = true;
+	evil-collection-swap-keys = ''
+          "x" "B"
+          "X" "b"
+          "u" "W"
+          "U" "w"
+          "j" "u"
+          "a" ":"
+          "m" "n"
+          "M" "N"
+          "h" "m"
+          "b" "g"
+	'';
+      };
+      usePackage.evil = {
+	generalOneConfig = {
+	  ":n" = {
+	    "I" = "'evil-window-top";
+	    "C-i" = "'evil-goto-line";
+	    "N" = "'evil-window-bottom";
+	    "C-n" = "'evil-goto-first-line";
+	    "E" = "'evil-scroll-down";
+	    "O" = "'evil-scroll-up";
+	    "x" = "'evil-backward-WORD-begin";
+	    "X" = "'evil-backward-word-begin";
+	    "C-x" = "'evil-backward-WORD-end";
+	    "j" = "'evil-undo";
+	    "J" = "'evil-redo";
+	    "a" = "'evil-ex";
+	    "r" = "'evil-insert-line";
+	    "R" = "'evil-open-above";
+	    "s" = "'evil-append-line";
+	    "S" = "'evil-open-below";
+	    "t" = "'evil-insert";
+	    "T" = "'evil-append";
+	    "C-t" = "'evil-replace-state";
+	    "u" = "'evil-forward-WORD-begin";
+	    "U" = "'evil-forward-word-begin";
+	    "C-u" = "'evil-forward-WORD-end";
+	    "-" = "'evil-jump-backward";
+	    "_" = "'evil-jump-forward";
+	    "m" = "'evil-search-next";
+	    "M" = "'evil-search-previous";
+	    "k" = "'evil-delete-char";
+	    "K" = "'evil-substitute";
+	    "c" = "'evil-visual-char";
+	    "C" = "'evil-visual-line";
+	    "C-c" = "'evil-visual-block";
+	    "v" = "'evil-delete";
+	    "V" = "'evil-change";
+	    "C-v" = "'evil-delete-line";
+	    "d" = "'evil-yank";
+	    "D" = "'evil-yank-line";
+	    "G" = "'evil-paste-after";
+	    ";" = "'evil-end-of-visual-line";
+	    ":" = "'evil-end-of-line";
+	    "C-;" = "'evil-end-of-line";
+	    "p" = "'ergo-word-delete";
+	    "P" = "'ergo-word-change";
+	    "C-p" = "'ergo-word-change";
+	    "$" = "'evil-execute-macro";
+	    "~" = "'evil-record-macro";
+	    "C-z" = "'evil-goto-last-change-reverse";
+	    "w" = "'evil-repeat";
+	    "W" = "'evil-ex-repeat";
+	    "C-w" = "'evil-ex-repeat";
+	    "l" = "'evil-shift-right-line";
+	    "L" = "'evil-shift-left-line";
+	    "C-l" = "'evil-shift-left-line";
+	    "/" = "'isearch-forward-regexp";
+	    "?" = "'isearch-backward-regexp";
+	    "y" = "'evil-shift-right";
+	    "Y" = "'evil-shift-left";
+	    "C-s" = "'evil-write";
+	  } ;
+	  ":m" = {
+	    "I" = "'evil-window-top";
+	    "C-i" = "'evil-goto-line";
+	    "N" = "'evil-window-bottom";
+	    "C-n" = "'evil-goto-first-line";
+	    "C-e" = "'evil-scroll-page-down";
+	    "C-o" = "'evil-scroll-page-up";
+	    "a" = "'evil-ex";
+	    "h" = "'evil-set-marker";
+	    "m" = "'evil-search-next";
+	    "M" = "'evil-search-previous";
+	    "-" = "'evil-jump-backward";
+	    "_" = "'evil-jump-forward";
+	    "/" = "'isearch-forward-regexp";
+	    "?" = "'isearch-backward-regexp";
+	    "f" = "'evil-first-non-blank-of-visual-line";
+	    "F" = "'evil-beginning-of-visual-line";
+	    "C-f" = "'evil-first-non-blank";
+	    "B" = "'evil-goto-line";
+	    "C-M-o" = "'scroll-other-window-down";
+	    "C-M-e" = "'scroll-other-window";
+	  };
+	  ":v" = {
+	    "U" = "'evil-forward-word-begin";
+	    "u" = "'evil-forward-WORD-begin";
+	    "X" = "'evil-backward-word-begin";
+	    "x" = "'evil-backward-WORD-begin";
+	    "v" = "'evil-delete-char";
+	    "V" = "'evil-substitute";
+	    "C-v" = "'evil-substitute";
+	    "t" = "evil-outer-text-objects-map";
+	    "s" = "evil-inner-text-objects-map";
+	    "l" = "'evil-invert-case";
+	    "y" = "'evil-shift-right";
+	    "Y" = "'evil-shift-left";
+	    "C-t" = "'evil-replace";
+	    "R" = "'evil-insert-line";
+	    "C-r" = "'evil-append-line";
+	    "d" = "'evil-yank-line";
+	    "D" = "'evil-yank-line";
+	    "C-d" = "'evil-yank-line";
+	    "/" = "'isearch-forward-regexp";
+	    "?" = "'isearch-backward-regexp";
+	    "G" = "'evil-paste";
+	  };
+	  ":i" = {
+	    "C-s" = "'insert-char";
+	    "C-k" = "'kill-line";
+	  };
+	};
+	extraConfig = ''
+	  <<Ergovim Extraconfig>>
+	'';
+	config = ''
+	  <<Ergovim Config>>
+	'';
+      };
+    };
+  };
+}
+#+end_src
+
+
+#+NAME: Ergovim Config
+#+begin_src emacs-lisp
 (evil-define-operator ergo-word-delete (beg end type register yank-handler)
   "Delete word."
   :motion evil-a-word
@@ -2501,14 +2658,9 @@ emacs.generalOneConfig = {
   "Delete word."
   :motion evil-inner-word
   (evil-change beg end type register yank-handler))
-
-(repeaters-define-maps
- '(("flyspell"
-    evil-prev-flyspell-error "S"
-    evil-next-flyspell-error "s")))
 #+end_src
 
-#+NAME: Evil Extra Config
+#+NAME: Ergovim Extraconfig
 #+begin_src emacs-lisp
 :general-config
 (general-swap-key nil '(motion normal visual)
@@ -2531,197 +2683,68 @@ emacs.generalOneConfig = {
 ('normal "bl" 'consult-goto-line
 	 "b/" 'consult-keep-lines)
 #+end_src
-    
-**** Extensions
-Easymotion's prefix is M-SPC, however, most important keys are already bound somewhere easier.
-Cursors hydra: https://hungyi.net/posts/hydra-for-evil-mc/
-#+NAME: Emacs Evil Extensions
-#+begin_src nix-ts :noweb yes
-evil-collection.setopt.evil-collection-unimpaired-want-repeat-mode-integration = true;
-
-evil-surround.generalTwoConfig = {
-  ":v".evil-surround-mode-map = {
-    "r" = "'evil-surround-region";
-    "R" = "'evil-surround-region";
-  };
-  ":o".evil-surround-mode-map = {
-    "s" = "nil";
-    "r" = "'evil-surround-edit";
-    "R" = "'evil-Surround-edit";
-  };
-};
-
-evil-easymotion = {
-  generalOne.":nvo" = {
-    "H-m" = "'evilem-motion-search-next";
-    "H-U" = "'evilem-motion-forward-word-begin";
-    "H-u" = "'evilem-motion-forward-WORD-begin";
-    "H-X" = "'evilem-motion-backward-word-begin";
-    "H-x" = "'evilem-motion-backward-WORD-begin";
-    "H-M" = "'evilem-motion-search-previous";
-    "H-)" = "'evilem-motion-forward-sentence-begin";
-    "H-(" = "'evilem-motion-backward-sentence-begin";
-  };
-  custom.avy-dispatch-alist = [
-    "'(?l . avy-action-ispell)"
-    "'(?o . nix-emacs-avy-action-embark)"
-    "'(?h . avy-action-helpful)"
-    "'(?g . avy-action-yank)"
-    "'(?p . avy-action-teleport)"
-    "'(?q . nix-emacs-avy-action-fold)"
-  ];
-  setopt = {
-    avy-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
-    avy-all-windows = false;
-  };
-  config = ''
-    <<Emacs Evil Easymotion Config>>
-  '';
-};
-
-evil-mc = {
-  enable = true;
-  defer = true;
-  command = ["evil-mc-pause-cursors" "evil-mc-make-cursor-here"];
-  gfhookf = [''('doom-escape (lambda () (when (and (featurep 'evil-mc) (evil-mc-has-cursors-p))
-						 (evil-mc-undo-all-cursors)
-						 (evil-mc-resume-cursors) t)))''];
-  generalOne = {
-    ":nv"."bz" = "'evil-mc-hydra/body";
-    global-leader."C" = "'evil-mc-hydra/body";
-  };
-  config = ''
-    <<Emacs Evil-MC Config>>
-  '';
-  extraConfig = ''
-    :pretty-hydra
-    ((:color pink :pre (evil-mc-pause-cursors))
-     ("Search"
-      (("m" #'evil-mc-make-and-goto-next-match "Search forward")
-       ("M" #'evil-mc-make-and-goto-prev-match "Search backward")
-       ("C-m" #'evil-mc-skip-and-goto-next-match "Skip forward")
-       ("C-M" #'evil-mc-skip-and-goto-prev-match "Skip backward"))
-      "Undo"
-      (("q" #'evil-mc-undo-all-cursors)
-       ("j" #'evil-mc-undo-last-added-cursor))
-      "Pause/Resume"
-      (("r" #'evil-mc-resume-cursors "Resume")
-       ("p" #'evil-mc-pause-cursors "Pause")
-       ("<return>" #'evil-mc-resume-cursors "Quit" :color blue))
-      "Create Cursors"
-      (("h" #'evil-mc-make-all-cursors "All")
-       ("s" #'evil-mc-make-cursor-here "Here")
-       ("E" #'evil-mc-make-cursor-move-next-line "Next Line")
-       ("O" #'evil-mc-make-cursor-move-prev-line "Prev Line"))))
-  '';
-};
-
-evil-owl = {
-  enable = true;
-  setopt = {
-    evil-owl-max-string-length = 50;
-    evil-owl-extra-posframe-args = [ "':width" 50 "':height" 20 ];
-    evil-owl-display-method = "'posframe";
-  };
-  ghookf = ["('evil-mode 'evil-owl-mode)"];
-};
-
-evil-exchange = {
-  enable = true;
-  generalOne = {
-    evil-operator-state-map."k" = "'evil-exchange/cx";
-    evil-visual-state-map."k" = "'evil-exchange";
-  };
-  gfhookf = ["('doom-escape (lambda () (when (featurep 'evil-exchange) (evil-exchange-cancel))))"];
-};
-#+end_src
-
-#+NAME: Emacs Evil Easymotion Config
-#+begin_src emacs-lisp
-(defun avy-action-helpful (pt)
-  "Get documentation for thing at point."
-  (nix-emacs-base-avy-action 'helpful-at-point pt))
-
-(defun avy-action-repeat (pt)
-  "Repeat the last evil command."
-  (nix-emacs-base-avy-action (lambda () (evil-repeat 1)) pt))
-#+end_src
-
-#+NAME: Emacs Evil-MC Config
-#+begin_src emacs-lisp
-(global-evil-mc-mode)
-
-;; Don't mess with my macros.
-;; https://github.com/gabesoft/evil-mc/issues/83
-(defun ~+multiple-cursors-evil-mc-write-cursor-state-a (state)
-  "Write the state of the real cursor with values from STATE."
-  (let ((names (evil-mc-get-cursor-variables)))
-    (dolist (name names)
-      (when (boundp name)
-        (let ((p (evil-mc-get-cursor-property state name)))
-          (when (not
-                 (or
-                  (eq name 'register-alist)
-                  (eq name 'evil-markers-alist)))
-            (set name p)))))))
-(advice-add #'evil-mc-write-cursor-state :override #'~+multiple-cursors-evil-mc-write-cursor-state-a)
-#+end_src
 
 **** Symex
 Gives us an entire state where we can rapidly make specific edits to code.
-#+NAME: Emacs Evil Symex
-#+begin_src nix-ts :noweb yes
-symex = {
-  enable = true;
-  defer = true;
-  generalTwo.":n"."(racket-repl-mode-map lisp-interaction-mode-map lisp-mode-map)"."RET" = "'symex-mode-interface";
-  config = ''
-    <<Emacs Symex Config>>    
-  '';
-  generalOneConfig.evil-symex-state-map = {
-    "n" = "'symex-go-backward";
-    "H-n" = "'efs/evilem-motion-symex-go-backward";
-    "H-o" = "'efs/evilem-motion-symex-go-down";
-    "C-o" = "'symex-climb-branch";
-    "o" = "'symex-go-down";
-    "H-e" = "'efs/evilem-motion-symex-go-up";
-    "C-e" = "'symex-descend-branch";
-    "e" = "'symex-go-up";
-    "i" = "'symex-go-forward";
-    "H-i" = "'efs/evilem-motion-symex-go-forward";
-    "bn" = "'evil-backward-char";
-    "bi" = "'evil-forward-char";
-    "d" = "'symex-yank";
-    "D" = "'symex-yank-remaining";
-    "G" = "'symex-paste-after";
-    "g" = "'symex-paste-before";
-    "k" = "'symex-delete";
-    "C-k" = "'symex-delete-backward";
-    "p" = "'symex-delete-remaining";
-    "K" = "'symex-change";
-    "P" = "'symex-change-remaining";
-    "N" = "'symex-shift-backward";
-    "I" = "'symex-shift-forward";
-    "M-N" = "'symex-shift-backward-most";
-    "M-I" = "'symex-shift-forward-most";
-    "M-n" = "'symex-goto-first";
-    "M-i" = "'symex-goto-last";
-    "t" = "'symex-insert-at-beginning";
-    "T" = "'symex-append-at-end";
-    "S" = "'symex-open-line-after";
-    "R" = "'symex-open-line-before";
-    "j" = "'evil-undo";
-    "J" = "'evil-redo";
-    "s" = "'symex-append-after";
-    "r" = "'symex-insert-before";
-    "w" = "'evil-repeat";
-    "C-w" = "'evil-repeat-pop";
-    "W" = "'evil-ex-repeat";
-    "a" = "'evil-ex";
-    "~" = "'evil-record-macro";
-    "$" = "'evil-execute-macro";
+#+begin_src nix-ts :tangle modules/emacs/evil/symex.nix :noweb yes
+{
+  flake.homeModules.emacs = { ... }: {
+    programs.emacs.init = {
+      ide.symex = true;  
+      usePackage.symex = {
+	enable = true;
+	defer = true;
+	generalTwo.":n"."(racket-repl-mode-map lisp-interaction-mode-map lisp-mode-map)"."RET" = "'symex-mode-interface";
+	config = ''
+	  <<Emacs Symex Config>>    
+	'';
+	generalOneConfig.evil-symex-state-map = {
+	  "n" = "'symex-go-backward";
+	  "H-n" = "'efs/evilem-motion-symex-go-backward";
+	  "H-o" = "'efs/evilem-motion-symex-go-down";
+	  "C-o" = "'symex-climb-branch";
+	  "o" = "'symex-go-down";
+	  "H-e" = "'efs/evilem-motion-symex-go-up";
+	  "C-e" = "'symex-descend-branch";
+	  "e" = "'symex-go-up";
+	  "i" = "'symex-go-forward";
+	  "H-i" = "'efs/evilem-motion-symex-go-forward";
+	  "bn" = "'evil-backward-char";
+	  "bi" = "'evil-forward-char";
+	  "d" = "'symex-yank";
+	  "D" = "'symex-yank-remaining";
+	  "G" = "'symex-paste-after";
+	  "g" = "'symex-paste-before";
+	  "k" = "'symex-delete";
+	  "C-k" = "'symex-delete-backward";
+	  "p" = "'symex-delete-remaining";
+	  "K" = "'symex-change";
+	  "P" = "'symex-change-remaining";
+	  "N" = "'symex-shift-backward";
+	  "I" = "'symex-shift-forward";
+	  "M-N" = "'symex-shift-backward-most";
+	  "M-I" = "'symex-shift-forward-most";
+	  "M-n" = "'symex-goto-first";
+	  "M-i" = "'symex-goto-last";
+	  "t" = "'symex-insert-at-beginning";
+	  "T" = "'symex-append-at-end";
+	  "S" = "'symex-open-line-after";
+	  "R" = "'symex-open-line-before";
+	  "j" = "'evil-undo";
+	  "J" = "'evil-redo";
+	  "s" = "'symex-append-after";
+	  "r" = "'symex-insert-before";
+	  "w" = "'evil-repeat";
+	  "C-w" = "'evil-repeat-pop";
+	  "W" = "'evil-ex-repeat";
+	  "a" = "'evil-ex";
+	  "~" = "'evil-record-macro";
+	  "$" = "'evil-execute-macro";
+	};
+      };
+    };
   };
-};
+}
 #+end_src
 
 #+NAME: Emacs Symex Config
@@ -2741,27 +2764,26 @@ symex = {
 #+end_src
 
 **** Compats
-#+NAME: Emacs Evil Compats
-#+begin_src nix-ts :noweb yes
-evil-org.config = ''
-  <<Emacs Evil Org Config>>
-'';
+#+begin_src nix-ts :tangle modules/emacs/evil/compats.nix :noweb yes
+{
+  flake.homeModules.emacs = { ... }: {
+    programs.emacs.init.usePackage = {
+      evil-org.config = ''
+	<<Emacs Evil Org Config>>
+      '';
 
-evil-org-agenda = {
-  generalTwoConfig.":m".evil-org-agenda-mode-map = {
-    "bn" = "'org-agenda-next-item";
-    "bI" = "'evil-window-bottom";
-    "I" = "'org-agenda-do-date-later";
-    "C-S-i" = "'org-agenda-todo-nextset"; # Original binding "C-S-<right>"
-    "l" = "'org-agenda-diary-entry";
+      evil-org-agenda = {
+	generalTwoConfig.":m".evil-org-agenda-mode-map = {
+	  "bn" = "'org-agenda-next-item";
+	  "bI" = "'evil-window-bottom";
+	  "I" = "'org-agenda-do-date-later";
+	  "C-S-i" = "'org-agenda-todo-nextset"; # Original binding "C-S-<right>"
+	  "l" = "'org-agenda-diary-entry";
+	};
+      };
+    };
   };
-};
-
-ewal-evil-cursors = {
-  enable = true;
-  demand = true;
-  config = ''(ewal-evil-cursors-get-colors :apply t)'';
-};
+}
 #+end_src
 
 #+NAME: Emacs Evil Org Config
@@ -3237,35 +3259,50 @@ Helpful gives more information, & which-key tells what keybinds you have availab
     '';
   };
 
-  flake.homeModules.emacs = { ... }: {
-    programs.emacs.init.usePackage = {
-      helpful = {
-	enable = true;
-	defer = true;
-	generalOne = {
-          global-leader = {
-            "hf" = "'helpful-function";
-            "hs" = "'helpful-symbol";
-            "hv" = "'helpful-variable";
-            "hx" = "'helpful-command";
-            "hk" = "'helpful-key";
-            "hm" = "'helpful-macro";
-          };
-          embark-become-help-map = {
-            "f" = "'helpful-function";
-            "s" = "'helpful-symbol";
-            "v" = "'helpful-variable";
-          };
-          embark-symbol-map."h" = "'helpful-symbol";
+  flake.homeModules.emacs = { lib, pkgs, ... }: {
+    programs.emacs.init = {
+      keybinds.whichKey.enable = true;
+      usePackage = {
+	helpful = {
+	  enable = true;
+	  defer = true;
+	  generalOne = {
+            global-leader = {
+              "hf" = "'helpful-function";
+              "hs" = "'helpful-symbol";
+              "hv" = "'helpful-variable";
+              "hx" = "'helpful-command";
+              "hk" = "'helpful-key";
+              "hm" = "'helpful-macro";
+            };
+            embark-become-help-map = {
+              "f" = "'helpful-function";
+              "s" = "'helpful-symbol";
+              "v" = "'helpful-variable";
+            };
+            embark-symbol-map."h" = "'helpful-symbol";
+	  };
 	};
-      };
 
-      info = {
-	enable = true;
-	config = ''
-	  <<Emacs Info Config>>
-	'';
-      };
+	info = {
+	  enable = true;
+	  config = ''
+	    <<Emacs Info Config>>
+	  '';
+	};
+
+	evil-owl = {
+	  enable = true;
+	  setopt = {
+	    evil-owl-max-string-length = 50;
+	    evil-owl-extra-posframe-args = [ "':width" 50 "':height" 20 ];
+	    evil-owl-display-method = "'posframe";
+	  };
+	  ghookf = ["('evil-mode 'evil-owl-mode)"];
+	};
+
+	emacs.generalOne.help-map."A" = ''`("Arch Wiki" . ,(cmd! (async-shell-command "${lib.getExe pkgs.wiki}")))'';
+      } ;
     };
   };
 }
@@ -5035,7 +5072,7 @@ NAME is the term to search for."
 #+end_src
 
 *** Elfeed
-#+begin_src nix-ts
+#+begin_src nix-ts :tangle modules/web/elfeed.nix
 {
   flake.homeModules.web = { ... }:
   {
@@ -5102,7 +5139,7 @@ https://greasyfork.org/en/scripts/374833-yt2invidio
       };
 
       extraConfig = ''
-	<<Qutebrowser Config>>
+<<Qutebrowser Config>>
       '';
     };
   };
