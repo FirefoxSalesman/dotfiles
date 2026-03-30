@@ -298,8 +298,7 @@ Dev templates: https://github.com/the-nix-way/dev-templates
   
 * Home Manager
 ** Main Config
-*** Inputs & Imports
-#+begin_src nix-ts :tangle modules/home.nix :noweb yes 
+#+begin_src nix-ts :tangle modules/home.nix
 { self, inputs, ... }:
 let
   system = "x86_64-linux";
@@ -316,12 +315,8 @@ in {
   imports = [ inputs.home-manager.flakeModules.home-manager ];
   systems = ["x86_64-linux"];
   flake = {
-    gpuWrappers = inputs.nixgl.defaultPackage;
     homeConfigurations.holschcc = inputs.home-manager.lib.homeManagerConfiguration {
       inherit pkgs;
-      extraSpecialArgs = {
-	inherit inputs;
-      };
       modules = [
 	inputs.self.homeModules.aesthetics
 	inputs.self.homeModules.ai
@@ -335,6 +330,8 @@ in {
 	inputs.self.homeModules.extraPackages
 	inputs.self.homeModules.exwm
 	inputs.self.homeModules.fileManager
+	inputs.self.homeModules.gaming
+	inputs.self.homeModules.glx
 	inputs.self.homeModules.java
 	inputs.self.homeModules.ledger
 	inputs.self.homeModules.media
@@ -354,10 +351,7 @@ in {
     homeModules.basic = { lib, config, ... }:
 
     {
-      # Home Manager needs a bit of information about you and the paths it should
-      # manage.
       home.username = "holschcc";
-      home.homeDirectory = "/home/holschcc";
 
       # This value determines the Home Manager release that your configuration is
       # compatible with. This helps avoid breakage when a new Home Manager release
@@ -372,71 +366,50 @@ in {
       programs.home-manager.enable = true;
 
       nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
-
-      <<glx>>
-
-      <<alsoftrc>>
-
-      <<User Dirs>>
-
-      <<Proced>>
     };
   };
 }
 #+end_src
 
-*** glx
-#+NAME: glx
-#+begin_src nix-ts
-targets.genericLinux.nixGL.packages = inputs.nixgl.packages;
-
-targets.genericLinux.enable = true;
-
-home.activation = {
-  clearNixglCache = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-      [ -v DRY_RUN ] || rm -f ${config.xdg.cacheHome}/nixgl/result*
-    '';
-};
-#+end_src
-
-*** alsoftrc
-#+NAME: alsoftrc
-#+begin_src nix-ts
-home.file.".alsoftrc".text = ''
-  [general]
-  drivers=pulse
-  hrtf=true
-'';
-#+end_src
-
-*** User Dirs
-#+NAME: User Dirs
-#+begin_src nix-ts
-xdg.userDirs = {
-    enable = true;
-    createDirectories = true;
-    desktop = null;
-    publicShare = null;
-    templates = null;
-    documents = "${config.home.homeDirectory}/doc";
-    download = "${config.home.homeDirectory}/dwn";
-    music = "${config.home.homeDirectory}/mus";
-    pictures = "${config.home.homeDirectory}/pic";
-    videos = "${config.home.homeDirectory}/vid";
-};
-#+end_src
-
-*** Proced
-#+NAME: Proced
-#+begin_src nix-ts
-programs.emacs.init.usePackage.proced = {
-  enable = true;
-  command = ["proced"];
-  generalTwoConfig.":n".proced-mode-map = {
-    "j" = "'proced-unmark";
-    "k" = "'proced-send-signal";
+** User Dirs
+#+begin_src nix-ts :tangle modules/user-dirs.nix
+{
+  flake.homeModules.basic = { config, ... }: {
+    home.homeDirectory = "/home/${config.home.username}";
+    xdg.userDirs = {
+      enable = true;
+      createDirectories = true;
+      desktop = null;
+      publicShare = null;
+      templates = null;
+      documents = "${config.home.homeDirectory}/doc";
+      download = "${config.home.homeDirectory}/dwn";
+      music = "${config.home.homeDirectory}/mus";
+      pictures = "${config.home.homeDirectory}/pic";
+      videos = "${config.home.homeDirectory}/vid";
+    };
   };
-};
+}
+#+end_src
+
+** glx
+#+NAME: glx
+#+begin_src nix-ts :tangle modules/glx.nix
+{ inputs, ... }:
+{
+  flake = {
+    gpuWrappers = inputs.nixgl.defaultPackage;
+    homeModules.glx = { config, lib, ... }: {
+      targets.genericLinux.nixGL.packages = inputs.nixgl.packages;
+
+      targets.genericLinux.enable = true;
+
+      home.activation.clearNixglCache = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+	  [ -v DRY_RUN ] || rm -f ${config.xdg.cacheHome}/nixgl/result*
+	'';
+    };
+  };
+}
 #+end_src
 
 ** shells
@@ -1451,20 +1424,8 @@ I couldn't get olivetti to work.
       (config.lib.nixGL.wrap blockbench)
       (config.lib.nixGL.wrap tor-browser)
       wget
-      zip
-      unzip
       zbar
-      (config.lib.nixGL.wrap steam)
-      (config.lib.nixGL.wrap lutris)
-      (config.lib.nixGL.wrap retroarch)
-      (config.lib.nixGL.wrap gamemode)
-      (config.lib.nixGL.wrap prismlauncher)
-      # things emacs appreciates
-      xclip
-      xsel
-      xdotool
       # scripts
-      ezf
       pkg
       updatefix
       hdmihelper
@@ -1925,6 +1886,13 @@ I'm running dired with a couple of small packages that improve on it
   flake.homeModules.emacs = { config, pkgs, ... }:
 
   {
+    home.packages = with pkgs; [
+      xclip
+      xsel
+      xdotool
+      zip
+      unzip
+    ];
     programs.emacs = {
       enable = true;
       package = (config.lib.nixGL.wrap pkgs.emacs30-gtk3);
@@ -3302,6 +3270,22 @@ fi
 							     :poshandler posframe-poshandler-frame-bottom-center
 							     :refposhandler posframe-refposhandler-xwininfo))
   :gfhookf ('doom-escape 'hydra-keyboard-quit))
+#+end_src
+
+*** Proced
+#+begin_src nix-ts :tangle modules/proced.nix
+{
+  flake.homeModules.emacs = { ... }: {
+    programs.emacs.init.usePackage.proced = {
+      enable = true;
+      command = ["proced"];
+      generalTwoConfig.":n".proced-mode-map = {
+	"j" = "'proced-unmark";
+	"k" = "'proced-send-signal";
+      };
+    };
+  };
+}
 #+end_src
 
 ** Notifications
@@ -5435,4 +5419,25 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
   };
 }
 #+end_src
-
+** Gaming
+Setting up your alsoftrc correctly makes Minecraft happy
+#+begin_src nix-ts :tangle modules/gaming.nix
+{
+  flake.homeModules.gaming = { config, pkgs, ... }: {
+    home = {
+      file.".alsoftrc".text = ''
+	[general]
+        drivers=pulse
+        hrtf=true
+      '';
+      packages = with pkgs; [
+	(config.lib.nixGL.wrap steam)
+	(config.lib.nixGL.wrap lutris)
+	(config.lib.nixGL.wrap retroarch)
+	(config.lib.nixGL.wrap gamemode)
+	(config.lib.nixGL.wrap prismlauncher)
+      ];
+    };
+  };
+}
+#+end_src

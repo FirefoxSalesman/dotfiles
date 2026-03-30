@@ -14,12 +14,8 @@ in {
   imports = [ inputs.home-manager.flakeModules.home-manager ];
   systems = ["x86_64-linux"];
   flake = {
-    gpuWrappers = inputs.nixgl.defaultPackage;
     homeConfigurations.holschcc = inputs.home-manager.lib.homeManagerConfiguration {
       inherit pkgs;
-      extraSpecialArgs = {
-	inherit inputs;
-      };
       modules = [
 	inputs.self.homeModules.aesthetics
 	inputs.self.homeModules.ai
@@ -33,6 +29,8 @@ in {
 	inputs.self.homeModules.extraPackages
 	inputs.self.homeModules.exwm
 	inputs.self.homeModules.fileManager
+	inputs.self.homeModules.gaming
+	inputs.self.homeModules.glx
 	inputs.self.homeModules.java
 	inputs.self.homeModules.ledger
 	inputs.self.homeModules.media
@@ -52,10 +50,7 @@ in {
     homeModules.basic = { lib, config, ... }:
 
     {
-      # Home Manager needs a bit of information about you and the paths it should
-      # manage.
       home.username = "holschcc";
-      home.homeDirectory = "/home/holschcc";
 
       # This value determines the Home Manager release that your configuration is
       # compatible with. This helps avoid breakage when a new Home Manager release
@@ -70,44 +65,6 @@ in {
       programs.home-manager.enable = true;
 
       nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
-
-      targets.genericLinux.nixGL.packages = inputs.nixgl.packages;
-      
-      targets.genericLinux.enable = true;
-      
-      home.activation = {
-        clearNixglCache = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-            [ -v DRY_RUN ] || rm -f ${config.xdg.cacheHome}/nixgl/result*
-          '';
-      };
-
-      home.file.".alsoftrc".text = ''
-        [general]
-        drivers=pulse
-        hrtf=true
-      '';
-
-      xdg.userDirs = {
-          enable = true;
-          createDirectories = true;
-          desktop = null;
-          publicShare = null;
-          templates = null;
-          documents = "${config.home.homeDirectory}/doc";
-          download = "${config.home.homeDirectory}/dwn";
-          music = "${config.home.homeDirectory}/mus";
-          pictures = "${config.home.homeDirectory}/pic";
-          videos = "${config.home.homeDirectory}/vid";
-      };
-
-      programs.emacs.init.usePackage.proced = {
-        enable = true;
-        command = ["proced"];
-        generalTwoConfig.":n".proced-mode-map = {
-          "j" = "'proced-unmark";
-          "k" = "'proced-send-signal";
-        };
-      };
     };
   };
 }

@@ -4,6 +4,13 @@
   flake.homeModules.emacs = { config, pkgs, ... }:
 
   {
+    home.packages = with pkgs; [
+      xclip
+      xsel
+      xdotool
+      zip
+      unzip
+    ];
     programs.emacs = {
       enable = true;
       package = (config.lib.nixGL.wrap pkgs.emacs30-gtk3);
