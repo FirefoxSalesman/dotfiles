@@ -137,26 +137,7 @@ in {
 }
 #+end_src
 
-** Emacs
-*** Repeaters
-#+begin_src nix-ts :tangle modules/packages/emacs/repeaters.nix
-{ inputs, ... } :
-
-{
-  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages.repeaters = (epkgs.callPackage
-      epkgs.trivialBuild rec {
-	pname = "repeaters";
-	version = "current";
-	src = inputs.repeaters;
-      }
-    );
-  };
-}
-#+end_src
-
-*** Reka
+** Reka
 https://github.com/dmkhitaryan/river-next-nix-module/blob/5205ebf2b5f820c3a9221f472c78c548a4a84aad/window-managers/reka/package.nix
 # #+begin_src nix-ts :tangle modules/packages/emacs/reka.nix
 # {
@@ -357,6 +338,7 @@ in {
 	inputs.self.homeModules.java
 	inputs.self.homeModules.ledger
 	inputs.self.homeModules.media
+	inputs.self.homeModules.notifications
 	inputs.self.homeModules.passwordManagement
 	inputs.self.homeModules.sage
 	inputs.self.homeModules.shellConfig
@@ -1936,7 +1918,6 @@ I'm running dired with a couple of small packages that improve on it
 
 ** Emacs
 *** Main
-**** Inputs & Imports
 #+begin_src nix-ts :tangle modules/emacs.nix :noweb yes
 { inputs, ... }:
 
@@ -1947,11 +1928,6 @@ I'm running dired with a couple of small packages that improve on it
     programs.emacs = {
       enable = true;
       package = (config.lib.nixGL.wrap pkgs.emacs30-gtk3);
-      extraPackages = epkgs: with epkgs; [ 
-        repeaters
-        hydra
-        pretty-hydra
-      ];
       init = {
         enable = true;
         packageQuickstart = false;
@@ -1964,70 +1940,23 @@ I'm running dired with a couple of small packages that improve on it
 	  electricPair.enable = true;
 	};
   
-        <<Emacs Prelude>>
+	prelude = ''
+	  <<Emacs Prelude>>
+	'';
 
-        usePackage = {
-          <<Emacs UI Improvements>>
-  
-          <<Emacs Cleanup>>
-
-          <<Emacs Async>>
-
-          <<Emacs Wgrep>>
-
-          <<Emacs Notifications>>
-        
-          <<Emacs Mutype>>
-
-	  evil-collection.setopt.evil-collection-unimpaired-want-repeat-mode-integration = true;
-        };
-
-        <<Emacs Postlude>>
+	postlude = ''
+	  <<Emacs Postlude>>
+	'';
       };
     };
   };
 }
 #+end_src
 
-**** Prelude
 #+NAME: Emacs Prelude
-#+begin_src nix-ts :noweb yes
-prelude =''
-  <<emacs-prelude>>
-'';
-#+end_src
-
-#+NAME: emacs-prelude
 #+begin_src emacs-lisp
 (defalias 'gsetq #'general-setq)
 (general-unbind "C-h")
-
-(use-package pretty-hydra
-  :demand t
-  :custom
-  (hydra-hint-display-type 'posframe)
-  :config
-  (gsetq hydra-posframe-show-params '(:internal-border-width 1
-							     :internal-border-color "003f28"
-							     :parent-frame nil
-							     :poshandler posframe-poshandler-frame-bottom-center
-							     :refposhandler posframe-refposhandler-xwininfo))
-  :gfhookf ('doom-escape 'hydra-keyboard-quit))
-
-(use-package repeaters
-  :demand t
-  :config
-  (repeaters-define-maps
-   '(("next-error" ;; borrowed from the hydra wiki
-      next-error "`"
-      next-error "n"
-      previous-error "e"))))
-
-(use-package repeat
-  :config
-  (repeat-mode))
-
-(general-def "H-z" 'repeat)
 
 (defmacro cmd! (&rest body)
   "Returns (lambda () (interactive) ,@body)
@@ -2056,71 +1985,87 @@ or aliases. Stolen from Doom."
 		       (lambda () (general-def ,state ,map ,@args))))
 #+end_src
 
-**** Sensible Defaults
-***** UI Improvements
-Most of this was shamelessly lifted from Emacs from Scratch.
 Display buffer rules were taken from noctuid's config.
 https://emacs.stackexchange.com/questions/75528/how-to-define-display-buffer-alist-to-keep-every-buffer-in-the-frame-it-is-curr
-#+NAME: Emacs UI Improvements
-#+begin_src nix-ts
-tooltip = {
-  enable = true;
-  config = ''
-    (tooltip-mode -1)
-    (set-fringe-mode -1)
-  '';
-};
-
-simple = {
-  enable = true;
-  config = ''
-    (gsetq save-interprogram-paste-before-kill t)
-    (column-number-mode)
-  '';
-};
-
-display-line-numbers = {
-  enable = true;
-  setopt = {
-    display-line-numbers-type = "'relative";
-    display-line-numbers-width = 3;
-  }; 
-  config = "(global-display-line-numbers-mode)";
-  #Disable line numbers for some modes
-  ghookf = ["((gen-mode-hooks '(org term dired eww eat markdown help helpful Info Man shell pdf-view elfeed-search elfeed-show eshell racket-repl sage-shell nov)) (lambda () (display-line-numbers-mode 0)))"];
-} ;
-
-server = {
-  enable = true;
-  deferIncrementally = true;
-  config = "(server-start)";
-};
+#+begin_src emacs-lisp
+;; Display buffer rules
+(cl-pushnew (list (rx "*Async Shell Command*" (0+ any)) #'display-buffer-no-window) display-buffer-alist)
+(cl-pushnew (list (rx "*Shell Command Output*" (0+ any)) #'display-buffer-no-window) display-buffer-alist)
 #+end_src
 
-***** Cleanup
+*** Sensible Defaults
+**** UI Improvements
+Most of this was shamelessly lifted from Emacs from Scratch.
+#+begin_src nix-ts :tangle modules/emacs/ui.nix
+{
+  flake.homeModules.emacs = { ... }: {
+    programs.emacs.init.usePackage = {
+      tooltip = {
+	enable = true;
+	config = ''
+	  (tooltip-mode -1)
+          (set-fringe-mode -1)
+	'';
+      };
+
+      simple = {
+	enable = true;
+	config = ''
+	  (gsetq save-interprogram-paste-before-kill t)
+          (column-number-mode)
+	'';
+      };
+
+      display-line-numbers = {
+	enable = true;
+	setopt = {
+	  display-line-numbers-type = "'relative";
+	  display-line-numbers-width = 3;
+	}; 
+	config = "(global-display-line-numbers-mode)";
+	#Disable line numbers for some modes
+	ghookf = ["((gen-mode-hooks '(org term dired eww eat markdown help helpful Info Man shell pdf-view elfeed-search elfeed-show eshell racket-repl sage-shell nov)) (lambda () (display-line-numbers-mode 0)))"];
+      } ;
+
+      server = {
+	enable = true;
+	deferIncrementally = true;
+	config = "(server-start)";
+      };
+    };
+  } ;
+}
+#+end_src
+
+**** Cleanup
 Emacs has a propensity for leaving garbage lying around. This configuration that I stole from David Wilson should make that stop.
-
-#+NAME: Emacs Cleanup
-#+begin_src nix-ts
-no-littering = {
-  enable = true;
-  demand = true;
-  #no-littering doesn't set this by default so we must place
-  #auto save files in the same path as it uses for sessions
-  setopt.auto-save-file-name-transforms = ''`((".*" ,(no-littering-expand-var-file-name "auto-save/") t))'';
-};
+#+begin_src nix-ts :tangle modules/emacs/no-littering.nix
+{
+  flake.homeModules.emacs = { ... }: {
+    programs.emacs.init.usePackage.no-littering = {
+      enable = true;
+      demand = true;
+      #no-littering doesn't set this by default so we must place
+      #auto save files in the same path as it uses for sessions
+      setopt.auto-save-file-name-transforms = ''`((".*" ,(no-littering-expand-var-file-name "auto-save/") t))'';
+    };
+  };
+}
 #+end_src
 
-**** Async
+*** Async
 Async lets emacs create other instances of itself to run functions. It still has to be passed back to the main instance, but it does help with the single-threadedness.
-#+NAME: Emacs Async
-#+begin_src nix-ts :noweb yes
-async = {
-  enable = true;
-  config = ''
-    <<Emacs Async Config>>
-  '';
-};
+#+begin_src nix-ts :tangle modules/emacs/async.nix :noweb yes
+{
+  flake.homeModules.emacs = { ... }: {
+    programs.emacs.init.usePackage.async = {
+      enable = true;
+      config = ''
+	<<Emacs Async Config>>
+      '';
+    };
+  };
+}
 #+end_src
 
 #+NAME: Emacs Async Config
@@ -2129,7 +2074,7 @@ async = {
 (dired-async-mode)
 #+end_src
 
-**** Wgrep
+*** Wgrep
 Wgrep basically turns grep into sed.
 
 =Bindings=
@@ -2140,63 +2085,16 @@ Wgrep basically turns grep into sed.
 + C-c C-p: Toggle read-only
 + C-c C-k: Exit without changes
 + C-x C-q: Exit wgrep
-#+NAME: Emacs Wgrep
-#+begin_src nix-ts
-wgrep = {
-  enable = true;
-  setopt.wgrep-auto-save-buffer = true;
-  generalTwo.":n".grep-mode-map."w" = "'wgrep-change-to-wgrep-mode";
-};
-#+end_src
-
-**** Notifications
-Stolen from EDNC's github page.
-
-EDNC does the same thing as dunst. It will pop up any new notifications inside of a text buffer.
-#+NAME: Emacs Notifications
-#+begin_src nix-ts :noweb yes
-ednc = {
-  enable = true;
-  gfhook = [
-    "('ednc-notification-presentation-functions #'show-notification-in-echo-area)"
-  ];
-  deferIncrementally = true;
-  config = ''
-    <<Emacs EDNC Config>>
-  '';
-};
-#+end_src
-
-#+NAME: Emacs EDNC Config
-#+begin_src emacs-lisp
-(ednc-mode)
-(defun show-notification-in-echo-area (old new)
-  (when new (message (ednc-format-notification new t))))
-#+end_src
-
-**** Mutype
-#+NAME: Emacs Mutype
-#+begin_src nix-ts
-mutype = {
-  enable = true;
-  command = ["mutype-mode" "mutype-mode-custom"];
-  setopt.mutype-source-directory = ''"~/.config/emacs/mutype"'';
-};
-#+end_src
-
-**** Postlude
-#+NAME: Emacs Postlude
-#+begin_src nix-ts :noweb yes
-postlude = ''
-  <<Emacs Postlude Config>>
-'';
-#+end_src
-
-#+NAME: Emacs Postlude Config
-#+begin_src emacs-lisp
-;; Display buffer rules
-(cl-pushnew (list (rx "*Async Shell Command*" (0+ any)) #'display-buffer-no-window) display-buffer-alist)
-(cl-pushnew (list (rx "*Shell Command Output*" (0+ any)) #'display-buffer-no-window) display-buffer-alist)
+#+begin_src nix-ts :tangle modules/emacs/wgrep.nix
+{
+  flake.homeModules.emacs = { ... }: {
+    programs.emacs.init.usePackage.wgrep = {
+      enable = true;
+      setopt.wgrep-auto-save-buffer = true;
+      generalTwo.":n".grep-mode-map."w" = "'wgrep-change-to-wgrep-mode";
+    };
+  };
+}
 #+end_src
 
 *** Early Init
@@ -3330,6 +3228,109 @@ if [ "''${dir}$doc" ]; then
 else
   ${pkgs.coreutils}/bin/echo "Program terminated." && exit 0
 fi
+#+end_src
+
+*** Repeaters
+#+begin_src nix-ts :tangle modules/emacs/repeaters.nix :noweb yes
+{ inputs, ... }:
+{
+  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
+  in {
+    packages.repeaters = (epkgs.callPackage
+      epkgs.trivialBuild rec {
+	pname = "repeaters";
+	version = "current";
+	src = inputs.repeaters;
+      }
+    );
+  };
+
+  flake.homeModules.emacs = { ... }: {
+    programs.emacs = {
+      extraPackages = epkgs: [ epkgs.repeaters ];
+      init = {
+	prelude = ''
+	  <<Repeaters Prelude>>
+	'';
+	usePackage.evil-collection.setopt.evil-collection-unimpaired-want-repeat-mode-integration = true;
+      };
+    };
+  };
+}
+#+end_src
+
+#+NAME: Repeaters Prelude
+#+begin_src emacs-lisp
+(use-package repeaters
+  :demand t
+  :config
+  (repeaters-define-maps
+   '(("next-error" ;; borrowed from the hydra wiki
+      next-error "`"
+      next-error "n"
+      previous-error "e"))))
+
+(use-package repeat
+  :config (repeat-mode)
+  :general-config ("H-z" 'repeat))
+#+end_src
+
+*** Hydra
+#+begin_src nix-ts :tangle modules/emacs/hydra.nix :noweb yes
+{
+  flake.homeModules.emacs = { ... }: {
+    programs.emacs = {
+      extraPackages = epkgs: [ epkgs.pretty-hydra ];
+      init.prelude = ''
+	<<Hydra Prelude>>
+      '';
+    };
+  };
+}
+#+end_src
+
+#+NAME: Hydra Prelude
+#+begin_src emacs-lisp
+(use-package pretty-hydra
+  :demand t
+  :custom
+  (hydra-hint-display-type 'posframe)
+  :config
+  (gsetq hydra-posframe-show-params '(:internal-border-width 1
+							     :internal-border-color "003f28"
+							     :parent-frame nil
+							     :poshandler posframe-poshandler-frame-bottom-center
+							     :refposhandler posframe-refposhandler-xwininfo))
+  :gfhookf ('doom-escape 'hydra-keyboard-quit))
+#+end_src
+
+** Notifications
+Stolen from EDNC's github page.
+
+EDNC does the same thing as dunst. It will pop up any new notifications inside of a text buffer.
+#+begin_src nix-ts :tangle modules/notifications.nix :noweb yes
+{
+  flake.homeModules.notifications = { ... }:
+  {
+    programs.emacs.init.usePackage.ednc = {
+      enable = true;
+      gfhook = [
+	"('ednc-notification-presentation-functions #'show-notification-in-echo-area)"
+      ];
+      deferIncrementally = true;
+      config = ''
+	<<Emacs EDNC Config>>
+      '';
+    };
+  };
+}
+#+end_src
+
+#+NAME: Emacs EDNC Config
+#+begin_src emacs-lisp
+(ednc-mode)
+(defun show-notification-in-echo-area (old new)
+  (when new (message (ednc-format-notification new t))))
 #+end_src
 
 ** Writing
@@ -5422,3 +5423,16 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
   };
 }
 #+end_src
+** Mutype
+#+begin_src nix-ts :tangle modules/mutype.nix
+{
+  flake.homeModules.mutype = { ... }: {
+    programs.emacs.init.usePackage.mutype = {
+      enable = true;
+      command = ["mutype-mode" "mutype-mode-custom"];
+      setopt.mutype-source-directory = ''"~/.config/emacs/mutype"'';
+    };
+  };
+}
+#+end_src
+

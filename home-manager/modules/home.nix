@@ -36,6 +36,7 @@ in {
 	inputs.self.homeModules.java
 	inputs.self.homeModules.ledger
 	inputs.self.homeModules.media
+	inputs.self.homeModules.notifications
 	inputs.self.homeModules.passwordManagement
 	inputs.self.homeModules.sage
 	inputs.self.homeModules.shellConfig
