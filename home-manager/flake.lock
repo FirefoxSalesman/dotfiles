@@ -284,22 +284,6 @@
         "type": "github"
       }
     },
-    "ezf": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1702913955,
-        "narHash": "sha256-AxPTxgBiwAF8vxDmZOoo2sJCHB7bwmGvjwTS6SxwDMk=",
-        "owner": "firefoxsalesman",
-        "repo": "ezf",
-        "rev": "b46e8e9dff4fd86fb513182be48aef7af9441fd1",
-        "type": "github"
-      },
-      "original": {
-        "owner": "firefoxsalesman",
-        "repo": "ezf",
-        "type": "github"
-      }
-    },
     "firefox-gnome-theme": {
       "flake": false,
       "locked": {
@@ -313,6 +297,21 @@
       "original": {
         "owner": "rafaelmardojai",
         "repo": "firefox-gnome-theme",
+        "type": "github"
+      }
+    },
+    "flake-file": {
+      "locked": {
+        "lastModified": 1774886516,
+        "narHash": "sha256-w2LoQVM6DXrSdGUZBZqa1nYkMzHoB0t82DrptzZKhTs=",
+        "owner": "vic",
+        "repo": "flake-file",
+        "rev": "3daadf37de2bb85b0ff34e2a7ab0d71e077c2b9e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "vic",
+        "repo": "flake-file",
         "type": "github"
       }
     },
@@ -440,28 +439,6 @@
       "original": {
         "owner": "vic",
         "repo": "import-tree",
-        "type": "github"
-      }
-    },
-    "kmonad": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "dir": "nix",
-        "lastModified": 1773223301,
-        "narHash": "sha256-DFB6tLJ3WSgUICO3BjOj9cKdn80Z35cTXsO/bfa8OQo=",
-        "owner": "kmonad",
-        "repo": "kmonad",
-        "rev": "16843198355fe8fed96081d2827124279f7d3959",
-        "type": "github"
-      },
-      "original": {
-        "dir": "nix",
-        "owner": "kmonad",
-        "repo": "kmonad",
         "type": "github"
       }
     },
@@ -708,11 +685,10 @@
         "emacs-init": "emacs-init",
         "emacs-overlay": "emacs-overlay",
         "exwm-qutebrowser": "exwm-qutebrowser",
-        "ezf": "ezf",
+        "flake-file": "flake-file",
         "flake-parts": "flake-parts",
         "home-manager": "home-manager",
         "import-tree": "import-tree",
-        "kmonad": "kmonad",
         "mpc-wrapper": "mpc-wrapper",
         "nixgl": "nixgl",
         "nixpkgs": "nixpkgs_3",

@@ -6,6 +6,7 @@
     nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
     emacs-overlay.url  = "github:nix-community/emacs-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    flake-file.url = "github:vic/flake-file";
     import-tree.url = "github:vic/import-tree";
 
     stylix.url = "github:danth/stylix";
@@ -21,11 +22,6 @@
 
     nixgl = {
       url = "github:nix-community/nixGL"; 
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    kmonad = {
-      url = "github:kmonad/kmonad?submodules=1&dir=nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -47,11 +43,6 @@
 
     dired-single = {
       url = "github:firefoxsalesman/dired-single";
-      flake = false;
-    };
-
-    ezf = {
-      url = "github:firefoxsalesman/ezf";
       flake = false;
     };
 

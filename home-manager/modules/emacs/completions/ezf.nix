@@ -1,5 +1,10 @@
 { inputs, ... } :
 {
+  flake-file.inputs.ezf = {
+    url = "github:firefoxsalesman/ezf";
+    flake = false;
+  };
+
   perSystem = { pkgs, self', ... }: let epkgs = pkgs.emacs.pkgs;
   in {
     packages = {
