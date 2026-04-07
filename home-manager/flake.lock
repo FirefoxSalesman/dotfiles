@@ -284,6 +284,22 @@
         "type": "github"
       }
     },
+    "ezf": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1702913955,
+        "narHash": "sha256-AxPTxgBiwAF8vxDmZOoo2sJCHB7bwmGvjwTS6SxwDMk=",
+        "owner": "firefoxsalesman",
+        "repo": "ezf",
+        "rev": "b46e8e9dff4fd86fb513182be48aef7af9441fd1",
+        "type": "github"
+      },
+      "original": {
+        "owner": "firefoxsalesman",
+        "repo": "ezf",
+        "type": "github"
+      }
+    },
     "firefox-gnome-theme": {
       "flake": false,
       "locked": {
@@ -297,21 +313,6 @@
       "original": {
         "owner": "rafaelmardojai",
         "repo": "firefox-gnome-theme",
-        "type": "github"
-      }
-    },
-    "flake-file": {
-      "locked": {
-        "lastModified": 1774886516,
-        "narHash": "sha256-w2LoQVM6DXrSdGUZBZqa1nYkMzHoB0t82DrptzZKhTs=",
-        "owner": "vic",
-        "repo": "flake-file",
-        "rev": "3daadf37de2bb85b0ff34e2a7ab0d71e077c2b9e",
-        "type": "github"
-      },
-      "original": {
-        "owner": "vic",
-        "repo": "flake-file",
         "type": "github"
       }
     },
@@ -685,7 +686,7 @@
         "emacs-init": "emacs-init",
         "emacs-overlay": "emacs-overlay",
         "exwm-qutebrowser": "exwm-qutebrowser",
-        "flake-file": "flake-file",
+        "ezf": "ezf",
         "flake-parts": "flake-parts",
         "home-manager": "home-manager",
         "import-tree": "import-tree",

@@ -11,7 +11,6 @@
     nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
     emacs-overlay.url  = "github:nix-community/emacs-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
-    flake-file.url = "github:vic/flake-file";
     import-tree.url = "github:vic/import-tree";
 
     stylix.url = "github:danth/stylix";
@@ -33,6 +32,11 @@
     # packages
     repeaters = {
       url = "github:mmarshall540/repeaters";
+      flake = false;
+    };
+
+    ezf = {
+      url = "github:firefoxsalesman/ezf";
       flake = false;
     };
 
@@ -122,6 +126,7 @@ in {
           ezf = packages.emacs-ezf;
 	  mpc-wrapper = packages.mpc-wrapper;
 	  semel = packages.semel;
+	  nano-vertico = packages.nano-vertico;
           embark = packages.embark;
 	}));
   };
@@ -303,10 +308,7 @@ let
     ];
   };
 in {
-  imports = [
-    inputs.home-manager.flakeModules.home-manager
-    inputs.flake-file.flakeModules.dendritic 
-  ];
+  imports = [inputs.home-manager.flakeModules.home-manager];
   systems = ["x86_64-linux"];
   flake = {
     homeConfigurations.holschcc = inputs.home-manager.lib.homeManagerConfiguration {
@@ -2079,7 +2081,15 @@ All of the repeaters config was origally stolen from Karthinks. I don't think an
 (tool-bar-mode -1) ; Disable the toolbar
 (menu-bar-mode -1)
 
+(setq-default bidi-display-reordering 'left-to-right
+              bidi-paragraph-direction 'left-to-right
+	      cursor-in-non-selected-windows nil)
+
 (setq auto-save-visited-file-name t
+      highlight-nonselected-windows nil
+      redisplay-skip-fontification-on-input t
+      bidi-inhibit-bpa t
+      read-process-output-max (* 4 1024 1024)
       warning-minimum-level :error
       use-package-enable-imenu-support t
       make-backup-files nil
@@ -2707,11 +2717,31 @@ Vertico is basically dmenu for emacs. It lists out all the options in a command 
 }
 #+end_src
 
+format count borrowed from: https://github.com/rougier/nano-vertico
 #+NAME: Emacs Vertico Config
 #+begin_src emacs-lisp
 (with-eval-after-load 'evil-collection-vertico
   (efs/evil-collection-remap 'evil-collection-vertico-setup 'normal vertico-map
 			     "k" 'evil-delete-char))
+
+(defun vertico--format-count ()
+  "Format the count string."
+  (concat (propertize "" 'face `(:foreground ,(face-foreground 'default nil 'default)
+					     :background ,(face-background 'default nil 'default)
+					     :weight ,(face-attribute 'bold :weight nil 'default)))
+          (propertize (format (car vertico-count-format)
+			      (format (cdr vertico-count-format)
+				      (cond ((>= vertico--index 0) (1+ vertico--index))
+					    (vertico--allow-prompt "*")
+					    (t "!"))
+				      vertico--total)) 'face
+				      `(:foreground ,(face-background 'default nil 'default)
+						    :background ,(ewal-get-color 'yellow)
+						    :weight ,(face-attribute 'bold :weight nil 'default)))
+          (propertize "" 'face `(:foreground ,(ewal-get-color 'yellow)
+					      :background ,(face-background 'widget-field nil 'default)
+					      :weight ,(face-attribute 'bold :weight nil 'default)))
+	  " "))
 #+end_src
 
 **** Corfu
@@ -2787,7 +2817,8 @@ Evil integration is from noctuid & minad
 	      '''(?w "Web" qutebrowser-bookmark-jump eww-bookmark-jump xwidget-webkit-bookmark-jump-handler)''
 	      '''(?v "VC Directory" vc-dir-bookmark-jump)''
 	      '''(nil "Other")''
-	    ] ;
+	    ];
+	    kill-do-not-save-duplicates = true;
 	  };
 	  generalOne = {
 	    ":n" = {
@@ -3039,11 +3070,6 @@ An alternative to fzf.
 #+begin_src nix-ts :tangle modules/emacs/completions/ezf.nix :noweb yes
 { inputs, ... } :
 {
-  flake-file.inputs.ezf = {
-    url = "github:firefoxsalesman/ezf";
-    flake = false;
-  };
-
   perSystem = { pkgs, self', ... }: let epkgs = pkgs.emacs.pkgs;
   in {
     packages = {
@@ -4529,7 +4555,7 @@ For moving massive quantities of Jordan Peterson's podcast into my mp3 player
 	<<Cast>>
       '');
       ffmpeg-bulk = (pkgs.writeShellScriptBin "ffmpeg-bulk" ''
-	<<Ffmpeg Bulk>>
+	<<FFmpeg Bulk>>
       '');
       masstube = pkgs.writeShellScriptBin "masstube" ''
 	<<Masstube>>
@@ -4570,8 +4596,8 @@ ${pkgs.coreutils}/bin/mv ~/*.cleaned.$out /run/media/$USER/$device/Podcasts
 ${pkgs.coreutils}/bin/rm ~/*.$out
 #+end_src
 
-#+NAME: Ffmpeg Bulk
 I stole this from this git repo https://github.com/sylsau/ffmpeg-bulk
+#+NAME: FFmpeg Bulk
 #+begin_src bash-ts
 #===============================================================================
 #
@@ -4589,7 +4615,7 @@ I stole this from this git repo https://github.com/sylsau/ffmpeg-bulk
 
 [[ $DEBUG ]] && set -o nounset
 set -o pipefail -o errexit -o errtrace
-trap 'echo -e "${FMT_BOLD}ERROR${FMT_OFF}: at $FUNCNAME:$LINENO"' ERR
+trap 'echo -e "''${FMT_BOLD}ERROR''${FMT_OFF}: at $FUNCNAME:$LINENO"' ERR
 
 readonly FMT_BOLD='\e[1m'
 readonly FMT_UNDERL='\e[4m'
@@ -4598,7 +4624,7 @@ readonly FMT_OFF='\e[0m'
 readonly PROGRAM_NAME="''${0##*/}"
 readonly SCRIPT_NAME="''${0##*/}"
 RES="$( stat -c %y $0 | cut -d" " -f1 )"
-readonly VERSION=${RES//-/}
+readonly VERSION=''${RES//-/}
 
 readonly ERR_NO_CMD=60
 
@@ -4627,34 +4653,6 @@ fn_err() {
 	exit $2
 }
 
-fn_help() {
-	${pkgs.coreutils}/bin/cat << EOF
-$PROGRAM_NAME v$VERSION
-	Convert multiple media files at once with ffmpeg.
-	In pure and secure bash.
-REQUIREMENTS
-	ffmpeg
-USAGE
-	$PROGRAM_NAME FILES... (--to|-t) EXTENSION [--args-in|-ai INPUT_ARGS] [--args-out|-ao OUTPUT_ARGS] [--force|-f] [--log-level LOG_LEVEL]
-OPTIONS AND ARGUMENTS
-	EXTENSION 		format of output files
-	INPUT_ARGS 		ffmpeg arguments for the input file
-	OUTPUT_ARGS		ffmpeg arguments for the output file
-	--force			overwrite files 
-	LOG_LEVEL		change ffmpeg '-loglevel'
-				(default: 'error', ffmpeg default: 'info')
-EXAMPLE
-	Convert all flac and wav files in the current directory to opus with the specified options:
-		$ $PROGRAM_NAME *.flac -t opus --args-out "-b:a 320k" *.wav
-SEE ALSO
-	ffmpeg(1)
-AUTHOR
-	Written by Sylvain Saubier
-REPORTING BUGS
-	Mail at: <feedback@sylsau.com>
-EOF
-}
-
 fn_show_params() {
 	m_say "\n input=''${INPUT[*]}\n -t=$OPT_EXT\n -ai=$OPT_ARGS_IN\n -ao=$OPT_ARGS_OUT\n -f=$OPT_FORCE\n -q=$OPT_LOGLEVEL" >&2
 }
@@ -4664,15 +4662,10 @@ fn_need_cmd "$FFMPEG"
 
 # Check args
 if [[ -z "$@" ]]; then
-	fn_help
 	exit
 else
 	while [[ $# -gt 0 ]]; do
 		case "$1" in
-			"--help"|"-h")
-				fn_help
-				exit
-				;;
 			"--to"|"-t")
 				OPT_EXT=$2
 				shift
@@ -4706,7 +4699,7 @@ fi
 [[ $OPT_EXT ]] || fn_err "please specify the output extension with -t EXT" 2
 
 # Rajoute un point à l'extension si absent
-if [[ ${OPT_EXT:0:1} != '.' ]]; then
+if [[ ''${OPT_EXT:0:1} != '.' ]]; then
 	OPT_EXT=.$OPT_EXT
 fi
 

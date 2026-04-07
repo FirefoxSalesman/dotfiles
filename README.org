@@ -54,3 +54,4 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
   https://github.com/DamianB-BitFlipper/javelin.el
 + [ ] https://github.com/bbatsov/super-save
 + [ ] dash template gets cleaned up & goes to live in its own repo
++ [ ] https://github.com/isamert/corg.el

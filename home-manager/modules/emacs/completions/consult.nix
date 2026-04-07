@@ -22,7 +22,8 @@
 	      '''(?w "Web" qutebrowser-bookmark-jump eww-bookmark-jump xwidget-webkit-bookmark-jump-handler)''
 	      '''(?v "VC Directory" vc-dir-bookmark-jump)''
 	      '''(nil "Other")''
-	    ] ;
+	    ];
+	    kill-do-not-save-duplicates = true;
 	  };
 	  generalOne = {
 	    ":n" = {

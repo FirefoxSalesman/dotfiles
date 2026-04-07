@@ -6,7 +6,6 @@
     nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
     emacs-overlay.url  = "github:nix-community/emacs-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
-    flake-file.url = "github:vic/flake-file";
     import-tree.url = "github:vic/import-tree";
 
     stylix.url = "github:danth/stylix";
@@ -28,6 +27,11 @@
     # packages
     repeaters = {
       url = "github:mmarshall540/repeaters";
+      flake = false;
+    };
+
+    ezf = {
+      url = "github:firefoxsalesman/ezf";
       flake = false;
     };
 

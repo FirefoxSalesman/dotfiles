@@ -7,7 +7,15 @@
       (tool-bar-mode -1) ; Disable the toolbar
       (menu-bar-mode -1)
       
+      (setq-default bidi-display-reordering 'left-to-right
+                    bidi-paragraph-direction 'left-to-right
+      	      cursor-in-non-selected-windows nil)
+      
       (setq auto-save-visited-file-name t
+            highlight-nonselected-windows nil
+            redisplay-skip-fontification-on-input t
+            bidi-inhibit-bpa t
+            read-process-output-max (* 4 1024 1024)
             warning-minimum-level :error
             use-package-enable-imenu-support t
             make-backup-files nil
