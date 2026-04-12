@@ -3,6 +3,7 @@
     home.homeDirectory = "/home/${config.home.username}";
     xdg.userDirs = {
       enable = true;
+      setSessionVariables = true;
       createDirectories = true;
       desktop = null;
       publicShare = null;

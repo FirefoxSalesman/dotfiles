@@ -112,7 +112,6 @@
 		(setq elwm-current-layout 'tile-vertical-left)
 	        (set-window-configuration single-window--last-configuration))
 	    (setq single-window--last-configuration (current-window-configuration))
-	    (setq elwm-current-layout 'monocle)
 	    (delete-other-windows)))
 	
 	(defun evil-delete-buffer-and-window ()
@@ -130,8 +129,7 @@
 		     (split-window-right)
 		     (setq elwm-current-layout 'follow))
 	    (progn (follow-mode -1)
-		   (delete-other-windows)
-		   (setq elwm-current-layout 'tile-vertical-left))))
+		   (delete-other-windows))))
 	
 	(defvar efs/monitor-brightness 27 "The percent brightness of the monitor.")
 	
@@ -140,7 +138,7 @@
 	INC is the percent to increment the volume by.
 	NEG subtracts if it is true."
 	  (setopt efs/monitor-brightness (funcall (if neg '- '+) efs/monitor-brightness inc))
-	  (async-shell-command (concat "brightnessctl -d intel_backlight set " (int-to-string efs/monitor-brightness) "%")))
+	  (shell-command (concat "brightnessctl -d intel_backlight set " (int-to-string efs/monitor-brightness) "%")))
 	
 	(defun efs/nirify-forwards ()
 	  "Rotate the workspace, then rotate the buffers."

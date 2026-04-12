@@ -39,8 +39,6 @@ in {
           app-launcher = packages.app-launcher;
           ezf = packages.emacs-ezf;
 	  mpc-wrapper = packages.mpc-wrapper;
-	  semel = packages.semel;
-	  nano-vertico = packages.nano-vertico;
           embark = packages.embark;
 	}));
   };

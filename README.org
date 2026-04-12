@@ -50,8 +50,7 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] https://github.com/cosmicz/clime
   I'd like to see if I could integrate this into the nix framework
 + [ ] https://codeberg.org/tazjin/reka
-+ [ ] Investigate javelin
-  https://github.com/DamianB-BitFlipper/javelin.el
 + [ ] https://github.com/bbatsov/super-save
 + [ ] dash template gets cleaned up & goes to live in its own repo
 + [ ] https://github.com/isamert/corg.el
++ [ ] https://system-manager.net/main/how-to/import-nixos-module/#3-configure-the-service

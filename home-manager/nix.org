@@ -69,12 +69,6 @@
       url = "github:lrustand/qutebrowser.el/18f98f0";
       flake = false;
     };
-
-
-    semel = {
-      url = "github:eshelyaron/semel";
-      flake = false;
-    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake {inherit inputs;} (inputs.import-tree ./modules);
@@ -125,8 +119,6 @@ in {
           app-launcher = packages.app-launcher;
           ezf = packages.emacs-ezf;
 	  mpc-wrapper = packages.mpc-wrapper;
-	  semel = packages.semel;
-	  nano-vertico = packages.nano-vertico;
           embark = packages.embark;
 	}));
   };
@@ -374,6 +366,7 @@ in {
     home.homeDirectory = "/home/${config.home.username}";
     xdg.userDirs = {
       enable = true;
+      setSessionVariables = true;
       createDirectories = true;
       desktop = null;
       publicShare = null;
@@ -766,6 +759,7 @@ Pywal integration: https://github.com/danth/stylix/issues/99
 
 {
   flake.homeModules.aesthetics = { config, lib, pkgs, ... }: {
+    gtk.gtk4.theme = config.gtk.theme;
     stylix = {
       enable = true;
       polarity = "dark";
@@ -1571,19 +1565,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 
 *** Elisp
 #+begin_src nix-ts :tangle modules/development/elisp.nix 
-{ inputs, ... } :
-
 {
-  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages.semel = (epkgs.callPackage
-      epkgs.trivialBuild rec {
-	pname = "semel";
-	version = "current";
-	src = inputs.semel;
-      }
-    );
-  };
   flake.homeModules.elisp = { ... }:
   {
     programs.emacs.init = {
@@ -1591,15 +1573,11 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 	wcd = ''"(with-current-buffer " "q)"'';
 	gbc = ''"(get-buffer-create " "q)"'';
       };
-      ide.languages.emacs-lisp.enable = true;
-      usePackage = {
-	elisp-mode.gfhookf = ["('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"];
-	
-	semel = {
-	  enable = true;
-	  ghookf = ["('emacs-lisp-mode 'semel-mode)"];
-	};
+      ide.languages.emacs-lisp = {
+	enable = true;
+	semel = true;
       };
+      usePackage.elisp-mode.gfhookf = ["('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"];
     };
   };
 }
@@ -1958,60 +1936,46 @@ https://emacs.stackexchange.com/questions/75528/how-to-define-display-buffer-ali
 #+end_src
 
 *** Sensible Defaults
-**** UI Improvements
 Most of this was shamelessly lifted from Emacs from Scratch.
 #+begin_src nix-ts :tangle modules/emacs/ui.nix
 {
   flake.homeModules.emacs = { ... }: {
-    programs.emacs.init.usePackage = {
-      tooltip = {
-	enable = true;
-	config = ''
-	  (tooltip-mode -1)
-          (set-fringe-mode -1)
-	'';
+    programs.emacs.init = {
+      tools.noLittering.enable = true;
+      usePackage = {
+	tooltip = {
+	  enable = true;
+	  config = ''
+	    (tooltip-mode -1)
+            (set-fringe-mode -1)
+	  '';
+	};
+
+	simple = {
+	  enable = true;
+	  config = ''
+	    (gsetq save-interprogram-paste-before-kill t)
+            (column-number-mode)
+	  '';
+	};
+
+	display-line-numbers = {
+	  enable = true;
+	  setopt = {
+	    display-line-numbers-type = "'relative";
+	    display-line-numbers-width = 3;
+	  }; 
+	  config = "(global-display-line-numbers-mode)";
+	  #Disable line numbers for some modes
+	  ghookf = ["((gen-mode-hooks '(org term dired eww eat markdown help helpful Info Man shell pdf-view elfeed-search elfeed-show eshell racket-repl sage-shell nov)) (lambda () (display-line-numbers-mode 0)))"];
+	} ;
+
+	server = {
+	  enable = true;
+	  deferIncrementally = true;
+	  config = "(server-start)";
+	};
       };
-
-      simple = {
-	enable = true;
-	config = ''
-	  (gsetq save-interprogram-paste-before-kill t)
-          (column-number-mode)
-	'';
-      };
-
-      display-line-numbers = {
-	enable = true;
-	setopt = {
-	  display-line-numbers-type = "'relative";
-	  display-line-numbers-width = 3;
-	}; 
-	config = "(global-display-line-numbers-mode)";
-	#Disable line numbers for some modes
-	ghookf = ["((gen-mode-hooks '(org term dired eww eat markdown help helpful Info Man shell pdf-view elfeed-search elfeed-show eshell racket-repl sage-shell nov)) (lambda () (display-line-numbers-mode 0)))"];
-      } ;
-
-      server = {
-	enable = true;
-	deferIncrementally = true;
-	config = "(server-start)";
-      };
-    };
-  } ;
-}
-#+end_src
-
-**** Cleanup
-Emacs has a propensity for leaving garbage lying around. This configuration that I stole from David Wilson should make that stop.
-#+begin_src nix-ts :tangle modules/emacs/no-littering.nix
-{
-  flake.homeModules.emacs = { ... }: {
-    programs.emacs.init.usePackage.no-littering = {
-      enable = true;
-      demand = true;
-      #no-littering doesn't set this by default so we must place
-      #auto save files in the same path as it uses for sessions
-      setopt.auto-save-file-name-transforms = ''`((".*" ,(no-littering-expand-var-file-name "auto-save/") t))'';
     };
   };
 }
@@ -3698,6 +3662,49 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
   };
 }
 #+end_src
+*** Javelin
+#+begin_src nix-ts :tangle modules/window-manager/javelin.nix
+{
+  flake.homeModules.exwm = { lib, ... }:
+  {
+    programs.emacs.init.usePackage = {
+      javelin = {
+	enable = true;
+	gfhookf = ["('kill-emacs 'javelin-clear-all)"];
+	custom.javelin-disable-confirmation = true;
+	general = {
+	  "s-1" = "'javelin-go-to-1";
+	  "s-2" = "'javelin-go-to-2";
+	  "s-3" = "'javelin-go-to-3";
+	  "s-4" = "'javelin-go-to-4";
+	  "s-5" = "'javelin-go-to-5";
+	  "s-6" = "'javelin-go-to-6";
+	  "s-7" = "'javelin-go-to-7";
+	  "s-8" = "'javelin-go-to-8";
+	  "s-9" = "'javelin-go-to-9";
+	  "s--" = "'javelin-toggle-quick-menu";
+	  "s-h" = "'javelin-add-file";
+	  "s-H" = "'javelin-clear";
+	};
+      };
+      exwm.custom.exwm-input-prefix-keys = lib.mkForce [
+	'''?\s-1''
+	'''?\s-2''
+	'''?\s-3''
+	'''?\s-4''
+	'''?\s-5''
+	'''?\s-6''
+	'''?\s-7''
+	'''?\s-8''
+	'''?\s-9''
+	'''?\s--''
+	'''?\s-h''
+	'''?\s-H''
+      ];
+    };
+  };
+}
+#+end_src
 
 *** Bufler
 Bufler is the other half of tab bar. It lets us automatically narrow buffers down to a given workspace
@@ -3890,26 +3897,25 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
   created next to it, according to the current layout."
   (interactive)
   (let ((buf (current-buffer)))
-    (unless (or (eq elwm-current-layout 'monocle) (eq elwm-current-layout 'follow))
-	(if (eq (count-windows) 1)
-	    (if (eq elwm-current-layout 'tile-vertical-left)
-		(evil-window-vsplit)
-	      (evil-window-split))
-	  (cond
-	   ((eq elwm-current-layout 'tile-vertical-left)
-	    (if (elwm--in-master-area-p)
-		;; split the last window on the stack instead
-		(set-window-buffer
-		 (select-window (split-window (car (last (elwm--sorted-window-list))) nil nil))
-		 buf)
-	      (evil-window-split)))
-	   ((eq elwm-current-layout 'tile-horizontal-top)
-	    (if (elwm--in-master-area-p)
-		;; split the last window on the stack instead
-		(set-window-buffer
-		 (select-window (split-window (car (last (elwm--sorted-window-list))) nil t))
-		 buf)
-	      (evil-window-vsplit))))))))
+    (if (eq (count-windows) 1)
+	(if (eq elwm-current-layout 'tile-vertical-left)
+	    (evil-window-vsplit)
+	  (evil-window-split))
+      (cond
+       ((eq elwm-current-layout 'tile-vertical-left)
+	(if (elwm--in-master-area-p)
+	    ;; split the last window on the stack instead
+	    (set-window-buffer
+	     (select-window (split-window (car (last (elwm--sorted-window-list))) nil nil))
+	     buf)
+	  (evil-window-split)))
+       ((eq elwm-current-layout 'tile-horizontal-top)
+	(if (elwm--in-master-area-p)
+	    ;; split the last window on the stack instead
+	    (set-window-buffer
+	     (select-window (split-window (car (last (elwm--sorted-window-list))) nil t))
+	     buf)
+	  (evil-window-vsplit)))))))
 #+end_src
 
 #+NAME: Emacs Elwm Preface
@@ -4083,7 +4089,6 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 	(setq elwm-current-layout 'tile-vertical-left)
         (set-window-configuration single-window--last-configuration))
     (setq single-window--last-configuration (current-window-configuration))
-    (setq elwm-current-layout 'monocle)
     (delete-other-windows)))
 
 (defun evil-delete-buffer-and-window ()
@@ -4101,8 +4106,7 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 	     (split-window-right)
 	     (setq elwm-current-layout 'follow))
     (progn (follow-mode -1)
-	   (delete-other-windows)
-	   (setq elwm-current-layout 'tile-vertical-left))))
+	   (delete-other-windows))))
 
 (defvar efs/monitor-brightness 27 "The percent brightness of the monitor.")
 
@@ -4111,7 +4115,7 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 INC is the percent to increment the volume by.
 NEG subtracts if it is true."
   (setopt efs/monitor-brightness (funcall (if neg '- '+) efs/monitor-brightness inc))
-  (async-shell-command (concat "brightnessctl -d intel_backlight set " (int-to-string efs/monitor-brightness) "%")))
+  (shell-command (concat "brightnessctl -d intel_backlight set " (int-to-string efs/monitor-brightness) "%")))
 
 (defun efs/nirify-forwards ()
   "Rotate the workspace, then rotate the buffers."
@@ -4385,6 +4389,7 @@ NEG subtracts if it is true."
 
   flake.homeModules.media = { pkgs, config, ... }: {
     home.packages = with pkgs; [
+      (config.lib.nixGL.wrap kdePackages.kdenlive)
       (config.lib.nixGL.wrap obs-studio)
       lmms
       audacity

@@ -64,12 +64,6 @@
       url = "github:lrustand/qutebrowser.el/18f98f0";
       flake = false;
     };
-
-
-    semel = {
-      url = "github:eshelyaron/semel";
-      flake = false;
-    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake {inherit inputs;} (inputs.import-tree ./modules);

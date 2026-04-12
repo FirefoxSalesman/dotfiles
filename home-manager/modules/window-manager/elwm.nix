@@ -17,26 +17,25 @@
 	  created next to it, according to the current layout."
 	  (interactive)
 	  (let ((buf (current-buffer)))
-	    (unless (or (eq elwm-current-layout 'monocle) (eq elwm-current-layout 'follow))
-		(if (eq (count-windows) 1)
-		    (if (eq elwm-current-layout 'tile-vertical-left)
-			(evil-window-vsplit)
-		      (evil-window-split))
-		  (cond
-		   ((eq elwm-current-layout 'tile-vertical-left)
-		    (if (elwm--in-master-area-p)
-			;; split the last window on the stack instead
-			(set-window-buffer
-			 (select-window (split-window (car (last (elwm--sorted-window-list))) nil nil))
-			 buf)
-		      (evil-window-split)))
-		   ((eq elwm-current-layout 'tile-horizontal-top)
-		    (if (elwm--in-master-area-p)
-			;; split the last window on the stack instead
-			(set-window-buffer
-			 (select-window (split-window (car (last (elwm--sorted-window-list))) nil t))
-			 buf)
-		      (evil-window-vsplit))))))))
+	    (if (eq (count-windows) 1)
+		(if (eq elwm-current-layout 'tile-vertical-left)
+		    (evil-window-vsplit)
+		  (evil-window-split))
+	      (cond
+	       ((eq elwm-current-layout 'tile-vertical-left)
+		(if (elwm--in-master-area-p)
+		    ;; split the last window on the stack instead
+		    (set-window-buffer
+		     (select-window (split-window (car (last (elwm--sorted-window-list))) nil nil))
+		     buf)
+		  (evil-window-split)))
+	       ((eq elwm-current-layout 'tile-horizontal-top)
+		(if (elwm--in-master-area-p)
+		    ;; split the last window on the stack instead
+		    (set-window-buffer
+		     (select-window (split-window (car (last (elwm--sorted-window-list))) nil t))
+		     buf)
+		  (evil-window-vsplit)))))))
       '';
       preface = ''
 	(defun elwm-next ()
