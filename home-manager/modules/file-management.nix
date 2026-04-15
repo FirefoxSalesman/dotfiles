@@ -22,6 +22,7 @@
 	enable = true;
 	narrow = true;
 	posframe = true;
+	async = true;
       };
       usePackage = {
 	dired = {

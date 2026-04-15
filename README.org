@@ -54,3 +54,5 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] dash template gets cleaned up & goes to live in its own repo
 + [ ] https://github.com/isamert/corg.el
 + [ ] https://system-manager.net/main/how-to/import-nixos-module/#3-configure-the-service
++ [ ] Try out trust manager
++ [ ] https://github.com/vincentjgoh/avy-dashboard

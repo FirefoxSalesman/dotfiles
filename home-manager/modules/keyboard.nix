@@ -1,5 +1,5 @@
 {
-  flake.homeModules.canary = { ... }:
+  flake.homeModules.canary = { pkgs, lib, ... }:
 
   {
     home.file = {
@@ -99,6 +99,20 @@
         add mod3 = Hyper_L Hyper_R
         add mod4 = Super_L Super_R
       '';
+    };
+    home.packages = [pkgs.kmonad];
+    
+    systemd.user = {
+      services.kmonad = {
+	Unit = lib.mkMerge [{ Description = "KMonad service"; }];
+	Install = {
+	  WantedBy = [ "default.target" ];
+	};
+	Service = {
+	  Type = "simple";
+	  ExecStart = "${pkgs.kmonad}/bin/kmonad %h/.config/kmonad/kmonad.kbd";
+	};
+      };
     };
   };
 }
