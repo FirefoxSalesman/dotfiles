@@ -50,16 +50,6 @@
       flake = false;
     };
 
-    emacs-embark = {
-      url = "github:oantolin/embark";
-      flake = false;
-    };
-
-    dired-single = {
-      url = "github:firefoxsalesman/dired-single";
-      flake = false;
-    };
-
     doom-nano-modeline = {
       url = "github:ronisbr/doom-nano-modeline";
       flake = false;
@@ -120,7 +110,6 @@ in {
 	nfinal: nprev: {
           qutebrowser = packages.qutebrowser-emacs;
           doom-nano-modeline = packages.doom-nano-modeline;
-          dired-single = packages.dired-single;
           repeaters = packages.repeaters;
           app-launcher = packages.app-launcher;
           ezf = packages.emacs-ezf;
@@ -235,19 +224,23 @@ Dev templates: https://github.com/the-nix-way/dev-templates
 #+begin_src nix-ts :tangle modules/packages/scripts/pkg.nix
 { inputs, ... }:
 {
-  perSystem = { pkgs, self', ... }: {
-    packages.pkg = pkgs.writeShellScriptBin "pkg" ''
-      optimize() {
+  perSystem = { lib, pkgs, self', ... }:
+  let
+    torsocks = lib.getExe pkgs.torsocks;
+  in
+    {
+      packages.pkg = pkgs.writeShellScriptBin "pkg" ''
+	optimize() {
         nix-collect-garbage -d
         nix-store --optimise
         doas pacman -Sc --noconfirm
       }
 
       update() {
-        nix flake update --flake ~/.config/home-manager/
-        home-manager switch --flake ~/.config/home-manager/#holschcc
-        doas nix flake update --flake /etc/system-manager/
-        doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'
+        ${torsocks} nix flake update --flake ~/.config/home-manager/
+        ${torsocks} home-manager switch --flake ~/.config/home-manager/#holschcc
+        doas ${torsocks} nix flake update --flake /etc/system-manager/
+        doas ${torsocks} nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'
         yay -Syu
       }
 
@@ -268,7 +261,7 @@ Dev templates: https://github.com/the-nix-way/dev-templates
       }
 
       template() {
-        nix flake init --template "https://flakehub.com/f/the-nix-way/dev-templates/*#$(getTemplates)" 
+        ${torsocks} nix flake init --template "https://flakehub.com/f/the-nix-way/dev-templates/*#$(getTemplates)" 
         ${pkgs.direnv}/bin/direnv allow
       }
 
@@ -282,8 +275,8 @@ Dev templates: https://github.com/the-nix-way/dev-templates
         template ) template;;
         help ) help ;;
       esac
-    '';
-  };
+      '';
+    } ;
 }
 #+end_src
 * Notes to my future self
@@ -483,7 +476,7 @@ a prompt for bash & fish
 #+end_src
 
 *** dash
-Probably won't use this one interactively much, but it's my login shell, & my /bin/sh, so it may as well be nice
+Probably won't use this one much interactively, but it's my login shell, & my /bin/sh, so it may as well be nice
 #+begin_src nix-ts :tangle modules/shells/dash.nix :noweb yes
 {
   flake.homeModules.shellConfig = { pkgs, lib, ... }:
@@ -1525,7 +1518,10 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 	magit = {
 	  setopt.magit-process-find-password-functions = ["'magit-process-password-auth-source"];
 	  generalOneConfig = {
-	    magit-mode-map."e" = "'evil-next-visual-line";
+	    magit-mode-map = {
+	      "e" = "'evil-next-visual-line";
+	      "B" = "'evil-goto-line";
+	    };
 	    magit-status-mode-map."j" = "'magit-unstage-files";
 	  };
 	};
@@ -1760,20 +1756,11 @@ I'm running dired with a couple of small packages that improve on it
 #+begin_src nix-ts :tangle modules/file-management.nix :noweb yes 
 { inputs, ... }:
 {
-  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages = {
-      dired-single = (epkgs.callPackage
-	epkgs.trivialBuild rec {
-	  pname = "dired-single";
-	  version = "current";
-	  src = inputs.dired-single;
-	}
-      );
-      mpvmacs = pkgs.writeShellScriptBin "mpvmacs" ''
+  perSystem = { pkgs, ... }: 
+  {
+    packages.mpvmacs = pkgs.writeShellScriptBin "mpvmacs" ''
 	emacsclient -e "(mpv-play \"$1\")"
       '';
-    };
   };
 
   flake.homeModules.fileManager = { pkgs, ... }: {
@@ -1788,8 +1775,22 @@ I'm running dired with a couple of small packages that improve on it
 	dired = {
 	  generalOne.ctl-x-map."d" = "'consult-dir";
           # We're doing our best to get rid of that 1st extraneous line
-	  setopt.dired-free-space = false;
+	  setopt = {
+	    dired-free-space = false;
+	    dired-kill-when-opening-new-dired-buffer = true;
+	    dired-auto-revert-buffer = "#'dired-directory-changed-p";
+	    dired-recursive-copies = "'always";
+	    dired-recursive-deletes = "'always";
+	    dired-create-destination-dirs = "'ask";
+	    dired-create-destination-dirs-on-trailing-dirstep = true;
+	  };
 	  config = ''(with-eval-after-load 'dired-x (gsetq dired-omit-extensions (delete ".class" dired-omit-extensions)))'';
+	  ghookf = [''
+            ('dired-mode (lambda () (general-def 'normal dired-mode-map
+               "B" 'evil-goto-line
+               "n" 'dired-up-directory
+               "i" 'dired-find-file)))
+	  ''];
 	};
 
 	openwith = {
@@ -1799,17 +1800,6 @@ I'm running dired with a couple of small packages that improve on it
 	  config = ''
             <<Emacs Openwith Config>>
 	  '';
-	};
-
-	dired-single = {
-	  enable = true;
-	  after = [ "dired" ];
-	  ghookf = [''
-            ('dired-mode (lambda () (general-def 'normal dired-mode-map
-               "B" 'evil-goto-line
-               "n" 'dired-single-prev
-               "i" 'dired-single-next)))
-	  ''];
 	};
 
 	dired-ranger = {
@@ -1936,6 +1926,7 @@ or aliases. Stolen from Doom."
 
 Display buffer rules were taken from noctuid's config.
 https://emacs.stackexchange.com/questions/75528/how-to-define-display-buffer-alist-to-keep-every-buffer-in-the-frame-it-is-curr
+#+NAME: Emacs Postlude
 #+begin_src emacs-lisp
 ;; Display buffer rules
 (cl-pushnew (list (rx "*Async Shell Command*" (0+ any)) #'display-buffer-no-window) display-buffer-alist)
@@ -4089,8 +4080,7 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
   (interactive)
   (if (= (count-windows) 1)
       (progn (follow-mode 1)
-	     (split-window-right)
-	     (setq elwm-current-layout 'follow))
+	     (split-window-right))
     (progn (follow-mode -1)
 	   (delete-other-windows))))
 
@@ -4283,10 +4273,10 @@ NEG subtracts if it is true."
 
   flake.homeModules.ai = { config, pkgs, ... }: {
     programs.emacs.init = {
-      ide.copilot = {
-	enable = true;
-	keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode" "zenscript-mode"];
-      };
+      # ide.copilot = {
+      # 	enable = true;
+      # 	keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode" "zenscript-mode"];
+      # };
       usePackage = {
 	gptel = {
 	  enable = true;
@@ -4375,7 +4365,6 @@ NEG subtracts if it is true."
 
   flake.homeModules.media = { pkgs, config, ... }: {
     home.packages = with pkgs; [
-      (config.lib.nixGL.wrap kdePackages.kdenlive)
       (config.lib.nixGL.wrap obs-studio)
       lmms
       audacity
@@ -4816,7 +4805,6 @@ Canary is my layout of choice.
         add mod4 = Super_L Super_R
       '';
     };
-    home.packages = [pkgs.kmonad];
     
     systemd.user = {
       services.kmonad = {
@@ -5428,11 +5416,11 @@ Setting up your alsoftrc correctly makes Minecraft happy
         hrtf=true
       '';
       packages = with pkgs; [
-	(config.lib.nixGL.wrap steam)
+	# (config.lib.nixGL.wrap steam)
 	(config.lib.nixGL.wrap lutris)
 	(config.lib.nixGL.wrap retroarch)
 	(config.lib.nixGL.wrap gamemode)
-	(config.lib.nixGL.wrap prismlauncher)
+	# (config.lib.nixGL.wrap prismlauncher)
       ];
     };
   };

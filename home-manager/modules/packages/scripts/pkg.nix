@@ -1,18 +1,22 @@
 { inputs, ... }:
 {
-  perSystem = { pkgs, self', ... }: {
-    packages.pkg = pkgs.writeShellScriptBin "pkg" ''
-      optimize() {
+  perSystem = { lib, pkgs, self', ... }:
+  let
+    torsocks = lib.getExe pkgs.torsocks;
+  in
+    {
+      packages.pkg = pkgs.writeShellScriptBin "pkg" ''
+	optimize() {
         nix-collect-garbage -d
         nix-store --optimise
         doas pacman -Sc --noconfirm
       }
 
       update() {
-        nix flake update --flake ~/.config/home-manager/
-        home-manager switch --flake ~/.config/home-manager/#holschcc
-        doas nix flake update --flake /etc/system-manager/
-        doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'
+        ${torsocks} nix flake update --flake ~/.config/home-manager/
+        ${torsocks} home-manager switch --flake ~/.config/home-manager/#holschcc
+        doas ${torsocks} nix flake update --flake /etc/system-manager/
+        doas ${torsocks} nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'
         yay -Syu
       }
 
@@ -33,7 +37,7 @@
       }
 
       template() {
-        nix flake init --template "https://flakehub.com/f/the-nix-way/dev-templates/*#$(getTemplates)" 
+        ${torsocks} nix flake init --template "https://flakehub.com/f/the-nix-way/dev-templates/*#$(getTemplates)" 
         ${pkgs.direnv}/bin/direnv allow
       }
 
@@ -47,6 +51,6 @@
         template ) template;;
         help ) help ;;
       esac
-    '';
-  };
+      '';
+    } ;
 }

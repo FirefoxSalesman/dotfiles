@@ -1,19 +1,10 @@
 { inputs, ... }:
 {
-  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages = {
-      dired-single = (epkgs.callPackage
-	epkgs.trivialBuild rec {
-	  pname = "dired-single";
-	  version = "current";
-	  src = inputs.dired-single;
-	}
-      );
-      mpvmacs = pkgs.writeShellScriptBin "mpvmacs" ''
+  perSystem = { pkgs, ... }: 
+  {
+    packages.mpvmacs = pkgs.writeShellScriptBin "mpvmacs" ''
 	emacsclient -e "(mpv-play \"$1\")"
       '';
-    };
   };
 
   flake.homeModules.fileManager = { pkgs, ... }: {
@@ -28,8 +19,22 @@
 	dired = {
 	  generalOne.ctl-x-map."d" = "'consult-dir";
           # We're doing our best to get rid of that 1st extraneous line
-	  setopt.dired-free-space = false;
+	  setopt = {
+	    dired-free-space = false;
+	    dired-kill-when-opening-new-dired-buffer = true;
+	    dired-auto-revert-buffer = "#'dired-directory-changed-p";
+	    dired-recursive-copies = "'always";
+	    dired-recursive-deletes = "'always";
+	    dired-create-destination-dirs = "'ask";
+	    dired-create-destination-dirs-on-trailing-dirstep = true;
+	  };
 	  config = ''(with-eval-after-load 'dired-x (gsetq dired-omit-extensions (delete ".class" dired-omit-extensions)))'';
+	  ghookf = [''
+            ('dired-mode (lambda () (general-def 'normal dired-mode-map
+               "B" 'evil-goto-line
+               "n" 'dired-up-directory
+               "i" 'dired-find-file)))
+	  ''];
 	};
 
 	openwith = {
@@ -55,17 +60,6 @@
                           "${pkgs.mpvmacs}/bin/mpvmacs"
                           '(file))))
 	  '';
-	};
-
-	dired-single = {
-	  enable = true;
-	  after = [ "dired" ];
-	  ghookf = [''
-            ('dired-mode (lambda () (general-def 'normal dired-mode-map
-               "B" 'evil-goto-line
-               "n" 'dired-single-prev
-               "i" 'dired-single-next)))
-	  ''];
 	};
 
 	dired-ranger = {

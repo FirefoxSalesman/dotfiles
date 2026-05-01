@@ -45,16 +45,6 @@
       flake = false;
     };
 
-    emacs-embark = {
-      url = "github:oantolin/embark";
-      flake = false;
-    };
-
-    dired-single = {
-      url = "github:firefoxsalesman/dired-single";
-      flake = false;
-    };
-
     doom-nano-modeline = {
       url = "github:ronisbr/doom-nano-modeline";
       flake = false;

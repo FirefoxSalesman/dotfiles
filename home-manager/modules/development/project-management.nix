@@ -14,7 +14,10 @@
 	magit = {
 	  setopt.magit-process-find-password-functions = ["'magit-process-password-auth-source"];
 	  generalOneConfig = {
-	    magit-mode-map."e" = "'evil-next-visual-line";
+	    magit-mode-map = {
+	      "e" = "'evil-next-visual-line";
+	      "B" = "'evil-goto-line";
+	    };
 	    magit-status-mode-map."j" = "'magit-unstage-files";
 	  };
 	};

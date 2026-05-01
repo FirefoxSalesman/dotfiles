@@ -100,7 +100,6 @@
         add mod4 = Super_L Super_R
       '';
     };
-    home.packages = [pkgs.kmonad];
     
     systemd.user = {
       services.kmonad = {

@@ -126,8 +126,7 @@
 	  (interactive)
 	  (if (= (count-windows) 1)
 	      (progn (follow-mode 1)
-		     (split-window-right)
-		     (setq elwm-current-layout 'follow))
+		     (split-window-right))
 	    (progn (follow-mode -1)
 		   (delete-other-windows))))
 	

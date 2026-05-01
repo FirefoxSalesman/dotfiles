@@ -13,10 +13,10 @@
 
   flake.homeModules.ai = { config, pkgs, ... }: {
     programs.emacs.init = {
-      ide.copilot = {
-	enable = true;
-	keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode" "zenscript-mode"];
-      };
+      # ide.copilot = {
+      # 	enable = true;
+      # 	keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode" "zenscript-mode"];
+      # };
       usePackage = {
 	gptel = {
 	  enable = true;

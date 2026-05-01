@@ -35,7 +35,6 @@ in {
 	nfinal: nprev: {
           qutebrowser = packages.qutebrowser-emacs;
           doom-nano-modeline = packages.doom-nano-modeline;
-          dired-single = packages.dired-single;
           repeaters = packages.repeaters;
           app-launcher = packages.app-launcher;
           ezf = packages.emacs-ezf;

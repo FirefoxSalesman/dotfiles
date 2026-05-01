@@ -56,3 +56,4 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] https://system-manager.net/main/how-to/import-nixos-module/#3-configure-the-service
 + [ ] Try out trust manager
 + [ ] https://github.com/vincentjgoh/avy-dashboard
++ [ ] https://github.com/WuuBoLin/supermaven.el
