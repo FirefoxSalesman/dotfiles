@@ -18,6 +18,30 @@
       # 	keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode" "zenscript-mode"];
       # };
       usePackage = {
+	minuet = {
+	  enable = true;
+	  ghookf = ["('prog-mode 'minuet-auto-suggestion-mode)"];
+	  generalOneConfig.minuet-active-mode-map = {
+	    "M-e" = "'minuet-next-suggestion";
+	    "M-o" = "'minuet-previous-suggestion";
+	    "C-i" = "'minuet-accept-suggestion";
+	    "M-i" = "'minuet-accept-suggestion-line";
+	    "M-d" = "'minuet-dismiss-suggestion";
+	  };
+	  setopt = {
+	    minuet-provider = "'openai-fim-compatible";
+	    minuet-n-completions = 1;
+	    minuet-context-window = 512;
+	  };
+	  config = ''
+	    (start-ollama)
+	    (plist-put minuet-openai-fim-compatible-options :end-point "http://localhost:11434/v1/completions")
+	    (plist-put minuet-openai-fim-compatible-options :name "Ollama")
+	    (plist-put minuet-openai-fim-compatible-options :api-key "TERM")
+	    (plist-put minuet-openai-fim-compatible-options :model "qwen2.5-coder:3b")
+	    (minuet-set-optional-options minuet-openai-fim-compatible-options :max_tokens 56)
+	  '';
+	};
 	gptel = {
 	  enable = true;
 	  defer = true;

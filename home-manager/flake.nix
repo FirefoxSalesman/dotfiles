@@ -4,10 +4,12 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
-    emacs-overlay.url  = "github:nix-community/emacs-overlay";
+    emacs-overlay.url  = "github:nix-community/emacs-overlay/1746faa";
+    # emacs-overlay.url  = "github:nix-community/emacs-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
     import-tree.url = "github:vic/import-tree";
 
+    nur.url = "github:nix-community/NUR";
     stylix.url = "github:danth/stylix";
 
     apple-fonts.url = "github:Lyndeno/apple-fonts.nix";
@@ -26,6 +28,11 @@
 
     kmonad = {
       url = "github:kmonad/kmonad?dir=nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    glide = {
+      url = "github:glide-browser/glide.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -56,7 +63,8 @@
     };
 
     exwm-qutebrowser = {
-      url = "github:lrustand/qutebrowser.el/18f98f0";
+      # url = "github:lrustand/qutebrowser.el/18f98f0";
+      url = "github:lrustand/qutebrowser.el";
       flake = false;
     };
   };

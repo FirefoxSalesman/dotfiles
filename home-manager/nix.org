@@ -9,10 +9,12 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
-    emacs-overlay.url  = "github:nix-community/emacs-overlay";
+    emacs-overlay.url  = "github:nix-community/emacs-overlay/1746faa";
+    # emacs-overlay.url  = "github:nix-community/emacs-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
     import-tree.url = "github:vic/import-tree";
 
+    nur.url = "github:nix-community/NUR";
     stylix.url = "github:danth/stylix";
 
     apple-fonts.url = "github:Lyndeno/apple-fonts.nix";
@@ -31,6 +33,11 @@
 
     kmonad = {
       url = "github:kmonad/kmonad?dir=nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    glide = {
+      url = "github:glide-browser/glide.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -61,7 +68,8 @@
     };
 
     exwm-qutebrowser = {
-      url = "github:lrustand/qutebrowser.el/18f98f0";
+      # url = "github:lrustand/qutebrowser.el/18f98f0";
+      url = "github:lrustand/qutebrowser.el";
       flake = false;
     };
   };
@@ -237,10 +245,10 @@ Dev templates: https://github.com/the-nix-way/dev-templates
       }
 
       update() {
-        ${torsocks} nix flake update --flake ~/.config/home-manager/
-        ${torsocks} home-manager switch --flake ~/.config/home-manager/#holschcc
-        doas ${torsocks} nix flake update --flake /etc/system-manager/
-        doas ${torsocks} nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'
+        nix flake update --flake ~/.config/home-manager/
+        home-manager switch --flake ~/.config/home-manager/#holschcc
+        doas nix flake update --flake /etc/system-manager/
+        doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'
         yay -Syu
       }
 
@@ -331,8 +339,10 @@ in {
 	inputs.self.homeModules.webdev
 	inputs.self.homeModules.writing
 	inputs.stylix.homeModules.stylix
+	inputs.glide.homeModules.default
 	inputs.emacs-init.homeModules.emacs-init
 	inputs.emacs-init.homeModules.emacs-presets
+        inputs.nur.modules.homeManager.default
       ];
     };
     homeModules.basic = { lib, config, ... }:
@@ -1509,8 +1519,8 @@ I think most of it was from the github page for lsp mode, but it's been a while,
       ide = {
 	magit = {
 	  enable = true;
-	  forge = true;
-	  todo = true;
+	  forge = false;
+	  todo = false;
 	};
 	project = true;
       };
@@ -1524,6 +1534,11 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 	    };
 	    magit-status-mode-map."j" = "'magit-unstage-files";
 	  };
+	  # https://github.com/magit/magit/issues/5557
+	  config = ''
+	    (defalias 'magit--any
+              (static-if (fboundp 'member-if) #'member-if #'cl-member-if))
+	  '';
 	};
 
 	projection-ibuffer = {
@@ -4278,6 +4293,30 @@ NEG subtracts if it is true."
       # 	keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode" "zenscript-mode"];
       # };
       usePackage = {
+	minuet = {
+	  enable = true;
+	  ghookf = ["('prog-mode 'minuet-auto-suggestion-mode)"];
+	  generalOneConfig.minuet-active-mode-map = {
+	    "M-e" = "'minuet-next-suggestion";
+	    "M-o" = "'minuet-previous-suggestion";
+	    "C-i" = "'minuet-accept-suggestion";
+	    "M-i" = "'minuet-accept-suggestion-line";
+	    "M-d" = "'minuet-dismiss-suggestion";
+	  };
+	  setopt = {
+	    minuet-provider = "'openai-fim-compatible";
+	    minuet-n-completions = 1;
+	    minuet-context-window = 512;
+	  };
+	  config = ''
+	    (start-ollama)
+	    (plist-put minuet-openai-fim-compatible-options :end-point "http://localhost:11434/v1/completions")
+	    (plist-put minuet-openai-fim-compatible-options :name "Ollama")
+	    (plist-put minuet-openai-fim-compatible-options :api-key "TERM")
+	    (plist-put minuet-openai-fim-compatible-options :model "qwen2.5-coder:3b")
+	    (minuet-set-optional-options minuet-openai-fim-compatible-options :max_tokens 56)
+	  '';
+	};
 	gptel = {
 	  enable = true;
 	  defer = true;
@@ -5132,7 +5171,7 @@ config.set('content.javascript.enabled', True, 'qute://*/*')
 config.set('content.notifications.enabled', False, 'https://www.reddit.com')
 config.set('content.notifications.enabled', False, 'https://www.youtube.com')
 
-c.content.headers.user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:144.0) Gecko/20100101 Firefox/144.0'
+# c.content.headers.user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:144.0) Gecko/20100101 Firefox/144.0'
 
 c.editor.command = ['emacsclient', '{file}']
 
@@ -5265,6 +5304,7 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
 	  password-store
 	  dash
 	  evil
+	  password-store-otp
 	  doom-modeline
 	];
 
@@ -5282,17 +5322,8 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
 	    "('exwm-init 'global-qutebrowser-exwm-mode)"
 	  ];
 	  gfhookf = [
-	    "('server-visit 'qute/dired-hook)"
 	    "('qutebrowser-exwm-mode 'evil-normal-state)"
 	  ];
-	  config = ''
-	    <<Emacs Qutebrowser Config>>
-	  '';
-	  generalOneConfig.qute-dired-mode-map."C-c C-c" = "#'qute/choose-file";
-	  generalTwoConfig.":n".qute-dired-mode-map = {
-	    "i" = "'dired-find-file";
-	    "n" = "'dired-up-directory";
-	  };
 	};
 	qutebrowser-evil = {
 	  enable = true;
@@ -5300,6 +5331,14 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
 	  ghookf = [
 	    "('global-qutebrowser-exwm-mode 'qutebrowser-evil-state-mode)"
 	  ];
+	};
+	qutebrowser-fileselect = {
+	  enable = true;
+	  package = epkgs: epkgs.qutebrowser;
+	  ghookf = [
+	    "('global-qutebrowser-exwm-mode 'qutebrowser-fileselect-mode)"
+	  ];
+	  setopt.qutebrowser-fileselect-handler = "'qutebrowser-fileselect-completion";
 	};
       };
 
@@ -5330,28 +5369,6 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
     };
   };
 }
-#+end_src
-
-#+NAME: Emacs Qutebrowser Config
-#+begin_src emacs-lisp
-(define-minor-mode qute-dired-mode
-  "Used for dired buffers qutebrowser is using as a file picker"
-  :keymap '())
-
-(defun qute/choose-file ()
-  (interactive)
-  (let ((files (dired-get-marked-files)))
-    (with-temp-file qute-filename
-      (insert (s-join "\n" files)))
-    (remove-hook 'dired-mode-hook 'qute-dired-mode)
-    (dolist (buffer dired-buffers) (when qute-dired-mode (kill-buffer (cdr buffer))))))
-
-(defun qute/dired-hook (&optional _)
-  (when (s-starts-with? "/tmp/qutebrowser-fileselect" buffer-file-name)
-    (setq qute-filename buffer-file-name)
-    (kill-buffer)
-    (add-hook 'dired-mode-hook 'qute-dired-mode)
-    (setq qute-dired-buffers (list (dired "~/")))))
 #+end_src
 
 ** Chat
@@ -5417,7 +5434,7 @@ Setting up your alsoftrc correctly makes Minecraft happy
       '';
       packages = with pkgs; [
 	# (config.lib.nixGL.wrap steam)
-	(config.lib.nixGL.wrap lutris)
+	# (config.lib.nixGL.wrap lutris)
 	(config.lib.nixGL.wrap retroarch)
 	(config.lib.nixGL.wrap gamemode)
 	# (config.lib.nixGL.wrap prismlauncher)

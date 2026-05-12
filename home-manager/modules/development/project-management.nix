@@ -5,8 +5,8 @@
       ide = {
 	magit = {
 	  enable = true;
-	  forge = true;
-	  todo = true;
+	  forge = false;
+	  todo = false;
 	};
 	project = true;
       };
@@ -20,6 +20,11 @@
 	    };
 	    magit-status-mode-map."j" = "'magit-unstage-files";
 	  };
+	  # https://github.com/magit/magit/issues/5557
+	  config = ''
+	    (defalias 'magit--any
+              (static-if (fboundp 'member-if) #'member-if #'cl-member-if))
+	  '';
 	};
 
 	projection-ibuffer = {

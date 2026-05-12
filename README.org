@@ -57,3 +57,6 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] Try out trust manager
 + [ ] https://github.com/vincentjgoh/avy-dashboard
 + [ ] https://github.com/WuuBoLin/supermaven.el
++ [ ] https://www.jamescherti.com/essential-emacs-packages/
++ [ ] switch to ewm https://idlip.in/posts/may-i-recommend/
++ [ ] https://github.com/Exafunction/codeium.el

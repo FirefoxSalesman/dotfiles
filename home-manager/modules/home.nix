@@ -43,8 +43,10 @@ in {
 	inputs.self.homeModules.webdev
 	inputs.self.homeModules.writing
 	inputs.stylix.homeModules.stylix
+	inputs.glide.homeModules.default
 	inputs.emacs-init.homeModules.emacs-init
 	inputs.emacs-init.homeModules.emacs-presets
+        inputs.nur.modules.homeManager.default
       ];
     };
     homeModules.basic = { lib, config, ... }:

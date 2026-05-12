@@ -13,10 +13,10 @@
       }
 
       update() {
-        ${torsocks} nix flake update --flake ~/.config/home-manager/
-        ${torsocks} home-manager switch --flake ~/.config/home-manager/#holschcc
-        doas ${torsocks} nix flake update --flake /etc/system-manager/
-        doas ${torsocks} nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'
+        nix flake update --flake ~/.config/home-manager/
+        home-manager switch --flake ~/.config/home-manager/#holschcc
+        doas nix flake update --flake /etc/system-manager/
+        doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'
         yay -Syu
       }
 

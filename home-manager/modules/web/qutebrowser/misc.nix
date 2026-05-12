@@ -48,7 +48,7 @@ config.set('content.javascript.enabled', True, 'qute://*/*')
 config.set('content.notifications.enabled', False, 'https://www.reddit.com')
 config.set('content.notifications.enabled', False, 'https://www.youtube.com')
 
-c.content.headers.user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:144.0) Gecko/20100101 Firefox/144.0'
+# c.content.headers.user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:144.0) Gecko/20100101 Firefox/144.0'
 
 c.editor.command = ['emacsclient', '{file}']
 

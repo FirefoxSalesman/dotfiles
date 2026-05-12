@@ -15,6 +15,7 @@
 	  password-store
 	  dash
 	  evil
+	  password-store-otp
 	  doom-modeline
 	];
 
@@ -32,34 +33,8 @@
 	    "('exwm-init 'global-qutebrowser-exwm-mode)"
 	  ];
 	  gfhookf = [
-	    "('server-visit 'qute/dired-hook)"
 	    "('qutebrowser-exwm-mode 'evil-normal-state)"
 	  ];
-	  config = ''
-	    (define-minor-mode qute-dired-mode
-	      "Used for dired buffers qutebrowser is using as a file picker"
-	      :keymap '())
-	    
-	    (defun qute/choose-file ()
-	      (interactive)
-	      (let ((files (dired-get-marked-files)))
-	        (with-temp-file qute-filename
-	          (insert (s-join "\n" files)))
-	        (remove-hook 'dired-mode-hook 'qute-dired-mode)
-	        (dolist (buffer dired-buffers) (when qute-dired-mode (kill-buffer (cdr buffer))))))
-	    
-	    (defun qute/dired-hook (&optional _)
-	      (when (s-starts-with? "/tmp/qutebrowser-fileselect" buffer-file-name)
-	        (setq qute-filename buffer-file-name)
-	        (kill-buffer)
-	        (add-hook 'dired-mode-hook 'qute-dired-mode)
-	        (setq qute-dired-buffers (list (dired "~/")))))
-	  '';
-	  generalOneConfig.qute-dired-mode-map."C-c C-c" = "#'qute/choose-file";
-	  generalTwoConfig.":n".qute-dired-mode-map = {
-	    "i" = "'dired-find-file";
-	    "n" = "'dired-up-directory";
-	  };
 	};
 	qutebrowser-evil = {
 	  enable = true;
@@ -67,6 +42,14 @@
 	  ghookf = [
 	    "('global-qutebrowser-exwm-mode 'qutebrowser-evil-state-mode)"
 	  ];
+	};
+	qutebrowser-fileselect = {
+	  enable = true;
+	  package = epkgs: epkgs.qutebrowser;
+	  ghookf = [
+	    "('global-qutebrowser-exwm-mode 'qutebrowser-fileselect-mode)"
+	  ];
+	  setopt.qutebrowser-fileselect-handler = "'qutebrowser-fileselect-completion";
 	};
       };
 
