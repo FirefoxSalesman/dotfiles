@@ -12,7 +12,7 @@
 	"?\\s-a" = "evil-ex";
 	"?\\s-d" = "app-launcher-run-app";
 	"?\\s-t" = "proced";
-	  
+
 	# Movement
 	"?\\s-e" = "elwm-next";
 	"?\\s-o" = "elwm-prev";

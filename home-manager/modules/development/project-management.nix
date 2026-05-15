@@ -5,8 +5,8 @@
       ide = {
 	magit = {
 	  enable = true;
-	  forge = false;
-	  todo = false;
+	  forge = true;
+	  todo = true;
 	};
 	project = true;
       };
@@ -29,7 +29,10 @@
 
 	projection-ibuffer = {
 	  enable = true;
-	  generalOne.project-prefix-map.i = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
+	  generalOne.project-prefix-map = {
+	    C-b = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
+	    i = '''("info" . projection-show-project-info)'';
+	  };
 	};
 
 	projection-multi.custom.projection-gradle-use-daemon = false;

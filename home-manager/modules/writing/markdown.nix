@@ -13,7 +13,7 @@
 	  ":nm".gfm-mode-map = {
 	    "[h" = "'markdown-previous-visible-heading";
 	    "]h" = "'markdown-next-visible-heading";
-	  };  
+	  };
 	};
 	preface = ''
 	  (defun efs/markdown-font-setup ()

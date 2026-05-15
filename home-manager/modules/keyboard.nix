@@ -89,7 +89,7 @@
 	  _        @    !    $     \(  ~  \)    1    2    3    #    _                      _
 	  _       _    _               ret              _        _                     _    _    _)
       '' ;
-      
+
       ".Xmodmap".text = ''
 	clear lock
         clear mod3
@@ -100,7 +100,7 @@
         add mod4 = Super_L Super_R
       '';
     };
-    
+
     systemd.user = {
       services.kmonad = {
 	Unit = lib.mkMerge [{ Description = "KMonad service"; }];

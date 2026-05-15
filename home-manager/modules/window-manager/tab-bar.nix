@@ -46,9 +46,9 @@
 	enable = true;
 	command = [
 	  "tab-bar-lost-commands-move-tab-forward"
-	  "tab-bar-lost-commands-move-tab-backward" 
-	  "tab-bar-lost-commands-switch-to-first-tab" 
-	  "tab-bar-lost-commands-switch-to-last-tab" 
+	  "tab-bar-lost-commands-move-tab-backward"
+	  "tab-bar-lost-commands-switch-to-first-tab"
+	  "tab-bar-lost-commands-switch-to-last-tab"
 	];
       };
     };

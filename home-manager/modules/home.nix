@@ -31,6 +31,7 @@ in {
 	inputs.self.homeModules.fileManager
 	inputs.self.homeModules.gaming
 	inputs.self.homeModules.glx
+	inputs.self.homeModules.godot
 	inputs.self.homeModules.java
 	inputs.self.homeModules.ledger
 	inputs.self.homeModules.media

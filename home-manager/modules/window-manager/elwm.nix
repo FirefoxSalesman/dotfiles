@@ -9,10 +9,10 @@
       config = ''
 	(defun elwm-split-window ()
 	  "Split window according to the current layout.
-	  
+	
 	  Window in the master area can't be split, instead the last window
 	  in the stack will be split.
-	  
+	
 	  If selected window is window on the stack, the new window will be
 	  created next to it, according to the current layout."
 	  (interactive)

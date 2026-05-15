@@ -23,7 +23,7 @@
       searchEngines = {
 	"DEFAULT" = "https://duckduckgo.com/?q={}";
       };
-  
+
       settings = {
 	downloads.location.directory = "~/dwn";
 	url = {

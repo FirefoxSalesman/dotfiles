@@ -83,11 +83,11 @@
         };
       };
     };
-  
+
     config = let
       aliasesStr = concatStringsSep "\n"
       ((mapAttrsToList (k: v: "alias ${k}=${escapeShellArg v}")
-        cfg.shellAliases) ++ 
+        cfg.shellAliases) ++
         (mapAttrsToList (k: v: "alias ${k}=${escapeShellArg v}")
           config.home.shellAliases));
     

@@ -27,7 +27,7 @@
     };
 
     nixgl = {
-      url = "github:nix-community/nixGL"; 
+      url = "github:nix-community/nixGL";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -269,7 +269,7 @@ Dev templates: https://github.com/the-nix-way/dev-templates
       }
 
       template() {
-        ${torsocks} nix flake init --template "https://flakehub.com/f/the-nix-way/dev-templates/*#$(getTemplates)" 
+        ${torsocks} nix flake init --template "https://flakehub.com/f/the-nix-way/dev-templates/*#$(getTemplates)"
         ${pkgs.direnv}/bin/direnv allow
       }
 
@@ -290,7 +290,7 @@ Dev templates: https://github.com/the-nix-way/dev-templates
 * Notes to my future self
 + To get eduroam working, you need ppp & pptclient
 + Don't let xorg use the nvidia card. It breaks everything
-  
+
 * Home Manager
 ** Main Config
 #+begin_src nix-ts :tangle modules/home.nix
@@ -327,6 +327,7 @@ in {
 	inputs.self.homeModules.fileManager
 	inputs.self.homeModules.gaming
 	inputs.self.homeModules.glx
+	inputs.self.homeModules.godot
 	inputs.self.homeModules.java
 	inputs.self.homeModules.ledger
 	inputs.self.homeModules.media
@@ -413,7 +414,7 @@ in {
 ** shells
 *** aliases
 #+NAME: Shell Aliases
-#+begin_src nix-ts :tangle modules/shells/aliases.nix 
+#+begin_src nix-ts :tangle modules/shells/aliases.nix
 {
   flake.homeModules.shellConfig = { pkgs, lib, ... }:
   {
@@ -532,7 +533,7 @@ This one borrows heavily from the bash module
 Special note: The profile settings here take precedence over bash's, because I'm too dumb to make them coexist
 
 ***** Premble
-#+begin_src nix-ts :tangle modules/shells/dash-template.nix :noweb yes 
+#+begin_src nix-ts :tangle modules/shells/dash-template.nix :noweb yes
 {
   flake.homeModules.dashTemplate = { config, lib, pkgs, ... }:
 
@@ -553,7 +554,7 @@ Special note: The profile settings here take precedence over bash's, because I'm
   in {
     meta.maintainers = [ maintainers.rycee ];
     <<Dash Option Definitions>>
-  
+
     <<Dash File Generation>>
   };
 }
@@ -636,7 +637,7 @@ options = {
 config = let
   aliasesStr = concatStringsSep "\n"
   ((mapAttrsToList (k: v: "alias ${k}=${escapeShellArg v}")
-    cfg.shellAliases) ++ 
+    cfg.shellAliases) ++
     (mapAttrsToList (k: v: "alias ${k}=${escapeShellArg v}")
       config.home.shellAliases));
 
@@ -698,7 +699,7 @@ config = let
 
 ** Aesthetics
 *** Icons
-#+begin_src nix-ts :tangle modules/aesthetics/icons.nix :noweb yes 
+#+begin_src nix-ts :tangle modules/aesthetics/icons.nix :noweb yes
 {
   flake.homeModules.aesthetics = { ... }:
 
@@ -1187,7 +1188,7 @@ A great deal was borrowed from:
       };
 
       shrface = {
-	enable = true;    
+	enable = true;
 	ghookf = ["('(eww-mode elfeed-show-mode nov-mode) 'shrface-mode)"];
 	setopt.shrface-header-line-max-level = 0;
 	config = ''
@@ -1439,7 +1440,7 @@ I couldn't get olivetti to work.
   flake.homeModules.startx = { pkgs, ... }:
 
   {
-    home.file.".config/X11/xinitrc".text = '' 
+    home.file.".config/X11/xinitrc".text = ''
       <<xinitrc-config>>
     '';
   };
@@ -1453,8 +1454,8 @@ xrandr --setprovideroutputsource modesetting NVIDIA-0
 xrandr --auto
 xrandr --dpi 96
 # xrandr --output eDP-1 --mode 2560x1600
-${pkgs.xwallpaper}/bin/xwallpaper --stretch ~/.config/home-manager/wallpaper.png 
-xrdb load ~/.cache/wal/colors.Xresources 
+${pkgs.xwallpaper}/bin/xwallpaper --stretch ~/.config/home-manager/wallpaper.png
+xrdb load ~/.cache/wal/colors.Xresources
 
 if test -z "$DBUS_SESSION_BUS_ADDRESS"; then
     eval $(dbus-launch --exit-with-session --sh-syntax)
@@ -1502,7 +1503,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 	  enable = true;
 	  ghookf = ["('prog-mode 'rainbow-delimiters-mode)"];
 	};
-      
+
 	racket-mode.gfhookf = ["('racket-mode 'hs-minor-mode)"];
       };
     };
@@ -1519,8 +1520,8 @@ I think most of it was from the github page for lsp mode, but it's been a while,
       ide = {
 	magit = {
 	  enable = true;
-	  forge = false;
-	  todo = false;
+	  forge = true;
+	  todo = true;
 	};
 	project = true;
       };
@@ -1543,7 +1544,10 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 
 	projection-ibuffer = {
 	  enable = true;
-	  generalOne.project-prefix-map.i = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
+	  generalOne.project-prefix-map = {
+	    C-b = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
+	    i = '''("info" . projection-show-project-info)'';
+	  };
 	};
 
 	projection-multi.custom.projection-gradle-use-daemon = false;
@@ -1581,7 +1585,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 #+end_src
 
 *** Elisp
-#+begin_src nix-ts :tangle modules/development/elisp.nix 
+#+begin_src nix-ts :tangle modules/development/elisp.nix
 {
   flake.homeModules.elisp = { ... }:
   {
@@ -1692,6 +1696,26 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 }
 #+end_src
 
+*** Godot
+#+begin_src nix-ts :tangle modules/development/godot.nix
+{
+  flake.homeModules.godot = { pkgs, ... }:
+  {
+    programs.emacs.init = {
+      ide.treesitter.treesitterGrammars.gdscript = "https://github.com/PrestonKnopp/tree-sitter-gdscript.git";
+      usePackage.gdscript-ts-mode = {
+	enable = true;
+	package = epkgs: epkgs.gdscript-mode;
+	extraPackages = [pkgs.godot pkgs.gdtoolkit_4];
+	symex = true;
+	eglot = true;
+        mode = [ ''"\\.tscn\\'"'' ''"\\.gd\\'"''] ;
+      };
+    };
+  };
+}
+#+end_src
+
 *** Eglot
 https://github.com/joaotavora/eglot/discussions/888
 https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
@@ -1746,7 +1770,7 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 
 #+NAME: Development Eglot Config
 #+begin_src emacs-lisp
-(efs/evil-collection-remap 'evil-collection-eglot-setup 'normal eglot-mode-map 
+(efs/evil-collection-remap 'evil-collection-eglot-setup 'normal eglot-mode-map
 			   "K" 'evil-substitute)
 #+end_src
 
@@ -1768,10 +1792,10 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 
 ** File Management
 I'm running dired with a couple of small packages that improve on it
-#+begin_src nix-ts :tangle modules/file-management.nix :noweb yes 
+#+begin_src nix-ts :tangle modules/file-management.nix :noweb yes
 { inputs, ... }:
 {
-  perSystem = { pkgs, ... }: 
+  perSystem = { pkgs, ... }:
   {
     packages.mpvmacs = pkgs.writeShellScriptBin "mpvmacs" ''
 	emacsclient -e "(mpv-play \"$1\")"
@@ -1893,7 +1917,7 @@ I'm running dired with a couple of small packages that improve on it
 	  undo.enable = true;
 	  electricPair.enable = true;
 	};
-  
+
 	prelude = ''
 	  <<Emacs Prelude>>
 	'';
@@ -1977,7 +2001,7 @@ Most of this was shamelessly lifted from Emacs from Scratch.
 	  setopt = {
 	    display-line-numbers-type = "'relative";
 	    display-line-numbers-width = 3;
-	  }; 
+	  };
 	  config = "(global-display-line-numbers-mode)";
 	  #Disable line numbers for some modes
 	  ghookf = ["((gen-mode-hooks '(org term dired eww eat markdown help helpful Info Man shell pdf-view elfeed-search elfeed-show eshell racket-repl sage-shell nov)) (lambda () (display-line-numbers-mode 0)))"];
@@ -1987,6 +2011,17 @@ Most of this was shamelessly lifted from Emacs from Scratch.
 	  enable = true;
 	  deferIncrementally = true;
 	  config = "(server-start)";
+	};
+
+	super-save = {
+	  enable = true;
+	  ghookf = ["('on-first-file 'super-save-mode)"];
+	  setopt = {
+	    super-save-auto-save-when-idle = true;
+	    auto-save-default = false;
+	    super-save-silent = true;
+	    super-save-delete-trailing-whitespace = true;
+	  };
 	};
       };
     };
@@ -2019,7 +2054,7 @@ Wgrep basically turns grep into sed.
 
 *** Early Init
 All of the repeaters config was origally stolen from Karthinks. I don't think any of the code I stole is actually here anymore, though.
-#+begin_src nix-ts :tangle modules/emacs/early-init.nix :noweb yes 
+#+begin_src nix-ts :tangle modules/emacs/early-init.nix :noweb yes
 {
   flake.homeModules.emacs = { ... }:
 
@@ -2073,7 +2108,7 @@ All of the repeaters config was origally stolen from Karthinks. I don't think an
 
 *** Evil Mode
 My keybinds have been rearranged to work with Canary. Evil is used for the purposes of ergonomics, & all my bindings revolve around it.
-#+begin_src nix-ts :tangle modules/emacs/evil.nix :noweb yes 
+#+begin_src nix-ts :tangle modules/emacs/evil.nix :noweb yes
 { inputs, ... }:
 
 {
@@ -2516,13 +2551,13 @@ Gives us an entire state where we can rapidly make specific edits to code.
 {
   flake.homeModules.emacs = { ... }: {
     programs.emacs.init = {
-      ide.symex = true;  
+      ide.symex = true;
       usePackage.symex = {
 	enable = true;
 	defer = true;
 	generalTwo.":n"."(racket-repl-mode-map lisp-interaction-mode-map lisp-mode-map)"."RET" = "'symex-mode-interface";
 	config = ''
-	  <<Emacs Symex Config>>    
+	  <<Emacs Symex Config>>
 	'';
 	generalOneConfig.evil-symex-state-map = {
 	  "n" = "'symex-go-backward";
@@ -2796,7 +2831,7 @@ Evil integration is from noctuid & minad
 	};
 
 	bookmark = {
-	  enable = true;  
+	  enable = true;
 	  generalOne."ctl-x-r-map"."S" = "'bookmark-save";
 	};
       };
@@ -2979,7 +3014,7 @@ Borrowed from Karthinks
       }
     );
   };
-  
+
   flake.homeModules.emacs = { ... }: {
     programs.emacs.init.usePackage.app-launcher = {
       enable = true;
@@ -3012,7 +3047,7 @@ Borrowed from Karthinks
       };
 
       replace = {
-	enable = true;  
+	enable = true;
 	defer = true;
 	generalTwoConfig.":n".occur-mode-map."w" = "'occur-edit-mode";
       };
@@ -3096,7 +3131,7 @@ fi
 *** Help System
 An improved help system that I lifted from emacs from scratch.
 Helpful gives more information, & which-key tells what keybinds you have available
-#+begin_src nix-ts :tangle modules/emacs/help-system.nix :noweb yes 
+#+begin_src nix-ts :tangle modules/emacs/help-system.nix :noweb yes
 { inputs, ... }:
 
 {
@@ -3304,7 +3339,7 @@ The org agenda syntax:
 DEADLINE:<year-month-date>
 How to add a latex package
 : #+LATEX_HEADER: \usepackage{times}
-#+begin_src nix-ts :tangle modules/writing/org.nix :noweb yes 
+#+begin_src nix-ts :tangle modules/writing/org.nix :noweb yes
 { inputs, ... }:
 {
   flake.homeModules.writing = { config, pkgs, ... }:
@@ -3350,7 +3385,7 @@ How to add a latex package
 	    <<Emacs Org Config>>
 	  '' ;
 	};
-  
+
 	org-auto-tangle = {
 	  enable = true;
 	  ghookf = ["('org-mode 'org-auto-tangle-mode)"];
@@ -3366,6 +3401,19 @@ How to add a latex package
 	    "obi" = "'biblio-doi-insert-bibtex";
 	  };
 	};
+
+	# https://www.alcarney.me/blog/2026/organising-series-with-denote-sequence/
+	denote-sequence = {
+	  enable = true;
+	  generalOne.global-leader = {
+	    "oq" = '''(:ignore t :which-key "sequence")'';
+	    "oqc" = "'denote-sequence";
+	    "oqf" = "'denote-sequence-find";
+	    "oqp" = "'denote-sequence-rename-as-parent";
+	    "oqr" = "'denote-sequence-reparent";
+	  };
+	  setopt.denote-sequence-scheme = "'numeric";
+        };
       };
     };
   };
@@ -3388,7 +3436,7 @@ How to add a latex package
 *** Latex
 Auctex turns emacs into a LaTeX IDE.
 
-This configuration was taken from the emacs wiki. [[https://www.emacswiki.org/emacs/RefTeX][Reftex]] 
+This configuration was taken from the emacs wiki. [[https://www.emacswiki.org/emacs/RefTeX][Reftex]]
 [[https://libredd.it/r/emacs/comments/4zvln1/editing_tex_documents/
 ][Also this reddit post]]
 Reftex seems to do references
@@ -3447,7 +3495,7 @@ No idea what the rest of this is for.
 	  ":nm".gfm-mode-map = {
 	    "[h" = "'markdown-previous-visible-heading";
 	    "]h" = "'markdown-next-visible-heading";
-	  };  
+	  };
 	};
 	preface = ''
 	  <<Emacs Markdown Init>>
@@ -3645,9 +3693,9 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
 	enable = true;
 	command = [
 	  "tab-bar-lost-commands-move-tab-forward"
-	  "tab-bar-lost-commands-move-tab-backward" 
-	  "tab-bar-lost-commands-switch-to-first-tab" 
-	  "tab-bar-lost-commands-switch-to-last-tab" 
+	  "tab-bar-lost-commands-move-tab-backward"
+	  "tab-bar-lost-commands-switch-to-first-tab"
+	  "tab-bar-lost-commands-switch-to-last-tab"
 	];
       };
     };
@@ -3881,10 +3929,10 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 #+begin_src emacs-lisp
 (defun elwm-split-window ()
   "Split window according to the current layout.
-  
+
   Window in the master area can't be split, instead the last window
   in the stack will be split.
-  
+
   If selected window is window on the stack, the new window will be
   created next to it, according to the current layout."
   (interactive)
@@ -3967,7 +4015,7 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 	"?\\s-a" = "evil-ex";
 	"?\\s-d" = "app-launcher-run-app";
 	"?\\s-t" = "proced";
-	  
+
 	# Movement
 	"?\\s-e" = "elwm-next";
 	"?\\s-o" = "elwm-prev";
@@ -4272,7 +4320,7 @@ NEG subtracts if it is true."
 #+end_src
 
 ** Gptel
-#+begin_src nix-ts :tangle modules/gptel.nix :noweb yes 
+#+begin_src nix-ts :tangle modules/gptel.nix :noweb yes
 { inputs, ... }:
 
 {
@@ -4504,7 +4552,7 @@ The mpv package lets us start an mpv process & puppeteer it with emacs. I'm defi
       ];
     });
   };
-  
+
   flake.homeModules.media = { pkgs, config, ... }: {
     home.packages = [ pkgs.yt-dlp ];
     programs = {
@@ -4621,9 +4669,9 @@ I stole this from this git repo https://github.com/sylsau/ffmpeg-bulk
 #===============================================================================
 #
 #		  USAGE: ./this.sh --help
-# 
+#
 #	DESCRIPTION: Create a ffmpeg conversion script from a list of input files.
-# 
+#
 #		OPTIONS: ---
 #  REQUIREMENTS: sed, gawk, ffmpeg, tee
 #		   BUGS: ---
@@ -4738,7 +4786,7 @@ exit
 #+begin_src bash-ts
 emacsclient ~/.download.txt
 # ${pkgs.yt-dlp}/bin/yt-dlp $1 --verbose -ci --batch-file=~/.download.txt --proxy socks://localhost:9050
-${pkgs.yt-dlp}/bin/yt-dlp $1 --verbose -ci --batch-file=~/.download.txt 
+${pkgs.yt-dlp}/bin/yt-dlp $1 --verbose -ci --batch-file=~/.download.txt
 ${pkgs.coreutils}/bin/rm ~/.download.txt
 #+end_src
 
@@ -4754,7 +4802,7 @@ Putting =:session= in an org block is necessary for evaluation
     home.file.".config/sage/ipython-5.0.0/profile_default/startup/00nix.py".text = ''
       <<sage-config>>
     '';
-    
+
     programs.emacs.init.usePackage = {
       sage-shell-mode = {
 	enable = true;
@@ -4833,7 +4881,7 @@ Canary is my layout of choice.
       ".config/kmonad/kmonad.kbd".text = ''
 	<<Kmonad>>
       '' ;
-      
+
       ".Xmodmap".text = ''
 	clear lock
         clear mod3
@@ -4844,7 +4892,7 @@ Canary is my layout of choice.
         add mod4 = Super_L Super_R
       '';
     };
-    
+
     systemd.user = {
       services.kmonad = {
 	Unit = lib.mkMerge [{ Description = "KMonad service"; }];
@@ -5137,7 +5185,7 @@ https://greasyfork.org/en/scripts/374833-yt2invidio
       searchEngines = {
 	"DEFAULT" = "https://duckduckgo.com/?q={}";
       };
-  
+
       settings = {
 	downloads.location.directory = "~/dwn";
 	url = {

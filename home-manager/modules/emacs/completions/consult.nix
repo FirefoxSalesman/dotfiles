@@ -96,7 +96,7 @@
 	};
 
 	bookmark = {
-	  enable = true;  
+	  enable = true;
 	  generalOne."ctl-x-r-map"."S" = "'bookmark-save";
 	};
       };

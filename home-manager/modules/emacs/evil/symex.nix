@@ -1,7 +1,7 @@
 {
   flake.homeModules.emacs = { ... }: {
     programs.emacs.init = {
-      ide.symex = true;  
+      ide.symex = true;
       usePackage.symex = {
 	enable = true;
 	defer = true;
@@ -18,7 +18,7 @@
 	  (evilem-make-motion efs/evilem-motion-symex-go-forward #'symex-go-forward)
 	  (evilem-make-motion efs/evilem-motion-symex-go-backward #'symex-go-backward)
 	  (evilem-make-motion efs/evilem-motion-symex-go-down #'symex-go-down)
-	  (evilem-make-motion efs/evilem-motion-symex-go-up #'symex-go-up)    
+	  (evilem-make-motion efs/evilem-motion-symex-go-up #'symex-go-up)
 	'';
 	generalOneConfig.evil-symex-state-map = {
 	  "n" = "'symex-go-backward";

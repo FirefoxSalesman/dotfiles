@@ -23,7 +23,7 @@
 	  enable = true;
 	  ghookf = ["('prog-mode 'rainbow-delimiters-mode)"];
 	};
-      
+
 	racket-mode.gfhookf = ["('racket-mode 'hs-minor-mode)"];
       };
     };

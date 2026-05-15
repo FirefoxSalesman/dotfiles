@@ -8,7 +8,7 @@
       ];
     });
   };
-  
+
   flake.homeModules.media = { pkgs, config, ... }: {
     home.packages = [ pkgs.yt-dlp ];
     programs = {

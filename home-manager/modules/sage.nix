@@ -43,7 +43,7 @@
            sigma: the variance"""
         return exp(-((x-mu)**2)/(2*sigma))/sqrt(2*pi*sigma)
     '';
-    
+
     programs.emacs.init.usePackage = {
       sage-shell-mode = {
 	enable = true;

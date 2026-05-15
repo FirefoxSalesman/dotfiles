@@ -51,7 +51,7 @@
 	              ((equal export-type "html") (org-html-export-to-html)))))
 	  '' ;
 	};
-  
+
 	org-auto-tangle = {
 	  enable = true;
 	  ghookf = ["('org-mode 'org-auto-tangle-mode)"];
@@ -67,6 +67,19 @@
 	    "obi" = "'biblio-doi-insert-bibtex";
 	  };
 	};
+
+	# https://www.alcarney.me/blog/2026/organising-series-with-denote-sequence/
+	denote-sequence = {
+	  enable = true;
+	  generalOne.global-leader = {
+	    "oq" = '''(:ignore t :which-key "sequence")'';
+	    "oqc" = "'denote-sequence";
+	    "oqf" = "'denote-sequence-find";
+	    "oqp" = "'denote-sequence-rename-as-parent";
+	    "oqr" = "'denote-sequence-reparent";
+	  };
+	  setopt.denote-sequence-scheme = "'numeric";
+        };
       };
     };
   };

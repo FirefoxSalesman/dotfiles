@@ -41,7 +41,7 @@
       };
 
       shrface = {
-	enable = true;    
+	enable = true;
 	ghookf = ["('(eww-mode elfeed-show-mode nov-mode) 'shrface-mode)"];
 	setopt.shrface-header-line-max-level = 0;
 	config = ''

@@ -50,13 +50,21 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] https://github.com/cosmicz/clime
   I'd like to see if I could integrate this into the nix framework
 + [ ] https://codeberg.org/tazjin/reka
-+ [ ] https://github.com/bbatsov/super-save
 + [ ] dash template gets cleaned up & goes to live in its own repo
 + [ ] https://github.com/isamert/corg.el
 + [ ] https://system-manager.net/main/how-to/import-nixos-module/#3-configure-the-service
 + [ ] Try out trust manager
 + [ ] https://github.com/vincentjgoh/avy-dashboard
-+ [ ] https://github.com/WuuBoLin/supermaven.el
-+ [ ] https://www.jamescherti.com/essential-emacs-packages/
++ [ ] https://github.com/jamescherti/buffer-terminator.el
++ [ ] toc-org
++ [ ] aphelia
++ [ ] highlight-symbol
++ [ ] git-modes
++ [ ] saveplace
++ [ ] goto chg
++ [ ] undo-fu-session
++ [ ] elisp-auto-fmt
++ [ ] quick-fasd (probably not)
 + [ ] switch to ewm https://idlip.in/posts/may-i-recommend/
-+ [ ] https://github.com/Exafunction/codeium.el
++ [ ] https://github.com/jojojames/fussy
++ [ ] https://github.com/jojojames/fzf-async

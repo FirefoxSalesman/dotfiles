@@ -18,7 +18,7 @@
       };
 
       replace = {
-	enable = true;  
+	enable = true;
 	defer = true;
 	generalTwoConfig.":n".occur-mode-map."w" = "'occur-edit-mode";
       };

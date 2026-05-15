@@ -37,7 +37,7 @@
       }
 
       template() {
-        ${torsocks} nix flake init --template "https://flakehub.com/f/the-nix-way/dev-templates/*#$(getTemplates)" 
+        ${torsocks} nix flake init --template "https://flakehub.com/f/the-nix-way/dev-templates/*#$(getTemplates)"
         ${pkgs.direnv}/bin/direnv allow
       }
 

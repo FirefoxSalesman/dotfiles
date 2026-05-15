@@ -25,7 +25,7 @@
 	  undo.enable = true;
 	  electricPair.enable = true;
 	};
-  
+
 	prelude = ''
 	  (defalias 'gsetq #'general-setq)
 	  (general-unbind "C-h")

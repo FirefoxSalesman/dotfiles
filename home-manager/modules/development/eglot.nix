@@ -24,7 +24,7 @@
 	    "('before-save (lambda () (when (and eglot--managed-mode efs/autoformat) (eglot-format-buffer))))"
 	  ];
 	  config = ''
-	    (efs/evil-collection-remap 'evil-collection-eglot-setup 'normal eglot-mode-map 
+	    (efs/evil-collection-remap 'evil-collection-eglot-setup 'normal eglot-mode-map
 	    			   "K" 'evil-substitute)
 	  '';
 	};
