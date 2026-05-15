@@ -188,11 +188,11 @@
         "use-package-eglot": "use-package-eglot"
       },
       "locked": {
-        "lastModified": 1778540355,
-        "narHash": "sha256-CM1HITBYF4tQpcJYwPsTZndZLz3YtfschvhOZj+EKj8=",
+        "lastModified": 1778867771,
+        "narHash": "sha256-2mV8GOX2cv24PVT+a8gdyOiPnH8NUODRz6+C99oJc/g=",
         "owner": "firefoxsalesman",
         "repo": "NixEmacs",
-        "rev": "229f78c0005207da28e00671195a68d0b9623374",
+        "rev": "38eb074a121988630525d3f526f71d1331eb40dc",
         "type": "github"
       },
       "original": {
@@ -379,27 +379,6 @@
         "type": "github"
       }
     },
-    "glide": {
-      "inputs": {
-        "home-manager": "home-manager",
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1777767341,
-        "narHash": "sha256-lV2i2hBWxUKU2dgHza9SGfizOsV+uUcTQD/De+6/X3M=",
-        "owner": "glide-browser",
-        "repo": "glide.nix",
-        "rev": "790c9d37e3dcf9bb04ae4486a0320b999a8eec32",
-        "type": "github"
-      },
-      "original": {
-        "owner": "glide-browser",
-        "repo": "glide.nix",
-        "type": "github"
-      }
-    },
     "gnome-shell": {
       "flake": false,
       "locked": {
@@ -418,27 +397,6 @@
       }
     },
     "home-manager": {
-      "inputs": {
-        "nixpkgs": [
-          "glide",
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1770818644,
-        "narHash": "sha256-DYS4jIRpRoKOzJjnR/QqEd/MlT4OZZpt8CrBLv+cjsE=",
-        "owner": "nix-community",
-        "repo": "home-manager",
-        "rev": "0acbd1180697de56724821184ad2c3e6e7202cd7",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-community",
-        "repo": "home-manager",
-        "type": "github"
-      }
-    },
-    "home-manager_2": {
       "inputs": {
         "nixpkgs": [
           "nixpkgs"
@@ -773,8 +731,7 @@
         "exwm-qutebrowser": "exwm-qutebrowser",
         "ezf": "ezf",
         "flake-parts": "flake-parts",
-        "glide": "glide",
-        "home-manager": "home-manager_2",
+        "home-manager": "home-manager",
         "import-tree": "import-tree",
         "kmonad": "kmonad",
         "mpc-wrapper": "mpc-wrapper",

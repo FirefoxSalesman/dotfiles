@@ -36,11 +36,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    glide = {
-      url = "github:glide-browser/glide.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # packages
     repeaters = {
       url = "github:mmarshall540/repeaters";
@@ -327,7 +322,6 @@ in {
 	inputs.self.homeModules.fileManager
 	inputs.self.homeModules.gaming
 	inputs.self.homeModules.glx
-	inputs.self.homeModules.godot
 	inputs.self.homeModules.java
 	inputs.self.homeModules.ledger
 	inputs.self.homeModules.media
@@ -340,7 +334,6 @@ in {
 	inputs.self.homeModules.webdev
 	inputs.self.homeModules.writing
 	inputs.stylix.homeModules.stylix
-	inputs.glide.homeModules.default
 	inputs.emacs-init.homeModules.emacs-init
 	inputs.emacs-init.homeModules.emacs-presets
         inputs.nur.modules.homeManager.default
@@ -1488,6 +1481,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 	direnv = true;
 	treesit-fold.enable = true;
 	languages = {
+          godot.enable = true;
           bash.enable = true;
           json.enable = true;
           nix.enable = true;
@@ -1690,26 +1684,6 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
       usePackage.python-ts-mode.setopt = {
 	python-shell-interpreter = ''"ipython"'';
 	python-shell-interpreter-args = ''"-i --simple-prompt"'';
-      };
-    };
-  };
-}
-#+end_src
-
-*** Godot
-#+begin_src nix-ts :tangle modules/development/godot.nix
-{
-  flake.homeModules.godot = { pkgs, ... }:
-  {
-    programs.emacs.init = {
-      ide.treesitter.treesitterGrammars.gdscript = "https://github.com/PrestonKnopp/tree-sitter-gdscript.git";
-      usePackage.gdscript-ts-mode = {
-	enable = true;
-	package = epkgs: epkgs.gdscript-mode;
-	extraPackages = [pkgs.godot pkgs.gdtoolkit_4];
-	symex = true;
-	eglot = true;
-        mode = [ ''"\\.tscn\\'"'' ''"\\.gd\\'"''] ;
       };
     };
   };

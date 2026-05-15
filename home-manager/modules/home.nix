@@ -31,7 +31,6 @@ in {
 	inputs.self.homeModules.fileManager
 	inputs.self.homeModules.gaming
 	inputs.self.homeModules.glx
-	inputs.self.homeModules.godot
 	inputs.self.homeModules.java
 	inputs.self.homeModules.ledger
 	inputs.self.homeModules.media
@@ -44,7 +43,6 @@ in {
 	inputs.self.homeModules.webdev
 	inputs.self.homeModules.writing
 	inputs.stylix.homeModules.stylix
-	inputs.glide.homeModules.default
 	inputs.emacs-init.homeModules.emacs-init
 	inputs.emacs-init.homeModules.emacs-presets
         inputs.nur.modules.homeManager.default
