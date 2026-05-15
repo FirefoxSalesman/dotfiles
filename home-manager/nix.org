@@ -3950,139 +3950,119 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 (defun elwm-derotate-window () (interactive) (elwm-rotate-window (prefix-numeric-value -1)))
 #+end_src
 
-*** Golden Ratio
-#+begin_src nix-ts :tangle modules/window-manager/golden-ratio.nix
-{
-  flake.homeModules.exwm = { pkgs, config, lib, ... }:
-
-  {
-    programs.emacs.init.usePackage = {
-      golden-ratio = {
-	enable = true;
-	defer = true;
-	ghookf = ["('on-first-input 'golden-ratio-mode)"];
-	config = "(general-add-advice 'golden-ratio :after 'exwm-mff-warp-to-selected)";
-      };
-
-      exwm-mff = {
-	command = ["exwm-mff-warp-to-selected"];
-	hook = lib.mkForce [];
-      };
-    };
-  } ;
-}
-#+end_src
-
 *** EXWM
 #+begin_src nix-ts :tangle modules/window-manager/exwm.nix :noweb yes
 {
   flake.homeModules.exwm = { pkgs, lib, ... }:
 
   {
-  programs.emacs.init = {
-    tools.exwm = {
-      enable = true;
-      wantMouseWarping = true;
-      useGaps = true;
-      bindings = {
-	"?\\s-r" = "exwm-reset";
-	"?\\s-a" = "evil-ex";
-	"?\\s-d" = "app-launcher-run-app";
-	"?\\s-t" = "proced";
+    programs.emacs.init = {
+      tools = {
+	goldenRatio = true;
+	exwm = {
+	  enable = true;
+	  wantMouseWarping = true;
+	  useGaps = true;
+	  bindings = {
+	    "?\\s-r" = "exwm-reset";
+	    "?\\s-a" = "evil-ex";
+	    "?\\s-d" = "app-launcher-run-app";
+	    "?\\s-t" = "proced";
 
-	# Movement
-	"?\\s-e" = "elwm-next";
-	"?\\s-o" = "elwm-prev";
-	"?\\s-." = "other-frame";
+	    # Movement
+	    "?\\s-e" = "elwm-next";
+	    "?\\s-o" = "elwm-prev";
+	    "?\\s-." = "other-frame";
 
-	# Arrangement
-	"?\\s-\\C-e" = "efs/nirify-forwards";
-	"?\\s-\\C-o" = "efs/nirify-backwards";
-	"?\\s-E" = "elwm-rotate-window";
-	"?\\s-O" = "elwm-derotate-window";
-	"?\\s-c" = "elwm-split-window";
-	"?\\s-n" = "evil-window-move-far-left";
-	"?\\s-i" = "evil-window-move-far-right";
-	"?\\s-j" = "winner-undo";
-	"?\\s-J" = "winner-redo";
-	"?\\s-m" = "toggle-single-window";
-	"?\\s-x" = "toggle-follow-mode";
-	"?\\s-k" = "evil-window-delete";
-	"?\\s-K" = "evil-delete-buffer-and-window";
+	    # Arrangement
+	    "?\\s-\\C-e" = "efs/nirify-forwards";
+	    "?\\s-\\C-o" = "efs/nirify-backwards";
+	    "?\\s-E" = "elwm-rotate-window";
+	    "?\\s-O" = "elwm-derotate-window";
+	    "?\\s-c" = "elwm-split-window";
+	    "?\\s-n" = "evil-window-move-far-left";
+	    "?\\s-i" = "evil-window-move-far-right";
+	    "?\\s-j" = "winner-undo";
+	    "?\\s-J" = "winner-redo";
+	    "?\\s-m" = "toggle-single-window";
+	    "?\\s-x" = "toggle-follow-mode";
+	    "?\\s-k" = "evil-window-delete";
+	    "?\\s-K" = "evil-delete-buffer-and-window";
 
-	#Shell bindings
-	"?\\s-s" = '',(cmd! (shell-command "slock"))'';
-	"?\\s-y" = '',(cmd! (start-process-shell-command "maim" nil  "${lib.getExe pkgs.maim} ~/pic/screenshot.png"))'';
-	"XF86MonBrightnessDown" = '',(cmd! (efs/alter-monitor-brightness 5 t))'';
-	"XF86MonBrightnessUp" = '',(cmd! (efs/alter-monitor-brightness 5))'';
+	    #Shell bindings
+	    "?\\s-s" = '',(cmd! (shell-command "slock"))'';
+	    "?\\s-y" = '',(cmd! (start-process-shell-command "maim" nil  "${lib.getExe pkgs.maim} ~/pic/screenshot.png"))'';
+	    "XF86MonBrightnessDown" = '',(cmd! (efs/alter-monitor-brightness 5 t))'';
+	    "XF86MonBrightnessUp" = '',(cmd! (efs/alter-monitor-brightness 5))'';
+	  };
+	  titleAlterations = {
+	    qutebrowser = ''(exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title))'';
+	    mpv = ''(exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title))'';
+	  };
+	};
       };
-      titleAlterations = {
-	qutebrowser = ''(exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title))'';
-	mpv = ''(exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title))'';
-      };
-    };
-    usePackage.exwm = {
-      gfhookf = [
-	# When window "class" updates, use it to set the buffer name
-	"('exwm-update-class (lambda () (exwm-workspace-rename-buffer exwm-class-name)))"
-	# When EXWM starts up, do some extra configuration
-	''('exwm-init (lambda ()
-          (start-process-shell-command "xbanish" nil "${lib.getExe pkgs.xbanish}")))''
-      ];
-      # Ctrl+q will enable the next key to be sent directly
-      generalOneConfig.exwm-mode-map = {
-	"C-c" = "mode-specific-map";
-      };
-      custom = {
-	exwm-manage-force-tiling = true;
-	# Emacs everywhere
-	exwm-input-simulation-keys = '''(([?\C-h] . [backspace]))'';
-	exwm-workspace-number = 1;
-	# This will need to be updated to the name of a display!  You can find
-	# the names of your displays by looking at arandr or the output of xrandr
-	exwm-randr-workspace-monitor-plist = '''(0 "eDP-1-1") (1 "HDMI-0")'';
-	# Window focus should follow the mouse pointer
-	mouse-autoselect-window = false;
-	focus-follows-mouse = false;
-	# These keys should always pass through to Emacs
-	exwm-input-prefix-keys = lib.mkForce [
-	  '''?\M-`''
-	  '''?\C-^''
-	  '''?\M-&''
-	  "?\\s-\\M-'"
-	  '''?\s-b''
-	  '''?\M-u''
-	  '''?\M-:''
-	  '''?\s-o''
-	  '''?\s-c''
-	  '''?\s-v''
-	  '''?\s-n''
-	  '''?\s-i''
-	  '''?\s-e''
-	  '''?\s-f''
-	  '''?\s-F''
-	  '''?\s-u''
-	  '''?\s-/''
-	  '''?\s-\H-e''
-	  '''?\s-\H-o''
-	  "?\\s-'"	# popper-toggle-latest
-	  '''?\s-\"'' # popper-toggle-type
-	  '''?\s-\ ''
-	  '''XF86AudioRaiseVolume''
-	  '''XF86AudioLowerVolume''
-	  '''XF86AudioMute''
-	  '''?\M-\ ''
+      usePackage.exwm = {
+	gfhookf = [
+	  # When window "class" updates, use it to set the buffer name
+	  "('exwm-update-class (lambda () (exwm-workspace-rename-buffer exwm-class-name)))"
+	  # When EXWM starts up, do some extra configuration
+	  ''('exwm-init (lambda ()
+            (start-process-shell-command "xbanish" nil "${lib.getExe pkgs.xbanish}")))''
 	];
+	# Ctrl+q will enable the next key to be sent directly
+	generalOneConfig.exwm-mode-map = {
+	  "C-c" = "mode-specific-map";
+	};
+	custom = {
+	  exwm-manage-force-tiling = true;
+	  # Emacs everywhere
+	  exwm-input-simulation-keys = '''(([?\C-h] . [backspace]))'';
+	  exwm-workspace-number = 1;
+	  # This will need to be updated to the name of a display!  You can find
+	  # the names of your displays by looking at arandr or the output of xrandr
+	  exwm-randr-workspace-monitor-plist = '''(0 "eDP-1-1") (1 "HDMI-0")'';
+	  # Window focus should follow the mouse pointer
+	  mouse-autoselect-window = false;
+	  focus-follows-mouse = false;
+	  # These keys should always pass through to Emacs
+	  exwm-input-prefix-keys = lib.mkForce [
+	    '''?\M-`''
+	    '''?\C-^''
+	    '''?\M-&''
+	    "?\\s-\\M-'"
+	    '''?\s-b''
+	    '''?\M-u''
+	    '''?\M-:''
+	    '''?\s-o''
+	    '''?\s-c''
+	    '''?\s-v''
+	    '''?\s-n''
+	    '''?\s-i''
+	    '''?\s-e''
+	    '''?\s-f''
+	    '''?\s-F''
+	    '''?\s-u''
+	    '''?\s-/''
+	    '''?\s-\H-e''
+	    '''?\s-\H-o''
+	    "?\\s-'"	# popper-toggle-latest
+	    '''?\s-\"'' # popper-toggle-type
+	    '''?\s-\ ''
+	    '''XF86AudioRaiseVolume''
+	    '''XF86AudioLowerVolume''
+	    '''XF86AudioMute''
+	    '''?\M-\ ''
+	  ];
+	};
+	init = ''
+	  <<Emacs Exwm Init>>
+	'';
+	config = ''
+	  <<Emacs Exwm Config>>
+	'';
+	after = ["repeaters"];
       };
-      init = ''
-	<<Emacs Exwm Init>>
-      '';
-      config = ''
-	<<Emacs Exwm Config>>
-      '';
-      after = ["repeaters"];
     };
-  };
   };
 }
 #+end_src
