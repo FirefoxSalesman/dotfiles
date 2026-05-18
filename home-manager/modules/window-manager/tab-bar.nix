@@ -26,8 +26,10 @@
 	     (setq tab-bar-tab-hints nil))
 	  
 	  (defvar pertab-default-layout nil "The default layout to use when opening a new tab.")
-	  (defvar pertab--default-tab-local-variables '())
-	  (defvar pertab--layout-registry '())
+	  (defvar pertab--default-tab-local-variables '() "The default values for each tab-local variable.")
+	  (defvar pertab--layout-registry '() "An alist of symbols to their 'pertab-layout-manager' objects.")
+	  (defvar pertab-next-buffer-function 'next-buffer "The function used to move to the next buffer when there is only 1 window.")
+	  (defvar pertab-previous-buffer-function 'previous-buffer "The function used to move to the previous buffer when there is only 1 window.")
 	  
 	  (defsubst pertab--get-tab-data (data)
 	    "Get DATA from current tab. Borrowed from bufler."
@@ -50,7 +52,7 @@
 	    (unless (pertab--get-tab-local-variables)
 	      (pertab--set-tab-parameter 'pertab-local-variables (tab-bar--current-tab-find) (copy-alist pertab--default-tab-local-variables))))
 	  
-	  (defun pertab--set-tab-local (name value)
+	  (defun pertab-set-tab-local (name value)
 	    "Set the tab local variable named NAME to VALUE."
 	    (pertab--add-tab-local-variables)
 	    (setf (alist-get name (pertab--get-tab-local-variables)) value))
@@ -163,33 +165,39 @@
 	    (interactive)
 	    (pertab--do-window-management-action 'vert-split-fun))
 	  
+	  (defun pertab--focus-action (command mono)
+	    "Run the window management action COMMAND. If only 1 window is active, run MONO instead."
+	    (if (eq (count-windows) 1)
+	        (funcall mono))
+	    (pertab--do-window-management-action command))
+	  
 	  (defun pertab-focus-left ()
 	    "Put keyboard focus on the window to the left, according to the current layout's rules."
 	    (interactive)
-	    (pertab--do-window-management-action 'focus-left-fun))
+	    (pertab--focus-action 'focus-left-fun pertab-previous-buffer-function))
 	  
 	  (defun pertab-focus-right ()
-	    "Put keyboard focus on the window to the right, according to the current layout's rules."
+	    "Put keyboard focus on the window to the right, according to the current layout's rules. If there is only one window, go to the next buffer instead."
 	    (interactive)
-	    (pertab--do-window-management-action 'focus-right-fun))
+	    (pertab--focus-action 'focus-right-fun pertab-next-buffer-function))
 	  
 	  (defun pertab-focus-up ()
-	    "Put keyboard focus on the window above, according to the current layout's rules."
+	    "Put keyboard focus on the window above, according to the current layout's rules. If there is only one window, go to the next buffer instead."
 	    (interactive)
-	    (pertab--do-window-management-action 'focus-up-fun))
+	    (pertab--focus-action 'focus-up-fun pertab-previous-buffer-function))
 	  
 	  (defun pertab-focus-down ()
-	    "Put keyboard focus on the window below, according to the current layout's rules."
+	    "Put keyboard focus on the window below, according to the current layout's rules. If there is only one window, go to the next buffer instead."
 	    (interactive)
-	    (pertab--do-window-management-action 'focus-down-fun))
+	    (pertab--focus-action 'focus-down-fun pertab-next-buffer-function))
 	  
 	  (defun pertab-move-left ()
-	    "Move the current window to the left, according to the current layout's rules."
+	    "Move the current window to the left, according to the current layout's rules. If there is only one window, go to the next buffer instead."
 	    (interactive)
 	    (pertab--do-window-management-action 'move-left-fun))
 	  
 	  (defun pertab-move-right ()
-	    "Move the current window to the right, according to the current layout's rules."
+	    "Move the current window to the right, according to the current layout's rules. If there is only one window, go to the next buffer instead."
 	    (interactive)
 	    (pertab--do-window-management-action 'move-right-fun))
 	  
@@ -272,9 +280,7 @@
 	  
 	  (pertab-register-layout 'monocle '() (pertab-layout-manager :lighter "[M]"
 	  							    :enter-fun 'pertab-monocle-enter
-	  							    :exit-fun 'pertab-monocle-exit
-	  							    :focus-up-fun 'previous-buffer
-	  							    :focus-down-fun 'next-buffer))
+	  							    :exit-fun 'pertab-monocle-exit))
 	  
 	  (defvar pertab-follow--old-window-state nil "Window state prior to entering follow layout.")
 	  (defvar pertab-follow--splits 1 "The number of splits to use in follow layout.")
@@ -299,13 +305,13 @@
 	  (defun pertab-follow-close ()
 	    "Close the current window."
 	    (setq pertab-follow--splits (max 0 (- pertab-follow--splits 1)))
-	    (pertab--set-tab-local 'pertab-follow--splits pertab-follow--splits)
+	    (pertab-set-tab-local 'pertab-follow--splits pertab-follow--splits)
 	    (delete-window))
 	  
 	  (defun pertab-follow-split ()
 	    "Split the current window."
 	    (setq pertab-follow--splits (+ 1 pertab-follow--splits))
-	    (pertab--set-tab-local 'pertab-follow--splits pertab-follow--splits)
+	    (pertab-set-tab-local 'pertab-follow--splits pertab-follow--splits)
 	    (split-window-horizontally))
 	  
 	  (pertab-register-layout 'follow '((pertab-follow--splits . 1)) (pertab-layout-manager :lighter "|||"
@@ -322,24 +328,16 @@
 	  (defun pertab-master-stack-enter ()
 	    "Set up the master/stack layout."
 	    (setq elwm-current-layout 'tile-vertical-left)
-	    (pertab--set-tab-local 'elwm-current-layout 'tile-vertical-left)
+	    (pertab-set-tab-local 'elwm-current-layout 'tile-vertical-left)
 	    (run-hooks 'pertab-master-stack-enter-hook))
 	  
 	  (defun pertab-master-stack-exit ()
 	    "Tear down the master/stack layout."
 	    (run-hooks 'pertab-master-stack-exit-hook))
 	  
-	  (defun pertab-master-stack-next ()
-	    "Move to the next window."
-	    (if (eq (count-windows) 1)
-	        (next-buffer)
-	      (elwm-activate-window)))
-	  
-	  (defun pertab-master-stack-previous ()
+	  (defun pertab-master-stack-deactivate ()
 	    "Move to the previous window."
-	    (if (eq (count-windows) 1)
-	        (previous-buffer)
-	      (elwm-activate-window (prefix-numeric-value -1))))
+	    (elwm-activate-window (prefix-numeric-value -1)))
 	  
 	  (defun pertab-master-stack-derotate ()
 	    "Move the windows backwards."
@@ -362,8 +360,8 @@
 	  					       :exit-fun 'pertab-master-stack-exit
 	  					       :horiz-split-fun 'elwm-split-window
 	  					       :vert-split-fun 'elwm-split-window
-	  					       :focus-down-fun 'pertab-master-stack-next
-	  					       :focus-up-fun 'pertab-master-stack-previous
+	  					       :focus-down-fun 'elwm-activate-window
+	  					       :focus-up-fun 'pertab-master-stack-deactivate
 	  					       :move-down-fun 'pertab-rotate-windows
 	  					       :move-up-fun 'pertab-master-stack-derotate
 	  					       :close-window-fun 'pertab-master-stack-remove-window))
@@ -374,7 +372,7 @@
 	  (defun pertab-master-stack-horizontal-enter ()
 	    "Set up the horizontal master/stack layout."
 	    (setq elwm-current-layout 'tile-horizontal-top)
-	    (pertab--set-tab-local 'elwm-current-layout 'tile-horizontal-top)
+	    (pertab-set-tab-local 'elwm-current-layout 'tile-horizontal-top)
 	    (run-hooks 'pertab-master-stack-horizontal-enter-hook))
 	  
 	  (defun pertab-master-stack-horizontal-exit ()
@@ -387,8 +385,8 @@
 	  					       :exit-fun 'pertab-master-stack-horizontal-exit
 	  					       :horiz-split-fun 'elwm-split-window
 	  					       :vert-split-fun 'elwm-split-window
-	  					       :focus-down-fun 'pertab-master-stack-next
-	  					       :focus-up-fun 'pertab-master-stack-previous
+	  					       :focus-down-fun 'elwm-activate-window
+	  					       :focus-up-fun 'pertab-master-stack-deactivate
 	  					       :move-down-fun 'pertab-rotate-windows
 	  					       :move-up-fun 'pertab-master-stack-derotate
 	  					       :close-window-fun 'pertab-master-stack-remove-window))
@@ -431,11 +429,11 @@
 	  (defun pertab-scroll-exit ()
 	    "Tear down the scrolling layout."
 	    (roll-mode -1)
-	    (pertab--set-tab-local 'roll-max-visible-panes roll-max-visible-panes)
-	    (pertab--set-tab-local 'roll--panes roll--panes)
-	    (pertab--set-tab-local 'roll--windows roll--windows)
-	    (pertab--set-tab-local 'roll--nof-visible-panes roll--nof-visible-panes)
-	    (pertab--set-tab-local 'roll--first-visible-pane roll--first-visible-pane)
+	    (pertab-set-tab-local 'roll-max-visible-panes roll-max-visible-panes)
+	    (pertab-set-tab-local 'roll--panes roll--panes)
+	    (pertab-set-tab-local 'roll--windows roll--windows)
+	    (pertab-set-tab-local 'roll--nof-visible-panes roll--nof-visible-panes)
+	    (pertab-set-tab-local 'roll--first-visible-pane roll--first-visible-pane)
 	    (run-hooks 'pertab-scroll-stack-exit-hook))
 	  
 	  (pertab-register-layout 'scroll '((roll-max-visible-panes . 2)
@@ -455,7 +453,9 @@
 	  					       :close-window-fun 'roll-close))
 	  
 	  (pertab-mode)
-	  (setq pertab-default-layout 'master-stack)
+	  (setq pertab-default-layout 'master-stack
+	        pertab-next-buffer-function 'bufler-cycle-buffers-forward
+	        pertab-previous-buffer-function 'bufler-cycle-buffers-backward)
 	  (add-hook 'pertab-follow-enter-hook (lambda () (golden-ratio-mode -1)))
 	  (add-hook 'pertab-follow-exit-hook (lambda () (golden-ratio-mode +1)))
 	'';
@@ -507,7 +507,9 @@
              "Initialize Roll mode by setting up the initial state.
               Removes all other windows and creates the initial pane configuration."
              ;;(delete-other-windows)
-             (when (equal roll--windows '()) (setq roll--windows (list (selected-window))))
+             (when (equal roll--windows '())
+		   (delete-other-windows)
+	           (setq roll--windows (list (selected-window))))
              ;;(setq roll--nof-visible-panes 1)
              ;;(setq roll--first-visible-pane 0)
              (when (equal roll--panes '()) (setq roll--panes (list (roll--make-snapshot))))
