@@ -40,6 +40,7 @@ in {
           ezf = packages.emacs-ezf;
 	  mpc-wrapper = packages.mpc-wrapper;
 	  roll = packages.roll;
+	  pertab = packages.pertab;
           embark = packages.embark;
 	}));
   };

@@ -63,6 +63,11 @@
       flake = false;
     };
 
+    pertab = {
+      url = "github:firefoxsalesman/pertab";
+      flake = false;
+    };
+
     roll = {
       url = "github:finalclass/emacs-roll";
       flake = false;

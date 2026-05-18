@@ -705,6 +705,22 @@
         "type": "github"
       }
     },
+    "pertab": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1779119933,
+        "narHash": "sha256-ia0d5zFnYKt6cs4KQ/rmYASYmDpjLRtKCXQrLygaw18=",
+        "owner": "firefoxsalesman",
+        "repo": "pertab",
+        "rev": "67d8fbfd4763d222fd1a0a6d46a67a17ac928ec2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "firefoxsalesman",
+        "repo": "pertab",
+        "type": "github"
+      }
+    },
     "repeaters": {
       "flake": false,
       "locked": {
@@ -755,6 +771,7 @@
         "nixpkgs": "nixpkgs_3",
         "nixpkgs-stable": "nixpkgs-stable_2",
         "nur": "nur",
+        "pertab": "pertab",
         "repeaters": "repeaters",
         "roll": "roll",
         "stylix": "stylix"
