@@ -62,6 +62,11 @@
       url = "github:lrustand/qutebrowser.el";
       flake = false;
     };
+
+    roll = {
+      url = "github:finalclass/emacs-roll";
+      flake = false;
+    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake {inherit inputs;} (inputs.import-tree ./modules);

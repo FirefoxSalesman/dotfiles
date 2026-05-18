@@ -39,6 +39,7 @@ in {
           app-launcher = packages.app-launcher;
           ezf = packages.emacs-ezf;
 	  mpc-wrapper = packages.mpc-wrapper;
+	  roll = packages.roll;
           embark = packages.embark;
 	}));
   };

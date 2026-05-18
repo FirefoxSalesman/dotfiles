@@ -1,22 +1,12 @@
 {
   flake.homeModules.emacs = { ... }: {
     programs.emacs.init = {
+      aesthetics.declutter.enable = true;
       tools.noLittering.enable = true;
       usePackage = {
-	tooltip = {
-	  enable = true;
-	  config = ''
-	    (tooltip-mode -1)
-            (set-fringe-mode -1)
-	  '';
-	};
-
 	simple = {
 	  enable = true;
-	  config = ''
-	    (gsetq save-interprogram-paste-before-kill t)
-            (column-number-mode)
-	  '';
+	  setopt.save-interprogram-paste-before-kill = true;
 	};
 
 	display-line-numbers = {

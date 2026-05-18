@@ -68,3 +68,4 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] switch to ewm https://idlip.in/posts/may-i-recommend/
 + [ ] https://github.com/jojojames/fussy
 + [ ] https://github.com/jojojames/fzf-async
++ [ ] https://github.com/finalclass/emacs-roll

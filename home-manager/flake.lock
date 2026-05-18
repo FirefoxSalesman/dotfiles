@@ -188,11 +188,11 @@
         "use-package-eglot": "use-package-eglot"
       },
       "locked": {
-        "lastModified": 1778869512,
-        "narHash": "sha256-Cc+Ld41bvDA53UdQQTPX9u3Yur3IY3I5hG5FHjqgb3A=",
+        "lastModified": 1778871141,
+        "narHash": "sha256-Rf6xaUJJAHqEZ3JSl06f2SQGfm6UjTPS4qn0UzllMV8=",
         "owner": "firefoxsalesman",
         "repo": "NixEmacs",
-        "rev": "883d9da165e280dec7474fcfd0965e41c294c532",
+        "rev": "624282c5d7b36af23c8beb01df0806c33ec3cea3",
         "type": "github"
       },
       "original": {
@@ -721,6 +721,22 @@
         "type": "github"
       }
     },
+    "roll": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1758535401,
+        "narHash": "sha256-e9vbVZmG3Mii4f9AQbsu8PZ/l/Q5wn9oEapg3SUaN8c=",
+        "owner": "finalclass",
+        "repo": "emacs-roll",
+        "rev": "c187f6b9cafb6e166c3e39b87b97686ec7784906",
+        "type": "github"
+      },
+      "original": {
+        "owner": "finalclass",
+        "repo": "emacs-roll",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "app-launcher": "app-launcher",
@@ -740,6 +756,7 @@
         "nixpkgs-stable": "nixpkgs-stable_2",
         "nur": "nur",
         "repeaters": "repeaters",
+        "roll": "roll",
         "stylix": "stylix"
       }
     },
