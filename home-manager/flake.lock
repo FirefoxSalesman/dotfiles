@@ -708,11 +708,11 @@
     "pertab": {
       "flake": false,
       "locked": {
-        "lastModified": 1779119933,
-        "narHash": "sha256-ia0d5zFnYKt6cs4KQ/rmYASYmDpjLRtKCXQrLygaw18=",
+        "lastModified": 1779121334,
+        "narHash": "sha256-HC7XUDOeM5FbcD2jUADVyGyp9k3MrVjOf9MnHt9Xk9Q=",
         "owner": "firefoxsalesman",
         "repo": "pertab",
-        "rev": "67d8fbfd4763d222fd1a0a6d46a67a17ac928ec2",
+        "rev": "000dca4bc408b7fb2379b6fbb22f43bbe8864a29",
         "type": "github"
       },
       "original": {

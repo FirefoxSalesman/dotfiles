@@ -16,6 +16,12 @@
 	pname = "pertab";
 	version = "current";
 	src = inputs.pertab;
+
+	propagatedUserEnvPkgs = with epkgs; [
+	  elwm
+	];
+
+	buildInputs = propagatedUserEnvPkgs;
 	}
       );
     };
@@ -83,115 +89,6 @@
 	  pertab-previous-buffer-function = "'bufler-cycle-buffers-backward";
 	};
 	config = ''
-	  (defvar pertab-follow--old-window-state nil "Window state prior to entering follow layout.")
-	  (defvar pertab-follow--splits 1 "The number of splits to use in follow layout.")
-	  (defvar pertab-follow-enter-hook nil "Hook run when entering follow layout.")
-	  (defvar pertab-follow-exit-hook nil "Hook run when exiting follow layout.")
-	  
-	  
-	  (defun pertab-follow-enter ()
-	    "Sets up the follow layout."
-	    (setq pertab-follow--old-window-state (current-window-configuration))
-	    (delete-other-windows)
-	    (follow-mode +1)
-	    (dotimes (i pertab-follow--splits) (split-window-horizontally))
-	    (run-hooks 'pertab-follow-enter-hook))
-	  
-	  (defun pertab-follow-exit ()
-	    "Tears down follow layout."
-	    (follow-mode -1)
-	    (set-window-configuration pertab-follow--old-window-state)
-	    (run-hooks 'pertab-follow-exit-hook))
-	  
-	  (defun pertab-follow-close ()
-	    "Close the current window."
-	    (setq pertab-follow--splits (max 0 (- pertab-follow--splits 1)))
-	    (pertab-set-tab-local 'pertab-follow--splits pertab-follow--splits)
-	    (delete-window))
-	  
-	  (defun pertab-follow-split ()
-	    "Split the current window."
-	    (setq pertab-follow--splits (+ 1 pertab-follow--splits))
-	    (pertab-set-tab-local 'pertab-follow--splits pertab-follow--splits)
-	    (split-window-horizontally))
-	  
-	  (pertab-register-layout 'follow '((pertab-follow--splits . 1)) (pertab-layout-manager :lighter "|||"
-	  										      :enter-fun 'pertab-follow-enter
-	  										      :exit-fun 'pertab-follow-exit
-	  										      :focus-left-fun 'windmove-left
-	  										      :focus-right-fun 'windmove-right
-	  										      :close-window-fun 'pertab-follow-close
-	  										      :horiz-split-fun 'pertab-follow-split
-	  										      :vert-split-fun 'pertab-follow-split))
-	  (defvar pertab-master-stack-enter-hook nil "Hook run when entering master/stack layout.")
-	  (defvar pertab-master-stack-exit-hook nil "Hook run when exiting master/stack layout.")
-	  
-	  (defun pertab-master-stack-enter ()
-	    "Set up the master/stack layout."
-	    (setq elwm-current-layout 'tile-vertical-left)
-	    (pertab-set-tab-local 'elwm-current-layout 'tile-vertical-left)
-	    (run-hooks 'pertab-master-stack-enter-hook))
-	  
-	  (defun pertab-master-stack-exit ()
-	    "Tear down the master/stack layout."
-	    (run-hooks 'pertab-master-stack-exit-hook))
-	  
-	  (defun pertab-master-stack-deactivate ()
-	    "Move to the previous window."
-	    (elwm-activate-window (prefix-numeric-value -1)))
-	  
-	  (defun pertab-master-stack-derotate ()
-	    "Move the windows backwards."
-	    (elwm-rotate-window (prefix-numeric-value -1)))
-	  
-	  (defun pertab-rotate-windows ()
-	    "Move the windows forwards."
-	    (elwm-rotate-window 1))
-	  
-	  (defun pertab-master-stack-remove-window ()
-	    "Close the current window."
-	    (when (elwm--in-master-area-p)
-	      (elwm-rotate-window 1)
-	      (elwm-activate-window))
-	    (delete-window))
-	  
-	  (pertab-register-layout 'master-stack '((elwm-current-layout . 'tile-vertical-left))
-	  			(pertab-layout-manager :lighter "[]="
-	  					       :enter-fun 'pertab-master-stack-enter
-	  					       :exit-fun 'pertab-master-stack-exit
-	  					       :horiz-split-fun 'elwm-split-window
-	  					       :vert-split-fun 'elwm-split-window
-	  					       :focus-down-fun 'elwm-activate-window
-	  					       :focus-up-fun 'pertab-master-stack-deactivate
-	  					       :move-down-fun 'pertab-rotate-windows
-	  					       :move-up-fun 'pertab-master-stack-derotate
-	  					       :close-window-fun 'pertab-master-stack-remove-window))
-	  
-	  (defvar pertab-master-stack-horizontal-enter-hook nil "Hook run when entering horizontal master/stack layout.")
-	  (defvar pertab-master-stack-horizontal-exit-hook nil "Hook run when exiting horizontal master/stack layout.")
-	  
-	  (defun pertab-master-stack-horizontal-enter ()
-	    "Set up the horizontal master/stack layout."
-	    (setq elwm-current-layout 'tile-horizontal-top)
-	    (pertab-set-tab-local 'elwm-current-layout 'tile-horizontal-top)
-	    (run-hooks 'pertab-master-stack-horizontal-enter-hook))
-	  
-	  (defun pertab-master-stack-horizontal-exit ()
-	    "Tear down the horizontal master/stack layout."
-	    (run-hooks 'pertab-master-stack-horizontal-exit-hook))
-	  
-	  (pertab-register-layout 'master-stack-horizontal '()
-	  			(pertab-layout-manager :lighter "|-|"
-	  					       :enter-fun 'pertab-master-stack-horizontal-enter
-	  					       :exit-fun 'pertab-master-stack-horizontal-exit
-	  					       :horiz-split-fun 'elwm-split-window
-	  					       :vert-split-fun 'elwm-split-window
-	  					       :focus-down-fun 'elwm-activate-window
-	  					       :focus-up-fun 'pertab-master-stack-deactivate
-	  					       :move-down-fun 'pertab-rotate-windows
-	  					       :move-up-fun 'pertab-master-stack-derotate
-	  					       :close-window-fun 'pertab-master-stack-remove-window))
-	  
 	  (defvar pertab-manual-enter-hook nil "Hook run when entering manual layout.")
 	  (defvar pertab-manual-exit-hook nil "Hook run when exiting manual layout.")
 	  
@@ -225,7 +122,7 @@
 	  (defun pertab-scroll-enter ()
 	    "Set up the scrolling layout."
 	    (roll-mode +1)
-	    (run-hooks 'pertab-scroll-stack-enter-hook))
+	    (run-hooks 'pertab-scroll-enter-hook))
 	  
 	  (defun pertab-scroll-exit ()
 	    "Tear down the scrolling layout."
@@ -235,7 +132,7 @@
 	    (pertab-set-tab-local 'roll--windows roll--windows)
 	    (pertab-set-tab-local 'roll--nof-visible-panes roll--nof-visible-panes)
 	    (pertab-set-tab-local 'roll--first-visible-pane roll--first-visible-pane)
-	    (run-hooks 'pertab-scroll-stack-exit-hook))
+	    (run-hooks 'pertab-scroll-exit-hook))
 	  
 	  (pertab-register-layout 'scroll '((roll-max-visible-panes . 2)
 	  				  (roll--windows . ())
@@ -253,12 +150,28 @@
 	  					       :move-right-fun 'roll-move-right
 	  					       :close-window-fun 'roll-close))
 	  
-	  (add-hook 'pertab-follow-enter-hook (lambda () (golden-ratio-mode -1)))
-	  (add-hook 'pertab-follow-exit-hook (lambda () (golden-ratio-mode +1)))
+	  (add-hook 'pertab-scroll-enter-hook (lambda () (golden-ratio-mode -1)))
+	  (add-hook 'pertab-scroll-exit-hook (lambda () (golden-ratio-mode +1)))
 	'';
       };
 
       pertab-monocle = {
+	enable = true;
+	package = epkgs: epkgs.pertab;
+	after = ["pertab"];
+      };
+
+      pertab-follow = {
+	enable = true;
+	package = epkgs: epkgs.pertab;
+	after = ["pertab"];
+	gfhookf = [
+	  "('pertab-follow-enter-hook (lambda () (golden-ratio-mode -1)))"
+	  "('pertab-follow-exit-hook (lambda () (golden-ratio-mode +1)))"
+	];
+      };
+
+      pertab-master-stack = {
 	enable = true;
 	package = epkgs: epkgs.pertab;
 	after = ["pertab"];
