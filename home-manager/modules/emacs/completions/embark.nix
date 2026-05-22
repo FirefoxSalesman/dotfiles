@@ -44,17 +44,20 @@
 	generalTwo.":n".vertico-map."a" = "'embark-act";
 	generalOneConfig = {
 	  embark-file-map = {
-	    "2" = "(my/embark-split-action find-file elwm-split-window)";
+	    "v" = "(my/embark-split-action find-file pertab-vertical-split)";
+	    "h" = "(my/embark-split-action find-file pertab-horizontal-split)";
 	    "t" = "(my/embark-split-action find-file tab-new)";
 	    "o" = "(my/embark-ace-action find-file)";
 	  };
 	  embark-buffer-map = {
-	    "2" = "(my/embark-split-action switch-to-buffer elwm-split-window)";
+	    "v" = "(my/embark-split-action switch-to-buffer pertab-vertical-split)";
+	    "h" = "(my/embark-split-action switch-to-buffer pertab-horizontal-split)";
 	    "t" = "(my/embark-split-action switch-to-buffer tab-new)";
 	    "o" = "(my/embark-ace-action switch-to-buffer)";
 	  };
 	  embark-bookmark-map = {
-	    "2" = "(my/embark-split-action bookmark-jump elwm-split-window)";
+	    "v" = "(my/embark-split-action bookmark-jump pertab-vertical-split)";
+	    "h" = "(my/embark-split-action bookmark-jump pertab-horizontal-split)";
 	    "t" = "(my/embark-split-action bookmark-jump tab-new)";
 	    "o" = "(my/embark-ace-action bookmark-jump)";
 	  };

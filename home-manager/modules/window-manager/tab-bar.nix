@@ -89,33 +89,6 @@
 	  pertab-previous-buffer-function = "'bufler-cycle-buffers-backward";
 	};
 	config = ''
-	  (defvar pertab-manual-enter-hook nil "Hook run when entering manual layout.")
-	  (defvar pertab-manual-exit-hook nil "Hook run when exiting manual layout.")
-	  
-	  (defun pertab-manual-enter ()
-	    "Set up the manual layout."
-	    (run-hooks 'pertab-manual-stack-enter-hook))
-	  
-	  (defun pertab-manual-exit ()
-	    "Tear down the manual layout."
-	    (run-hooks 'pertab-manual-stack-exit-hook))
-	  
-	  (pertab-register-layout 'manual '()
-	  			(pertab-layout-manager :lighter "[+]"
-	  					       :enter-fun 'pertab-manual-enter
-	  					       :exit-fun 'pertab-manual-exit
-	  					       :horiz-split-fun 'split-window-horizontally
-	  					       :vert-split-fun 'split-window-vertically
-	  					       :focus-left-fun 'windmove-left
-	  					       :focus-right-fun 'windmove-right
-	  					       :focus-down-fun 'windmove-down
-	  					       :focus-up-fun 'windmove-up
-	  					       :move-left-fun 'windmove-swap-states-left
-	  					       :move-right-fun 'windmove-swap-states-right
-	  					       :move-down-fun 'windmove-swap-states-down
-	  					       :move-up-fun 'windmove-swap-states-up
-	  					       :close-window-fun 'delete-window))
-	  
 	  (defvar pertab-scroll-enter-hook nil "Hook run when entering scrolling layout.")
 	  (defvar pertab-scroll-exit-hook nil "Hook run when exiting scrolling layout.")
 	  
@@ -139,7 +112,7 @@
 	  				  (roll--panes . ())
 	  				  (roll--nof-visible-panes . 1)
 	  				  (roll--first-visible-pane . 0))
-	  			(pertab-layout-manager :lighter "[]>"
+	  			(pertab-layout-manager :lighter "[>]"
 	  					       :enter-fun 'pertab-scroll-enter
 	  					       :exit-fun 'pertab-scroll-exit
 	  					       :horiz-split-fun 'roll-open
@@ -150,8 +123,8 @@
 	  					       :move-right-fun 'roll-move-right
 	  					       :close-window-fun 'roll-close))
 	  
-	  (add-hook 'pertab-scroll-enter-hook (lambda () (golden-ratio-mode -1)))
-	  (add-hook 'pertab-scroll-exit-hook (lambda () (golden-ratio-mode +1)))
+	  (add-hook 'pertab-scroll-enter-hook (lambda () (golden-ratio-mode -1) (exwm-mff-mode +1)))
+	  (add-hook 'pertab-scroll-exit-hook (lambda () (golden-ratio-mode +1) (exwm-mff-mode -1)))
 	'';
       };
 
@@ -166,12 +139,18 @@
 	package = epkgs: epkgs.pertab;
 	after = ["pertab"];
 	gfhookf = [
-	  "('pertab-follow-enter-hook (lambda () (golden-ratio-mode -1)))"
-	  "('pertab-follow-exit-hook (lambda () (golden-ratio-mode +1)))"
+	  "('pertab-follow-enter (lambda () (golden-ratio-mode -1)))"
+	  "('pertab-follow-exit (lambda () (golden-ratio-mode +1)))"
 	];
       };
 
       pertab-master-stack = {
+	enable = true;
+	package = epkgs: epkgs.pertab;
+	after = ["pertab"];
+      };
+
+      pertab-manual = {
 	enable = true;
 	package = epkgs: epkgs.pertab;
 	after = ["pertab"];

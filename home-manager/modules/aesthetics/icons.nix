@@ -16,7 +16,10 @@
 	  ghookf = ["('prog-mode 'prettify-symbols-mode)"];
 	};
 
-        dashboard.setopt.dashboard-banner-logo-title = ''"Emacs: The one true desktop environment"'';
+        dashboard.setopt = {
+	  dashboard-banner-logo-title = ''"Emacs: The one true desktop environment"'';
+	  dashboard-startup-banner = "'logo";
+	};
       };
     };
   };

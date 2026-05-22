@@ -6,7 +6,10 @@
     home.packages = with pkgs; [ libreoffice-fresh ];
 
     programs.emacs.init = {
-      writing.denote = true;
+      writing.denote = {
+	 enable = true;
+	 sequence = true;
+      };
       completions.tempel.templates.org-mode.exp = ''"#+export: " q'';
       ide.languages.org = {
         enable = true;
@@ -68,17 +71,9 @@
 	  };
 	};
 
-	# https://www.alcarney.me/blog/2026/organising-series-with-denote-sequence/
-	denote-sequence = {
+	denote-project-notes = {
 	  enable = true;
-	  generalOne.global-leader = {
-	    "oq" = '''(:ignore t :which-key "sequence")'';
-	    "oqc" = "'denote-sequence";
-	    "oqf" = "'denote-sequence-find";
-	    "oqp" = "'denote-sequence-rename-as-parent";
-	    "oqr" = "'denote-sequence-reparent";
-	  };
-	  setopt.denote-sequence-scheme = "'numeric";
+	  after = ["denote"];
         };
       };
     };
