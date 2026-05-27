@@ -14,58 +14,91 @@ in {
   imports = [inputs.home-manager.flakeModules.home-manager];
   systems = ["x86_64-linux"];
   flake = {
-    homeConfigurations.holschcc = inputs.home-manager.lib.homeManagerConfiguration {
+    homeConfigurations."holschcc@emacs" = inputs.home-manager.lib.homeManagerConfiguration {
       inherit pkgs;
       modules = [
-	inputs.self.homeModules.aesthetics
-	inputs.self.homeModules.ai
-	inputs.self.homeModules.basic
-	inputs.self.homeModules.canary
-	inputs.self.homeModules.chat
-	inputs.self.homeModules.dashTemplate
-	inputs.self.homeModules.development
-	inputs.self.homeModules.emacs
-	inputs.self.homeModules.elisp
-	inputs.self.homeModules.extraPackages
-	inputs.self.homeModules.exwm
-	inputs.self.homeModules.fileManager
-	inputs.self.homeModules.gaming
-	inputs.self.homeModules.glx
-	inputs.self.homeModules.java
-	inputs.self.homeModules.ledger
-	inputs.self.homeModules.media
-	inputs.self.homeModules.notifications
-	inputs.self.homeModules.passwordManagement
-	inputs.self.homeModules.sage
-	inputs.self.homeModules.shellConfig
-	inputs.self.homeModules.startx
-	inputs.self.homeModules.web
-	inputs.self.homeModules.webdev
-	inputs.self.homeModules.writing
-	inputs.stylix.homeModules.stylix
-	inputs.emacs-init.homeModules.emacs-init
-	inputs.emacs-init.homeModules.emacs-presets
-        inputs.nur.modules.homeManager.default
+	inputs.self.homeModules.main
+	inputs.self.homeModules.emacs-host
       ];
     };
-    homeModules.basic = { lib, config, ... }:
+    homeConfigurations."holschcc@monitors" = inputs.home-manager.lib.homeManagerConfiguration {
+      inherit pkgs;
+      modules = [
+	inputs.self.homeModules.main
+	inputs.self.homeModules.monitors-host
+      ];
+    };
+    homeModules.main = { lib, config, ... }:
 
     {
-      home.username = "holschcc";
+      imports = with inputs; [
+	self.homeModules.aesthetics
+	self.homeModules.ai
+	self.homeModules.canary
+	self.homeModules.chat
+	self.homeModules.dashTemplate
+	self.homeModules.development
+	self.homeModules.emacs
+	self.homeModules.elisp
+	self.homeModules.extraPackages
+	self.homeModules.exwm
+	self.homeModules.fileManager
+	self.homeModules.gaming
+	self.homeModules.glx
+	self.homeModules.java
+	self.homeModules.ledger
+	self.homeModules.media
+	self.homeModules.notifications
+	self.homeModules.passwordManagement
+	self.homeModules.sage
+	self.homeModules.shellConfig
+	self.homeModules.startx
+	self.homeModules.web
+	self.homeModules.webdev
+	self.homeModules.writing
+	stylix.homeModules.stylix
+	emacs-init.homeModules.emacs-init
+	emacs-init.homeModules.emacs-presets
+        nur.modules.homeManager.default
+      ];
 
-      # This value determines the Home Manager release that your configuration is
-      # compatible with. This helps avoid breakage when a new Home Manager release
-      # introduces backwards incompatible changes.
-      #
-      # You should not change this value, even if you update Home Manager. If you do
-      # want to update the value, then make sure to first check the Home Manager
-      # release notes.
-      home.stateVersion = "23.05"; # Please read the comment before changing.
+      options.hosts = {
+	xrandr-command = lib.mkOption {
+	  type = lib.types.str;
+	  default = "";
+	  description = "The xrandr command (or commands) to execute when running startx.";
+	};
+	exwm-monitors = lib.mkOption {
+	  type = lib.types.listOf lib.types.str;
+	  default = "";
+	  description = "The value of exwm-randr-workspace-monitor-plist to use for the current host";
+	};
+	exwm-monitor-count = lib.mkOption {
+	  type = lib.types.int;
+	  default = "";
+	  description = "Th";
+	};
+      } ;
 
-      # Let Home Manager install and manage itself.
-      programs.home-manager.enable = true;
+      config = {
+	home = {
+	  username = "holschcc";
+	  homeDirectory = "/home/${config.home.username}";
 
-      nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
+	  # This value determines the Home Manager release that your configuration is
+	  # compatible with. This helps avoid breakage when a new Home Manager release
+	  # introduces backwards incompatible changes.
+	  #
+	  # You should not change this value, even if you update Home Manager. If you do
+	  # want to update the value, then make sure to first check the Home Manager
+	  # release notes.
+	  stateVersion = "23.05"; # Please read the comment before changing.
+	};
+	# Let Home Manager install and manage itself.
+	programs.home-manager.enable = true;
+
+	nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
+      };
     };
   };
 }

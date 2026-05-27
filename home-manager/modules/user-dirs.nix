@@ -1,6 +1,5 @@
 {
   flake.homeModules.basic = { config, ... }: {
-    home.homeDirectory = "/home/${config.home.username}";
     xdg.userDirs = {
       enable = true;
       setSessionVariables = true;

@@ -1,5 +1,5 @@
 {
-  flake.homeModules.exwm = { pkgs, lib, ... }:
+  flake.homeModules.exwm = { config, pkgs, lib, ... }:
 
   {
     programs.emacs.init = {
@@ -63,10 +63,10 @@
 	  exwm-manage-force-tiling = true;
 	  # Emacs everywhere
 	  exwm-input-simulation-keys = '''(([?\C-h] . [backspace]))'';
-	  exwm-workspace-number = 1;
+	  exwm-workspace-number = lib.lists.length config.hosts.exwm-monitors;
 	  # This will need to be updated to the name of a display!  You can find
 	  # the names of your displays by looking at arandr or the output of xrandr
-	  exwm-randr-workspace-monitor-plist = '''(0 "eDP-1-1") (1 "HDMI-0")'';
+	  exwm-randr-workspace-monitor-plist = config.hosts.exwm-monitors;
 	  # Window focus should follow the mouse pointer
 	  mouse-autoselect-window = false;
 	  focus-follows-mouse = false;

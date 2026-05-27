@@ -318,58 +318,117 @@ in {
   imports = [inputs.home-manager.flakeModules.home-manager];
   systems = ["x86_64-linux"];
   flake = {
-    homeConfigurations.holschcc = inputs.home-manager.lib.homeManagerConfiguration {
+    homeConfigurations."holschcc@emacs" = inputs.home-manager.lib.homeManagerConfiguration {
       inherit pkgs;
       modules = [
-	inputs.self.homeModules.aesthetics
-	inputs.self.homeModules.ai
-	inputs.self.homeModules.basic
-	inputs.self.homeModules.canary
-	inputs.self.homeModules.chat
-	inputs.self.homeModules.dashTemplate
-	inputs.self.homeModules.development
-	inputs.self.homeModules.emacs
-	inputs.self.homeModules.elisp
-	inputs.self.homeModules.extraPackages
-	inputs.self.homeModules.exwm
-	inputs.self.homeModules.fileManager
-	inputs.self.homeModules.gaming
-	inputs.self.homeModules.glx
-	inputs.self.homeModules.java
-	inputs.self.homeModules.ledger
-	inputs.self.homeModules.media
-	inputs.self.homeModules.notifications
-	inputs.self.homeModules.passwordManagement
-	inputs.self.homeModules.sage
-	inputs.self.homeModules.shellConfig
-	inputs.self.homeModules.startx
-	inputs.self.homeModules.web
-	inputs.self.homeModules.webdev
-	inputs.self.homeModules.writing
-	inputs.stylix.homeModules.stylix
-	inputs.emacs-init.homeModules.emacs-init
-	inputs.emacs-init.homeModules.emacs-presets
-        inputs.nur.modules.homeManager.default
+	inputs.self.homeModules.main
+	inputs.self.homeModules.emacs-host
       ];
     };
-    homeModules.basic = { lib, config, ... }:
+    homeConfigurations."holschcc@monitors" = inputs.home-manager.lib.homeManagerConfiguration {
+      inherit pkgs;
+      modules = [
+	inputs.self.homeModules.main
+	inputs.self.homeModules.monitors-host
+      ];
+    };
+    homeModules.main = { lib, config, ... }:
 
     {
-      home.username = "holschcc";
+      imports = with inputs; [
+	self.homeModules.aesthetics
+	self.homeModules.ai
+	self.homeModules.canary
+	self.homeModules.chat
+	self.homeModules.dashTemplate
+	self.homeModules.development
+	self.homeModules.emacs
+	self.homeModules.elisp
+	self.homeModules.extraPackages
+	self.homeModules.exwm
+	self.homeModules.fileManager
+	self.homeModules.gaming
+	self.homeModules.glx
+	self.homeModules.java
+	self.homeModules.ledger
+	self.homeModules.media
+	self.homeModules.notifications
+	self.homeModules.passwordManagement
+	self.homeModules.sage
+	self.homeModules.shellConfig
+	self.homeModules.startx
+	self.homeModules.web
+	self.homeModules.webdev
+	self.homeModules.writing
+	stylix.homeModules.stylix
+	emacs-init.homeModules.emacs-init
+	emacs-init.homeModules.emacs-presets
+        nur.modules.homeManager.default
+      ];
 
-      # This value determines the Home Manager release that your configuration is
-      # compatible with. This helps avoid breakage when a new Home Manager release
-      # introduces backwards incompatible changes.
-      #
-      # You should not change this value, even if you update Home Manager. If you do
-      # want to update the value, then make sure to first check the Home Manager
-      # release notes.
-      home.stateVersion = "23.05"; # Please read the comment before changing.
+      options.hosts = {
+	xrandr-command = lib.mkOption {
+	  type = lib.types.str;
+	  default = "";
+	  description = "The xrandr command (or commands) to execute when running startx.";
+	};
+	exwm-monitors = lib.mkOption {
+	  type = lib.types.listOf lib.types.str;
+	  default = "";
+	  description = "The value of exwm-randr-workspace-monitor-plist to use for the current host";
+	};
+	exwm-monitor-count = lib.mkOption {
+	  type = lib.types.int;
+	  default = "";
+	  description = "Th";
+	};
+      } ;
 
-      # Let Home Manager install and manage itself.
-      programs.home-manager.enable = true;
+      config = {
+	home = {
+	  username = "holschcc";
+	  homeDirectory = "/home/${config.home.username}";
 
-      nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
+	  # This value determines the Home Manager release that your configuration is
+	  # compatible with. This helps avoid breakage when a new Home Manager release
+	  # introduces backwards incompatible changes.
+	  #
+	  # You should not change this value, even if you update Home Manager. If you do
+	  # want to update the value, then make sure to first check the Home Manager
+	  # release notes.
+	  stateVersion = "23.05"; # Please read the comment before changing.
+	};
+	# Let Home Manager install and manage itself.
+	programs.home-manager.enable = true;
+
+	nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
+      };
+    };
+  };
+}
+#+end_src
+
+** Host-Predicated Code
+#+begin_src nix-ts :tangle modules/hosts.nix
+{
+  flake.homeModules.emacs-host = { ... }:
+  {
+    hosts = {
+      xrandr-command = ''
+	xrandr --setprovideroutputsource modesetting NVIDIA-0
+        xrandr --auto
+        xrandr --dpi 96
+      '';
+      exwm-monitors = [''0 "eDP-1-1"''];
+    };
+  };
+  flake.homeModules.monitors-host = { ... }:
+  {
+    hosts = {
+      xrandr-command = ''
+        xrandr --auto
+      '';
+      exwm-monitors = [''0 "DP-1"'' ''1 "DVI-I-1"''] ;
     };
   };
 }
@@ -379,7 +438,6 @@ in {
 #+begin_src nix-ts :tangle modules/user-dirs.nix
 {
   flake.homeModules.basic = { config, ... }: {
-    home.homeDirectory = "/home/${config.home.username}";
     xdg.userDirs = {
       enable = true;
       setSessionVariables = true;
@@ -476,6 +534,81 @@ It's mostly here for eshell to get completions from, but it's a usable shell
     };
   } ;
 }
+#+end_src
+
+*** eshell
+#+begin_src nix-ts :tangle modules/shells/eshell.nix
+{
+  flake.homeModules.shellConfig = { pkgs, ... }:
+  {
+    programs.emacs.init = {
+      completions.tempel.templates.eshell-mode.gbc = ''"(get-buffer-create \"" q "\")"'';
+      terminals = {
+	eshell = true;
+	eat = true;
+      };
+      usePackage = {
+	eshell = {
+	  ghookf = ["('eshell-first-time-mode 'efs/configure-eshell)"];
+	  general."s-<enter>" = "'efs/make-eshell";
+	  init = ''
+	    (defun efs/make-eshell ()
+	      (interactive)
+	      (eshell 'N))
+	  '';
+	  config = ''
+	    (defun efs/configure-eshell ()
+	      ;; Bind some useful keys for evil-mode
+	      (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
+	      (evil-normalize-keymaps))
+
+	    ;; https://xenodium.com/rinku-cli-link-previews
+	    (defun adviced:eshell/cat (orig-fun &rest args)
+	      "Like `eshell/cat' but with image support."
+	      (if (seq-every-p (lambda (arg)
+	                         (and (stringp arg)
+	                              (file-exists-p arg)
+	                              (image-supported-file-p arg)))
+	                       args)
+	          (with-temp-buffer
+	            (insert "\n")
+	            (dolist (path args)
+	              (let ((newpath (expand-file-name path)))
+	    	    (insert-image (create-image
+	    			   newpath (image-type-from-file-name newpath)
+	    			   nil :max-width 350)))
+	              (insert "\n"))
+	            (insert "\n")
+	            (buffer-string))
+	        (apply orig-fun args)))
+
+	    (advice-add #'eshell/cat :around #'adviced:eshell/cat)
+	  '';
+	};
+
+	fish-completion.gfhookf = ["('fish-completion-mode (local! completion-at-point-functions '(tempel-complete pcomplete-completions-at-point)))"];
+
+	evil-collection-eshell = {
+	  enable = true;
+	  defer = true;
+	  generalTwoConfig.":n".eshell-mode-map = {
+	    "v" = "'evil-collection-eshell-evil-delete";
+	    "V" = "'evil-collection-eshell-evil-change";
+	    "C-v" = "'evil-collection-eshell-evil-delete-line";
+	  };
+	  config = ''
+	    (efs/evil-collection-remap 'evil-collection-eshell-setup-keys 'normal eshell-mode-map
+	    			   "d" 'evil-yank
+	    			   "D" 'evil-yank-line
+	    			   "c" 'evil-visual-state
+	    			   "C" 'evil-visual-line)
+	  '';
+	};
+      };
+    };
+  };
+}
+
 #+end_src
 
 *** starship
@@ -1447,7 +1580,7 @@ I couldn't get olivetti to work.
 ** Gui
 #+begin_src nix-ts :tangle modules/gui.nix :noweb yes
 {
-  flake.homeModules.startx = { pkgs, ... }:
+  flake.homeModules.startx = { config, pkgs, ... }:
 
   {
     home.file.".config/X11/xinitrc".text = ''
@@ -1460,10 +1593,7 @@ I couldn't get olivetti to work.
 #+NAME: xinitrc-config
 #+begin_src shell
 #!/usr/bin/sh
-xrandr --setprovideroutputsource modesetting NVIDIA-0
-xrandr --auto
-xrandr --dpi 96
-# xrandr --output eDP-1 --mode 2560x1600
+${config.hosts.xrandr-command}
 ${pkgs.xwallpaper}/bin/xwallpaper --stretch ~/.config/home-manager/wallpaper.png
 xrdb load ~/.cache/wal/colors.Xresources
 
@@ -4087,7 +4217,7 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 *** EXWM
 #+begin_src nix-ts :tangle modules/window-manager/exwm.nix :noweb yes
 {
-  flake.homeModules.exwm = { pkgs, lib, ... }:
+  flake.homeModules.exwm = { config, pkgs, lib, ... }:
 
   {
     programs.emacs.init = {
@@ -4151,10 +4281,10 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 	  exwm-manage-force-tiling = true;
 	  # Emacs everywhere
 	  exwm-input-simulation-keys = '''(([?\C-h] . [backspace]))'';
-	  exwm-workspace-number = 1;
+	  exwm-workspace-number = lib.lists.length config.hosts.exwm-monitors;
 	  # This will need to be updated to the name of a display!  You can find
 	  # the names of your displays by looking at arandr or the output of xrandr
-	  exwm-randr-workspace-monitor-plist = '''(0 "eDP-1-1") (1 "HDMI-0")'';
+	  exwm-randr-workspace-monitor-plist = config.hosts.exwm-monitors;
 	  # Window focus should follow the mouse pointer
 	  mouse-autoselect-window = false;
 	  focus-follows-mouse = false;

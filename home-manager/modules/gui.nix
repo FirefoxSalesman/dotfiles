@@ -1,13 +1,10 @@
 {
-  flake.homeModules.startx = { pkgs, ... }:
+  flake.homeModules.startx = { config, pkgs, ... }:
 
   {
     home.file.".config/X11/xinitrc".text = ''
       #!/usr/bin/sh
-      xrandr --setprovideroutputsource modesetting NVIDIA-0
-      xrandr --auto
-      xrandr --dpi 96
-      # xrandr --output eDP-1 --mode 2560x1600
+      ${config.hosts.xrandr-command}
       ${pkgs.xwallpaper}/bin/xwallpaper --stretch ~/.config/home-manager/wallpaper.png
       xrdb load ~/.cache/wal/colors.Xresources
       

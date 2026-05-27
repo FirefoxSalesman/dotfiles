@@ -20,14 +20,8 @@
 	    (defun efs/configure-eshell ()
 	      ;; Bind some useful keys for evil-mode
 	      (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
-	      (evil-normalize-keymaps)
-	      (gsetq eshell-command-aliases-list '(("gc" "torsocks git clone")
-	      				       ("nixbuild" "home-manager switch --flake ~/.config/home-manager/#holschcc")
-	      				       ("l" "ls $*")
-	      				       ("halt" "doas shutdown -P now")
-	    				       ("reboot" "doas reboot")
-	      				       ("systembuild" "doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'"))))
-	    
+	      (evil-normalize-keymaps))
+
 	    ;; https://xenodium.com/rinku-cli-link-previews
 	    (defun adviced:eshell/cat (orig-fun &rest args)
 	      "Like `eshell/cat' but with image support."
@@ -47,7 +41,7 @@
 	            (insert "\n")
 	            (buffer-string))
 	        (apply orig-fun args)))
-	    
+
 	    (advice-add #'eshell/cat :around #'adviced:eshell/cat)
 	  '';
 	};
