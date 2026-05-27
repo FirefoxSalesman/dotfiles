@@ -100,6 +100,7 @@ in {
   in {
     # shell scripts
     kmonad = inputs.kmonad.packages.${pkgs.system}.default;
+    sage = pkgs-stable.sage;
     ezf = packages.ezf;
     cast = packages.cast;
     doomer = packages.doomer;
@@ -391,6 +392,7 @@ in {
       music = "${config.home.homeDirectory}/mus";
       pictures = "${config.home.homeDirectory}/pic";
       videos = "${config.home.homeDirectory}/vid";
+      projects = "${config.home.homeDirectory}/projects";
     };
   };
 }
@@ -696,7 +698,7 @@ config = let
       GTK2_RC_FILES="/home/holschcc/.gtkrc-2.0";
       SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)";
       _JAVA_AWT_WM_NONREPARENTING = "1";
-      PATH="/run/system-manager/sw/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/holschcc/bin:/home/holschcc/.nix-profile/bin";
+      PATH="/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/holschcc/bin:/home/holschcc/.nix-profile/bin";
     };
   };
 }
@@ -2301,6 +2303,7 @@ Cursors hydra: https://hungyi.net/posts/hydra-for-evil-mc/
 #+end_src
 
 **** Leader Key
+Note: You still need to install udisks manually if you're not using this on nixos.
 #+begin_src nix-ts :tangle modules/emacs/evil/leader.nix
 { inputs, ... }:
 
@@ -3386,11 +3389,6 @@ How to add a latex package
 	    "obi" = "'biblio-doi-insert-bibtex";
 	  };
 	};
-
-	denote-project-notes = {
-	  enable = true;
-	  after = ["denote"];
-        };
       };
     };
   };
@@ -4916,6 +4914,7 @@ def pnormal(x, mu, sigma):
 ** Keyboard
 I use kmonad to manage my keybinds.
 Canary is my layout of choice.
+*Important*: Add your user to the input & uinput groups
 #+begin_src nix-ts :tangle modules/keyboard.nix :noweb yes
 {
   flake.homeModules.canary = { pkgs, lib, ... }:
@@ -5416,6 +5415,7 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
 	  gfhookf = [
 	    "('qutebrowser-exwm-mode 'evil-normal-state)"
 	  ];
+	  setopt.qutebrowser-history-database = ''"~/.local/qutebrowser/history.sqlite"'';
 	};
 	qutebrowser-evil = {
 	  enable = true;

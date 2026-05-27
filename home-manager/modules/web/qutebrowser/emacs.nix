@@ -35,6 +35,7 @@
 	  gfhookf = [
 	    "('qutebrowser-exwm-mode 'evil-normal-state)"
 	  ];
+	  setopt.qutebrowser-history-database = ''"~/.local/qutebrowser/history.sqlite"'';
 	};
 	qutebrowser-evil = {
 	  enable = true;

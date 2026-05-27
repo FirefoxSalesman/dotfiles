@@ -70,11 +70,6 @@
 	    "obi" = "'biblio-doi-insert-bibtex";
 	  };
 	};
-
-	denote-project-notes = {
-	  enable = true;
-	  after = ["denote"];
-        };
       };
     };
   };

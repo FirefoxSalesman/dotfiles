@@ -12,6 +12,7 @@ in {
   in {
     # shell scripts
     kmonad = inputs.kmonad.packages.${pkgs.system}.default;
+    sage = pkgs-stable.sage;
     ezf = packages.ezf;
     cast = packages.cast;
     doomer = packages.doomer;
