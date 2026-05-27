@@ -24,7 +24,6 @@ in {
     pkg = packages.pkg;
     startOllama = packages.startOllama;
     udisksmenu = packages.udisksmenu;
-    updatefix = packages.updatefix;
     wiki = packages.wiki;
 
     # overrides

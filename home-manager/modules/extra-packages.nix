@@ -10,7 +10,6 @@
       zbar
       # scripts
       pkg
-      updatefix
       hdmihelper
     ];
   };
