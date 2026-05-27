@@ -200,21 +200,6 @@ https://github.com/dmkhitaryan/river-next-nix-module/blob/5205ebf2b5f820c3a9221f
 # #+end_src
 
 ** Scripts
-*** Updatefix
-Script to automate fixing my setup after an update breaks certain parts.
-Meant to be run with doas
-#+begin_src nix-ts :tangle modules/packages/scripts/updatefix.nix
-{ inputs, ... }:
-
-{
-  perSystem = { pkgs, ... }: {
-    packages.updatefix = pkgs.writeShellScriptBin "updatefix" ''
-      cp /usr/lib/systemd/system/getty@.bak /usr/lib/systemd/system/getty@.service
-    '';
-  };
-}
-#+end_src
-
 *** HDMI Helper
 #+begin_src nix-ts :tangle modules/packages/scripts/hdmi-helper.nix
 { inputs, ... }:
@@ -255,8 +240,6 @@ Dev templates: https://github.com/the-nix-way/dev-templates
       update() {
         nix flake update --flake ~/.config/home-manager/
         home-manager switch --flake ~/.config/home-manager/#holschcc
-        doas nix flake update --flake /etc/system-manager/
-        doas nix run 'github:numtide/system-manager' -- switch --flake '/etc/system-manager/'
         yay -Syu
       }
 
@@ -1580,7 +1563,7 @@ I couldn't get olivetti to work.
 }
 #+end_src
 
-** Gui
+** startx
 #+begin_src nix-ts :tangle modules/gui.nix :noweb yes
 {
   flake.homeModules.startx = { config, pkgs, ... }:
@@ -3400,7 +3383,7 @@ fi
   :config
   (gsetq hydra-posframe-show-params '(:internal-border-width 1
 							     :internal-border-color "003f28"
-							     :parent-frame nil
+							     ;; :parent-frame nil
 							     :poshandler posframe-poshandler-frame-bottom-center
 							     :refposhandler posframe-refposhandler-xwininfo))
   :gfhookf ('doom-escape 'hydra-keyboard-quit))
