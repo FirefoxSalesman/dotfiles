@@ -8,6 +8,7 @@
         xrandr --dpi 96
       '';
       exwm-monitors = [''0 "eDP-1-1"''];
+      wantBattery = true;
     };
   };
   flake.homeModules.monitors-host = { ... }:
@@ -17,6 +18,7 @@
         xrandr --auto
       '';
       exwm-monitors = [''0 "DP-1"'' ''1 "DVI-I-1"''] ;
+      wantBattery = false;
     };
   };
 }

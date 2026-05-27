@@ -73,10 +73,10 @@ in {
 	  default = "";
 	  description = "The value of exwm-randr-workspace-monitor-plist to use for the current host";
 	};
-	exwm-monitor-count = lib.mkOption {
-	  type = lib.types.int;
-	  default = "";
-	  description = "Th";
+	wantBattery = lib.mkOption {
+	  type = lib.types.bool;
+	  default = false;
+	  description = "Enables the battery block in the status bar";
 	};
       } ;
 

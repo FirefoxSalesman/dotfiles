@@ -17,11 +17,12 @@
               format =  "$icon $timestamp.datetime(f:'%a %d/%m %R')";
               interval = 60;
             }
+	    (lib.mkIf config.hosts.wantBattery
 	    {
               block = "battery";
               format =  "$icon $percentage";
               interval = 60;
-            }
+            })
 	  ];
 	  icons = "awesome6";
 	  settings.theme.overrides = {

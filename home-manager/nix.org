@@ -377,10 +377,10 @@ in {
 	  default = "";
 	  description = "The value of exwm-randr-workspace-monitor-plist to use for the current host";
 	};
-	exwm-monitor-count = lib.mkOption {
-	  type = lib.types.int;
-	  default = "";
-	  description = "Th";
+	wantBattery = lib.mkOption {
+	  type = lib.types.bool;
+	  default = false;
+	  description = "Enables the battery block in the status bar";
 	};
       } ;
 
@@ -420,6 +420,7 @@ in {
         xrandr --dpi 96
       '';
       exwm-monitors = [''0 "eDP-1-1"''];
+      wantBattery = true;
     };
   };
   flake.homeModules.monitors-host = { ... }:
@@ -429,6 +430,7 @@ in {
         xrandr --auto
       '';
       exwm-monitors = [''0 "DP-1"'' ''1 "DVI-I-1"''] ;
+      wantBattery = false;
     };
   };
 }
@@ -1029,11 +1031,12 @@ We use this to format the date, time, & battery percentage in our modeline.
               format =  "$icon $timestamp.datetime(f:'%a %d/%m %R')";
               interval = 60;
             }
+	    (lib.mkIf config.hosts.wantBattery
 	    {
               block = "battery";
               format =  "$icon $percentage";
               interval = 60;
-            }
+            })
 	  ];
 	  icons = "awesome6";
 	  settings.theme.overrides = {
