@@ -232,21 +232,36 @@ Dev templates: https://github.com/the-nix-way/dev-templates
       packages.pkg = pkgs.writeShellScriptBin "pkg" ''
 	<<Pkg Body>>
       '';
-    } ;
+    };
+
+  flake.homeModules.pkg = { pkgs, ... }:
+
+  {
+    home.packages = [pkgs.pkg];
+
+    programs.nh = {
+      enable = true;
+      flake = "~/.config/home-manager";
+    };
+  };
 }
 #+end_src
 
 #+NAME: Pkg Body
 #+begin_src bash-ts
 optimize() {
-  nix-collect-garbage -d
+  ${pkgs.nh}/bin/nh clean user -q
   nix-store --optimise
   doas pacman -Sc --noconfirm
 }
 
+rebuild() {
+  ${pkgs.nh}/bin/nh home switch -c $(printf "holschcc@" | cat - /etc/hostname)
+}
+
 update() {
   nix flake update --flake ~/.config/home-manager/
-  home-manager switch --flake ~/.config/home-manager/#holschcc
+  rebuild
   yay -Syu
 }
 
@@ -282,8 +297,10 @@ case "$1" in
   rm ) yay -Rs ''${@:2} ;;
   flake ) nix flake ''${@:2} ;;
   tmp ) nix-shell -p ''${@:2};;
-  template ) template;;
-  search ) list | ${pkgs.ripgrep}/bin/rg ''${@:2} ;;
+  rebuild ) rebuild ;;
+  template ) template ;;
+  query ) list | ${pkgs.ripgrep}/bin/rg ''${@:2} ;;
+  search ) nh-search ''${@:2} ;;
   help ) help ;;
 esac
 #+end_src
@@ -347,6 +364,7 @@ in {
 	self.homeModules.media
 	self.homeModules.notifications
 	self.homeModules.passwordManagement
+	self.homeModules.pkg
 	self.homeModules.sage
 	self.homeModules.shellConfig
 	self.homeModules.startx
@@ -812,7 +830,7 @@ config = let
 *** Environment variables
 #+begin_src nix-ts :tangle modules/shells/environment-variables.nix
 {
-  flake.homeModules.shellConfig = { lib, ... }:
+  flake.homeModules.shellConfig = { lib, config, ... }:
   {
     home.sessionVariables = {
       XDG_DATA_HOME="$HOME/.local";
@@ -820,7 +838,7 @@ config = let
       XDG_CACHE_HOME="$HOME/.cache";
       XDG_CONFIG_HOME="$HOME/.config";
       XDG_DATA_DIRS= lib.mkForce "$HOME/.nix-profile/share:$XDG_DATA_DIRS";
-      # EDITOR = "emacsclient";
+      EDITOR = "emacsclient";
       BROWSER="qutebrowser";
       _JAVA_OPTIONS="-Djava.util.prefs.userRoot=$XDG_CONFIG_HOME/java";
       GTK2_RC_FILES="/home/holschcc/.gtkrc-2.0";
@@ -1565,7 +1583,6 @@ I couldn't get olivetti to work.
       wget
       zbar
       # scripts
-      pkg
       hdmihelper
     ];
   };
@@ -3849,10 +3866,6 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
 	  "('pertab-follow-enter (lambda () (golden-ratio-mode -1)))"
 	  "('pertab-follow-exit (lambda () (golden-ratio-mode +1)))"
 	];
-	config = ''
-	  (advice-add 'other-frame :before 'pertab--exit-layout)
-	  (advice-add 'other-frame :after 'pertab--after-switch-to-tab)
-	'';
       };
 
       pertab-master-stack = {

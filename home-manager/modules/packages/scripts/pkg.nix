@@ -7,14 +7,18 @@
     {
       packages.pkg = pkgs.writeShellScriptBin "pkg" ''
 	optimize() {
-	  nix-collect-garbage -d
+	  ${pkgs.nh}/bin/nh clean user -q
 	  nix-store --optimise
 	  doas pacman -Sc --noconfirm
 	}
 	
+	rebuild() {
+	  ${pkgs.nh}/bin/nh home switch -c $(printf "holschcc@" | cat - /etc/hostname)
+	}
+	
 	update() {
 	  nix flake update --flake ~/.config/home-manager/
-	  home-manager switch --flake ~/.config/home-manager/#holschcc
+	  rebuild
 	  yay -Syu
 	}
 	
@@ -50,10 +54,23 @@
 	  rm ) yay -Rs ''${@:2} ;;
 	  flake ) nix flake ''${@:2} ;;
 	  tmp ) nix-shell -p ''${@:2};;
-	  template ) template;;
-	  search ) list | ${pkgs.ripgrep}/bin/rg ''${@:2} ;;
+	  rebuild ) rebuild ;;
+	  template ) template ;;
+	  query ) list | ${pkgs.ripgrep}/bin/rg ''${@:2} ;;
+	  search ) nh-search ''${@:2} ;;
 	  help ) help ;;
 	esac
       '';
-    } ;
+    };
+
+  flake.homeModules.pkg = { pkgs, ... }:
+
+  {
+    home.packages = [pkgs.pkg];
+
+    programs.nh = {
+      enable = true;
+      flake = "~/.config/home-manager";
+    };
+  };
 }

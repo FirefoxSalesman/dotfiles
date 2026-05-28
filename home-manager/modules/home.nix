@@ -50,6 +50,7 @@ in {
 	self.homeModules.media
 	self.homeModules.notifications
 	self.homeModules.passwordManagement
+	self.homeModules.pkg
 	self.homeModules.sage
 	self.homeModules.shellConfig
 	self.homeModules.startx

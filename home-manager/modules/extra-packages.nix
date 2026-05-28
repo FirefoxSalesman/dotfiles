@@ -9,7 +9,6 @@
       wget
       zbar
       # scripts
-      pkg
       hdmihelper
     ];
   };

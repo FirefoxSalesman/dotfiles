@@ -1,5 +1,5 @@
 {
-  flake.homeModules.shellConfig = { lib, ... }:
+  flake.homeModules.shellConfig = { lib, config, ... }:
   {
     home.sessionVariables = {
       XDG_DATA_HOME="$HOME/.local";
@@ -7,7 +7,7 @@
       XDG_CACHE_HOME="$HOME/.cache";
       XDG_CONFIG_HOME="$HOME/.config";
       XDG_DATA_DIRS= lib.mkForce "$HOME/.nix-profile/share:$XDG_DATA_DIRS";
-      # EDITOR = "emacsclient";
+      EDITOR = "emacsclient";
       BROWSER="qutebrowser";
       _JAVA_OPTIONS="-Djava.util.prefs.userRoot=$XDG_CONFIG_HOME/java";
       GTK2_RC_FILES="/home/holschcc/.gtkrc-2.0";
