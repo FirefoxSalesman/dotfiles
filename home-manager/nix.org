@@ -221,7 +221,7 @@ https://github.com/dmkhitaryan/river-next-nix-module/blob/5205ebf2b5f820c3a9221f
 A package manager manager
 
 Dev templates: https://github.com/the-nix-way/dev-templates
-#+begin_src nix-ts :tangle modules/packages/scripts/pkg.nix
+#+begin_src nix-ts :noweb yes :tangle modules/packages/scripts/pkg.nix
 { inputs, ... }:
 {
   perSystem = { lib, pkgs, self', ... }:
@@ -230,53 +230,64 @@ Dev templates: https://github.com/the-nix-way/dev-templates
   in
     {
       packages.pkg = pkgs.writeShellScriptBin "pkg" ''
-	optimize() {
-        nix-collect-garbage -d
-        nix-store --optimise
-        doas pacman -Sc --noconfirm
-      }
-
-      update() {
-        nix flake update --flake ~/.config/home-manager/
-        home-manager switch --flake ~/.config/home-manager/#holschcc
-        yay -Syu
-      }
-
-      help() {
-        ${pkgs.coreutils}/bin/echo "help: display this message"
-        ${pkgs.coreutils}/bin/echo "install [packages]: install packages with yay"
-        ${pkgs.coreutils}/bin/echo "optimize: clean up package cache"
-        ${pkgs.coreutils}/bin/echo "update: update all packages"
-        ${pkgs.coreutils}/bin/echo "add: install a package"
-        ${pkgs.coreutils}/bin/echo "rm: uninstall a package"
-        ${pkgs.coreutils}/bin/echo "flake: perform a nix flake operation"
-        ${pkgs.coreutils}/bin/echo "template: set up a devshell template"
-        ${pkgs.coreutils}/bin/echo "tmp: temporarily install a package"
-      }
-
-      getTemplates() {
-        ${pkgs.coreutils}/bin/printf "bun\nc-cpp\nclojure\ncsharp\ncue\ndhall\nelixir\nelm\nempty\ngleam\ngo\nhashi\nhaskell\nhaxe\njava\njupyter\nkotlin\nlatex\nnickel\nnim\nnix\nnode\nocaml\nopa\nphp\nplatformio\nprotobuf\npulumi\npurescript\npython\nr\nruby\nrust\nrust-toolchain\nscala\nshell\nswi-prolog\nswift\nvlang\nzig" | ${self'.packages.ezf}/bin/ezf
-      }
-
-      template() {
-        ${torsocks} nix flake init --template "https://flakehub.com/f/the-nix-way/dev-templates/*#$(getTemplates)"
-        ${pkgs.direnv}/bin/direnv allow
-      }
-
-      case "$1" in
-        optimize ) optimize ;;
-        update ) update ;;
-        add ) yay -S ''${@:2} ;;
-        rm ) yay -Rs ''${@:2} ;;
-        flake ) nix flake ''${@:2} ;;
-        tmp ) nix-shell -p ''${@:2};;
-        template ) template;;
-        help ) help ;;
-      esac
+	<<Pkg Body>>
       '';
     } ;
 }
 #+end_src
+
+#+NAME: Pkg Body
+#+begin_src bash-ts
+optimize() {
+  nix-collect-garbage -d
+  nix-store --optimise
+  doas pacman -Sc --noconfirm
+}
+
+update() {
+  nix flake update --flake ~/.config/home-manager/
+  home-manager switch --flake ~/.config/home-manager/#holschcc
+  yay -Syu
+}
+
+help() {
+  ${pkgs.coreutils}/bin/echo "help: display this message"
+  ${pkgs.coreutils}/bin/echo "install [packages]: install packages with yay"
+  ${pkgs.coreutils}/bin/echo "optimize: clean up package cache"
+  ${pkgs.coreutils}/bin/echo "update: update all packages"
+  ${pkgs.coreutils}/bin/echo "add: install a package"
+  ${pkgs.coreutils}/bin/echo "rm: uninstall a package"
+  ${pkgs.coreutils}/bin/echo "flake: perform a nix flake operation"
+  ${pkgs.coreutils}/bin/echo "template: set up a devshell template"
+  ${pkgs.coreutils}/bin/echo "tmp: temporarily install a package"
+}
+
+getTemplates() {
+  ${pkgs.coreutils}/bin/printf "bun\nc-cpp\nclojure\ncsharp\ncue\ndhall\nelixir\nelm\nempty\ngleam\ngo\nhashi\nhaskell\nhaxe\njava\njupyter\nkotlin\nlatex\nnickel\nnim\nnix\nnode\nocaml\nopa\nphp\nplatformio\nprotobuf\npulumi\npurescript\npython\nr\nruby\nrust\nrust-toolchain\nscala\nshell\nswi-prolog\nswift\nvlang\nzig" | ${self'.packages.ezf}/bin/ezf
+}
+
+template() {
+  ${torsocks} nix flake init --template "https://flakehub.com/f/the-nix-way/dev-templates/*#$(getTemplates)"
+  ${pkgs.direnv}/bin/direnv allow
+}
+
+list() {
+  yay -Qq
+}
+
+case "$1" in
+  optimize ) optimize ;;
+  update ) update ;;
+  add ) yay -S ''${@:2} ;;
+  rm ) yay -Rs ''${@:2} ;;
+  flake ) nix flake ''${@:2} ;;
+  tmp ) nix-shell -p ''${@:2};;
+  template ) template;;
+  search ) list | ${pkgs.ripgrep}/bin/rg ''${@:2} ;;
+  help ) help ;;
+esac
+#+end_src
+
 * Notes to my future self
 + To get eduroam working, you need ppp & pptclient
 + Don't let xorg use the nvidia card. It breaks everything
@@ -3788,7 +3799,7 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
               (("s" #'tab-new "new")
                ("k" #'tab-close "close")
                ("r" #'tab-rename "rename")
-               ("u" #'tab-undo "undo"))
+               ("j" #'tab-undo "undo"))
               "Groups"
               (("g" #'tab-group "add to group")
                ("K" #'tab-close-group "close group"))
@@ -3838,6 +3849,10 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
 	  "('pertab-follow-enter (lambda () (golden-ratio-mode -1)))"
 	  "('pertab-follow-exit (lambda () (golden-ratio-mode +1)))"
 	];
+	config = ''
+	  (advice-add 'other-frame :before 'pertab--exit-layout)
+	  (advice-add 'other-frame :after 'pertab--after-switch-to-tab)
+	'';
       };
 
       pertab-master-stack = {

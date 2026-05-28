@@ -57,7 +57,7 @@
               (("s" #'tab-new "new")
                ("k" #'tab-close "close")
                ("r" #'tab-rename "rename")
-               ("u" #'tab-undo "undo"))
+               ("j" #'tab-undo "undo"))
               "Groups"
               (("g" #'tab-group "add to group")
                ("K" #'tab-close-group "close group"))
@@ -142,6 +142,10 @@
 	  "('pertab-follow-enter (lambda () (golden-ratio-mode -1)))"
 	  "('pertab-follow-exit (lambda () (golden-ratio-mode +1)))"
 	];
+	config = ''
+	  (advice-add 'other-frame :before 'pertab--exit-layout)
+	  (advice-add 'other-frame :after 'pertab--after-switch-to-tab)
+	'';
       };
 
       pertab-master-stack = {
