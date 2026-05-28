@@ -14,7 +14,7 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
     import-tree.url = "github:vic/import-tree";
 
-    wrappers.url = "github:Lassulus/wrappers";
+    wrapper-modules.url = "github:BirdeeHub/nix-wrapper-modules";
 
     nur.url = "github:nix-community/NUR";
     stylix.url = "github:danth/stylix";
@@ -228,12 +228,10 @@ Dev templates: https://github.com/the-nix-way/dev-templates
 {
   perSystem = { lib, pkgs, self', ... }:
   let
-    nh = inputs.wrappers.lib.wrapPackage {
+    nh = inputs.wrapper-modules.wrappers.nh.wrap {
       inherit pkgs;
       package = pkgs.nh;
-      env = {
-        "NH_HOME_FLAKE" = "$HOME/.config/home-manager";
-      };
+      flake = "~/.config/home-manager";
     };
   in
     {
@@ -4723,14 +4721,23 @@ NEG subtracts if it is true."
 The mpv package lets us start an mpv process & puppeteer it with emacs. I'm definitely not using it to its full potential.
 =efs/mpv-browse-url= originates from https://karthinks.com/software/lazy-elfeed/
 #+begin_src nix-ts :tangle modules/multimedia/mpv.nix :noweb yes
+{ inputs, ... }:
+
 {
   perSystem = { pkgs, ... }: {
-    packages.mpv = (pkgs.mpv.override {
-      scripts = with pkgs.mpvScripts; [
-	thumbfast
-	sponsorblock
-	quality-menu
-      ];
+    packages.mpv = (inputs.wrapper-modules.wrappers.mpv.wrap {
+      pkgs = pkgs;
+      script = {
+	thumbnail.path = pkgs.mpvScripts.thumbnail;
+	sponsorblock.path = pkgs.mpvScripts.sponsorblock;
+	quality-menu.path = pkgs.mpvScripts.quality-menu;
+      };
+      "mpv.conf".content = ''
+	 fs=no
+	 hwdec=auto
+	 x11-bypass-compositor=no
+	 volume-max=250
+      '';
     });
   };
 
@@ -4748,15 +4755,9 @@ The mpv package lets us start an mpv process & puppeteer it with emacs. I'm defi
       mpv = {
 	enable = true;
 	package = (config.lib.nixGL.wrap pkgs.mpv);
-	config = {
-	  fs = "no";
-	  hwdec = "auto";
-	  x11-bypass-compositor = "no";
-	  volume-max = "250";
-	};
       };
     };
-  } ;
+  };
 }
 #+end_src
 

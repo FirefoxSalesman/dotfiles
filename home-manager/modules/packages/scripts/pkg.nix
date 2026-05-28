@@ -2,12 +2,10 @@
 {
   perSystem = { lib, pkgs, self', ... }:
   let
-    nh = inputs.wrappers.lib.wrapPackage {
+    nh = inputs.wrapper-modules.wrappers.nh.wrap {
       inherit pkgs;
       package = pkgs.nh;
-      env = {
-        "NH_HOME_FLAKE" = "$HOME/.config/home-manager";
-      };
+      flake = "~/.config/home-manager";
     };
   in
     {

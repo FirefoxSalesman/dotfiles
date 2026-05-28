@@ -1,11 +1,20 @@
+{ inputs, ... }:
+
 {
   perSystem = { pkgs, ... }: {
-    packages.mpv = (pkgs.mpv.override {
-      scripts = with pkgs.mpvScripts; [
-	thumbfast
-	sponsorblock
-	quality-menu
-      ];
+    packages.mpv = (inputs.wrapper-modules.wrappers.mpv.wrap {
+      pkgs = pkgs;
+      script = {
+	thumbnail.path = pkgs.mpvScripts.thumbnail;
+	sponsorblock.path = pkgs.mpvScripts.sponsorblock;
+	quality-menu.path = pkgs.mpvScripts.quality-menu;
+      };
+      "mpv.conf".content = ''
+	 fs=no
+	 hwdec=auto
+	 x11-bypass-compositor=no
+	 volume-max=250
+      '';
     });
   };
 
@@ -28,13 +37,7 @@
       mpv = {
 	enable = true;
 	package = (config.lib.nixGL.wrap pkgs.mpv);
-	config = {
-	  fs = "no";
-	  hwdec = "auto";
-	  x11-bypass-compositor = "no";
-	  volume-max = "250";
-	};
       };
     };
-  } ;
+  };
 }
