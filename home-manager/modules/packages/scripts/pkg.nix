@@ -2,18 +2,24 @@
 {
   perSystem = { lib, pkgs, self', ... }:
   let
-    torsocks = lib.getExe pkgs.torsocks;
+    nh = inputs.wrappers.lib.wrapPackage {
+      inherit pkgs;
+      package = pkgs.nh;
+      env = {
+        "NH_HOME_FLAKE" = "$HOME/.config/home-manager";
+      };
+    };
   in
     {
       packages.pkg = pkgs.writeShellScriptBin "pkg" ''
 	optimize() {
-	  ${pkgs.nh}/bin/nh clean user -q
+	  ${lib.getExe nh} clean user -q
 	  nix-store --optimise
 	  doas pacman -Sc --noconfirm
 	}
 	
 	rebuild() {
-	  ${pkgs.nh}/bin/nh home switch -c $(printf "holschcc@" | cat - /etc/hostname)
+	  ${lib.getExe nh} home switch -c $(printf "holschcc@" | cat - /etc/hostname)
 	}
 	
 	update() {
@@ -39,7 +45,7 @@
 	}
 	
 	template() {
-	  ${torsocks} nix flake init --template "https://flakehub.com/f/the-nix-way/dev-templates/*#$(getTemplates)"
+	  nix flake init --template "https://flakehub.com/f/the-nix-way/dev-templates/*#$(getTemplates)"
 	  ${pkgs.direnv}/bin/direnv allow
 	}
 	
@@ -57,20 +63,9 @@
 	  rebuild ) rebuild ;;
 	  template ) template ;;
 	  query ) list | ${pkgs.ripgrep}/bin/rg ''${@:2} ;;
-	  search ) nh-search ''${@:2} ;;
+	  search ) ${lib.getExe nh} search ''${@:2} ;;
 	  help ) help ;;
 	esac
       '';
     };
-
-  flake.homeModules.pkg = { pkgs, ... }:
-
-  {
-    home.packages = [pkgs.pkg];
-
-    programs.nh = {
-      enable = true;
-      flake = "~/.config/home-manager";
-    };
-  };
 }

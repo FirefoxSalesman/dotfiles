@@ -10,6 +10,7 @@
       zbar
       # scripts
       hdmihelper
+      pkg
     ];
   };
 }

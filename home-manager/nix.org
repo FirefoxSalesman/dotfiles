@@ -14,6 +14,8 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
     import-tree.url = "github:vic/import-tree";
 
+    wrappers.url = "github:Lassulus/wrappers";
+
     nur.url = "github:nix-community/NUR";
     stylix.url = "github:danth/stylix";
 
@@ -226,37 +228,32 @@ Dev templates: https://github.com/the-nix-way/dev-templates
 {
   perSystem = { lib, pkgs, self', ... }:
   let
-    torsocks = lib.getExe pkgs.torsocks;
+    nh = inputs.wrappers.lib.wrapPackage {
+      inherit pkgs;
+      package = pkgs.nh;
+      env = {
+        "NH_HOME_FLAKE" = "$HOME/.config/home-manager";
+      };
+    };
   in
     {
       packages.pkg = pkgs.writeShellScriptBin "pkg" ''
 	<<Pkg Body>>
       '';
     };
-
-  flake.homeModules.pkg = { pkgs, ... }:
-
-  {
-    home.packages = [pkgs.pkg];
-
-    programs.nh = {
-      enable = true;
-      flake = "~/.config/home-manager";
-    };
-  };
 }
 #+end_src
 
 #+NAME: Pkg Body
 #+begin_src bash-ts
 optimize() {
-  ${pkgs.nh}/bin/nh clean user -q
+  ${lib.getExe nh} clean user -q
   nix-store --optimise
   doas pacman -Sc --noconfirm
 }
 
 rebuild() {
-  ${pkgs.nh}/bin/nh home switch -c $(printf "holschcc@" | cat - /etc/hostname)
+  ${lib.getExe nh} home switch -c $(printf "holschcc@" | cat - /etc/hostname)
 }
 
 update() {
@@ -282,7 +279,7 @@ getTemplates() {
 }
 
 template() {
-  ${torsocks} nix flake init --template "https://flakehub.com/f/the-nix-way/dev-templates/*#$(getTemplates)"
+  nix flake init --template "https://flakehub.com/f/the-nix-way/dev-templates/*#$(getTemplates)"
   ${pkgs.direnv}/bin/direnv allow
 }
 
@@ -300,7 +297,7 @@ case "$1" in
   rebuild ) rebuild ;;
   template ) template ;;
   query ) list | ${pkgs.ripgrep}/bin/rg ''${@:2} ;;
-  search ) nh-search ''${@:2} ;;
+  search ) ${lib.getExe nh} search ''${@:2} ;;
   help ) help ;;
 esac
 #+end_src
@@ -364,7 +361,6 @@ in {
 	self.homeModules.media
 	self.homeModules.notifications
 	self.homeModules.passwordManagement
-	self.homeModules.pkg
 	self.homeModules.sage
 	self.homeModules.shellConfig
 	self.homeModules.startx
@@ -1584,6 +1580,7 @@ I couldn't get olivetti to work.
       zbar
       # scripts
       hdmihelper
+      pkg
     ];
   };
 }

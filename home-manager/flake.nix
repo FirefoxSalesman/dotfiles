@@ -9,6 +9,8 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
     import-tree.url = "github:vic/import-tree";
 
+    wrappers.url = "github:Lassulus/wrappers";
+
     nur.url = "github:nix-community/NUR";
     stylix.url = "github:danth/stylix";
 
