@@ -11,7 +11,8 @@
 	# lutris
 	# retroarch
 	# gamemode
-	# prismlauncher
+	prismlauncher
+	graalvmPackages.graalvm-oracle_17
       ];
     };
   };

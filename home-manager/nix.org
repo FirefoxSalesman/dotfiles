@@ -5650,7 +5650,8 @@ Setting up your alsoftrc correctly makes Minecraft happy
 	# lutris
 	# retroarch
 	# gamemode
-	# prismlauncher
+	prismlauncher
+	graalvmPackages.graalvm-oracle_17
       ];
     };
   };
