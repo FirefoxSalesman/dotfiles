@@ -44,7 +44,6 @@ in {
 	self.homeModules.exwm
 	self.homeModules.fileManager
 	self.homeModules.gaming
-	self.homeModules.glx
 	self.homeModules.java
 	self.homeModules.ledger
 	self.homeModules.media
@@ -98,6 +97,7 @@ in {
 	programs.home-manager.enable = true;
 
 	nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
+	targets.genericLinux.gpu.enable = true;
       };
     };
   };

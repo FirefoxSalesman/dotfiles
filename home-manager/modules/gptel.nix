@@ -1,17 +1,18 @@
 { inputs, ... }:
 
 {
-  perSystem = { pkgs, ... }: {
+  perSystem = { lib, pkgs, ... }: {
     packages.startOllama = pkgs.writeShellScriptBin "start-ollama" ''
       if [[ "$(pidof ollama)" -gt 0 ]]; then
         echo "ollama already running"
       else
-        ollama serve
+        ${lib.getExe pkgs.ollama} serve
       fi
     '';
   };
 
   flake.homeModules.ai = { config, pkgs, ... }: {
+    home.packages = [pkgs.ollama];
     programs.emacs.init = {
       # ide.copilot = {
       # 	enable = true;
@@ -38,7 +39,7 @@
 	    (plist-put minuet-openai-fim-compatible-options :end-point "http://localhost:11434/v1/completions")
 	    (plist-put minuet-openai-fim-compatible-options :name "Ollama")
 	    (plist-put minuet-openai-fim-compatible-options :api-key "TERM")
-	    (plist-put minuet-openai-fim-compatible-options :model "qwen2.5-coder:3b")
+	    (plist-put minuet-openai-fim-compatible-options :model "deepseek-coder:1.3b")
 	    (minuet-set-optional-options minuet-openai-fim-compatible-options :max_tokens 56)
 	  '';
 	};
@@ -59,14 +60,13 @@
               '''(org-mode . "HK-47  ")''
               '''(text-mode . "HK-47  ")''
 	    ];
-	    gptel-model = "'llama3.2:3b";
-	    # gptel-model = "'qwen3:latest";
+	    gptel-model = "'deepseek-coder:1.3b";
 	    gptel-backend = ''
 	      (gptel-make-ollama "Ollama"
 	        :stream t
 	        :protocol "http"
 	        :host "localhost:11434"
-	        :models '(qwen3:latest llama3.2:3b))
+	        :models '(deepseek-coder:1.3b))
 	    '';
 	    # gptel-backend = ''(gptel-make-gh-copilot "Copilot")'';
 	  };

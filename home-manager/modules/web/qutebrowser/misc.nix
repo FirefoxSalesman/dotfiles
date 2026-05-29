@@ -11,7 +11,6 @@
     programs.qutebrowser = {
       enable = true;
       enableDefaultBindings = true;
-      package = (config.lib.nixGL.wrap pkgs.qutebrowser);
       loadAutoconfig = false;
 
       aliases = {

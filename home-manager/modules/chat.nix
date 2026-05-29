@@ -4,8 +4,7 @@
   flake.homeModules.chat = { config, pkgs, ... }:
   {
     home.packages = with pkgs; [
-      (config.lib.nixGL.wrap teams-for-linux)
-      (config.lib.nixGL.wrap thunderbird)
+      thunderbird
     ];
 
     programs.vesktop = {

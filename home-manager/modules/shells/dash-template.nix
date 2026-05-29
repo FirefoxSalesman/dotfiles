@@ -85,11 +85,11 @@
     };
 
     config = let
-      aliasesStr = concatStringsSep "\n"
+    aliasesStr = concatStringsSep "\n"
       ((mapAttrsToList (k: v: "alias ${k}=${escapeShellArg v}")
         cfg.shellAliases) ++
-        (mapAttrsToList (k: v: "alias ${k}=${escapeShellArg v}")
-          config.home.shellAliases));
+      (mapAttrsToList (k: v: "alias ${k}=${escapeShellArg v}")
+        config.home.shellAliases));
     
       globalAliasesStr = concatStringsSep "\n"
       (mapAttrsToList (k: v: "alias ${k}=${escapeShellArg v}")

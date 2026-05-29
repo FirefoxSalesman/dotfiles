@@ -28,11 +28,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nixgl = {
-      url = "github:nix-community/nixGL";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     kmonad = {
       url = "github:kmonad/kmonad?dir=nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -353,7 +348,6 @@ in {
 	self.homeModules.exwm
 	self.homeModules.fileManager
 	self.homeModules.gaming
-	self.homeModules.glx
 	self.homeModules.java
 	self.homeModules.ledger
 	self.homeModules.media
@@ -407,6 +401,7 @@ in {
 	programs.home-manager.enable = true;
 
 	nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
+	targets.genericLinux.gpu.enable = true;
       };
     };
   };
@@ -463,26 +458,6 @@ in {
 }
 #+end_src
 
-** glx
-#+NAME: glx
-#+begin_src nix-ts :tangle modules/glx.nix
-{ inputs, ... }:
-{
-  flake = {
-    gpuWrappers = inputs.nixgl.defaultPackage;
-    homeModules.glx = { config, lib, ... }: {
-      targets.genericLinux.nixGL.packages = inputs.nixgl.packages;
-
-      targets.genericLinux.enable = true;
-
-      home.activation.clearNixglCache = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-	  [ -v DRY_RUN ] || rm -f ${config.xdg.cacheHome}/nixgl/result*
-	'';
-    };
-  };
-}
-#+end_src
-
 ** shells
 *** aliases
 #+NAME: Shell Aliases
@@ -519,6 +494,14 @@ This shell is mostly around for eshell to get completions from, but it can be us
       enable = true;
       package = pkgs.fish;
       interactiveShellInit = ''${lib.getExe pkgs.pfetch}'';
+      # Borrows from yay's completions
+      completions.pkg = ''
+	set -l listall "(yay -Pc)"
+	set -l listinstalled "(pacman -Q | string replace ' ' \t)"
+	complete -c pkg -a 'optimize update add rm flake tmp rebuild template query search help'
+	complete -c pkg -n "__fish_seen_subcommand_from add" -xa "$listall"
+	complete -c pkg -n "__fish_seen_subcommand_from rm" -xa "$listinstalled"
+      '';
     };
   };
 }
@@ -782,11 +765,11 @@ options = {
 #+NAME: Dash File Generation
 #+begin_src nix-ts
 config = let
-  aliasesStr = concatStringsSep "\n"
+aliasesStr = concatStringsSep "\n"
   ((mapAttrsToList (k: v: "alias ${k}=${escapeShellArg v}")
     cfg.shellAliases) ++
-    (mapAttrsToList (k: v: "alias ${k}=${escapeShellArg v}")
-      config.home.shellAliases));
+  (mapAttrsToList (k: v: "alias ${k}=${escapeShellArg v}")
+    config.home.shellAliases));
 
   globalAliasesStr = concatStringsSep "\n"
   (mapAttrsToList (k: v: "alias ${k}=${escapeShellArg v}")
@@ -882,7 +865,6 @@ At the moment we're using picom
   flake.homeModules.aesthetics = {config, pkgs, ... }: {
     services.picom = {
       enable = true;
-      package = (config.lib.nixGL.wrap pkgs.picom);
       backend = "glx";
       opacityRules = [ "70:class_g = 'lmms'" ];
       settings = {
@@ -1571,9 +1553,9 @@ I couldn't get olivetti to work.
 
   {
     home.packages = with pkgs; [
-      (config.lib.nixGL.wrap gimp)
-      (config.lib.nixGL.wrap blockbench)
-      (config.lib.nixGL.wrap tor-browser)
+      gimp
+      blockbench
+      tor-browser
       wget
       zbar
       # scripts
@@ -2033,7 +2015,7 @@ I'm running dired with a couple of small packages that improve on it
     ];
     programs.emacs = {
       enable = true;
-      package = (config.lib.nixGL.wrap pkgs.emacs30-gtk3);
+      package = pkgs.emacs30-gtk3;
       init = {
         enable = true;
         packageQuickstart = false;
@@ -4314,6 +4296,8 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 	    '''?\s-F''
 	    '''?\s-u''
 	    '''?\s-/''
+	    '''?\s-\H-i''
+	    '''?\s-\H-n''
 	    '''?\s-\H-e''
 	    '''?\s-\H-o''
 	    "?\\s-'"	# popper-toggle-latest
@@ -4435,6 +4419,8 @@ NEG subtracts if it is true."
                                            (?T aw-transpose-frame "Transpose Frame")
                                            (?? aw-show-dispatch-help)))'';
       general = {
+	"s-H-i" = "'ace-window";
+	"s-H-n" = "'ace-window";
 	"s-H-o" = "'ace-window";
 	"s-H-e" = "'ace-window";
       };
@@ -4503,17 +4489,18 @@ NEG subtracts if it is true."
 { inputs, ... }:
 
 {
-  perSystem = { pkgs, ... }: {
+  perSystem = { lib, pkgs, ... }: {
     packages.startOllama = pkgs.writeShellScriptBin "start-ollama" ''
       if [[ "$(pidof ollama)" -gt 0 ]]; then
         echo "ollama already running"
       else
-        ollama serve
+        ${lib.getExe pkgs.ollama} serve
       fi
     '';
   };
 
   flake.homeModules.ai = { config, pkgs, ... }: {
+    home.packages = [pkgs.ollama];
     programs.emacs.init = {
       # ide.copilot = {
       # 	enable = true;
@@ -4540,7 +4527,7 @@ NEG subtracts if it is true."
 	    (plist-put minuet-openai-fim-compatible-options :end-point "http://localhost:11434/v1/completions")
 	    (plist-put minuet-openai-fim-compatible-options :name "Ollama")
 	    (plist-put minuet-openai-fim-compatible-options :api-key "TERM")
-	    (plist-put minuet-openai-fim-compatible-options :model "qwen2.5-coder:3b")
+	    (plist-put minuet-openai-fim-compatible-options :model "deepseek-coder:1.3b")
 	    (minuet-set-optional-options minuet-openai-fim-compatible-options :max_tokens 56)
 	  '';
 	};
@@ -4561,14 +4548,13 @@ NEG subtracts if it is true."
               '''(org-mode . "HK-47  ")''
               '''(text-mode . "HK-47  ")''
 	    ];
-	    gptel-model = "'llama3.2:3b";
-	    # gptel-model = "'qwen3:latest";
+	    gptel-model = "'deepseek-coder:1.3b";
 	    gptel-backend = ''
 	      (gptel-make-ollama "Ollama"
 	        :stream t
 	        :protocol "http"
 	        :host "localhost:11434"
-	        :models '(qwen3:latest llama3.2:3b))
+	        :models '(deepseek-coder:1.3b))
 	    '';
 	    # gptel-backend = ''(gptel-make-gh-copilot "Copilot")'';
 	  };
@@ -4631,7 +4617,7 @@ NEG subtracts if it is true."
 
   flake.homeModules.media = { pkgs, config, ... }: {
     home.packages = with pkgs; [
-      (config.lib.nixGL.wrap obs-studio)
+      obs-studio
       lmms
       audacity
       doomer
@@ -4752,10 +4738,7 @@ The mpv package lets us start an mpv process & puppeteer it with emacs. I'm defi
 	'';
       };
 
-      mpv = {
-	enable = true;
-	package = (config.lib.nixGL.wrap pkgs.mpv);
-      };
+      mpv.enable = true;
     };
   };
 }
@@ -5356,7 +5339,6 @@ https://greasyfork.org/en/scripts/374833-yt2invidio
     programs.qutebrowser = {
       enable = true;
       enableDefaultBindings = true;
-      package = (config.lib.nixGL.wrap pkgs.qutebrowser);
       loadAutoconfig = false;
 
       aliases = {
@@ -5611,8 +5593,7 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
   flake.homeModules.chat = { config, pkgs, ... }:
   {
     home.packages = with pkgs; [
-      (config.lib.nixGL.wrap teams-for-linux)
-      (config.lib.nixGL.wrap thunderbird)
+      thunderbird
     ];
 
     programs.vesktop = {
@@ -5665,11 +5646,11 @@ Setting up your alsoftrc correctly makes Minecraft happy
         hrtf=true
       '';
       packages = with pkgs; [
-	# (config.lib.nixGL.wrap steam)
-	# (config.lib.nixGL.wrap lutris)
-	(config.lib.nixGL.wrap retroarch)
-	(config.lib.nixGL.wrap gamemode)
-	# (config.lib.nixGL.wrap prismlauncher)
+	steam
+	# lutris
+	# retroarch
+	# gamemode
+	# prismlauncher
       ];
     };
   };

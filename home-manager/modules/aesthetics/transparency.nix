@@ -2,7 +2,6 @@
   flake.homeModules.aesthetics = {config, pkgs, ... }: {
     services.picom = {
       enable = true;
-      package = (config.lib.nixGL.wrap pkgs.picom);
       backend = "glx";
       opacityRules = [ "70:class_g = 'lmms'" ];
       settings = {

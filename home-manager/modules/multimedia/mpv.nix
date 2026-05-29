@@ -34,10 +34,7 @@
 	'';
       };
 
-      mpv = {
-	enable = true;
-	package = (config.lib.nixGL.wrap pkgs.mpv);
-      };
+      mpv.enable = true;
     };
   };
 }

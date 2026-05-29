@@ -13,7 +13,7 @@
     ];
     programs.emacs = {
       enable = true;
-      package = (config.lib.nixGL.wrap pkgs.emacs30-gtk3);
+      package = pkgs.emacs30-gtk3;
       init = {
         enable = true;
         packageQuickstart = false;

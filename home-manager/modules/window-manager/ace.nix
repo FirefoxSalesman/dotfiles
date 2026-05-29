@@ -31,6 +31,8 @@
                                            (?T aw-transpose-frame "Transpose Frame")
                                            (?? aw-show-dispatch-help)))'';
       general = {
+	"s-H-i" = "'ace-window";
+	"s-H-n" = "'ace-window";
 	"s-H-o" = "'ace-window";
 	"s-H-e" = "'ace-window";
       };
