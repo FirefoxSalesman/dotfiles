@@ -69,3 +69,4 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] https://github.com/jojojames/fussy
 + [ ] https://github.com/jojojames/fzf-async
 + [ ] https://ianyepan.github.io/posts/git-blame-emacs/
++ [ ] https://blog.sidhartharya.com/posts/integrating-org-protocol-with-qutebrowser/

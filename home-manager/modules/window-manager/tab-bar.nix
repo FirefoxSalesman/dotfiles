@@ -163,12 +163,11 @@
 	  (defun roll--enable ()
              "Initialize Roll mode by setting up the initial state.
               Removes all other windows and creates the initial pane configuration."
-             ;;(delete-other-windows)
-             (when (equal roll--windows '())
-		   (delete-other-windows)
-	           (setq roll--windows (list (selected-window))))
-             ;;(setq roll--nof-visible-panes 1)
-             ;;(setq roll--first-visible-pane 0)
+             (if (equal roll--windows '())
+	          (progn
+		    (delete-other-windows)
+	            (setq roll--windows (list (selected-window))))
+                  (balance-windows))
              (when (equal roll--panes '()) (setq roll--panes (list (roll--make-snapshot))))
              (roll--debug "roll-mode enabled"))
 	'';

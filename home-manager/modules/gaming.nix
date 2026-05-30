@@ -7,7 +7,7 @@
         hrtf=true
       '';
       packages = with pkgs; [
-	steam
+	# steam
 	# lutris
 	# retroarch
 	# gamemode
