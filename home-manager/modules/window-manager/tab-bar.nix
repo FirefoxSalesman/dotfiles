@@ -92,13 +92,13 @@
 	  (defvar pertab-scroll-enter-hook nil "Hook run when entering scrolling layout.")
 	  (defvar pertab-scroll-exit-hook nil "Hook run when exiting scrolling layout.")
 	  
-	  (defun pertab-scroll-enter ()
-	    "Set up the scrolling layout."
+	  (defun pertab-scroll-enter (&optional reason)
+	    "Set up the scrolling layout. REASON is the reason for entering the layout."
 	    (roll-mode +1)
 	    (run-hooks 'pertab-scroll-enter-hook))
 	  
-	  (defun pertab-scroll-exit ()
-	    "Tear down the scrolling layout."
+	  (defun pertab-scroll-exit (&optional reason)
+	    "Tear down the scrolling layout. REASON is the reason for entering the layout."
 	    (roll-mode -1)
 	    (pertab-set-tab-local 'roll-max-visible-panes roll-max-visible-panes)
 	    (pertab-set-tab-local 'roll--panes roll--panes)
@@ -160,7 +160,7 @@
 	enable = true;
 	setopt.roll-debug-enabled = false;
 	config = ''
-	  (defun roll--enable ()
+	  (defun pertab-scroll--roll-enable ()
              "Initialize Roll mode by setting up the initial state.
               Removes all other windows and creates the initial pane configuration."
              (if (equal roll--windows '())
@@ -170,6 +170,7 @@
                   (balance-windows))
              (when (equal roll--panes '()) (setq roll--panes (list (roll--make-snapshot))))
              (roll--debug "roll-mode enabled"))
+	   (advice-add 'roll--enable :override 'pertab-scroll--roll-enable)
 	'';
       };
     };
