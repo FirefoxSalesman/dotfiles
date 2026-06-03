@@ -3821,7 +3821,7 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
 	enable = true;
 	ghookf = ["('tab-bar-mode 'pertab-mode)"];
 	setopt = {
-	  pertab-default-layout  = "'scroll";
+	  pertab-default-layout  = "'master-stack";
 	  pertab-next-buffer-function = "'bufler-cycle-buffers-forward";
 	  pertab-previous-buffer-function = "'bufler-cycle-buffers-backward";
 	};
@@ -3974,6 +3974,7 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 	enable = true;
 	ghookf = ["('bufler-mode 'bufler-workspace-workspaces-as-tabs-mode)"];
 	gfhookf = ["('bufler-workspace-workspaces-as-tabs-mode '(global-tab-line-mode burly-tabs-mode))"];
+	config = "(general-advice-add 'bufler-workspace-bookmark-handler :after 'pertab--after-switch-to-tab)";
       };
     };
   };

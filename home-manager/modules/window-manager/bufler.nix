@@ -137,6 +137,7 @@
 	enable = true;
 	ghookf = ["('bufler-mode 'bufler-workspace-workspaces-as-tabs-mode)"];
 	gfhookf = ["('bufler-workspace-workspaces-as-tabs-mode '(global-tab-line-mode burly-tabs-mode))"];
+	config = "(general-advice-add 'bufler-workspace-bookmark-handler :after 'pertab--after-switch-to-tab)";
       };
     };
   };

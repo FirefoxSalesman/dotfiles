@@ -85,7 +85,7 @@
 	enable = true;
 	ghookf = ["('tab-bar-mode 'pertab-mode)"];
 	setopt = {
-	  pertab-default-layout  = "'scroll";
+	  pertab-default-layout  = "'master-stack";
 	  pertab-next-buffer-function = "'bufler-cycle-buffers-forward";
 	  pertab-previous-buffer-function = "'bufler-cycle-buffers-backward";
 	};
