@@ -69,6 +69,11 @@
       url = "github:finalclass/emacs-roll";
       flake = false;
     };
+
+    avy-dashboard = {
+      url = "github:vincentjgoh/avy-dashboard";
+      flake = false;
+    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake {inherit inputs;} (inputs.import-tree ./modules);

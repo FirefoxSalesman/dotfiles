@@ -43,6 +43,22 @@
         "type": "github"
       }
     },
+    "avy-dashboard": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1775515598,
+        "narHash": "sha256-+ppCX9fMRRspiFmzAJV6//wgVcKBHeeLHme7/RRsLuc=",
+        "owner": "vincentjgoh",
+        "repo": "avy-dashboard",
+        "rev": "a4af931d8683f272be29b6425b0d65ff3ed5d3d8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "vincentjgoh",
+        "repo": "avy-dashboard",
+        "type": "github"
+      }
+    },
     "base16": {
       "inputs": {
         "fromYaml": "fromYaml"
@@ -783,6 +799,7 @@
       "inputs": {
         "app-launcher": "app-launcher",
         "apple-fonts": "apple-fonts",
+        "avy-dashboard": "avy-dashboard",
         "doom-nano-modeline": "doom-nano-modeline",
         "emacs-init": "emacs-init",
         "emacs-overlay": "emacs-overlay",

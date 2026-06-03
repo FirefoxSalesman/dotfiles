@@ -10,9 +10,8 @@
 	  :config
 	  (gsetq hydra-posframe-show-params '(:internal-border-width 1
 								     :internal-border-color "003f28"
-								     ;; :parent-frame nil
 								     :poshandler posframe-poshandler-frame-bottom-center
-								     :refposhandler posframe-refposhandler-xwininfo))
+								     :refposhandler vertico-posframe-refposhandler-default))
 	  :gfhookf ('doom-escape 'hydra-keyboard-quit))
       '';
     };

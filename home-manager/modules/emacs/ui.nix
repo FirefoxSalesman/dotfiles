@@ -6,7 +6,10 @@
       usePackage = {
 	simple = {
 	  enable = true;
-	  setopt.save-interprogram-paste-before-kill = true;
+	  setopt = {
+	    read-extended-command-predicate = "'command-completion-default-include-p";
+	    save-interprogram-paste-before-kill = true;
+	  };
 	};
 
 	display-line-numbers = {
