@@ -2,15 +2,15 @@
 
 {
   perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages = {
-      roll = (epkgs.callPackage
+    roll = (epkgs.callPackage
 	epkgs.trivialBuild rec {
 	pname = "roll";
 	version = "current";
 	src = inputs.roll;
-	}
-      );
+	});
+  in {
+    packages = {
+      roll = roll;
       pertab = (epkgs.callPackage
 	epkgs.trivialBuild rec {
 	pname = "pertab";
@@ -19,6 +19,7 @@
 
 	propagatedUserEnvPkgs = with epkgs; [
 	  elwm
+	  roll
 	];
 
 	buildInputs = propagatedUserEnvPkgs;
@@ -84,45 +85,11 @@
 	enable = true;
 	ghookf = ["('tab-bar-mode 'pertab-mode)"];
 	setopt = {
-	  pertab-default-layout  = "'master-stack";
+	  pertab-default-layout  = "'scroll";
 	  pertab-next-buffer-function = "'bufler-cycle-buffers-forward";
 	  pertab-previous-buffer-function = "'bufler-cycle-buffers-backward";
 	};
 	config = ''
-	  (defvar pertab-scroll-enter-hook nil "Hook run when entering scrolling layout.")
-	  (defvar pertab-scroll-exit-hook nil "Hook run when exiting scrolling layout.")
-	  
-	  (defun pertab-scroll-enter (&optional reason)
-	    "Set up the scrolling layout. REASON is the reason for entering the layout."
-	    (roll-mode +1)
-	    (run-hooks 'pertab-scroll-enter-hook))
-	  
-	  (defun pertab-scroll-exit (&optional reason)
-	    "Tear down the scrolling layout. REASON is the reason for entering the layout."
-	    (roll-mode -1)
-	    (pertab-set-tab-local 'roll-max-visible-panes roll-max-visible-panes)
-	    (pertab-set-tab-local 'roll--panes roll--panes)
-	    (pertab-set-tab-local 'roll--windows roll--windows)
-	    (pertab-set-tab-local 'roll--nof-visible-panes roll--nof-visible-panes)
-	    (pertab-set-tab-local 'roll--first-visible-pane roll--first-visible-pane)
-	    (run-hooks 'pertab-scroll-exit-hook))
-	  
-	  (pertab-register-layout 'scroll '((roll-max-visible-panes . 2)
-	  				  (roll--windows . ())
-	  				  (roll--panes . ())
-	  				  (roll--nof-visible-panes . 1)
-	  				  (roll--first-visible-pane . 0))
-	  			(pertab-layout-manager :lighter "[>]"
-	  					       :enter-fun 'pertab-scroll-enter
-	  					       :exit-fun 'pertab-scroll-exit
-	  					       :horiz-split-fun 'roll-open
-	  					       :vert-split-fun 'roll-open
-	  					       :focus-left-fun 'roll-go-left
-	  					       :focus-right-fun 'roll-go-right
-	  					       :move-left-fun 'roll-move-left
-	  					       :move-right-fun 'roll-move-right
-	  					       :close-window-fun 'roll-close))
-	  
 	  (add-hook 'pertab-scroll-enter-hook (lambda () (golden-ratio-mode -1) (exwm-mff-mode +1)))
 	  (add-hook 'pertab-scroll-exit-hook (lambda () (golden-ratio-mode +1) (exwm-mff-mode -1)))
 	'';
@@ -150,7 +117,7 @@
 	after = ["pertab"];
       };
 
-      pertab-manual = {
+      pertab-scroll = {
 	enable = true;
 	package = epkgs: epkgs.pertab;
 	after = ["pertab"];
@@ -158,20 +125,8 @@
 
       roll = {
 	enable = true;
+	defer = true;
 	setopt.roll-debug-enabled = false;
-	config = ''
-	  (defun pertab-scroll--roll-enable ()
-             "Initialize Roll mode by setting up the initial state.
-              Removes all other windows and creates the initial pane configuration."
-             (if (equal roll--windows '())
-	          (progn
-		    (delete-other-windows)
-	            (setq roll--windows (list (selected-window))))
-                  (balance-windows))
-             (when (equal roll--panes '()) (setq roll--panes (list (roll--make-snapshot))))
-             (roll--debug "roll-mode enabled"))
-	   (advice-add 'roll--enable :override 'pertab-scroll--roll-enable)
-	'';
       };
     };
   };
