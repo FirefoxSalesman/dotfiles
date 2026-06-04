@@ -60,7 +60,6 @@
     };
 
     exwm-qutebrowser = {
-      # url = "github:lrustand/qutebrowser.el/18f98f0";
       url = "github:lrustand/qutebrowser.el";
       flake = false;
     };
@@ -72,11 +71,6 @@
 
     roll = {
       url = "github:finalclass/emacs-roll";
-      flake = false;
-    };
-
-    avy-dashboard = {
-      url = "github:vincentjgoh/avy-dashboard";
       flake = false;
     };
   };
@@ -301,7 +295,6 @@ esac
 #+end_src
 
 * Notes to my future self
-+ To get eduroam working, you need ppp & pptclient
 + Don't let xorg use the nvidia card. It breaks everything
 
 * Home Manager
@@ -496,8 +489,6 @@ This shell is mostly around for eshell to get completions from, but it can be us
   flake.homeModules.shellConfig = { lib, pkgs, ... }:
   {
     programs.fish = {
-      enable = true;
-      package = pkgs.fish;
       interactiveShellInit = ''${lib.getExe pkgs.pfetch}'';
       # Borrows from yay's completions
       completions.pkg = ''
@@ -522,7 +513,6 @@ It's mostly here for eshell to get completions from, but it's a usable shell
       direnv.enableBashIntegration = true;
 
       bash = {
-	enable = true;
 	initExtra = ''${lib.getExe pkgs.pfetch}'';
 	shellAliases.z = "cd ./$(ls -d */ .*/ | ${lib.getExe pkgs.ezf})";
       };
@@ -838,26 +828,6 @@ aliasesStr = concatStringsSep "\n"
 { inputs, ... }:
 
 {
-  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages = {
-      avy-dashboard = (epkgs.callPackage
-	epkgs.trivialBuild rec {
-	pname = "avy-dashboard";
-	version = "current";
-	src = inputs.avy-dashboard;
-
-	propagatedUserEnvPkgs = with epkgs; [
-	  avy
-	  dashboard
-	];
-
-	buildInputs = propagatedUserEnvPkgs;
-	}
-      );
-    };
-  } ;
-
   flake.homeModules.aesthetics = { ... }:
 
   {
@@ -878,11 +848,6 @@ aliasesStr = concatStringsSep "\n"
         dashboard.setopt = {
 	  dashboard-banner-logo-title = ''"Emacs: The one true desktop environment"'';
 	  dashboard-startup-banner = "'logo";
-	};
-
-	avy-dashboard = {
-	  enable = true;
-	  generalTwo.":nm".dashboard-mode-map."H-a" = "'avy-dashboard";
 	};
       };
     };
@@ -933,7 +898,6 @@ Pywal integration: https://github.com/danth/stylix/issues/99
 
 {
   flake.homeModules.aesthetics = { config, lib, pkgs, ... }: {
-    gtk.gtk4.theme = config.gtk.theme;
     stylix = {
       enable = true;
       polarity = "dark";
@@ -1316,38 +1280,12 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
   flake.homeModules.aesthetics = { ... }:
   {
     programs.emacs.init = {
-      keybinds.whichKey.posframe.enable = true;
-      usePackage = {
-	which-key-posframe.config = ''
-          (defun which-key-posframe--show-buffer (act-popup-dim)
-             "Show which-key buffer when popup type is posframe.
-           Argument ACT-POPUP-DIM has the form (HEIGHT . WIDTH), specifying
-           the dimensions of the buffer text to be displayed in the popup."
-             (when (posframe-workable-p)
-               (save-window-excursion
-                 (posframe-show
-                  which-key--buffer
-                  :font which-key-posframe-font
-                  :position (point)
-                  :poshandler which-key-posframe-poshandler
-                  :background-color (face-attribute 'which-key-posframe :background nil t)
-                  :foreground-color (face-attribute 'which-key-posframe :foreground nil t)
-                  :height (car act-popup-dim)
-                  :width (cdr act-popup-dim)
-                  :lines-truncate t
-                  :internal-border-width which-key-posframe-border-width
-                  :internal-border-color (face-attribute 'which-key-posframe-border
-                                                         :background nil t)
-                  :refposhandler 'vertico-posframe-refposhandler-default
-                  :override-parameters which-key-posframe-parameters))))
-	'';
-	vertico-posframe = {
-	  enable = true;
-	  defer = true;
-	  ghookf = ["('vertico-mode 'vertico-posframe-mode)"];
-	  config = ''(set-face-attribute 'vertico-posframe-face nil :family 'variable-pitch)'';
-	};
+      keybinds.whichKey.posframe = {
+	enable = true;
+	unparent = true;
       };
+      completions.vertico.posframe = true;
+      usePackage.vertico-posframe.config = ''(set-face-attribute 'vertico-posframe-face nil :family 'variable-pitch)'';
     };
   };
 }
@@ -1671,7 +1609,6 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 	direnv = true;
 	treesit-fold.enable = true;
 	languages = {
-          godot.enable = true;
           bash.enable = true;
           json.enable = true;
           nix.enable = true;
@@ -1916,7 +1853,7 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 
 	flymake-popon.setopt.flymake-popon-posframe-extra-arguments = [
 	  "':poshandler" "'posframe-poshandler-point-bottom-left-corner-upward"
-	  "':parent-frame" false "':refposhandler" "'posframe-refposhandler-xwininfo"
+	  "':refposhandler" "'vertico-posframe-refposhandler-default"
 	];
 
 	eglot-java = {
@@ -2143,42 +2080,18 @@ Most of this was shamelessly lifted from Emacs from Scratch.
   flake.homeModules.emacs = { ... }: {
     programs.emacs.init = {
       aesthetics.declutter.enable = true;
-      tools.noLittering.enable = true;
+      tools = {
+	noLittering.enable = true;
+	lineNumbers.enable = true;
+	sensibleDefaults.enable = true;
+      };
       usePackage = {
-	simple = {
-	  enable = true;
-	  setopt = {
-	    read-extended-command-predicate = "'command-completion-default-include-p";
-	    save-interprogram-paste-before-kill = true;
-	  };
-	};
-
-	display-line-numbers = {
-	  enable = true;
-	  setopt = {
-	    display-line-numbers-type = "'relative";
-	    display-line-numbers-width = 3;
-	  };
-	  config = "(global-display-line-numbers-mode)";
-	  #Disable line numbers for some modes
-	  ghookf = ["((gen-mode-hooks '(org term dired eww eat markdown help helpful Info Man shell pdf-view elfeed-search elfeed-show eshell racket-repl sage-shell nov)) (lambda () (display-line-numbers-mode 0)))"];
-	} ;
+	display-line-numbers.setopt.display-line-numbers-type = "'relative";
 
 	server = {
 	  enable = true;
 	  deferIncrementally = true;
 	  config = "(server-start)";
-	};
-
-	super-save = {
-	  enable = true;
-	  ghookf = ["('on-first-file 'super-save-mode)"];
-	  setopt = {
-	    super-save-auto-save-when-idle = true;
-	    auto-save-default = false;
-	    super-save-silent = true;
-	    super-save-delete-trailing-whitespace = true;
-	  };
 	};
       };
     };
@@ -2210,7 +2123,6 @@ Wgrep basically turns grep into sed.
 #+end_src
 
 *** Early Init
-All of the repeaters config was origally stolen from Karthinks. I don't think any of the code I stole is actually here anymore, though.
 #+begin_src nix-ts :tangle modules/emacs/early-init.nix :noweb yes
 {
   flake.homeModules.emacs = { ... }:
@@ -2225,42 +2137,17 @@ All of the repeaters config was origally stolen from Karthinks. I don't think an
 
 #+NAME: Emacs Early Init
 #+begin_src emacs-lisp
-(scroll-bar-mode -1) ; Disable visible scrollbar
-(tool-bar-mode -1) ; Disable the toolbar
-(menu-bar-mode -1)
-
 (setq-default bidi-display-reordering 'left-to-right
-              bidi-paragraph-direction 'left-to-right
-	      cursor-in-non-selected-windows nil)
+              bidi-paragraph-direction 'left-to-right)
 
-(setq auto-save-visited-file-name t
-      highlight-nonselected-windows nil
+(setq highlight-nonselected-windows nil
       redisplay-skip-fontification-on-input t
       bidi-inhibit-bpa t
       read-process-output-max (* 4 1024 1024)
       warning-minimum-level :error
-      use-package-enable-imenu-support t
-      make-backup-files nil
-      enable-recursive-minibuffers t
-      inhibit-startup-message t
-      inhibit-startup-screen t
-      visible-bell t
-      use-short-answers t
-      switch-to-buffer-obey-display-actions t
       ;; Scratch is an org mode buffer
       initial-major-mode 'org-mode
-      initial-scratch-message ""
-      ;;Reduce garbage
-      user-emacs-directory "~/.cache/emacs")
-
-(defun efs/display-startup-time ()
-  (message "Emacs loaded in %s with %d garbage collections."
-           (format "%.2f seconds"
-                   (float-time
-                    (time-subtract after-init-time before-init-time)))
-           gcs-done))
-
-(add-hook 'emacs-startup-hook #'efs/display-startup-time)
+      initial-scratch-message "")
 #+end_src
 
 *** Evil Mode
@@ -3376,6 +3263,7 @@ fi
 #+end_src
 
 *** Repeaters
+All of this config was origally stolen from Karthinks. I don't think any of the code I stole is actually here anymore, though.
 #+begin_src nix-ts :tangle modules/emacs/repeaters.nix :noweb yes
 { inputs, ... }:
 {

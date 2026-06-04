@@ -55,7 +55,6 @@
     };
 
     exwm-qutebrowser = {
-      # url = "github:lrustand/qutebrowser.el/18f98f0";
       url = "github:lrustand/qutebrowser.el";
       flake = false;
     };
@@ -67,11 +66,6 @@
 
     roll = {
       url = "github:finalclass/emacs-roll";
-      flake = false;
-    };
-
-    avy-dashboard = {
-      url = "github:vincentjgoh/avy-dashboard";
       flake = false;
     };
   };

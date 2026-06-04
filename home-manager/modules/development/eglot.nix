@@ -31,7 +31,7 @@
 
 	flymake-popon.setopt.flymake-popon-posframe-extra-arguments = [
 	  "':poshandler" "'posframe-poshandler-point-bottom-left-corner-upward"
-	  "':parent-frame" false "':refposhandler" "'posframe-refposhandler-xwininfo"
+	  "':refposhandler" "'vertico-posframe-refposhandler-default"
 	];
 
 	eglot-java = {

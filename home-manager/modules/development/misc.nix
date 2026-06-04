@@ -8,7 +8,6 @@
 	direnv = true;
 	treesit-fold.enable = true;
 	languages = {
-          godot.enable = true;
           bash.enable = true;
           json.enable = true;
           nix.enable = true;
