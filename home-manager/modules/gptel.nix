@@ -39,7 +39,7 @@
 	    (plist-put minuet-openai-fim-compatible-options :end-point "http://localhost:11434/v1/completions")
 	    (plist-put minuet-openai-fim-compatible-options :name "Ollama")
 	    (plist-put minuet-openai-fim-compatible-options :api-key "TERM")
-	    (plist-put minuet-openai-fim-compatible-options :model "deepseek-coder:1.3b")
+	    (plist-put minuet-openai-fim-compatible-options :model "qwen2.5-coder:3b")
 	    (minuet-set-optional-options minuet-openai-fim-compatible-options :max_tokens 56)
 	  '';
 	};
@@ -60,13 +60,13 @@
               '''(org-mode . "HK-47  ")''
               '''(text-mode . "HK-47  ")''
 	    ];
-	    gptel-model = "'deepseek-coder:1.3b";
+	    gptel-model = "'qwen3.5-coder:4b";
 	    gptel-backend = ''
 	      (gptel-make-ollama "Ollama"
 	        :stream t
 	        :protocol "http"
 	        :host "localhost:11434"
-	        :models '(deepseek-coder:1.3b))
+	        :models '(qwen2.5-coder:3b qwen3.5:4b))
 	    '';
 	    # gptel-backend = ''(gptel-make-gh-copilot "Copilot")'';
 	  };
@@ -93,6 +93,11 @@
 	    "gd" = "'macher-discuss";
 	    "ga" = "'macher-abort";
 	  };
+	};
+
+	gptel-magit = {
+	  enable = true;
+	  ghookf = ["('magit-mode 'gptel-magit-install)"];
 	};
 
 	# mcp = {
