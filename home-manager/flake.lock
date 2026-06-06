@@ -223,33 +223,6 @@
         "type": "github"
       }
     },
-    "emacs-init": {
-      "inputs": {
-        "doom-utils": "doom-utils",
-        "eglot-booster": "eglot-booster",
-        "eglot-x": "eglot-x",
-        "exwm-outer-gaps": "exwm-outer-gaps",
-        "org-modern-indent": "org-modern-indent",
-        "org-novelist": "org-novelist",
-        "semel": "semel",
-        "svelte-ts-mode": "svelte-ts-mode",
-        "symex": "symex",
-        "use-package-eglot": "use-package-eglot"
-      },
-      "locked": {
-        "lastModified": 1780717032,
-        "narHash": "sha256-iA2dIjyUgT+BNo/05STdBgn6ki8l1ORLGkoLCQ3207Y=",
-        "owner": "firefoxsalesman",
-        "repo": "NixEmacs",
-        "rev": "d60e02bfcd88ab073f6b21704e6c9230d713279d",
-        "type": "github"
-      },
-      "original": {
-        "owner": "firefoxsalesman",
-        "repo": "NixEmacs",
-        "type": "github"
-      }
-    },
     "emacs-overlay": {
       "inputs": {
         "nixpkgs": "nixpkgs_2",
@@ -784,7 +757,6 @@
         "app-launcher": "app-launcher",
         "apple-fonts": "apple-fonts",
         "doom-nano-modeline": "doom-nano-modeline",
-        "emacs-init": "emacs-init",
         "emacs-overlay": "emacs-overlay",
         "exwm-qutebrowser": "exwm-qutebrowser",
         "ezf": "ezf",

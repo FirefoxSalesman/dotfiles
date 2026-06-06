@@ -14,24 +14,11 @@
   flake.homeModules.ai = { config, pkgs, ... }: {
     home.packages = [pkgs.ollama];
     programs.emacs.init = {
-      # ai.minuet.enable = true;
       ai.copilot = {
 	enable = true;
 	keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode" "zenscript-mode"];
       };
       usePackage = {
-	# minuet = {
-	#   setopt.minuet-provider = "'openai-fim-compatible";
-	#   config = ''
-	#     (start-ollama)
-	#     (plist-put minuet-openai-fim-compatible-options :end-point "http://localhost:11434/v1/completions")
-	#     (plist-put minuet-openai-fim-compatible-options :name "Ollama")
-	#     (plist-put minuet-openai-fim-compatible-options :api-key "TERM")
-	#     (plist-put minuet-openai-fim-compatible-options :model "qwen2.5-coder:3b")
-	#     (minuet-set-optional-options minuet-openai-fim-compatible-options :max_tokens 56)
-	#   '';
-	# };
-
 	gptel = {
 	  enable = true;
 	  defer = true;
