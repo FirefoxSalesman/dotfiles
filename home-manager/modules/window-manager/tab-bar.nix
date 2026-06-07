@@ -120,13 +120,9 @@
       pertab-scroll = {
 	enable = true;
 	package = epkgs: epkgs.pertab;
-	after = ["pertab"];
-      };
-
-      roll = {
-	enable = true;
-	defer = true;
+	gfhookf = [];
 	setopt.roll-debug-enabled = false;
+	after = ["pertab"];
       };
     };
   };

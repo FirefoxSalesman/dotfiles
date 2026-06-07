@@ -3799,13 +3799,9 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
       pertab-scroll = {
 	enable = true;
 	package = epkgs: epkgs.pertab;
-	after = ["pertab"];
-      };
-
-      roll = {
-	enable = true;
-	defer = true;
+	gfhookf = [];
 	setopt.roll-debug-enabled = false;
+	after = ["pertab"];
       };
     };
   };
@@ -3912,13 +3908,15 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
              (("<escape>" nil "quit" :color blue :exit t)
               ("<return>" nil "quit" :color blue :exit t))))
 	'';
-      };
+	config = ''
+	  <<Emacs Bufler Config>>
+	'';
+      } ;
 
       bufler-workspace-tabs = {
 	enable = true;
 	ghookf = ["('bufler-mode 'bufler-workspace-workspaces-as-tabs-mode)"];
 	gfhookf = ["('bufler-workspace-workspaces-as-tabs-mode '(global-tab-line-mode burly-tabs-mode))"];
-	config = "(general-advice-add 'bufler-workspace-bookmark-handler :after 'pertab--after-switch-to-tab)";
       };
     };
   };
@@ -4029,6 +4027,12 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
   "Cycles the buffers in the workspace backward."
   (interactive)
   (bufler-cycle-buffers 'evil-prev-buffer))
+#+end_src
+
+#+NAME: Emacs Bufler Config
+#+begin_src emacs-lisp
+(general-advice-add 'bufler-workspace-bookmark-handler :after 'pertab--after-switch-to-tab)
+(general-advice-add 'bufler-workspace-focus-buffer :after (lambda (&rest _) (when (project-current) (pertab-set-scroll))))
 #+end_src
 
 *** ELWM

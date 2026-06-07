@@ -131,13 +131,16 @@
              (("<escape>" nil "quit" :color blue :exit t)
               ("<return>" nil "quit" :color blue :exit t))))
 	'';
-      };
+	config = ''
+	  (general-advice-add 'bufler-workspace-bookmark-handler :after 'pertab--after-switch-to-tab)
+	  (general-advice-add 'bufler-workspace-focus-buffer :after (lambda (&rest _) (when (project-current) (pertab-set-scroll))))
+	'';
+      } ;
 
       bufler-workspace-tabs = {
 	enable = true;
 	ghookf = ["('bufler-mode 'bufler-workspace-workspaces-as-tabs-mode)"];
 	gfhookf = ["('bufler-workspace-workspaces-as-tabs-mode '(global-tab-line-mode burly-tabs-mode))"];
-	config = "(general-advice-add 'bufler-workspace-bookmark-handler :after 'pertab--after-switch-to-tab)";
       };
     };
   };
