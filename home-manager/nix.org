@@ -73,13 +73,6 @@
       url = "github:finalclass/emacs-roll";
       flake = false;
     };
-
-    gptel-quick = {
-      url = "github:karthink/gptel-quick";
-      flake = false;
-    };
-
-    ob-gptel.url = "github:jwiegley/ob-gptel";
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake {inherit inputs;} (inputs.import-tree ./modules);
@@ -133,75 +126,10 @@ in {
 	  roll = packages.roll;
 	  pertab = packages.pertab;
           embark = packages.embark;
-          gptel-quick = packages.gptel-quick;
-	  ob-gptel = inputs.ob-gptel.packages.${pkgs.system}.default;
 	}));
   };
 }
 #+end_src
-
-** Reka
-https://github.com/dmkhitaryan/river-next-nix-module/blob/5205ebf2b5f820c3a9221f472c78c548a4a84aad/window-managers/reka/package.nix
-# #+begin_src nix-ts :tangle modules/packages/emacs/reka.nix
-# {
-#   perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
-#   packages.reka = {
-#     lib,
-#     rustPlatform,
-#     fetchFromCodeberg,
-#     pkg-config,
-#     wayland-scanner,
-#     wayland,
-#     libxkbcommon,
-#     wayland-protocols,
-#     emacsPackages,
-#     fetchurl,
-#   }: # Packaging approach adopted from https://codeberg.org/tazjin/reka/src/branch/canon/default.nix
-
-#   let
-#     reka = rustPlatform.buildRustPackage {
-#       pname = "reka-lib";
-#       version = "unstable-2026-03-16";
-
-#       src = fetchFromCodeberg {
-# 	owner = "tazjin";
-# 	repo = "reka";
-# 	rev = "8441e6eaf4b76f7085a25d3dafa0ef281d4cb009";
-# 	hash = "sha256-KXAClKjYfkit6n89YTZ83qzp4n81bEXZ2cFGliZZOxQ=";
-#       };
-
-#       cargoHash = "sha256-qSyx2tzWMBr56Lbdjy+DJVuaHJmtxzKlFZivG7VA1d8=";
-
-#       nativeBuildInputs = [
-# 	pkg-config
-# 	wayland-scanner
-#       ];
-
-#       buildInputs = [
-# 	wayland
-# 	libxkbcommon
-# 	wayland-protocols
-#       ];
-
-#       postInstall = ''
-# 	mkdir -p $out/share/emacs/site-lisp
-#       ln -s $out/lib/libreka.so $out/share/emacs/site-lisp/libreka.so
-#       '';
-#     };
-#   in
-#     epkgs.trivialBuild {
-#       pname = "reka";
-#       version = "unstable-2026-03-16";
-#       src = fetchurl {
-# 	url = "https://codeberg.org/tazjin/reka/raw/branch/canon/lisp/reka.el";
-# 	hash = "sha256-K4uk1Zuct0xpth/MyJNbhJ+qm2yia0zDoNplA/YX1kU=";
-#       };
-#       packageRequires = [ reka ];
-
-#       passthru.reka-lib = reka;
-#     };
-# }
-# #+end_src
 
 ** Scripts
 *** HDMI Helper
@@ -446,7 +374,7 @@ in {
 ** User Dirs
 #+begin_src nix-ts :tangle modules/user-dirs.nix
 {
-  flake.homeModules.basic = { config, ... }: {
+  flake.homeModules.main = { config, ... }: {
     xdg.userDirs = {
       enable = true;
       setSessionVariables = true;
@@ -4403,45 +4331,30 @@ NEG subtracts if it is true."
 
 {
   perSystem = { lib, pkgs, ... }: {
-    packages =
-      let epkgs = pkgs.emacs.pkgs;
-      in {
-	startOllama = pkgs.writeShellScriptBin "start-ollama" ''
-	  if [[ "$(pidof ollama)" -gt 0 ]]; then
-          echo "ollama already running"
-        else
-          ${lib.getExe pkgs.ollama} serve
-        fi
-	'';
-	gptel-quick = (epkgs.callPackage
-	  epkgs.trivialBuild rec {
-	  pname = "gptel-quick";
-	  version = "current";
-	  src = inputs.gptel-quick;
-
-	  propagatedUserEnvPkgs = with epkgs; [
-	    gptel
-	  ];
-
-	  buildInputs = propagatedUserEnvPkgs;
-	  }
-	);
-      };
+    packages.startOllama = pkgs.writeShellScriptBin "start-ollama" ''
+      if [[ "$(pidof ollama)" -gt 0 ]]; then
+        echo "ollama already running"
+      else
+        ${lib.getExe pkgs.ollama} serve
+      fi
+    '';
   };
 
   flake.homeModules.ai = { config, pkgs, ... }: {
     home.packages = [pkgs.ollama];
     programs.emacs.init = {
-      ai.copilot = {
-	enable = true;
-	keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode" "zenscript-mode"];
+      ai = {
+	copilot = {
+	  enable = true;
+	  keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode" "zenscript-mode"];
+	};
+	gptel.enable = true;
       };
       usePackage = {
 	gptel = {
-	  enable = true;
 	  command = ["start-ollama"];
+	  generalOne.global-leader."gs" = '''("start" . start-ollama)'';
 	  setopt = {
-	    gptel-default-mode = "'org-mode";
 	    gptel-max-tokens = 10000000;
 	    gptel-prompt-prefix-alist = [
 	      ''`(markdown-mode . ,(concat "meatbag ›  "))''
@@ -4463,60 +4376,21 @@ NEG subtracts if it is true."
 	    '';
 	    # gptel-backend = ''(gptel-make-gh-copilot "Copilot")'';
 	  };
-	  generalOne.global-leader = {
-	    "g" = '''(:ignore t :which-key "gptel")'';
-	    "gs" = '''("start" . start-ollama)'';
-	    "gp" = '''("prompt" . gptel)'';
-	    "gt" = '''("add text to context" . gptel-add)'';
-	    "gf" = '''("add file to context" . gptel-add-file)'';
-	    "gm" = '''("open configuration menu" . gptel-menu)'';
-	    "gr" = '''("rewrite current region" . gptel-rewrite)'';
-	  };
 	  preface = ''
 	    <<Emacs Gptel Preface>>
 	  '';
 	  config = "(start-ollama)";
 	};
 
-	gptel-org = {
-	  enable = true;
-	  package = epkgs: epkgs.gptel;
-	  generalOne.global-leader = {
-	    "go" = '''("limit context to current org heading" . gptel-org-set-topic)'';
-	    "gO" = '''("store gptel config as org properties" . gptel-org-set-properties)'';
-	  };
-	};
-
-	gptel-quick = {
-	  enable = true;
-	  generalOne.global-leader."ge" = '''("Explain the current region" . gptel-quick)'';
-	  setopt = {
-	    gptel-model = "'llama3.2:1b" ;
-	    gptel-backend = ''
-	      (gptel-make-ollama "Ollama"
+	gptel-quick.setopt = {
+	  gptel-model = "'llama3.2:1b" ;
+	  gptel-backend = ''
+	    (gptel-make-ollama "Ollama"
 	        :stream t
 	        :protocol "http"
 	        :host "localhost:11434"
 	        :models '(llama3.2:1b))
-	    '';
-	  };
-	};
-
-	gptel-magit = {
-	  enable = true;
-	  after = ["magit"];
-	  ghookf = ["('magit-mode 'gptel-magit-install)"];
-	};
-
-	ob-gptel = {
-	  enable = true;
-	  config = ''
-	    (defun ob-gptel-setup-completions ()
-              (add-hook 'completion-at-point-functions
-                'ob-gptel-capf nil t))
 	  '';
-	  hook = ["(org-mode . ob-gptel-setup-completions)"];
-	  babel = "gptel";
 	};
 
 	macher = {

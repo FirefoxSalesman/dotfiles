@@ -42,8 +42,6 @@ in {
 	  roll = packages.roll;
 	  pertab = packages.pertab;
           embark = packages.embark;
-          gptel-quick = packages.gptel-quick;
-	  ob-gptel = inputs.ob-gptel.packages.${pkgs.system}.default;
 	}));
   };
 }

@@ -1,5 +1,5 @@
 {
-  flake.homeModules.basic = { config, ... }: {
+  flake.homeModules.main = { config, ... }: {
     xdg.userDirs = {
       enable = true;
       setSessionVariables = true;
