@@ -68,6 +68,13 @@
       url = "github:finalclass/emacs-roll";
       flake = false;
     };
+
+    gptel-quick = {
+      url = "github:karthink/gptel-quick";
+      flake = false;
+    };
+
+    ob-gptel.url = "github:jwiegley/ob-gptel";
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake {inherit inputs;} (inputs.import-tree ./modules);

@@ -2,13 +2,30 @@
 
 {
   perSystem = { lib, pkgs, ... }: {
-    packages.startOllama = pkgs.writeShellScriptBin "start-ollama" ''
-      if [[ "$(pidof ollama)" -gt 0 ]]; then
-        echo "ollama already running"
-      else
-        ${lib.getExe pkgs.ollama} serve
-      fi
-    '';
+    packages =
+      let epkgs = pkgs.emacs.pkgs;
+      in {
+	startOllama = pkgs.writeShellScriptBin "start-ollama" ''
+	  if [[ "$(pidof ollama)" -gt 0 ]]; then
+          echo "ollama already running"
+        else
+          ${lib.getExe pkgs.ollama} serve
+        fi
+	'';
+	gptel-quick = (epkgs.callPackage
+	  epkgs.trivialBuild rec {
+	  pname = "gptel-quick";
+	  version = "current";
+	  src = inputs.gptel-quick;
+
+	  propagatedUserEnvPkgs = with epkgs; [
+	    gptel
+	  ];
+
+	  buildInputs = propagatedUserEnvPkgs;
+	  }
+	);
+      };
   };
 
   flake.homeModules.ai = { config, pkgs, ... }: {
@@ -21,7 +38,6 @@
       usePackage = {
 	gptel = {
 	  enable = true;
-	  defer = true;
 	  command = ["start-ollama"];
 	  setopt = {
 	    gptel-default-mode = "'org-mode";
@@ -42,7 +58,7 @@
 	        :stream t
 	        :protocol "http"
 	        :host "localhost:11434"
-	        :models '(qwen2.5-coder:3b qwen3.5:4b))
+	        :models '(qwen3.5:4b))
 	    '';
 	    # gptel-backend = ''(gptel-make-gh-copilot "Copilot")'';
 	  };
@@ -50,8 +66,11 @@
 	    "g" = '''(:ignore t :which-key "gptel")'';
 	    "gs" = '''("start" . start-ollama)'';
 	    "gp" = '''("prompt" . gptel)'';
+	    "gt" = '''("add text to context" . gptel-add)'';
+	    "gf" = '''("add file to context" . gptel-add-file)'';
+	    "gm" = '''("open configuration menu" . gptel-menu)'';
+	    "gr" = '''("rewrite current region" . gptel-rewrite)'';
 	  };
-	  generalTwoConfig.":n".gptel-mode-map."S-RET" = "'gptel-menu";
 	  preface = ''
 	    (defun start-ollama ()
 	      (interactive)
@@ -60,20 +79,57 @@
 	  config = "(start-ollama)";
 	};
 
-	macher = {
+	gptel-org = {
 	  enable = true;
-	  command = ["macher-install"];
+	  package = epkgs: epkgs.gptel;
 	  generalOne.global-leader = {
-	    "gi" = "'macher-implement";
-	    "gr" = "'macher-revise";
-	    "gd" = "'macher-discuss";
-	    "ga" = "'macher-abort";
+	    "go" = '''("limit context to current org heading" . gptel-org-set-topic)'';
+	    "gO" = '''("store gptel config as org properties" . gptel-org-set-properties)'';
+	  };
+	};
+
+	gptel-quick = {
+	  enable = true;
+	  generalOne.global-leader."ge" = '''("Explain the current region" . gptel-quick)'';
+	  setopt = {
+	    gptel-model = "'llama3.2:1b" ;
+	    gptel-backend = ''
+	      (gptel-make-ollama "Ollama"
+	        :stream t
+	        :protocol "http"
+	        :host "localhost:11434"
+	        :models '(llama3.2:1b))
+	    '';
 	  };
 	};
 
 	gptel-magit = {
 	  enable = true;
+	  after = ["magit"];
 	  ghookf = ["('magit-mode 'gptel-magit-install)"];
+	};
+
+	ob-gptel = {
+	  enable = true;
+	  config = ''
+	    (defun ob-gptel-setup-completions ()
+              (add-hook 'completion-at-point-functions
+                'ob-gptel-capf nil t))
+	  '';
+	  hook = ["(org-mode . ob-gptel-setup-completions)"];
+	  babel = "gptel";
+	};
+
+	macher = {
+	  enable = true;
+	  command = ["macher-install"];
+	  generalOne.global-leader = {
+	    "ga" = '''(:ignore t :which-key "agent")'';
+	    "gai" = "'macher-implement";
+	    "gar" = "'macher-revise";
+	    "gad" = "'macher-discuss";
+	    "gaa" = "'macher-abort";
+	  };
 	};
 
 	# mcp = {
