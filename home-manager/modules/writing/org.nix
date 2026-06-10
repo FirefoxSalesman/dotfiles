@@ -27,6 +27,7 @@
                                                  #'tempel-complete
 						 #'cape-file)
                                                 #'pcomplete-completions-at-point
+						#'ob-gptel-capf
 						#'cape-tex
 						#'cape-elisp-block
 						#'cape-dict
@@ -60,7 +61,7 @@
 	  ghookf = ["('org-mode 'org-auto-tangle-mode)"];
 	};
 
-	denote.setopt.denote-known-keywords = [ ''"quotes"'' ''"chem"'' ''"emacs"'' ''"java"'' ''"physics"'' ''"calculus"'' ''"minecraft"'' ''"de"'' ''"proofs"'' ''"csse230"'' ''"os"'' ''"databases"'' ''"scifi"'' ''"softwarerequirements"'' ''"anthropology"'' ''"theoryofcomputation"'' ''"parallelcomp"'' ''"cybersecurity"'' ''"probstats"'' ''"scheme"'' ''"dreams"'' ''"softwaredevelopment"'' ''"ethics"'' ''"plp"'' ''"malwareanalysis"'' ''"bio"'' ''"ai"'' ''"resolve"'' ''"psychology"'' ''"algorithmanalysis"'' ''"music"''];
+	denote.setopt.denote-known-keywords = [ ''"quotes"'' ''"chem"'' ''"emacs"'' ''"java"'' ''"physics"'' ''"calculus"'' ''"minecraft"'' ''"de"'' ''"proofs"'' ''"csse230"'' ''"os"'' ''"databases"'' ''"scifi"'' ''"softwarerequirements"'' ''"anthropology"'' ''"theoryofcomputation"'' ''"parallelcomp"'' ''"cybersecurity"'' ''"probstats"'' ''"scheme"'' ''"dreams"'' ''"softwaredevelopment"'' ''"ethics"'' ''"plp"'' ''"malwareanalysis"'' ''"bio"'' ''"ai"'' ''"resolve"'' ''"psychology"'' ''"algorithmanalysis"'' ''"music"'' ''"people"''];
 
 	biblio = {
 	  enable = true;

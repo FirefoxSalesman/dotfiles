@@ -3354,6 +3354,7 @@ How to add a latex package
                                                  #'tempel-complete
 						 #'cape-file)
                                                 #'pcomplete-completions-at-point
+						#'ob-gptel-capf
 						#'cape-tex
 						#'cape-elisp-block
 						#'cape-dict
@@ -3379,7 +3380,7 @@ How to add a latex package
 	  ghookf = ["('org-mode 'org-auto-tangle-mode)"];
 	};
 
-	denote.setopt.denote-known-keywords = [ ''"quotes"'' ''"chem"'' ''"emacs"'' ''"java"'' ''"physics"'' ''"calculus"'' ''"minecraft"'' ''"de"'' ''"proofs"'' ''"csse230"'' ''"os"'' ''"databases"'' ''"scifi"'' ''"softwarerequirements"'' ''"anthropology"'' ''"theoryofcomputation"'' ''"parallelcomp"'' ''"cybersecurity"'' ''"probstats"'' ''"scheme"'' ''"dreams"'' ''"softwaredevelopment"'' ''"ethics"'' ''"plp"'' ''"malwareanalysis"'' ''"bio"'' ''"ai"'' ''"resolve"'' ''"psychology"'' ''"algorithmanalysis"'' ''"music"''];
+	denote.setopt.denote-known-keywords = [ ''"quotes"'' ''"chem"'' ''"emacs"'' ''"java"'' ''"physics"'' ''"calculus"'' ''"minecraft"'' ''"de"'' ''"proofs"'' ''"csse230"'' ''"os"'' ''"databases"'' ''"scifi"'' ''"softwarerequirements"'' ''"anthropology"'' ''"theoryofcomputation"'' ''"parallelcomp"'' ''"cybersecurity"'' ''"probstats"'' ''"scheme"'' ''"dreams"'' ''"softwaredevelopment"'' ''"ethics"'' ''"plp"'' ''"malwareanalysis"'' ''"bio"'' ''"ai"'' ''"resolve"'' ''"psychology"'' ''"algorithmanalysis"'' ''"music"'' ''"people"''];
 
 	biblio = {
 	  enable = true;
@@ -4326,21 +4327,36 @@ NEG subtracts if it is true."
 #+end_src
 
 ** Gptel
+https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
+https://github.com/skissue/llm-tool-collection
+*RAG tools:*
++ [X] https://github.com/positron-solutions/ragmacs should be used to provide an introspection preset
++ [ ] https://git.bajsicki.com/phil/gptel-got should probably be another preset, but I'm not sure how that would look right now.
+
+*Agents:*
++ [ ] Try gptel-agent at some point
++ [X] Put macher in NixEmacs. It shouldn't need too much modification
++ [ ] Try macher-agent
+
 #+begin_src nix-ts :tangle modules/gptel.nix :noweb yes
 { inputs, ... }:
 
 {
   perSystem = { lib, pkgs, ... }: {
-    packages.startOllama = pkgs.writeShellScriptBin "start-ollama" ''
-      if [[ "$(pidof ollama)" -gt 0 ]]; then
-        echo "ollama already running"
-      else
-        ${lib.getExe pkgs.ollama} serve
-      fi
-    '';
+    packages = let
+      epkgs = pkgs.emacs.pkgs;
+    in {
+      startOllama = pkgs.writeShellScriptBin "start-ollama" ''
+	if [[ "$(pidof ollama)" -gt 0 ]]; then
+          echo "ollama already running"
+        else
+          ${lib.getExe pkgs.ollama} serve
+        fi
+      '';
+    };
   };
 
-  flake.homeModules.ai = { config, pkgs, ... }: {
+  flake.homeModules.ai = { lib, config, pkgs, ... }: {
     home.packages = [pkgs.ollama];
     programs.emacs.init = {
       ai = {
@@ -4348,9 +4364,27 @@ NEG subtracts if it is true."
 	  enable = true;
 	  keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode" "zenscript-mode"];
 	};
-	gptel.enable = true;
+	gptel = {
+	  enable = true;
+	  macher.enable = true;
+	  introspection = {
+	    enable = true;
+	    model = "llama3-groq-tool-use:8b";
+	  };
+	};
       };
-      usePackage = {
+      usePackage = let
+      mkOllama = models: infix: {
+	"gptel${infix}-model" = "'${lib.findFirst (x: true) "" models}";
+	"gptel${infix}-backend" = ''
+	    (gptel-make-ollama "Ollama"
+	        :stream t
+	        :protocol "http"
+	        :host "localhost:11434"
+	        :models '(${lib.concatMapStrings (k: "${k} ") models}))
+	  '';
+      };
+      in {
 	gptel = {
 	  command = ["start-ollama"];
 	  generalOne.global-leader."gs" = '''("start" . start-ollama)'';
@@ -4366,44 +4400,17 @@ NEG subtracts if it is true."
               '''(org-mode . "HK-47  ")''
               '''(text-mode . "HK-47  ")''
 	    ];
-	    gptel-model = "'qwen3.5-coder:4b";
-	    gptel-backend = ''
-	      (gptel-make-ollama "Ollama"
-	        :stream t
-	        :protocol "http"
-	        :host "localhost:11434"
-	        :models '(qwen3.5:4b))
-	    '';
-	    # gptel-backend = ''(gptel-make-gh-copilot "Copilot")'';
-	  };
+	  } // mkOllama ["llama3-groq-tool-use:8b" "llama3.2:3b" "llama3.2:1b"] "";
 	  preface = ''
 	    <<Emacs Gptel Preface>>
 	  '';
-	  config = "(start-ollama)";
-	};
-
-	gptel-quick.setopt = {
-	  gptel-model = "'llama3.2:1b" ;
-	  gptel-backend = ''
-	    (gptel-make-ollama "Ollama"
-	        :stream t
-	        :protocol "http"
-	        :host "localhost:11434"
-	        :models '(llama3.2:1b))
+	  config = ''
+	    (start-ollama)
+	    (gptel-make-gh-copilot "copilot")
 	  '';
 	};
 
-	macher = {
-	  enable = true;
-	  command = ["macher-install"];
-	  generalOne.global-leader = {
-	    "ga" = '''(:ignore t :which-key "agent")'';
-	    "gai" = "'macher-implement";
-	    "gar" = "'macher-revise";
-	    "gad" = "'macher-discuss";
-	    "gaa" = "'macher-abort";
-	  };
-	};
+	gptel-quick.setopt = mkOllama ["llama3.2:1b"] "-quick";
 
 	# mcp = {
 	#   enable = true;
