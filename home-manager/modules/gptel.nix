@@ -2,29 +2,52 @@
 
 {
   perSystem = { lib, pkgs, ... }: {
-    packages.startOllama = pkgs.writeShellScriptBin "start-ollama" ''
-      if [[ "$(pidof ollama)" -gt 0 ]]; then
-        echo "ollama already running"
-      else
-        ${lib.getExe pkgs.ollama} serve
-      fi
-    '';
+    packages = let
+      epkgs = pkgs.emacs.pkgs;
+    in {
+      startOllama = pkgs.writeShellScriptBin "start-ollama" ''
+	if [[ "$(pidof ollama)" -gt 0 ]]; then
+          echo "ollama already running"
+        else
+          ${lib.getExe pkgs.ollama} serve
+        fi
+      '';
+    };
   };
 
-  flake.homeModules.ai = { config, pkgs, ... }: {
+  flake.homeModules.ai = { lib, config, pkgs, ... }: {
     home.packages = [pkgs.ollama];
     programs.emacs.init = {
-      ai.copilot = {
-	enable = true;
-	keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode" "zenscript-mode"];
-      };
-      usePackage = {
+      ai = {
+	copilot = {
+	  enable = true;
+	  keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode" "zenscript-mode"];
+	};
 	gptel = {
 	  enable = true;
-	  defer = true;
+	  macher.enable = true;
+	  introspection = {
+	    enable = true;
+	    model = "llama3-groq-tool-use:8b";
+	  };
+	};
+      };
+      usePackage = let
+      mkOllama = models: infix: {
+	"gptel${infix}-model" = "'${lib.findFirst (x: true) "" models}";
+	"gptel${infix}-backend" = ''
+	    (gptel-make-ollama "Ollama"
+	        :stream t
+	        :protocol "http"
+	        :host "localhost:11434"
+	        :models '(${lib.concatMapStrings (k: "${k} ") models}))
+	  '';
+      };
+      in {
+	gptel = {
 	  command = ["start-ollama"];
+	  generalOne.global-leader."gs" = '''("start" . start-ollama)'';
 	  setopt = {
-	    gptel-default-mode = "'org-mode";
 	    gptel-max-tokens = 10000000;
 	    gptel-prompt-prefix-alist = [
 	      ''`(markdown-mode . ,(concat "meatbag ›  "))''
@@ -36,45 +59,19 @@
               '''(org-mode . "HK-47  ")''
               '''(text-mode . "HK-47  ")''
 	    ];
-	    gptel-model = "'qwen3.5-coder:4b";
-	    gptel-backend = ''
-	      (gptel-make-ollama "Ollama"
-	        :stream t
-	        :protocol "http"
-	        :host "localhost:11434"
-	        :models '(qwen2.5-coder:3b qwen3.5:4b))
-	    '';
-	    # gptel-backend = ''(gptel-make-gh-copilot "Copilot")'';
-	  };
-	  generalOne.global-leader = {
-	    "g" = '''(:ignore t :which-key "gptel")'';
-	    "gs" = '''("start" . start-ollama)'';
-	    "gp" = '''("prompt" . gptel)'';
-	  };
-	  generalTwoConfig.":n".gptel-mode-map."S-RET" = "'gptel-menu";
+	  } // mkOllama ["llama3-groq-tool-use:8b" "llama3.2:3b" "llama3.2:1b"] "";
 	  preface = ''
 	    (defun start-ollama ()
 	      (interactive)
 	      (start-process-shell-command "startOllama" nil "${pkgs.startOllama}/bin/start-ollama"))
 	  '';
-	  config = "(start-ollama)";
+	  config = ''
+	    (start-ollama)
+	    (gptel-make-gh-copilot "copilot")
+	  '';
 	};
 
-	macher = {
-	  enable = true;
-	  command = ["macher-install"];
-	  generalOne.global-leader = {
-	    "gi" = "'macher-implement";
-	    "gr" = "'macher-revise";
-	    "gd" = "'macher-discuss";
-	    "ga" = "'macher-abort";
-	  };
-	};
-
-	gptel-magit = {
-	  enable = true;
-	  ghookf = ["('magit-mode 'gptel-magit-install)"];
-	};
+	gptel-quick.setopt = mkOllama ["llama3.2:1b"] "-quick";
 
 	# mcp = {
 	#   enable = true;
