@@ -1,4 +1,4 @@
-{
+
   "nodes": {
     "app-launcher": {
       "flake": false,
