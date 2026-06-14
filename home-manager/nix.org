@@ -2217,7 +2217,7 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
 
 (general-def "C-<escape>" 'stack-the-states-switch-stack)
 (general-def '(normal insert emacs god symex motion visual operator) "<escape>" 'stack-the-states-go-up)
-(general-def '(normal god symex) "t" 'stack-the-states-go-down)
+(general-def '(normal god symex) "M-t" 'stack-the-states-go-down)
 
 (hook! 'special-mode (local! stack-the-states-current-stack 'motion))
 (hook! (gen-mode-hooks '(bash-ts clojure c-ts lisp csharp-ts css-ts elisp erlang-ts fennel gdscript-ts go-ts haskell-ts html-ts hy java-ts js-ts json-ts json5-ts julia-ts kotlin-ts lua-ts org make nix-ts purescript python-ts racket ess-r ruby-ts rust-ts scala-ts scheme svelte-ts toml-ts typescript-ts yaml-ts zig)) (local! stack-the-states-current-stack 'symex))
@@ -2465,7 +2465,7 @@ Differences from the spec:
 	    "R" = "'evil-open-above";
 	    "s" = "'evil-append-line";
 	    "S" = "'evil-open-below";
-	    # "t" = "'evil-insert";
+	    "t" = "'evil-insert";
 	    "T" = "'evil-append";
 	    "C-t" = "'evil-replace-state";
 	    "u" = "'evil-forward-WORD-begin";
@@ -3733,6 +3733,12 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
   };
 
   flake.homeModules.exwm = { ... }:
+  let pertabExtension = {
+    enable = true;
+    package = epkgs: epkgs.pertab;
+    after = ["pertab"];
+  };
+  in
   {
     programs.emacs.init.usePackage = {
       tab-bar = {
@@ -3787,43 +3793,20 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
 	  pertab-default-layout  = "'master-stack";
 	  pertab-next-buffer-function = "'bufler-cycle-buffers-forward";
 	  pertab-previous-buffer-function = "'bufler-cycle-buffers-backward";
+	  roll-debug-enabled = false;
 	};
-	config = ''
-	  <<Pertab Config>>
-	'';
-      };
-
-      pertab-monocle = {
-	enable = true;
-	package = epkgs: epkgs.pertab;
-	after = ["pertab"];
-      };
-
-      pertab-follow = {
-	enable = true;
-	package = epkgs: epkgs.pertab;
-	after = ["pertab"];
 	gfhookf = [
-	  "('pertab-follow-enter (lambda () (golden-ratio-mode -1)))"
-	  "('pertab-follow-exit (lambda () (golden-ratio-mode +1)))"
+	  "('(pertab-follow-enter pertab-scroll-enter) (lambda () (golden-ratio-mode -1)))"
+	  "('(pertab-follow-exit pertab-scroll-exit) (lambda () (golden-ratio-mode +1)))"
 	];
       };
 
-      pertab-master-stack = {
-	enable = true;
-	package = epkgs: epkgs.pertab;
-	after = ["pertab"];
-      };
-
-      pertab-scroll = {
-	enable = true;
-	package = epkgs: epkgs.pertab;
-	gfhookf = [];
-	setopt.roll-debug-enabled = false;
-	after = ["pertab"];
-      };
+      pertab-monocle = pertabExtension;
+      pertab-follow = pertabExtension;
+      pertab-master-stack = pertabExtension;
+      pertab-scroll = pertabExtension;
     };
-  };
+  } ;
 }
 #+end_src
 
@@ -3831,16 +3814,10 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
 #+begin_src emacs-lisp
 (general-add-advice 'tab-new :after #'dashboard-open)
 (defun efs/tab-bar-select ()
-   (interactive)
-   (setq tab-bar-tab-hints t)
-   (tab-bar-select-tab (string-to-number (read-string "Tab Number: ")))
-   (setq tab-bar-tab-hints nil))
-#+end_src
-
-#+NAME: Pertab Config
-#+begin_src emacs-lisp
-(add-hook 'pertab-scroll-enter-hook (lambda () (golden-ratio-mode -1) (exwm-mff-mode +1)))
-(add-hook 'pertab-scroll-exit-hook (lambda () (golden-ratio-mode +1) (exwm-mff-mode -1)))
+  (interactive)
+  (setq tab-bar-tab-hints t)
+  (tab-bar-select-tab (string-to-number (read-string "Tab Number: ")))
+  (setq tab-bar-tab-hints nil))
 #+end_src
 
 *** Javelin
