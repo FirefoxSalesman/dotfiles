@@ -68,6 +68,11 @@
       url = "github:finalclass/emacs-roll";
       flake = false;
     };
+
+    macher-agent = {
+      url = "github:elij/macher-agent";
+      flake = false;
+    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake {inherit inputs;} (inputs.import-tree ./modules);

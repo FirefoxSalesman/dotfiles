@@ -4,6 +4,7 @@
       ide.symex = true;
       usePackage.symex = {
 	enable = true;
+	command = ["evil-symex-state"];
 	defer = true;
 	generalTwo.":n"."(racket-repl-mode-map lisp-interaction-mode-map lisp-mode-map)"."RET" = "'symex-mode-interface";
 	config = ''

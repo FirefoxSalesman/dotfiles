@@ -12,6 +12,20 @@
           ${lib.getExe pkgs.ollama} serve
         fi
       '';
+      macher-agent = (epkgs.callPackage
+	epkgs.trivialBuild rec {
+	pname = "macher-agent";
+	version = "current";
+	src = inputs.macher-agent;
+
+	propagatedUserEnvPkgs = with epkgs; [
+	  macher
+	  gptel
+	];
+
+	buildInputs = propagatedUserEnvPkgs;
+	}
+      );
     };
   };
 
@@ -26,10 +40,6 @@
 	gptel = {
 	  enable = true;
 	  macher.enable = true;
-	  introspection = {
-	    enable = true;
-	    model = "llama3-groq-tool-use:8b";
-	  };
 	};
       };
       usePackage = let
@@ -59,7 +69,7 @@
               '''(org-mode . "HK-47  ")''
               '''(text-mode . "HK-47  ")''
 	    ];
-	  } // mkOllama ["llama3-groq-tool-use:8b" "llama3.2:3b" "llama3.2:1b"] "";
+	  } // mkOllama ["llama3.2:3b" "qwen2.5-coder:7b" "llama3.2:1b"] "";
 	  preface = ''
 	    (defun start-ollama ()
 	      (interactive)
@@ -72,6 +82,12 @@
 	};
 
 	gptel-quick.setopt = mkOllama ["llama3.2:1b"] "-quick";
+
+	macher-agent = {
+	  enable = true;
+	  after = ["macher"];
+	  generalOneConfig.global-leader."gMt" = '''("inject thought" . macher-agent-inject-thought)'';
+	};
 
 	# mcp = {
 	#   enable = true;

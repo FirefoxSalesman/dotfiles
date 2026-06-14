@@ -21,6 +21,7 @@
 	    "?\\s-i" = "pertab-focus-right";
 	    "?\\s-n" = "pertab-focus-left";
 	    "?\\s-." = "other-frame";
+	    "?\\s->" = "tab-bar-move-tab-to-frame";
 
 	    # Arrangement
 	    "?\\s-E" = "pertab-move-down";
