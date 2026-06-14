@@ -13,7 +13,7 @@
       usePackage = {
 	doom-escape.ghookf = lib.mkForce ["('stack-the-states-out-of-bounds 'doom/escape)"];
 	evil = {
-	  gfhookf = ["('doom-escape 'evil-normal-state)"];
+	  gfhookf = ["('doom-escape 'stack-the-states--default)"];
 	  config = ''
 	    (evil-ex-define-cmd "q" `,(cmd! (prescient--save) (save-buffers-kill-emacs)))
 	    (evil-ex-define-cmd "Undotree" 'vundo)
@@ -102,9 +102,8 @@
 	    (stack-the-states-make-stack 'emacs (stack-the-states-stack-manager :default-state 'evil-emacs-state :state-stack '(evil-emacs-state evil-god-state)))
 	    
 	    (general-def "C-<escape>" 'stack-the-states-switch-stack)
-	    (general-def '(normal insert emacs god symex motion visual operator)
-	      "<escape>" 'stack-the-states-go-up
-	      "M-t" 'stack-the-states-go-down)
+	    (general-def '(normal insert emacs god symex motion visual operator) "<escape>" 'stack-the-states-go-up)
+	    (general-def '(normal god symex) "t" 'stack-the-states-go-down)
 	    
 	    (hook! 'special-mode (local! stack-the-states-current-stack 'motion))
 	    (hook! (gen-mode-hooks '(bash-ts clojure c-ts lisp csharp-ts css-ts elisp erlang-ts fennel gdscript-ts go-ts haskell-ts html-ts hy java-ts js-ts json-ts json5-ts julia-ts kotlin-ts lua-ts org make nix-ts purescript python-ts racket ess-r ruby-ts rust-ts scala-ts scheme svelte-ts toml-ts typescript-ts yaml-ts zig)) (local! stack-the-states-current-stack 'symex))

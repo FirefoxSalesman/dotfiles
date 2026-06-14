@@ -39,7 +39,7 @@
 	    "R" = "'evil-open-above";
 	    "s" = "'evil-append-line";
 	    "S" = "'evil-open-below";
-	    "t" = "'evil-insert";
+	    # "t" = "'evil-insert";
 	    "T" = "'evil-append";
 	    "C-t" = "'evil-replace-state";
 	    "u" = "'evil-forward-WORD-begin";
