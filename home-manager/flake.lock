@@ -240,11 +240,11 @@
         "use-package-eglot": "use-package-eglot"
       },
       "locked": {
-        "lastModified": 1781115177,
-        "narHash": "sha256-DLY7fiMtaasY7DiauznI90rfPM814pZXBU4oLClFWfg=",
+        "lastModified": 1781221750,
+        "narHash": "sha256-O9bmPDtScNrmz3SsXdiS5eu5UkpIpAEQEMF+/Ks6krk=",
         "owner": "firefoxsalesman",
         "repo": "NixEmacs",
-        "rev": "03562d922d81702263fe2fee15d2de8c2ac9e38c",
+        "rev": "f17286c1a604c85bc32731776d3fd6b370c8e73b",
         "type": "github"
       },
       "original": {
@@ -453,11 +453,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1781115031,
-        "narHash": "sha256-WrHqMjiilIoqF1Lu5mxt9ypdl+VsNfX323LR4PcY4Bs=",
+        "lastModified": 1781189114,
+        "narHash": "sha256-5inaamLgUMWy+MOBE9ChF9QAF1o/74LFuHkI0W/9rqc=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "f96f717a47589c9d0b6e21f1a0d0d42d2c576f18",
+        "rev": "486595d2cf49cfcd649b58a284fa11ac0e34da22",
         "type": "github"
       },
       "original": {
@@ -500,6 +500,22 @@
         "dir": "nix",
         "owner": "kmonad",
         "repo": "kmonad",
+        "type": "github"
+      }
+    },
+    "macher-agent": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1781159056,
+        "narHash": "sha256-sd8L9VhV8XrtX5VXQGfrHauY7CPduFlmyGIZqkukve0=",
+        "owner": "elij",
+        "repo": "macher-agent",
+        "rev": "76805619c8777133d3674f8274bd7e0abd0f0a67",
+        "type": "github"
+      },
+      "original": {
+        "owner": "elij",
+        "repo": "macher-agent",
         "type": "github"
       }
     },
@@ -684,11 +700,11 @@
         "nixpkgs": "nixpkgs_5"
       },
       "locked": {
-        "lastModified": 1781115277,
-        "narHash": "sha256-BIHTwfVvSjuaP1hsdYaSR/v7nXM6FSDv8XN0/J6TeB8=",
+        "lastModified": 1781221603,
+        "narHash": "sha256-K79t1ESN/OzDGfIXJgpKfiHTDVI21dLqP4XXq0QDTkA=",
         "owner": "nix-community",
         "repo": "NUR",
-        "rev": "f35d9317c0bfd02ea84540e986c6e2f192d4d570",
+        "rev": "4af9139dd607f18f14818fa8a76f676dfb62fdb3",
         "type": "github"
       },
       "original": {
@@ -861,6 +877,7 @@
         "home-manager": "home-manager",
         "import-tree": "import-tree",
         "kmonad": "kmonad",
+        "macher-agent": "macher-agent",
         "mpc-wrapper": "mpc-wrapper",
         "nixpkgs": "nixpkgs_4",
         "nixpkgs-stable": "nixpkgs-stable_2",

@@ -15,6 +15,11 @@
 	  deferIncrementally = true;
 	  config = "(server-start)";
 	};
+
+	loaddefs = {
+	  enable = true;
+	  ghookf = ["('on-first-file 'save-place-mode)"];
+	};
       };
     };
   };

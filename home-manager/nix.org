@@ -73,6 +73,11 @@
       url = "github:finalclass/emacs-roll";
       flake = false;
     };
+
+    macher-agent = {
+      url = "github:elij/macher-agent";
+      flake = false;
+    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake {inherit inputs;} (inputs.import-tree ./modules);
@@ -126,6 +131,7 @@ in {
 	  roll = packages.roll;
 	  pertab = packages.pertab;
           embark = packages.embark;
+	  macher-agent = packages.macher-agent;
 	}));
   };
 }
@@ -2030,6 +2036,11 @@ Most of this was shamelessly lifted from Emacs from Scratch.
 	  deferIncrementally = true;
 	  config = "(server-start)";
 	};
+
+	loaddefs = {
+	  enable = true;
+	  ghookf = ["('on-first-file 'save-place-mode)"];
+	};
       };
     };
   };
@@ -2141,6 +2152,45 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
  '(("flyspell"
     evil-prev-flyspell-error "S"
     evil-next-flyspell-error "s")))
+
+(defvar stack-the-states-current-stack 'evil)
+(defvar stack-the-states-out-of-bounds-hook '())
+(defvar stack-the-states-stacks '())
+
+(defclass stack-the-states-stack-manager ()
+  (default-state :initarg :default-state
+		 :type function
+		 :custom function
+		 :documentation "The function to switch to the default evil state.")
+  (state-stack :initarg :state-stack
+	       :documentation "A list of evil state switching functions"))
+
+(defun stack-the-states--get-current-state ()
+  "Return the current stack of evil states."
+  (alist-get stack-the-states-current-stack stack-the-states-stacks))
+
+(defun stack-the-states--default ()
+  "Return to the current stack's default evil state."
+  (funcall (eieio-oref (stack-the-states--get-current-state) 'default-state)))
+
+(defun stack-the-states--get-state-stack ()
+  "Return to the current stack's default evil state."
+  (eieio-oref (stack-the-states--get-current-state) 'state-stack))
+
+(defun stack-the-states--do-action (action)
+  "Execute ACTION on the position of the current state in the stack, or return to the default state if we are outside of the stack."
+  (let ((current-state (intern (concat "evil-" (symbol-name evil-state) "-state")))
+      (state-stack (stack-the-states--get-state-stack)))
+  (if (not (-contains? state-stack current-state))
+      (stack-the-states--default)
+    (funcall action (seq-position state-stack current-state)))))
+
+(defun stack-the-states-go-up ()
+  "Go up 1 state, or return to the default state if we are outside the stack."
+  (interactive)
+  (stack-the-states--do-action (lambda (pos)
+				 (let (newpos (+ 1 pos))
+				   (if (length< (stack-the-states--get-state-stack) newpos))))))
 #+end_src
 
 **** Extensions
@@ -4070,6 +4120,7 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 	    "?\\s-i" = "pertab-focus-right";
 	    "?\\s-n" = "pertab-focus-left";
 	    "?\\s-." = "other-frame";
+	    "?\\s->" = "tab-bar-move-tab-to-frame";
 
 	    # Arrangement
 	    "?\\s-E" = "pertab-move-down";
@@ -4334,7 +4385,7 @@ https://github.com/skissue/llm-tool-collection
 + [ ] https://git.bajsicki.com/phil/gptel-got should probably be another preset, but I'm not sure how that would look right now.
 
 *Agents:*
-+ [ ] Try gptel-agent at some point
++ [X] Try gptel-agent at some point
 + [X] Put macher in NixEmacs. It shouldn't need too much modification
 + [ ] Try macher-agent
 
@@ -4353,6 +4404,20 @@ https://github.com/skissue/llm-tool-collection
           ${lib.getExe pkgs.ollama} serve
         fi
       '';
+      macher-agent = (epkgs.callPackage
+	epkgs.trivialBuild rec {
+	pname = "macher-agent";
+	version = "current";
+	src = inputs.macher-agent;
+
+	propagatedUserEnvPkgs = with epkgs; [
+	  macher
+	  gptel
+	];
+
+	buildInputs = propagatedUserEnvPkgs;
+	}
+      );
     };
   };
 
@@ -4367,10 +4432,6 @@ https://github.com/skissue/llm-tool-collection
 	gptel = {
 	  enable = true;
 	  macher.enable = true;
-	  introspection = {
-	    enable = true;
-	    model = "llama3-groq-tool-use:8b";
-	  };
 	};
       };
       usePackage = let
@@ -4400,7 +4461,7 @@ https://github.com/skissue/llm-tool-collection
               '''(org-mode . "HK-47  ")''
               '''(text-mode . "HK-47  ")''
 	    ];
-	  } // mkOllama ["llama3-groq-tool-use:8b" "llama3.2:3b" "llama3.2:1b"] "";
+	  } // mkOllama ["llama3.2:3b" "qwen2.5-coder:7b" "llama3.2:1b"] "";
 	  preface = ''
 	    <<Emacs Gptel Preface>>
 	  '';
@@ -4411,6 +4472,12 @@ https://github.com/skissue/llm-tool-collection
 	};
 
 	gptel-quick.setopt = mkOllama ["llama3.2:1b"] "-quick";
+
+	macher-agent = {
+	  enable = true;
+	  after = ["macher"];
+	  generalOneConfig.global-leader."gMt" = '''("inject thought" . macher-agent-inject-thought)'';
+	};
 
 	# mcp = {
 	#   enable = true;
