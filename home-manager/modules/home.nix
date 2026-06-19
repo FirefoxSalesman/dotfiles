@@ -44,6 +44,7 @@ in {
 	self.homeModules.exwm
 	self.homeModules.fileManager
 	self.homeModules.gaming
+	self.homeModules.python
 	self.homeModules.java
 	self.homeModules.ledger
 	self.homeModules.media
