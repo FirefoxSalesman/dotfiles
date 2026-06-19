@@ -29,6 +29,12 @@
   };
 
   flake.homeModules.exwm = { ... }:
+  let pertabExtension = {
+    enable = true;
+    package = epkgs: epkgs.pertab;
+    after = ["pertab"];
+  };
+  in
   {
     programs.emacs.init.usePackage = {
       tab-bar = {
@@ -36,10 +42,10 @@
 	config = ''
 	  (general-add-advice 'tab-new :after #'dashboard-open)
 	  (defun efs/tab-bar-select ()
-	     (interactive)
-	     (setq tab-bar-tab-hints t)
-	     (tab-bar-select-tab (string-to-number (read-string "Tab Number: ")))
-	     (setq tab-bar-tab-hints nil))
+	    (interactive)
+	    (setq tab-bar-tab-hints t)
+	    (tab-bar-select-tab (string-to-number (read-string "Tab Number: ")))
+	    (setq tab-bar-tab-hints nil))
 	'';
 	ghookf = ["('exwm-init 'tab-bar-mode)"];
 	general."s-u" = "'tab-bar-hydra/body";
@@ -88,42 +94,18 @@
 	  pertab-default-layout  = "'master-stack";
 	  pertab-next-buffer-function = "'bufler-cycle-buffers-forward";
 	  pertab-previous-buffer-function = "'bufler-cycle-buffers-backward";
+	  roll-debug-enabled = false;
 	};
-	config = ''
-	  (add-hook 'pertab-scroll-enter-hook (lambda () (golden-ratio-mode -1) (exwm-mff-mode +1)))
-	  (add-hook 'pertab-scroll-exit-hook (lambda () (golden-ratio-mode +1) (exwm-mff-mode -1)))
-	'';
-      };
-
-      pertab-monocle = {
-	enable = true;
-	package = epkgs: epkgs.pertab;
-	after = ["pertab"];
-      };
-
-      pertab-follow = {
-	enable = true;
-	package = epkgs: epkgs.pertab;
-	after = ["pertab"];
 	gfhookf = [
-	  "('pertab-follow-enter (lambda () (golden-ratio-mode -1)))"
-	  "('pertab-follow-exit (lambda () (golden-ratio-mode +1)))"
+	  "('(pertab-follow-enter pertab-scroll-enter) (lambda () (golden-ratio-mode -1)))"
+	  "('(pertab-follow-exit pertab-scroll-exit) (lambda () (golden-ratio-mode +1)))"
 	];
       };
 
-      pertab-master-stack = {
-	enable = true;
-	package = epkgs: epkgs.pertab;
-	after = ["pertab"];
-      };
-
-      pertab-scroll = {
-	enable = true;
-	package = epkgs: epkgs.pertab;
-	gfhookf = [];
-	setopt.roll-debug-enabled = false;
-	after = ["pertab"];
-      };
+      pertab-monocle = pertabExtension;
+      pertab-follow = pertabExtension;
+      pertab-master-stack = pertabExtension;
+      pertab-scroll = pertabExtension;
     };
-  };
+  } ;
 }
