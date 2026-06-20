@@ -289,7 +289,6 @@ in {
 	self.homeModules.exwm
 	self.homeModules.fileManager
 	self.homeModules.gaming
-	self.homeModules.python
 	self.homeModules.java
 	self.homeModules.ledger
 	self.homeModules.media
@@ -1635,7 +1634,11 @@ I think most of it was from the github page for lsp mode, but it's been a while,
   flake.homeModules.webdev = { config, pkgs, lib, ... }:
   {
     programs.emacs.init.ide.languages = {
-      javascript.enable = true;
+      javascript = {
+	enable = true;
+	wantOxlint = true;
+	wantOxfmt = true;
+      };
       html = {
 	enable = true;
 	emmet = true;
@@ -1750,21 +1753,11 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
     programs.emacs.init = {
       ide.languages.python = {
 	enable = true;
-	languageServer = "basedpyright";
+	wantRuff = true;
       };
-      usePackage = {
-	python-ts-mode.setopt = {
-	  python-shell-interpreter = ''"ipython"'';
-	  python-shell-interpreter-args = ''"-i --simple-prompt"'';
-	};
-	eglot-python-preset = {
-	  enable = true;
-	  extraPackages = with pkgs; [rassumfrassum ruff uv];
-	  setopt = {
-	    eglot-python-preset-lsp-server = "'rass";
-	    eglot-python-preset-rass-tools= ["'ty" "'ruff"];
-	  };
-	};
+      usePackage.python-ts-mode.setopt = {
+	python-shell-interpreter = ''"ipython"'';
+	python-shell-interpreter-args = ''"-i --simple-prompt"'';
       };
     };
   };
