@@ -64,9 +64,7 @@
             (interactive)
             (mpc-volume-dec 5))
           (repeaters-define-maps
-           '(("music"
-              mpc-volume-dec-by-five "-"
-              mpc-volume-inc-by-five "+")))
+           '(("music" mpc-volume-dec-by-five "-" mpc-volume-inc-by-five "+")))
         '';
       };
     };

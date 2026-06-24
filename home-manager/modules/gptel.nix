@@ -105,7 +105,8 @@
               preface = ''
                 (defun start-ollama ()
                   (interactive)
-                  (start-process-shell-command "startOllama" nil "${pkgs.startOllama}/bin/start-ollama"))
+                  (start-process-shell-command
+                   "startOllama" nil "${pkgs.startOllama}/bin/start-ollama"))
               '';
               config = ''
                 (start-ollama)

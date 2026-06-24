@@ -11,7 +11,8 @@
         config = ''
           (ednc-mode)
           (defun show-notification-in-echo-area (old new)
-            (when new (message (ednc-format-notification new t))))
+            (when new
+              (message (ednc-format-notification new t))))
         '';
       };
     };

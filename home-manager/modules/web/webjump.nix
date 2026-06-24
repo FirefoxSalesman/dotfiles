@@ -16,18 +16,33 @@
           "Webjump function for searching curseforge.
         NAME is the term to search for."
           (let* ((prefix "legacy.curseforge.com/minecraft/")
-                 (category (completing-read "Choose a category" '("mc-mods" "modpacks" "shaders" "data-pack" "texture-packs")))
-        	 (url (concat prefix category))
-        	 (term (webjump-read-string (concat name " Search for"))))
+                 (category
+                  (completing-read
+                   "Choose a category"
+                   '("mc-mods"
+                     "modpacks"
+                     "shaders"
+                     "data-pack"
+                     "texture-packs")))
+                 (url (concat prefix category))
+                 (term (webjump-read-string (concat name " Search for"))))
             (concat url "/search?search=" (webjump-url-encode term))))
         
         (defun webjump-to-modrinth (name)
           "Webjump function for searching modrinth.
         NAME is the term to search for."
           (let* ((prefix "modrinth.com/")
-                 (category (completing-read "Choose a category" '("mods" "resourcepacks" "datapacks" "shaders" "modpacks" "plugins")))
-        	 (url (concat prefix category))
-        	 (term (webjump-read-string (concat name " Search for"))))
+                 (category
+                  (completing-read
+                   "Choose a category"
+                   '("mods"
+                     "resourcepacks"
+                     "datapacks"
+                     "shaders"
+                     "modpacks"
+                     "plugins")))
+                 (url (concat prefix category))
+                 (term (webjump-read-string (concat name " Search for"))))
             (concat url "?q=" (webjump-url-encode term))))
       '';
     };

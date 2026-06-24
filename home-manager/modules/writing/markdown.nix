@@ -18,13 +18,17 @@
         preface = ''
           (defun efs/markdown-font-setup ()
             (variable-pitch-mode)
-            (dolist (face '((markdown-header-face-1 . 1.4)
-                            (markdown-header-face-2 . 1.2)
-                            (markdown-header-face-3 . 1.1)
-                            (markdown-header-face-4 . 1.05)
-                            (markdown-header-face-5 . 1.05)
-                            (markdown-header-face-6 . 1.05)))
-              (set-face-attribute (car face) nil :font "SF Pro" :weight 'regular :height (cdr face))))
+            (dolist (face
+                     '((markdown-header-face-1 . 1.4)
+                       (markdown-header-face-2 . 1.2)
+                       (markdown-header-face-3 . 1.1)
+                       (markdown-header-face-4 . 1.05)
+                       (markdown-header-face-5 . 1.05)
+                       (markdown-header-face-6 . 1.05)))
+              (set-face-attribute (car face) nil
+                                  :font "SF Pro"
+                                  :weight 'regular
+                                  :height (cdr face))))
         '';
       };
     };

@@ -45,23 +45,32 @@
           defer = true;
           ghookf = [ "('dired-mode 'openwith-mode)" ];
           config = ''
-                        (gsetq openwith-associations
-                               (list
-                                (list (openwith-make-extension-regexp
-                                       '("xcf"))
-                                      "gimp"
-                                      '(file))
-                                (list (openwith-make-extension-regexp
-                                       '("odt" "doc" "docx" "odp" "pptx" "xlsx"))
-                                      "libreoffice"
-                                      '(file))
-                                (list (openwith-make-extension-regexp
-                                       '("mpg" "mpeg" "mp3" "mp4"
-                                         "avi" "wmv" "wav" "mov" "flv"
-                                         "ogm" "ogg" "mkv" "webm" "opus"
-                                         "flac"))
-                                      "${pkgs.mpvmacs}/bin/mpvmacs"
-                                      '(file))))
+                        (gsetq
+                         openwith-associations
+                         (list
+                          (list (openwith-make-extension-regexp '("xcf")) "gimp" '(file))
+                          (list
+                           (openwith-make-extension-regexp
+                            '("odt" "doc" "docx" "odp" "pptx" "xlsx"))
+                           "libreoffice" '(file))
+                          (list
+                           (openwith-make-extension-regexp
+                            '("mpg"
+                              "mpeg"
+                              "mp3"
+                              "mp4"
+                              "avi"
+                              "wmv"
+                              "wav"
+                              "mov"
+                              "flv"
+                              "ogm"
+                              "ogg"
+                              "mkv"
+                              "webm"
+                              "opus"
+                              "flac"))
+                           "${pkgs.mpvmacs}/bin/mpvmacs" '(file))))
             	  '';
         };
 

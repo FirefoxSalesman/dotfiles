@@ -54,27 +54,31 @@
           	         (bufname (format " *aw-posframe-buffer-%s*" path)))
           	    (with-selected-window wnd
           	      (push bufname aw--posframe-frames)
-          	      (posframe-show bufname
-          	                     :string str
-          	                     :poshandler aw-posframe-position-handler
-          			     :refposhandler 'posframe-refposhandler-xwininfo
-          			     :parent-frame nil
-          	                     :font (face-font 'aw-leading-char-face)
-          	                     :foreground-color (face-foreground 'aw-leading-char-face nil t)
-          	                     :background-color (face-background 'aw-leading-char-face nil t)))))
+          	      (posframe-show
+          	       bufname
+          	       :string str
+          	       :poshandler aw-posframe-position-handler
+          	       :refposhandler 'posframe-refposhandler-xwininfo
+          	       :parent-frame nil
+          	       :font (face-font 'aw-leading-char-face)
+          	       :foreground-color (face-foreground 'aw-leading-char-face nil t)
+          	       :background-color (face-background 'aw-leading-char-face nil t)))))
           	
-          	(general-add-advice 'ace-window :after (lambda (&rest args) (golden-ratio)))
+          	(general-add-advice
+          	 'ace-window
+          	 :after (lambda (&rest args) (golden-ratio)))
           	
           	(defun aw--switch-buffer ()
           	  "Call the buffer switching command appropriate to your setup."
-          	  (cond ((bound-and-true-p ivy-mode)
-          	         (ivy-switch-buffer))
-          	        ((bound-and-true-p ido-mode)
-          	         (ido-switch-buffer))
-          		((featurep 'consult)
-          		 (consult-buffer))
-          	        (t
-          	         (call-interactively 'switch-to-buffer))))
+          	  (cond
+          	   ((bound-and-true-p ivy-mode)
+          	    (ivy-switch-buffer))
+          	   ((bound-and-true-p ido-mode)
+          	    (ido-switch-buffer))
+          	   ((featurep 'consult)
+          	    (consult-buffer))
+          	   (t
+          	    (call-interactively 'switch-to-buffer))))
         '';
       };
     };

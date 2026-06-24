@@ -45,8 +45,12 @@
           enable = true;
           config = ''
             (with-eval-after-load 'evil-collection-info
-              (efs/evil-collection-remap 'evil-collection-info-setup '(normal motion) Info-mode-map
-            			     "C-o" 'evil-scroll-page-up))
+              (efs/evil-collection-remap
+               'evil-collection-info-setup
+               '(normal motion)
+               Info-mode-map
+               "C-o"
+               'evil-scroll-page-up))
           '';
         };
 

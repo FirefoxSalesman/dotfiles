@@ -12,13 +12,17 @@
           (symex-mode)
           (repeaters-define-maps
            '(("symex-visual-line"
-              symex-next-visual-line "e"
-              symex-previous-visual-line "o")))
+              symex-next-visual-line
+              "e"
+              symex-previous-visual-line
+              "o")))
           
           (require 'evil-easymotion)
           
-          (evilem-make-motion efs/evilem-motion-symex-go-forward #'symex-go-forward)
-          (evilem-make-motion efs/evilem-motion-symex-go-backward #'symex-go-backward)
+          (evilem-make-motion
+           efs/evilem-motion-symex-go-forward #'symex-go-forward)
+          (evilem-make-motion
+           efs/evilem-motion-symex-go-backward #'symex-go-backward)
           (evilem-make-motion efs/evilem-motion-symex-go-down #'symex-go-down)
           (evilem-make-motion efs/evilem-motion-symex-go-up #'symex-go-up)
         '';

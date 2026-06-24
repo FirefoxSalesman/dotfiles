@@ -9,12 +9,19 @@
         preface = ''
           (defun efs/check-for-roll-buffers ()
             "Check for roll buffers for buffer-terminator."
-            (if (-contains? (mapcar 'roll-pane-buffer
-          			  (car (-filter (lambda (x) (not (eq nil x)))
-          					(mapcar (lambda (tab)
-          						  (alist-get 'roll--panes (alist-get 'pertab-local-variables (cdr tab))))
-          						(funcall tab-bar-tabs-function)))))
-          		  (current-buffer))
+            (if (-contains?
+                 (mapcar
+                  'roll-pane-buffer
+                  (car
+                   (-filter
+                    (lambda (x) (not (eq nil x)))
+                    (mapcar
+                     (lambda (tab)
+                       (alist-get
+                        'roll--panes
+                        (alist-get 'pertab-local-variables (cdr tab))))
+                     (funcall tab-bar-tabs-function)))))
+                 (current-buffer))
                 ':keep
               nil))
         '';

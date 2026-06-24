@@ -23,9 +23,14 @@
       };
       init = ''
         (with-eval-after-load 'evil-collection-eww
-          (efs/evil-collection-remap 'evil-collection-eww-setup 'normal eww-mode-map
-        			     "d" 'evil-yank
-        			     "p" 'efs/mpv-eww-url))
+          (efs/evil-collection-remap
+           'evil-collection-eww-setup
+           'normal
+           eww-mode-map
+           "d"
+           'evil-yank
+           "p"
+           'efs/mpv-eww-url))
       '';
     };
   };

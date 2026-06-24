@@ -44,21 +44,28 @@
           bindLocal.help-map."M" = "man";
           config = ''
             (defvar consult--bufler-workspace+
-              `(:name "Workspace"
-                      :narrow ?w
-                      :category buffer
-                      :face consult-buffer
-                      :history  buffer-name-history
-                      :state    ,#'consult--buffer-state
-                      :enabled  ,(lambda () (bufler-workspace--tab-parameter 'bufler-workspace-path (tab-bar--current-tab-find)))
-                      :items
-                      ,(lambda ()
-                         (let ((bufler-vc-state nil))
-                           (mapcar #'buffer-name
-                                   (mapcar #'cdr
-                                           (bufler-buffer-alist-at
-                                            (bufler-workspace--tab-parameter 'bufler-workspace-path (tab-bar--current-tab-find))
-                                            :filter-fns bufler-filter-buffer-fns))))))
+              `(:name
+                "Workspace"
+                :narrow ?w
+                :category buffer
+                :face consult-buffer
+                :history buffer-name-history
+                :state ,#'consult--buffer-state
+                :enabled
+                ,(lambda ()
+                   (bufler-workspace--tab-parameter
+                    'bufler-workspace-path (tab-bar--current-tab-find)))
+                :items
+                ,(lambda ()
+                   (let ((bufler-vc-state nil))
+                     (mapcar
+                      #'buffer-name
+                      (mapcar
+                       #'cdr
+                       (bufler-buffer-alist-at
+                        (bufler-workspace--tab-parameter
+                         'bufler-workspace-path (tab-bar--current-tab-find))
+                        :filter-fns bufler-filter-buffer-fns))))))
               "Bufler workspace buffers source for `consult-buffer'.")
             
             (push #'consult--bufler-workspace+ consult-buffer-sources)
@@ -66,20 +73,27 @@
             ;; Stolen from the wiki
             (defun consult-initial-narrow ()
               (when (and (eq this-command #'consult-buffer)
-                         (bufler-workspace--tab-parameter 'bufler-workspace-path (tab-bar--current-tab-find)))
-                (setq unread-command-events (append unread-command-events (list ?w 32)))))
+                         (bufler-workspace--tab-parameter
+                          'bufler-workspace-path (tab-bar--current-tab-find)))
+                (setq unread-command-events
+                      (append unread-command-events (list ?w 32)))))
             
             (defun efs/consult-goto-imenu (filter getter)
-                          "Go to the next imenu item.
+              "Go to the next imenu item.
                         FILTER is a function used to filter for items. (Such as '>' or '<').
                         GETTER is a function used to get the appropriate item (Such as 'car' or 'last')."
-                          (require 'consult-imenu)
-                          (goto-char (funcall getter
-                        		      (-filter (lambda (x)
-                        				 (funcall filter x (marker-last-position (point-marker))))
-                        			       (mapcar (lambda (x)
-                        					 (marker-last-position (cdr x)))
-                        				       (consult-imenu--items))))))
+              (require 'consult-imenu)
+              (goto-char
+               (funcall getter
+                        (-filter
+                         (lambda (x)
+                           (funcall filter
+                                    x
+                                    (marker-last-position (point-marker))))
+                         (mapcar
+                          (lambda (x)
+                            (marker-last-position (cdr x)))
+                          (consult-imenu--items))))))
             
             (defun efs/consult-imenu-next ()
               "Go to the next imenu item."
@@ -93,8 +107,10 @@
             
             (repeaters-define-maps
              '(("imenu"
-                efs/consult-imenu-next "i"
-                efs/consult-imenu-previous "I")))
+                efs/consult-imenu-next
+                "i"
+                efs/consult-imenu-previous
+                "I")))
           '';
         };
 

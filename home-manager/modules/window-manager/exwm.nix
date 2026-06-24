@@ -112,25 +112,34 @@
             ];
           };
           init = ''
-            (defvar efs/monitor-brightness 27 "The percent brightness of the monitor.")
+            (defvar efs/monitor-brightness 27
+              "The percent brightness of the monitor.")
             
             (defun efs/alter-monitor-brightness (inc &optional neg)
               "Alters the monitor's brightness.
             INC is the percent to increment the volume by.
             NEG subtracts if it is true."
-              (setopt efs/monitor-brightness (funcall (if neg '- '+) efs/monitor-brightness inc))
-              (shell-command (concat "brightnessctl -d intel_backlight set " (int-to-string efs/monitor-brightness) "%")))
+              (setopt efs/monitor-brightness
+                      (funcall (if neg
+                                   '-
+                                 '+)
+                               efs/monitor-brightness inc))
+              (shell-command
+               (concat
+                "brightnessctl -d intel_backlight set "
+                (int-to-string efs/monitor-brightness)
+                "%")))
           '';
           config = ''
             (winner-mode)
             
             (repeaters-define-maps
              '(("delete-windows"
-                pertab-kill-buffer-close-window "K"
-                pertab-close-window "k")))
-            (repeaters-define-maps
-             '(("input-keys"
-                exwm-input-send-next-key "q")))
+                pertab-kill-buffer-close-window
+                "K"
+                pertab-close-window
+                "k")))
+            (repeaters-define-maps '(("input-keys" exwm-input-send-next-key "q")))
             (exwm-input-set-key (kbd "s-<return>") 'efs/make-eshell)
           '';
           after = [ "repeaters" ];

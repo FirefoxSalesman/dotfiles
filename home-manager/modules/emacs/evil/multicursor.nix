@@ -32,11 +32,12 @@
                 (when (boundp name)
                   (let ((p (evil-mc-get-cursor-property state name)))
                     (when (not
-                           (or
-                            (eq name 'register-alist)
-                            (eq name 'evil-markers-alist)))
+                           (or (eq name 'register-alist)
+                               (eq name 'evil-markers-alist)))
                       (set name p)))))))
-          (advice-add #'evil-mc-write-cursor-state :override #'~+multiple-cursors-evil-mc-write-cursor-state-a)
+          (advice-add
+           #'evil-mc-write-cursor-state
+           :override #'~+multiple-cursors-evil-mc-write-cursor-state-a)
         '';
         extraConfig = ''
           :pretty-hydra

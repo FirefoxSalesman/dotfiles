@@ -36,7 +36,9 @@
             A factory for quickly producing interaction commands, particularly for keybinds
             or aliases. Stolen from Doom."
               (declare (doc-string 1) (pure t) (side-effect-free t))
-              `(lambda (&rest _) (interactive) ,@body))
+              `(lambda (&rest _)
+                 (interactive)
+                 ,@body))
             
             (defmacro local! (var body)
               "Creates a lambda that runs setq-local on the variable VAR with the value provided by BODY."
@@ -44,9 +46,9 @@
             
             (defun gen-mode-hooks (modes)
               "Takes a list of symbols, MODES, & appends -mode to them."
-              (mapcar (lambda (mode)
-            	    (intern (concat (symbol-name mode) "-mode")))
-            	  modes))
+              (mapcar
+               (lambda (mode) (intern (concat (symbol-name mode) "-mode")))
+               modes))
             
             (defmacro efs/evil-collection-remap (fun state map &rest args)
               "Adds more key definitions directly after running some evil-collection setup function.
@@ -54,14 +56,21 @@
             `STATE` is the evil state to bind the keys in.
             `MAP` is the keymap to bind the keys to.
             `ARGS` is the actual key definitions."
-              `(general-add-advice ,fun :after
-            		       (lambda () (general-def ,state ,map ,@args))))
+              `(general-add-advice
+                ,fun
+                :after (lambda () (general-def ,state ,map ,@args))))
           '';
 
           postlude = ''
             ;; Display buffer rules
-            (cl-pushnew (list (rx "*Async Shell Command*" (0+ any)) #'display-buffer-no-window) display-buffer-alist)
-            (cl-pushnew (list (rx "*Shell Command Output*" (0+ any)) #'display-buffer-no-window) display-buffer-alist)
+            (cl-pushnew
+             (list
+              (rx "*Async Shell Command*" (0+ any)) #'display-buffer-no-window)
+             display-buffer-alist)
+            (cl-pushnew
+             (list
+              (rx "*Shell Command Output*" (0+ any)) #'display-buffer-no-window)
+             display-buffer-alist)
           '';
         };
       };

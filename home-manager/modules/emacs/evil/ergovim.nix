@@ -133,36 +133,48 @@
         };
         extraConfig = ''
           :general-config
-          (general-swap-key nil '(motion normal visual)
-            "g" "b"
-            "z" "q"
-            "Z" "Q")
+          (general-swap-key nil '(motion normal visual) "g" "b" "z" "q" "Z" "Q")
           
-          (:keymaps 'override
-          	  :states '(normal visual)
-          	  "g" 'evil-paste-before
-          	  "z" 'evil-jump-item
-          	  "Z" 'evil-goto-last-change)
+          (:keymaps
+           'override
+           :states
+           '(normal visual)
+           "g"
+           'evil-paste-before
+           "z"
+           'evil-jump-item
+           "Z"
+           'evil-goto-last-change)
           
-          (:keymaps 'override
-          	  :states '(operator visual)
-          	  "i" 'evil-forward-char
-          	  "s" evil-inner-text-objects-map
-          	  "t" evil-outer-text-objects-map)
+          (:keymaps
+           'override
+           :states
+           '(operator visual)
+           "i"
+           'evil-forward-char
+           "s"
+           evil-inner-text-objects-map
+           "t"
+           evil-outer-text-objects-map)
           
-          ('normal "bl" 'consult-goto-line
-          	 "b/" 'consult-keep-lines)
+          ('normal "bl" 'consult-goto-line "b/" 'consult-keep-lines)
         '';
         config = ''
-          (evil-define-operator ergo-word-delete (beg end type register yank-handler)
-            "Delete word."
-            :motion evil-a-word
-            (evil-delete beg end type register yank-handler))
+          (evil-define-operator
+           ergo-word-delete
+           (beg end type register yank-handler)
+           "Delete word."
+           :motion
+           evil-a-word
+           (evil-delete beg end type register yank-handler))
           
-          (evil-define-operator ergo-word-change (beg end type register yank-handler)
-            "Delete word."
-            :motion evil-inner-word
-            (evil-change beg end type register yank-handler))
+          (evil-define-operator
+           ergo-word-change
+           (beg end type register yank-handler)
+           "Delete word."
+           :motion
+           evil-inner-word
+           (evil-change beg end type register yank-handler))
         '';
       };
     };

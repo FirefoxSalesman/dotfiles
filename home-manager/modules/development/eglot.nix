@@ -17,16 +17,12 @@
 
         # https://github.com/radian-software/apheleia/issues/153
         tools.apheleia.formatters.eglot = ''
-          (cl-defun apheleia-indent-eglot-managed-buffer
-                  (&key buffer scratch callback &allow-other-keys)
-                "Copy BUFFER to SCRATCH, then format scratch, then call CALLBACK."
-                (with-current-buffer scratch
-                  (setq-local eglot--cached-server
-                              (with-current-buffer buffer
-                                (eglot-current-server)))
-                  (let ((buffer-file-name (buffer-local-value 'buffer-file-name buffer)))
-                    (eglot-format-buffer))
-                  (funcall callback)))
+          (make-apheleia-formatter apheleia-indent-eglot-managed-buffer
+             (setq-local eglot--cached-server
+                         (with-current-buffer buffer
+                           (eglot-current-server)))
+             (let ((buffer-file-name (buffer-local-value 'buffer-file-name buffer)))
+               (eglot-format-buffer)))
         '';
 
         usePackage = {
@@ -37,12 +33,16 @@
                 ('eglot-managed-mode (local! completion-at-point-functions (list (cape-capf-super #'tempel-complete
                 	      #'eglot-completion-at-point
                 											     #'cape-file))))
-                	    ''
+              ''
             ];
             config = ''
-              	    (efs/evil-collection-remap 'evil-collection-eglot-setup 'normal eglot-mode-map
-              	    			   "K" 'evil-substitute)
-              	  '';
+              (efs/evil-collection-remap
+               'evil-collection-eglot-setup
+               'normal
+               eglot-mode-map
+               "K"
+               'evil-substitute)
+            '';
           };
 
           flymake-popon.setopt.flymake-popon-posframe-extra-arguments = [
@@ -55,9 +55,9 @@
           eglot-java = {
             setopt.eglot-java-user-init-opts-fn = "'eglot-java-init-opts";
             preface = ''
-              	    (defun eglot-java-init-opts (server eglot-java-eclipse-jdt)
+              (defun eglot-java-init-opts (server eglot-java-eclipse-jdt)
                                  '(:bundles ["/usr/share/java-debug/com.microsoft.java.debug.plugin.jar"]))
-              	  '';
+            '';
           };
 
           citre = {

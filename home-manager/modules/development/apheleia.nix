@@ -47,6 +47,17 @@
         enable = true;
         ghookf = lib.mkIf tools.apheleia.autoFormat [ "('on-first-file 'apheleia-global-mode)" ];
         config = ''
+          (defmacro make-apheleia-formatter (name &rest body)
+            "Return a function that can be used as an apheleia formatter.
+          NAME is the name of the function, BODY is every action taken on the scratch buffer before the callback."
+            `(cl-defun
+              ,name
+              (&key buffer scratch callback &allow-other-keys)
+              "Copy BUFFER to SCRATCH, then format scratch, then call CALLBACK."
+              (with-current-buffer scratch
+                ,@body
+                (funcall callback))))
+
           ${makeFormatters tools.apheleia.formatters}
 
           (dolist (pair '(${makeModeFormatters tools.apheleia.modeFormatters}))
