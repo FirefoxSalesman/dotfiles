@@ -69,11 +69,6 @@
       flake = false;
     };
 
-    macher-agent = {
-      url = "github:elij/macher-agent";
-      flake = false;
-    };
-
     gptel-got = {
       url = "https://git.bajsicki.com/phil/gptel-got";
       flake = false;

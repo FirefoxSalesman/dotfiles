@@ -47,7 +47,6 @@ in
             roll = packages.roll;
             pertab = packages.pertab;
             embark = packages.embark;
-            macher-agent = packages.macher-agent;
             gptel-got = packages.gptel-got;
           }
         ));

@@ -74,11 +74,6 @@
       flake = false;
     };
 
-    macher-agent = {
-      url = "github:elij/macher-agent";
-      flake = false;
-    };
-
     gptel-got = {
       url = "https://git.bajsicki.com/phil/gptel-got";
       flake = false;
@@ -141,7 +136,6 @@ in
             roll = packages.roll;
             pertab = packages.pertab;
             embark = packages.embark;
-            macher-agent = packages.macher-agent;
             gptel-got = packages.gptel-got;
           }
         ));
@@ -1753,18 +1747,8 @@ I think most of it was from the github page for lsp mode, but it's been a while,
         };
 
         tools.apheleia = {
+          enable = true;
           autoFormat = true;
-          modeFormatters = {
-            bash-ts-mode = "eglot";
-            nix-ts-mode = "nixfmt";
-            java-ts-mode = "eglot";
-            js-ts-mode = "eglot";
-            typescript-ts-mode = "eglot";
-          };
-          formatters.nixfmt = [
-            "nixfmt"
-            "-"
-          ];
         };
 
         usePackage = {
@@ -1934,22 +1918,9 @@ I think most of it was from the github page for lsp mode, but it's been a while,
           enable = true;
           semel = true;
         };
-        tools.apheleia = {
-          formatters.elisp-autofmt = ''
-            (make-apheleia-formatter apheleia-indent-elisp
-               (elisp-autofmt-buffer))
-          '';
-	  modeFormatters.emacs-lisp-mode = "elisp-autofmt";
-        };
-        usePackage = {
-          elisp-autofmt = {
-            enable = true;
-            after = [ "apheleia" ];
-          };
-          elisp-mode.gfhookf = [
-            "('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"
-          ];
-        };
+        usePackage.elisp-mode.gfhookf = [
+          "('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"
+        ];
       };
     };
 }
@@ -2078,16 +2049,6 @@ Citre was borrowed from jweigley's config
           };
         };
 
-        # https://github.com/radian-software/apheleia/issues/153
-        tools.apheleia.formatters.eglot = ''
-          (make-apheleia-formatter apheleia-indent-eglot-managed-buffer
-             (setq-local eglot--cached-server
-                         (with-current-buffer buffer
-                           (eglot-current-server)))
-             (let ((buffer-file-name (buffer-local-value 'buffer-file-name buffer)))
-               (eglot-format-buffer)))
-        '';
-
         usePackage = {
           eglot = {
             preface = "(defvar efs/autoformat t) ";
@@ -2158,80 +2119,6 @@ Citre was borrowed from jweigley's config
  eglot-mode-map
  "K"
  'evil-substitute)
-#+end_src
-
-*** Aphelia
-#+begin_src nix-ts :tangle modules/development/apheleia.nix
-{ ... }:
-
-{
-  flake.homeModules.development =
-    {
-      pkgs,
-      config,
-      lib,
-      ...
-    }:
-    let
-      tools = config.programs.emacs.init.tools;
-      makeModeFormatters =
-        vs:
-        lib.concatStringsSep "\n" (
-          lib.optionals (vs != { }) (lib.mapAttrsToList (mode: formatter: "(${mode} . ${formatter})") vs)
-        );
-      makeFormattersHelper =
-        formatter:
-        if lib.isList formatter then "'(${lib.concatMapStrings (k: ''"${k}" '') formatter})" else formatter;
-      makeFormatters =
-        vs:
-        lib.concatStringsSep "\n" (
-          lib.optionals (vs != { }) (
-            lib.mapAttrsToList (
-              name: formatter: "(setf (alist-get '${name} apheleia-formatters) ${makeFormattersHelper formatter})"
-            ) vs
-          )
-        );
-    in
-    {
-      options.programs.emacs.init.tools.apheleia = {
-        autoFormat = lib.mkEnableOption "Auto-format buffers on save with apheleia.";
-        modeFormatters = lib.mkOption {
-          type = lib.types.attrsOf lib.types.str;
-          default = { };
-          description = "Aphelia formatters for each major mode";
-        };
-        formatters = lib.mkOption {
-          type = lib.types.attrsOf (lib.types.either lib.types.str (lib.types.listOf lib.types.str));
-          default = { };
-          description = "Aphelia formatters & their commands";
-        };
-      };
-
-      config.programs.emacs.init.usePackage.apheleia = lib.mkIf (tools.apheleia.formatters != { }) {
-        enable = true;
-        ghookf = lib.mkIf tools.apheleia.autoFormat [ "('on-first-file 'apheleia-global-mode)" ];
-        config = ''
-          (defmacro make-apheleia-formatter (name &rest body)
-            "Return a function that can be used as an apheleia formatter.
-          NAME is the name of the function, BODY is every action taken on the scratch buffer before the callback."
-            `(cl-defun
-              ,name
-              (&key buffer scratch callback &allow-other-keys)
-              "Copy BUFFER to SCRATCH, then format scratch, then call CALLBACK."
-              (with-current-buffer scratch
-                ,@body
-                (funcall callback))))
-
-          ${makeFormatters tools.apheleia.formatters}
-
-          (dolist (pair '(${makeModeFormatters tools.apheleia.modeFormatters}))
-            (add-to-list 'apheleia-mode-alist pair))
-        '';
-        generalOne.global-leader."F" =
-          lib.mkIf config.programs.emacs.init.keybinds.leader-key.enable "'apheleia-format-buffer";
-      };
-    };
-}
 #+end_src
 
 *** Ledger
@@ -5077,13 +4964,7 @@ NEG subtracts if it is true."
 https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 https://github.com/skissue/llm-tool-collection
 *RAG tools:*
-+ [X] https://github.com/positron-solutions/ragmacs should be used to provide an introspection preset
 + [ ] https://git.bajsicki.com/phil/gptel-got should probably be another preset, but I'm not sure how that would look right now.
-
-*Agents:*
-+ [X] Try gptel-agent at some point
-+ [X] Put macher in NixEmacs. It shouldn't need too much modification
-+ [X] Try macher-agent
 
 #+begin_src nix-ts :tangle modules/gptel.nix :noweb yes
 { inputs, ... }:
@@ -5102,20 +4983,6 @@ https://github.com/skissue/llm-tool-collection
                   ${lib.getExe pkgs.ollama} serve
                 fi
         '';
-        macher-agent = (
-          epkgs.callPackage epkgs.trivialBuild rec {
-            pname = "macher-agent";
-            version = "current";
-            src = inputs.macher-agent;
-
-            propagatedUserEnvPkgs = with epkgs; [
-              macher
-              gptel
-            ];
-
-            buildInputs = propagatedUserEnvPkgs;
-          }
-        );
         gptel-got = (
           epkgs.callPackage epkgs.trivialBuild rec {
             pname = "gptel-got";
@@ -5156,7 +5023,10 @@ https://github.com/skissue/llm-tool-collection
           };
           gptel = {
             enable = true;
-            macher.enable = true;
+            macher = {
+	      enable = true;
+	      agent = true;
+	    };
           };
         };
         usePackage =
@@ -5200,12 +5070,6 @@ https://github.com/skissue/llm-tool-collection
             };
 
             gptel-quick.setopt = mkOllama [ "llama3.2:1b" ] "-quick";
-
-            macher-agent = {
-              enable = true;
-              after = [ "macher" ];
-              generalOneConfig.global-leader."gMt" = '''("inject thought" . macher-agent-inject-thought)'';
-            };
 
             # gptel-got = {
             #   enable = true;

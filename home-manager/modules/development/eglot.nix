@@ -15,16 +15,6 @@
           };
         };
 
-        # https://github.com/radian-software/apheleia/issues/153
-        tools.apheleia.formatters.eglot = ''
-          (make-apheleia-formatter apheleia-indent-eglot-managed-buffer
-             (setq-local eglot--cached-server
-                         (with-current-buffer buffer
-                           (eglot-current-server)))
-             (let ((buffer-file-name (buffer-local-value 'buffer-file-name buffer)))
-               (eglot-format-buffer)))
-        '';
-
         usePackage = {
           eglot = {
             preface = "(defvar efs/autoformat t) ";

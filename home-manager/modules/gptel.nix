@@ -14,20 +14,6 @@
                   ${lib.getExe pkgs.ollama} serve
                 fi
         '';
-        macher-agent = (
-          epkgs.callPackage epkgs.trivialBuild rec {
-            pname = "macher-agent";
-            version = "current";
-            src = inputs.macher-agent;
-
-            propagatedUserEnvPkgs = with epkgs; [
-              macher
-              gptel
-            ];
-
-            buildInputs = propagatedUserEnvPkgs;
-          }
-        );
         gptel-got = (
           epkgs.callPackage epkgs.trivialBuild rec {
             pname = "gptel-got";
@@ -68,7 +54,10 @@
           };
           gptel = {
             enable = true;
-            macher.enable = true;
+            macher = {
+	      enable = true;
+	      agent = true;
+	    };
           };
         };
         usePackage =
@@ -115,12 +104,6 @@
             };
 
             gptel-quick.setopt = mkOllama [ "llama3.2:1b" ] "-quick";
-
-            macher-agent = {
-              enable = true;
-              after = [ "macher" ];
-              generalOneConfig.global-leader."gMt" = '''("inject thought" . macher-agent-inject-thought)'';
-            };
 
             # gptel-got = {
             #   enable = true;

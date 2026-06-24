@@ -20,18 +20,8 @@
         };
 
         tools.apheleia = {
+          enable = true;
           autoFormat = true;
-          modeFormatters = {
-            bash-ts-mode = "eglot";
-            nix-ts-mode = "nixfmt";
-            java-ts-mode = "eglot";
-            js-ts-mode = "eglot";
-            typescript-ts-mode = "eglot";
-          };
-          formatters.nixfmt = [
-            "nixfmt"
-            "-"
-          ];
         };
 
         usePackage = {
