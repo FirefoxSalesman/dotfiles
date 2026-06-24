@@ -1,5 +1,5 @@
 {
-flake.homeModules.java = { ... }:
+  flake.homeModules.java = { ... }:
   {
     programs.emacs.init = {
       ide.languages = {

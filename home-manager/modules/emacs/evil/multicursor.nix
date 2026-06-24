@@ -10,7 +10,7 @@
 						 (evil-mc-resume-cursors) t)))''];
       generalOne = {
 	":nv"."bz" = "'evil-mc-hydra/body";
-	global-leader."C" = "'evil-mc-hydra/body";
+	global-leader."C" = "`,(cmd! (if (eq evil-state 'visual) (evil-mc-make-cursor-in-visual-selection-beg) (evil-mc-hydra/body)))";
       };
       config = ''
 	(global-evil-mc-mode)

@@ -1,5 +1,5 @@
 {
-  flake.homeModules.development = { ... }:
+  flake.homeModules.development = { pkgs, ... }:
   {
     programs.emacs.init = {
       ide = {
@@ -25,6 +25,8 @@
 	  ];
 	  config = ''
 	    (efs/evil-collection-remap 'evil-collection-eglot-setup 'normal eglot-mode-map
+	    			   ;; "gd" 'citre-jump
+	    			   ;; "gr" 'citre-jump-to-reference
 	    			   "K" 'evil-substitute)
 	  '';
 	};
@@ -41,6 +43,33 @@
                    '(:bundles ["/usr/share/java-debug/com.microsoft.java.debug.plugin.jar"]))
 	  '';
 	};
+
+	citre = {
+	  enable = true;
+	  ghookf = ["('prog-mode 'citre-mode)"];
+	  gfhookf = ["('doom-escape 'citre-peek-abort)"];
+	  setopt = {
+	    citre-prompt-language-for-ctags-command = true;
+	    citre-use-project-root-when-creating-ctags = true;
+	    citre-ctags-program = ''"${pkgs.universal-ctags}/bin/ctags"'';
+	    citre-readtags-program = ''"${pkgs.universal-ctags}/bin/readtags"'';
+          };
+	  custom.citre-peek-ace-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
+	  generalTwoConfig = {
+	    local-leader.citre-mode-map = {
+	      "p" = "'citre-ace-peek";
+	      "u" = "'citre-update-this-tags-file";
+            };
+	    ":nvm".citre-peek-keymap = {
+	      "M-e" = "'citre-peek-next-line";
+	      "M-o" = "'citre-peek-prev-line";
+            };
+          };
+	  generalOneConfig.citre-peek-keymap = {
+	    "M-e" = "'citre-peek-next-line";
+	    "M-o" = "'citre-peek-prev-line";
+          };
+        };
       };
     };
   };

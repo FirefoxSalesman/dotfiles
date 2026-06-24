@@ -50,14 +50,12 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
   I'd like to see if I could integrate this into the nix framework
 + [ ] dash template gets cleaned up & goes to live in its own repo
 + [ ] https://github.com/isamert/corg.el
-+ [ ] https://system-manager.net/main/how-to/import-nixos-module/#3-configure-the-service
 + [ ] Try out trust manager
-+ [ ] https://github.com/jamescherti/buffer-terminator.el
 + [ ] toc-org
 + [ ] aphelia
 + [ ] highlight-symbol
 + [ ] git-modes
-+ [ ] saveplace
++ [ ] diff-hl
 + [ ] goto chg
 + [ ] undo-fu-session
 + [ ] elisp-auto-fmt
@@ -65,3 +63,5 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] switch to ewm https://idlip.in/posts/may-i-recommend/
 + [ ] https://ianyepan.github.io/posts/git-blame-emacs/
 + [ ] https://blog.sidhartharya.com/posts/integrating-org-protocol-with-qutebrowser/
++ [ ] doxygen
++ [ ] easysession

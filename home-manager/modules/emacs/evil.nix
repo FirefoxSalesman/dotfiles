@@ -28,7 +28,8 @@
 			   evilem-motion-search-previous
 			   find-file
 			   consult-fd
-			   nix-emacs/consult-header))
+			   nix-emacs/consult-header
+			   citre-peek-jump))
 	  (evil-add-command-properties command :jump t))
 	
 	(repeaters-define-maps

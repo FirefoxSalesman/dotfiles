@@ -78,6 +78,11 @@
       url = "github:elij/macher-agent";
       flake = false;
     };
+
+    gptel-got = {
+      url = "https://git.bajsicki.com/phil/gptel-got";
+      flake = false;
+    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake {inherit inputs;} (inputs.import-tree ./modules);
@@ -132,6 +137,7 @@ in {
 	  pertab = packages.pertab;
           embark = packages.embark;
 	  macher-agent = packages.macher-agent;
+	  gptel-got = packages.gptel-got;
 	}));
   };
 }
@@ -1629,27 +1635,82 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 #+end_src
 
 *** Web
-#+begin_src nix-ts :tangle modules/development/web.nix
+#+begin_src nix-ts :tangle modules/development/web.nix :noweb yes
 {
   flake.homeModules.webdev = { config, pkgs, lib, ... }:
   {
-    programs.emacs.init.ide.languages = {
-      javascript = {
-	enable = true;
-	wantOxlint = true;
-	wantOxfmt = true;
+    programs.emacs.init = {
+      ide.languages = {
+	javascript = {
+	  enable = true;
+	  wantOxlint = true;
+	  wantOxfmt = true;
+	};
+	html = {
+	  enable = true;
+	  emmet = true;
+	};
+	css = {
+	  enable = true;
+	  emmet = true;
+	};
       };
-      html = {
-	enable = true;
-	emmet = true;
-      };
-      css = {
-	enable = true;
-	emmet = true;
+
+      usePackage = {
+	jtsx = {
+	  enable = true;
+	  mode = [
+	    ''("\\.jsx?\\'" . jtsx-jsx-mode)''
+	    ''("\\.tsx\\'" . jtsx-tsx-mode)''
+	  ];
+	  ghookf = ["('(jtsx-jsx-mode jtsx-tsx-mode) '(hs-minor-mode emmet-mode))"];
+	  config = ''
+	    <<Jtsx Config>>
+	  '';
+	  symex = true;
+	  eglot = true;
+	  generalTwoConfig = {
+	    local-leader."'(jtsx-jsx-mode-map jtsx-tsx-mode-map)" = {
+	      "z" = "'jtsx-jump-jsx-element-tag-dwim";
+	      "R" = "'jtsx-rename-jsx-element";
+	      "w" = "'jtsx-wrap-in-jsx-element";
+	      "u" = "'jtsx-unwrap-jsx";
+	      "c" = "'jtsx-jump-jsx-opening-tag";
+	      "o" = "'jtsx-jump-jsx-closing-tag";
+	      "t" = "'jtsx-toggle-jsx-attributes-orientation";
+	      "h" = "'jtsx-rearrange-jsx-attributes-horizontally";
+	      "d" = "'jtsx-rearrange-jsx-attributes-vertically";
+	    };
+	    ":n"."'(jtsx-jsx-mode-map jtsx-tsx-mode-map)" = {
+	      "M-i" = "'jtsx-move-jsx-element-tag-forward";
+	      "M-n" = "'jtsx-move-jsx-element-tag-backward";
+	      "C-M-i" = "'jtsx-move-jsx-element-forward";
+	      "C-M-n" = "'jtsx-move-jsx-element-backward";
+	      "C-M-I" = "'jtsx-move-jsx-element-step-in-forward";
+	      "C-M-N" = "'jtsx-move-jsx-element-step-in-backward";
+	    };
+	  };
+	};
+	emmet.config = ''
+	  <<Emmet Config>>
+	'';
       };
     };
   };
 }
+#+end_src
+
+#+NAME: Jtsx Config
+#+begin_src emacs-lisp
+(dolist (lang '(javascript jsdoc tsx typescript))
+  (unless (treesit-language-available-p lang)
+    (jtsx-install-treesit-language lang)))
+#+end_src
+
+#+NAME: Emmet Config
+#+begin_src emacs-lisp
+(dolist (mode '(jtsx-jsx-mode jtsx-tsx-mode))
+  (add-to-list 'emmet-jsx-major-modes mode))
 #+end_src
 
 *** Elisp
@@ -1675,7 +1736,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 *** Java
 #+begin_src nix-ts :tangle modules/development/java.nix :noweb yes
 {
-flake.homeModules.java = { ... }:
+  flake.homeModules.java = { ... }:
   {
     programs.emacs.init = {
       ide.languages = {
@@ -1767,9 +1828,10 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 *** Eglot
 https://github.com/joaotavora/eglot/discussions/888
 https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
+Citre was borrowed from jweigley's config
 #+begin_src nix-ts :tangle modules/development/eglot.nix :noweb yes
 {
-  flake.homeModules.development = { ... }:
+  flake.homeModules.development = { pkgs, ... }:
   {
     programs.emacs.init = {
       ide = {
@@ -1810,6 +1872,33 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
                    '(:bundles ["/usr/share/java-debug/com.microsoft.java.debug.plugin.jar"]))
 	  '';
 	};
+
+	citre = {
+	  enable = true;
+	  ghookf = ["('prog-mode 'citre-mode)"];
+	  gfhookf = ["('doom-escape 'citre-peek-abort)"];
+	  setopt = {
+	    citre-prompt-language-for-ctags-command = true;
+	    citre-use-project-root-when-creating-ctags = true;
+	    citre-ctags-program = ''"${pkgs.universal-ctags}/bin/ctags"'';
+	    citre-readtags-program = ''"${pkgs.universal-ctags}/bin/readtags"'';
+          };
+	  custom.citre-peek-ace-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
+	  generalTwoConfig = {
+	    local-leader.citre-mode-map = {
+	      "p" = "'citre-ace-peek";
+	      "u" = "'citre-update-this-tags-file";
+            };
+	    ":nvm".citre-peek-keymap = {
+	      "M-e" = "'citre-peek-next-line";
+	      "M-o" = "'citre-peek-prev-line";
+            };
+          };
+	  generalOneConfig.citre-peek-keymap = {
+	    "M-e" = "'citre-peek-next-line";
+	    "M-o" = "'citre-peek-prev-line";
+          };
+        };
       };
     };
   };
@@ -1819,6 +1908,8 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 #+NAME: Development Eglot Config
 #+begin_src emacs-lisp
 (efs/evil-collection-remap 'evil-collection-eglot-setup 'normal eglot-mode-map
+			   ;; "gd" 'citre-jump
+			   ;; "gr" 'citre-jump-to-reference
 			   "K" 'evil-substitute)
 #+end_src
 
@@ -2144,7 +2235,8 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
 		   evilem-motion-search-previous
 		   find-file
 		   consult-fd
-		   nix-emacs/consult-header))
+		   nix-emacs/consult-header
+		   citre-peek-jump))
   (evil-add-command-properties command :jump t))
 
 (repeaters-define-maps
@@ -2198,6 +2290,7 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
 	  "H-(" = "'evilem-motion-backward-sentence-begin";
 	};
 	custom.avy-dispatch-alist = [
+	  "'(?u . avy-action-cursor)"
 	  "'(?l . avy-action-ispell)"
 	  "'(?o . nix-emacs-avy-action-embark)"
 	  "'(?h . avy-action-helpful)"
@@ -2224,12 +2317,17 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
   "Get documentation for thing at point."
   (nix-emacs-base-avy-action 'helpful-at-point pt))
 
+(defun avy-action-cursor (pt)
+  "Make a cursor at point."
+  (nix-emacs-base-avy-action 'evil-mc-make-cursor-here pt))
+
 (defun avy-action-repeat (pt)
   "Repeat the last evil command."
   (nix-emacs-base-avy-action (lambda () (evil-repeat 1)) pt))
 #+end_src
 
 ***** Multi Cursor
+Maybe try lasgun? https://github.com/aatmunbaxi/lasgun.el/blob/master/lasgun.el
 Cursors hydra: https://hungyi.net/posts/hydra-for-evil-mc/
 #+begin_src nix-ts :tangle modules/emacs/evil/multicursor.nix :noweb yes
 {
@@ -2244,7 +2342,7 @@ Cursors hydra: https://hungyi.net/posts/hydra-for-evil-mc/
 						 (evil-mc-resume-cursors) t)))''];
       generalOne = {
 	":nv"."bz" = "'evil-mc-hydra/body";
-	global-leader."C" = "'evil-mc-hydra/body";
+	global-leader."C" = "`,(cmd! (if (eq evil-state 'visual) (evil-mc-make-cursor-in-visual-selection-beg) (evil-mc-hydra/body)))";
       };
       config = ''
 	<<Evil-MC Config>>
@@ -3749,6 +3847,48 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
   (tab-bar-select-tab (string-to-number (read-string "Tab Number: ")))
   (setq tab-bar-tab-hints nil))
 #+end_src
+*** Buffer Terminator
+#+begin_src nix-ts :tangle modules/window-manager/buffer-terminator.nix :noweb yes
+{ ... }:
+
+{
+  flake.homeModules.exwm = { ... }:
+  {
+    programs.emacs.init.usePackage.buffer-terminator = {
+      enable = true;
+      preface = ''
+	<<Buffer Terminator Preface>>
+      '';
+      ghookf = ["('on-first-buffer 'buffer-terminator-mode)"];
+      setopt.buffer-terminator-rules-alist = [
+	'''(kill-buffer-name-regexp . "magit-process:.\\*$")''
+	'''(kill-buffer-name-regexp . "magit-diff:.\\*$")''
+	'''(keep-buffer-name . ("tasks.org"))''
+	"'(keep-buffer-property . special)"
+	"'(keep-buffer-property . process)"
+	"'(keep-buffer-property . visible)"
+	"'(call-function . efs/check-for-roll-buffers)"
+	"'(kill-buffer-property . inactive)"
+	"'(return . :keep)"
+      ];
+    };
+  };
+}
+#+end_src
+
+#+NAME: Buffer Terminator Preface
+#+begin_src emacs-lisp
+(defun efs/check-for-roll-buffers ()
+  "Check for roll buffers for buffer-terminator."
+  (if (-contains? (mapcar 'roll-pane-buffer
+			  (car (-filter (lambda (x) (not (eq nil x)))
+					(mapcar (lambda (tab)
+						  (alist-get 'roll--panes (alist-get 'pertab-local-variables (cdr tab))))
+						(funcall tab-bar-tabs-function)))))
+		  (current-buffer))
+      ':keep
+    nil))
+#+end_src
 
 *** Javelin
 #+begin_src nix-ts :tangle modules/window-manager/javelin.nix
@@ -4325,7 +4465,7 @@ https://github.com/skissue/llm-tool-collection
 *Agents:*
 + [X] Try gptel-agent at some point
 + [X] Put macher in NixEmacs. It shouldn't need too much modification
-+ [ ] Try macher-agent
++ [X] Try macher-agent
 
 #+begin_src nix-ts :tangle modules/gptel.nix :noweb yes
 { inputs, ... }:
@@ -4356,7 +4496,21 @@ https://github.com/skissue/llm-tool-collection
 	buildInputs = propagatedUserEnvPkgs;
 	}
       );
-    };
+      gptel-got = (epkgs.callPackage
+	epkgs.trivialBuild rec {
+	pname = "gptel-got";
+	version = "current";
+	src = inputs.gptel-got;
+
+	propagatedUserEnvPkgs = with epkgs; [
+	  org-ql
+	  gptel
+	];
+
+	buildInputs = propagatedUserEnvPkgs;
+	}
+      );
+    } ;
   };
 
   flake.homeModules.ai = { lib, config, pkgs, ... }: {
@@ -4416,6 +4570,11 @@ https://github.com/skissue/llm-tool-collection
 	  after = ["macher"];
 	  generalOneConfig.global-leader."gMt" = '''("inject thought" . macher-agent-inject-thought)'';
 	};
+
+	# gptel-got = {
+	#   enable = true;
+	#   after = ["gptel"];
+	# };
 
 	# mcp = {
 	#   enable = true;

@@ -26,7 +26,21 @@
 	buildInputs = propagatedUserEnvPkgs;
 	}
       );
-    };
+      gptel-got = (epkgs.callPackage
+	epkgs.trivialBuild rec {
+	pname = "gptel-got";
+	version = "current";
+	src = inputs.gptel-got;
+
+	propagatedUserEnvPkgs = with epkgs; [
+	  org-ql
+	  gptel
+	];
+
+	buildInputs = propagatedUserEnvPkgs;
+	}
+      );
+    } ;
   };
 
   flake.homeModules.ai = { lib, config, pkgs, ... }: {
@@ -88,6 +102,11 @@
 	  after = ["macher"];
 	  generalOneConfig.global-leader."gMt" = '''("inject thought" . macher-agent-inject-thought)'';
 	};
+
+	# gptel-got = {
+	#   enable = true;
+	#   after = ["gptel"];
+	# };
 
 	# mcp = {
 	#   enable = true;

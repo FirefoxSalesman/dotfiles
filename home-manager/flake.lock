@@ -430,6 +430,18 @@
         "type": "github"
       }
     },
+    "gptel-got": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-6f3Qh7Ols+AFPPUnV37xr2Tx7NKg5EAYGlrJeRQWWNI=",
+        "type": "file",
+        "url": "https://git.bajsicki.com/phil/gptel-got"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://git.bajsicki.com/phil/gptel-got"
+      }
+    },
     "gptel-quick": {
       "flake": false,
       "locked": {
@@ -874,6 +886,7 @@
         "exwm-qutebrowser": "exwm-qutebrowser",
         "ezf": "ezf",
         "flake-parts": "flake-parts",
+        "gptel-got": "gptel-got",
         "home-manager": "home-manager",
         "import-tree": "import-tree",
         "kmonad": "kmonad",

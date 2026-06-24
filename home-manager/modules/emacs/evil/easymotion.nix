@@ -18,6 +18,7 @@
 	  "H-(" = "'evilem-motion-backward-sentence-begin";
 	};
 	custom.avy-dispatch-alist = [
+	  "'(?u . avy-action-cursor)"
 	  "'(?l . avy-action-ispell)"
 	  "'(?o . nix-emacs-avy-action-embark)"
 	  "'(?h . avy-action-helpful)"
