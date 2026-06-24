@@ -20,10 +20,10 @@
     programs.emacs.init = {
       keybinds.whichKey.enable = true;
       usePackage = {
-	helpful = {
-	  enable = true;
-	  defer = true;
-	  generalOne = {
+        helpful = {
+          enable = true;
+          defer = true;
+          generalOne = {
             global-leader = {
               "hf" = "'helpful-function";
               "hs" = "'helpful-symbol";
@@ -38,30 +38,36 @@
               "v" = "'helpful-variable";
             };
             embark-symbol-map."h" = "'helpful-symbol";
-	  };
-	};
+          };
+        };
 
-	info = {
-	  enable = true;
-	  config = ''
-	    (with-eval-after-load 'evil-collection-info
-	      (efs/evil-collection-remap 'evil-collection-info-setup '(normal motion) Info-mode-map
-	    			     "C-o" 'evil-scroll-page-up))
-	  '';
-	};
+        info = {
+          enable = true;
+          config = ''
+            (with-eval-after-load 'evil-collection-info
+              (efs/evil-collection-remap 'evil-collection-info-setup '(normal motion) Info-mode-map
+            			     "C-o" 'evil-scroll-page-up))
+          '';
+        };
 
-	evil-owl = {
-	  enable = true;
-	  setopt = {
-	    evil-owl-max-string-length = 50;
-	    evil-owl-extra-posframe-args = [ "':width" 50 "':height" 20 ];
-	    evil-owl-display-method = "'posframe";
-	  };
-	  ghookf = ["('evil-mode 'evil-owl-mode)"];
-	};
+        evil-owl = {
+          enable = true;
+          setopt = {
+            evil-owl-max-string-length = 50;
+            evil-owl-extra-posframe-args = [
+              "':width"
+              50
+              "':height"
+              20
+            ];
+            evil-owl-display-method = "'posframe";
+          };
+          ghookf = [ "('evil-mode 'evil-owl-mode)" ];
+        };
 
-	emacs.generalOne.help-map."A" = ''`("Arch Wiki" . ,(cmd! (async-shell-command "${lib.getExe pkgs.wiki}")))'';
-      } ;
+        emacs.generalOne.help-map."A" =
+          ''`("Arch Wiki" . ,(cmd! (async-shell-command "${lib.getExe pkgs.wiki}")))'';
+      };
     };
   };
 }

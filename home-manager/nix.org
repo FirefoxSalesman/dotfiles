@@ -9,7 +9,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
-    emacs-overlay.url  = "github:nix-community/emacs-overlay/1746faa";
+    emacs-overlay.url = "github:nix-community/emacs-overlay/1746faa";
     # emacs-overlay.url  = "github:nix-community/emacs-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
     import-tree.url = "github:vic/import-tree";
@@ -85,7 +85,7 @@
     };
   };
 
-  outputs = inputs: inputs.flake-parts.lib.mkFlake {inherit inputs;} (inputs.import-tree ./modules);
+  outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
 }
 #+end_src
 
@@ -100,46 +100,52 @@ let
     inherit system;
     config.allowUnfree = true;
   };
-in {
-  flake.overlay = final: prev: pkgs: inputs:
-  let packages = self.packages.${pkgs.system};
-  in {
-    # shell scripts
-    kmonad = inputs.kmonad.packages.${pkgs.system}.default;
-    sage = pkgs-stable.sage;
-    ezf = packages.ezf;
-    cast = packages.cast;
-    doomer = packages.doomer;
-    ffmpeg-bulk = packages.ffmpeg-bulk;
-    masstube = packages.masstube;
-    mpvmacs = packages.mpvmacs;
-    hdmihelper = packages.hdmihelper;
-    i3status-rs = packages.i3status-rs;
-    pkg = packages.pkg;
-    startOllama = packages.startOllama;
-    udisksmenu = packages.udisksmenu;
-    wiki = packages.wiki;
+in
+{
+  flake.overlay =
+    final: prev: pkgs: inputs:
+    let
+      packages = self.packages.${pkgs.system};
+    in
+    {
+      # shell scripts
+      kmonad = inputs.kmonad.packages.${pkgs.system}.default;
+      sage = pkgs-stable.sage;
+      ezf = packages.ezf;
+      cast = packages.cast;
+      doomer = packages.doomer;
+      ffmpeg-bulk = packages.ffmpeg-bulk;
+      masstube = packages.masstube;
+      mpvmacs = packages.mpvmacs;
+      hdmihelper = packages.hdmihelper;
+      i3status-rs = packages.i3status-rs;
+      pkg = packages.pkg;
+      startOllama = packages.startOllama;
+      udisksmenu = packages.udisksmenu;
+      wiki = packages.wiki;
 
-    # overrides
-    mpv = packages.mpv;
+      # overrides
+      mpv = packages.mpv;
 
-    #emacs packages
-    emacsPackagesFor = emacs: (
-      (prev.emacsPackagesFor emacs).overrideScope (
-	nfinal: nprev: {
-          qutebrowser = packages.qutebrowser-emacs;
-          doom-nano-modeline = packages.doom-nano-modeline;
-          repeaters = packages.repeaters;
-          app-launcher = packages.app-launcher;
-          ezf = packages.emacs-ezf;
-	  mpc-wrapper = packages.mpc-wrapper;
-	  roll = packages.roll;
-	  pertab = packages.pertab;
-          embark = packages.embark;
-	  macher-agent = packages.macher-agent;
-	  gptel-got = packages.gptel-got;
-	}));
-  };
+      #emacs packages
+      emacsPackagesFor =
+        emacs:
+        ((prev.emacsPackagesFor emacs).overrideScope (
+          nfinal: nprev: {
+            qutebrowser = packages.qutebrowser-emacs;
+            doom-nano-modeline = packages.doom-nano-modeline;
+            repeaters = packages.repeaters;
+            app-launcher = packages.app-launcher;
+            ezf = packages.emacs-ezf;
+            mpc-wrapper = packages.mpc-wrapper;
+            roll = packages.roll;
+            pertab = packages.pertab;
+            embark = packages.embark;
+            macher-agent = packages.macher-agent;
+            gptel-got = packages.gptel-got;
+          }
+        ));
+    };
 }
 #+end_src
 
@@ -169,17 +175,23 @@ Dev templates: https://github.com/the-nix-way/dev-templates
 #+begin_src nix-ts :noweb yes :tangle modules/packages/scripts/pkg.nix
 { inputs, ... }:
 {
-  perSystem = { lib, pkgs, self', ... }:
-  let
-    nh = inputs.wrapper-modules.wrappers.nh.wrap {
-      inherit pkgs;
-      package = pkgs.nh;
-      flake = "~/.config/home-manager";
-    };
-  in
+  perSystem =
+    {
+      lib,
+      pkgs,
+      self',
+      ...
+    }:
+    let
+      nh = inputs.wrapper-modules.wrappers.nh.wrap {
+        inherit pkgs;
+        package = pkgs.nh;
+        flake = "~/.config/home-manager";
+      };
+    in
     {
       packages.pkg = pkgs.writeShellScriptBin "pkg" ''
-	<<Pkg Body>>
+        	<<Pkg Body>>
       '';
     };
 }
@@ -261,96 +273,98 @@ let
       inputs.emacs-overlay.overlay
     ];
   };
-in {
-  imports = [inputs.home-manager.flakeModules.home-manager];
-  systems = ["x86_64-linux"];
+in
+{
+  imports = [ inputs.home-manager.flakeModules.home-manager ];
+  systems = [ "x86_64-linux" ];
   flake = {
     homeConfigurations."holschcc@emacs" = inputs.home-manager.lib.homeManagerConfiguration {
       inherit pkgs;
       modules = [
-	inputs.self.homeModules.main
-	inputs.self.homeModules.emacs-host
+        inputs.self.homeModules.main
+        inputs.self.homeModules.emacs-host
       ];
     };
     homeConfigurations."holschcc@monitors" = inputs.home-manager.lib.homeManagerConfiguration {
       inherit pkgs;
       modules = [
-	inputs.self.homeModules.main
-	inputs.self.homeModules.monitors-host
+        inputs.self.homeModules.main
+        inputs.self.homeModules.monitors-host
       ];
     };
-    homeModules.main = { lib, config, ... }:
+    homeModules.main =
+      { lib, config, ... }:
 
-    {
-      imports = with inputs; [
-	self.homeModules.aesthetics
-	self.homeModules.ai
-	self.homeModules.canary
-	self.homeModules.chat
-	self.homeModules.dashTemplate
-	self.homeModules.development
-	self.homeModules.emacs
-	self.homeModules.elisp
-	self.homeModules.extraPackages
-	self.homeModules.exwm
-	self.homeModules.fileManager
-	self.homeModules.gaming
-	self.homeModules.java
-	self.homeModules.ledger
-	self.homeModules.media
-	self.homeModules.notifications
-	self.homeModules.passwordManagement
-	self.homeModules.sage
-	self.homeModules.shellConfig
-	self.homeModules.startx
-	self.homeModules.web
-	self.homeModules.webdev
-	self.homeModules.writing
-	stylix.homeModules.stylix
-	emacs-init.homeModules.emacs-init
-	emacs-init.homeModules.emacs-presets
-        nur.modules.homeManager.default
-      ];
+      {
+        imports = with inputs; [
+          self.homeModules.aesthetics
+          self.homeModules.ai
+          self.homeModules.canary
+          self.homeModules.chat
+          self.homeModules.dashTemplate
+          self.homeModules.development
+          self.homeModules.emacs
+          self.homeModules.elisp
+          self.homeModules.extraPackages
+          self.homeModules.exwm
+          self.homeModules.fileManager
+          self.homeModules.gaming
+          self.homeModules.java
+          self.homeModules.ledger
+          self.homeModules.media
+          self.homeModules.notifications
+          self.homeModules.passwordManagement
+          self.homeModules.sage
+          self.homeModules.shellConfig
+          self.homeModules.startx
+          self.homeModules.web
+          self.homeModules.webdev
+          self.homeModules.writing
+          stylix.homeModules.stylix
+          emacs-init.homeModules.emacs-init
+          emacs-init.homeModules.emacs-presets
+          nur.modules.homeManager.default
+        ];
 
-      options.hosts = {
-	xrandr-command = lib.mkOption {
-	  type = lib.types.str;
-	  default = "";
-	  description = "The xrandr command (or commands) to execute when running startx.";
-	};
-	exwm-monitors = lib.mkOption {
-	  type = lib.types.listOf lib.types.str;
-	  default = "";
-	  description = "The value of exwm-randr-workspace-monitor-plist to use for the current host";
-	};
-	wantBattery = lib.mkOption {
-	  type = lib.types.bool;
-	  default = false;
-	  description = "Enables the battery block in the status bar";
-	};
-      } ;
+        options.hosts = {
+          xrandr-command = lib.mkOption {
+            type = lib.types.str;
+            default = "";
+            description = "The xrandr command (or commands) to execute when running startx.";
+          };
+          exwm-monitors = lib.mkOption {
+            type = lib.types.listOf lib.types.str;
+            default = "";
+            description = "The value of exwm-randr-workspace-monitor-plist to use for the current host";
+          };
+          wantBattery = lib.mkOption {
+            type = lib.types.bool;
+            default = false;
+            description = "Enables the battery block in the status bar";
+          };
+        };
 
-      config = {
-	home = {
-	  username = "holschcc";
-	  homeDirectory = "/home/${config.home.username}";
+        config = {
+          home = {
+            username = "holschcc";
+            homeDirectory = "/home/${config.home.username}";
 
-	  # This value determines the Home Manager release that your configuration is
-	  # compatible with. This helps avoid breakage when a new Home Manager release
-	  # introduces backwards incompatible changes.
-	  #
-	  # You should not change this value, even if you update Home Manager. If you do
-	  # want to update the value, then make sure to first check the Home Manager
-	  # release notes.
-	  stateVersion = "23.05"; # Please read the comment before changing.
-	};
-	# Let Home Manager install and manage itself.
-	programs.home-manager.enable = true;
+            # This value determines the Home Manager release that your configuration is
+            # compatible with. This helps avoid breakage when a new Home Manager release
+            # introduces backwards incompatible changes.
+            #
+            # You should not change this value, even if you update Home Manager. If you do
+            # want to update the value, then make sure to first check the Home Manager
+            # release notes.
+            stateVersion = "23.05"; # Please read the comment before changing.
+          };
+          # Let Home Manager install and manage itself.
+          programs.home-manager.enable = true;
 
-	nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
-	targets.genericLinux.gpu.enable = true;
+          nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
+          targets.genericLinux.gpu.enable = true;
+        };
       };
-    };
   };
 }
 #+end_src
@@ -358,28 +372,33 @@ in {
 ** Host-Predicated Code
 #+begin_src nix-ts :tangle modules/hosts.nix
 {
-  flake.homeModules.emacs-host = { ... }:
-  {
-    hosts = {
-      xrandr-command = ''
-	xrandr --setprovideroutputsource modesetting NVIDIA-0
-        xrandr --auto
-        xrandr --dpi 96
-      '';
-      exwm-monitors = [''0 "eDP-1-1"''];
-      wantBattery = true;
+  flake.homeModules.emacs-host =
+    { ... }:
+    {
+      hosts = {
+        xrandr-command = ''
+          	xrandr --setprovideroutputsource modesetting NVIDIA-0
+                  xrandr --auto
+                  xrandr --dpi 96
+        '';
+        exwm-monitors = [ ''0 "eDP-1-1"'' ];
+        wantBattery = true;
+      };
     };
-  };
-  flake.homeModules.monitors-host = { ... }:
-  {
-    hosts = {
-      xrandr-command = ''
-        xrandr --auto
-      '';
-      exwm-monitors = [''0 "DP-1"'' ''1 "DVI-I-1"''] ;
-      wantBattery = false;
+  flake.homeModules.monitors-host =
+    { ... }:
+    {
+      hosts = {
+        xrandr-command = ''
+          xrandr --auto
+        '';
+        exwm-monitors = [
+          ''0 "DP-1"''
+          ''1 "DVI-I-1"''
+        ];
+        wantBattery = false;
+      };
     };
-  };
 }
 #+end_src
 
@@ -410,24 +429,25 @@ in {
 #+NAME: Shell Aliases
 #+begin_src nix-ts :tangle modules/shells/aliases.nix
 {
-  flake.homeModules.shellConfig = { pkgs, lib, ... }:
-  {
-    home.shellAliases = {
-      ffrecord = "ffmpeg -f sndio -i snd/0.mon -f x11grab -r 30 -s 1920x1080 -i :0 -c:v libx164 -preset ultrafast -acodec copy ~/test.mkv";
-      ffaud = "ffmpeg -f alsa -channels 1 -sample_rate 44100 -i default:CARD=Mic output.flac";
-      sx = "startx";
-      otp = "pass otp";
-      run = "cd /run/";
-      l = "ls";
-      ".." = "cd ..";
-      tortube = "yt-dlp --proxy socks://localhost:9050";
-      wget = "torsocks wget --hsts-file=$XDG_DATA_HOME/wget-hsts";
-      ga = "git add";
-      gc = "torsocks git clone";
-      gp = "git pull";
-      gP = "git push";
+  flake.homeModules.shellConfig =
+    { pkgs, lib, ... }:
+    {
+      home.shellAliases = {
+        ffrecord = "ffmpeg -f sndio -i snd/0.mon -f x11grab -r 30 -s 1920x1080 -i :0 -c:v libx164 -preset ultrafast -acodec copy ~/test.mkv";
+        ffaud = "ffmpeg -f alsa -channels 1 -sample_rate 44100 -i default:CARD=Mic output.flac";
+        sx = "startx";
+        otp = "pass otp";
+        run = "cd /run/";
+        l = "ls";
+        ".." = "cd ..";
+        tortube = "yt-dlp --proxy socks://localhost:9050";
+        wget = "torsocks wget --hsts-file=$XDG_DATA_HOME/wget-hsts";
+        ga = "git add";
+        gc = "torsocks git clone";
+        gp = "git pull";
+        gP = "git push";
+      };
     };
-  };
 }
 #+end_src
 
@@ -435,20 +455,21 @@ in {
 This shell is mostly around for eshell to get completions from, but it can be used interactively, if need be
 #+begin_src nix-ts :tangle modules/shells/fish.nix
 {
-  flake.homeModules.shellConfig = { lib, pkgs, ... }:
-  {
-    programs.fish = {
-      interactiveShellInit = ''${lib.getExe pkgs.pfetch}'';
-      # Borrows from yay's completions
-      completions.pkg = ''
-	set -l listall "(yay -Pc)"
-	set -l listinstalled "(pacman -Q | string replace ' ' \t)"
-	complete -c pkg -a 'optimize update add rm flake tmp rebuild template query search help'
-	complete -c pkg -n "__fish_seen_subcommand_from add" -xa "$listall"
-	complete -c pkg -n "__fish_seen_subcommand_from rm" -xa "$listinstalled"
-      '';
+  flake.homeModules.shellConfig =
+    { lib, pkgs, ... }:
+    {
+      programs.fish = {
+        interactiveShellInit = "${lib.getExe pkgs.pfetch}";
+        # Borrows from yay's completions
+        completions.pkg = ''
+          	set -l listall "(yay -Pc)"
+          	set -l listinstalled "(pacman -Q | string replace ' ' \t)"
+          	complete -c pkg -a 'optimize update add rm flake tmp rebuild template query search help'
+          	complete -c pkg -n "__fish_seen_subcommand_from add" -xa "$listall"
+          	complete -c pkg -n "__fish_seen_subcommand_from rm" -xa "$listinstalled"
+        '';
+      };
     };
-  };
 }
 #+end_src
 
@@ -456,107 +477,111 @@ This shell is mostly around for eshell to get completions from, but it can be us
 It's mostly here for eshell to get completions from, but it's a usable shell
 #+begin_src nix-ts :tangle modules/shells/bash.nix
 {
-  flake.homeModules.shellConfig = { pkgs, lib, ... }:
-  {
-    programs = {
-      direnv.enableBashIntegration = true;
+  flake.homeModules.shellConfig =
+    { pkgs, lib, ... }:
+    {
+      programs = {
+        direnv.enableBashIntegration = true;
 
-      bash = {
-	initExtra = ''${lib.getExe pkgs.pfetch}'';
-	shellAliases.z = "cd ./$(ls -d */ .*/ | ${lib.getExe pkgs.ezf})";
+        bash = {
+          initExtra = "${lib.getExe pkgs.pfetch}";
+          shellAliases.z = "cd ./$(ls -d */ .*/ | ${lib.getExe pkgs.ezf})";
+        };
       };
     };
-  } ;
 }
 #+end_src
 
 *** eshell
 #+begin_src nix-ts :tangle modules/shells/eshell.nix
 {
-  flake.homeModules.shellConfig = { pkgs, ... }:
-  {
-    programs.emacs.init = {
-      completions.tempel.templates.eshell-mode.gbc = ''"(get-buffer-create \"" q "\")"'';
-      terminals = {
-	eshell = true;
-	eat = true;
-      };
-      usePackage = {
-	eshell = {
-	  ghookf = ["('eshell-first-time-mode 'efs/configure-eshell)"];
-	  general."s-<enter>" = "'efs/make-eshell";
-	  init = ''
-	    (defun efs/make-eshell ()
-	      (interactive)
-	      (eshell 'N))
-	  '';
-	  config = ''
-	    (defun efs/configure-eshell ()
-	      ;; Bind some useful keys for evil-mode
-	      (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
-	      (evil-normalize-keymaps))
+  flake.homeModules.shellConfig =
+    { pkgs, ... }:
+    {
+      programs.emacs.init = {
+        completions.tempel.templates.eshell-mode.gbc = ''"(get-buffer-create \"" q "\")"'';
+        terminals = {
+          eshell = true;
+          eat = true;
+        };
+        usePackage = {
+          eshell = {
+            ghookf = [ "('eshell-first-time-mode 'efs/configure-eshell)" ];
+            general."s-<enter>" = "'efs/make-eshell";
+            init = ''
+              	    (defun efs/make-eshell ()
+              	      (interactive)
+              	      (eshell 'N))
+              	  '';
+            config = ''
+              	    (defun efs/configure-eshell ()
+              	      ;; Bind some useful keys for evil-mode
+              	      (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
+              	      (evil-normalize-keymaps))
 
-	    ;; https://xenodium.com/rinku-cli-link-previews
-	    (defun adviced:eshell/cat (orig-fun &rest args)
-	      "Like `eshell/cat' but with image support."
-	      (if (seq-every-p (lambda (arg)
-	                         (and (stringp arg)
-	                              (file-exists-p arg)
-	                              (image-supported-file-p arg)))
-	                       args)
-	          (with-temp-buffer
-	            (insert "\n")
-	            (dolist (path args)
-	              (let ((newpath (expand-file-name path)))
-	    	    (insert-image (create-image
-	    			   newpath (image-type-from-file-name newpath)
-	    			   nil :max-width 350)))
-	              (insert "\n"))
-	            (insert "\n")
-	            (buffer-string))
-	        (apply orig-fun args)))
+              	    ;; https://xenodium.com/rinku-cli-link-previews
+              	    (defun adviced:eshell/cat (orig-fun &rest args)
+              	      "Like `eshell/cat' but with image support."
+              	      (if (seq-every-p (lambda (arg)
+              	                         (and (stringp arg)
+              	                              (file-exists-p arg)
+              	                              (image-supported-file-p arg)))
+              	                       args)
+              	          (with-temp-buffer
+              	            (insert "\n")
+              	            (dolist (path args)
+              	              (let ((newpath (expand-file-name path)))
+              	    	    (insert-image (create-image
+              	    			   newpath (image-type-from-file-name newpath)
+              	    			   nil :max-width 350)))
+              	              (insert "\n"))
+              	            (insert "\n")
+              	            (buffer-string))
+              	        (apply orig-fun args)))
 
-	    (advice-add #'eshell/cat :around #'adviced:eshell/cat)
-	  '';
-	};
+              	    (advice-add #'eshell/cat :around #'adviced:eshell/cat)
+              	  '';
+          };
 
-	fish-completion.gfhookf = ["('fish-completion-mode (local! completion-at-point-functions '(tempel-complete pcomplete-completions-at-point)))"];
+          fish-completion.gfhookf = [
+            "('fish-completion-mode (local! completion-at-point-functions '(tempel-complete pcomplete-completions-at-point)))"
+          ];
 
-	evil-collection-eshell = {
-	  enable = true;
-	  defer = true;
-	  generalTwoConfig.":n".eshell-mode-map = {
-	    "v" = "'evil-collection-eshell-evil-delete";
-	    "V" = "'evil-collection-eshell-evil-change";
-	    "C-v" = "'evil-collection-eshell-evil-delete-line";
-	  };
-	  config = ''
-	    (efs/evil-collection-remap 'evil-collection-eshell-setup-keys 'normal eshell-mode-map
-	    			   "d" 'evil-yank
-	    			   "D" 'evil-yank-line
-	    			   "c" 'evil-visual-state
-	    			   "C" 'evil-visual-line)
-	  '';
-	};
+          evil-collection-eshell = {
+            enable = true;
+            defer = true;
+            generalTwoConfig.":n".eshell-mode-map = {
+              "v" = "'evil-collection-eshell-evil-delete";
+              "V" = "'evil-collection-eshell-evil-change";
+              "C-v" = "'evil-collection-eshell-evil-delete-line";
+            };
+            config = ''
+              	    (efs/evil-collection-remap 'evil-collection-eshell-setup-keys 'normal eshell-mode-map
+              	    			   "d" 'evil-yank
+              	    			   "D" 'evil-yank-line
+              	    			   "c" 'evil-visual-state
+              	    			   "C" 'evil-visual-line)
+              	  '';
+          };
+        };
       };
     };
-  };
 }
-
 #+end_src
 
 *** starship
 a prompt for bash & fish
 #+begin_src nix-ts :tangle modules/shells/starship.nix
 {
-  flake.homeModules.shellConfig = { ... }:
-  {
-    programs.starship = {
-      enable = true;
-      enableFishIntegration = true;
-      enableBashIntegration = true;
+  flake.homeModules.shellConfig =
+    { ... }:
+    {
+      programs.starship = {
+        enable = true;
+        enableFishIntegration = true;
+        enableBashIntegration = true;
+      };
     };
-  };
 }
 #+end_src
 
@@ -564,20 +589,21 @@ a prompt for bash & fish
 Probably won't use this one much interactively, but it's my login shell, & my /bin/sh, so it may as well be nice
 #+begin_src nix-ts :tangle modules/shells/dash.nix :noweb yes
 {
-  flake.homeModules.shellConfig = { pkgs, lib, ... }:
-  {
-    programs.dash = {
-      enable = true;
-      initExtra = ''
-        ${lib.getExe pkgs.pfetch}
-        . ~/.cache/wal/colors.sh
-      '';
-      shellAliases.z = "cd ./$(ls -d */ .*/ | ${lib.getExe pkgs.ezf})";
-      profileExtra = ''
-	<<Dash Profile Extra>>
-      '';
+  flake.homeModules.shellConfig =
+    { pkgs, lib, ... }:
+    {
+      programs.dash = {
+        enable = true;
+        initExtra = ''
+          ${lib.getExe pkgs.pfetch}
+          . ~/.cache/wal/colors.sh
+        '';
+        shellAliases.z = "cd ./$(ls -d */ .*/ | ${lib.getExe pkgs.ezf})";
+        profileExtra = ''
+          	<<Dash Profile Extra>>
+        '';
+      };
     };
-  };
 }
 #+end_src
 
@@ -751,23 +777,24 @@ aliasesStr = concatStringsSep "\n"
 *** Environment variables
 #+begin_src nix-ts :tangle modules/shells/environment-variables.nix
 {
-  flake.homeModules.shellConfig = { lib, config, ... }:
-  {
-    home.sessionVariables = {
-      XDG_DATA_HOME="$HOME/.local";
-      XDG_STATE_HOME="$HOME/.local/state";
-      XDG_CACHE_HOME="$HOME/.cache";
-      XDG_CONFIG_HOME="$HOME/.config";
-      XDG_DATA_DIRS= lib.mkForce "$HOME/.nix-profile/share:$XDG_DATA_DIRS";
-      EDITOR = "emacsclient";
-      BROWSER="qutebrowser";
-      _JAVA_OPTIONS="-Djava.util.prefs.userRoot=$XDG_CONFIG_HOME/java";
-      GTK2_RC_FILES="/home/holschcc/.gtkrc-2.0";
-      SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)";
-      _JAVA_AWT_WM_NONREPARENTING = "1";
-      PATH="/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/holschcc/bin:/home/holschcc/.nix-profile/bin";
+  flake.homeModules.shellConfig =
+    { lib, config, ... }:
+    {
+      home.sessionVariables = {
+        XDG_DATA_HOME = "$HOME/.local";
+        XDG_STATE_HOME = "$HOME/.local/state";
+        XDG_CACHE_HOME = "$HOME/.cache";
+        XDG_CONFIG_HOME = "$HOME/.config";
+        XDG_DATA_DIRS = lib.mkForce "$HOME/.nix-profile/share:$XDG_DATA_DIRS";
+        EDITOR = "emacsclient";
+        BROWSER = "qutebrowser";
+        _JAVA_OPTIONS = "-Djava.util.prefs.userRoot=$XDG_CONFIG_HOME/java";
+        GTK2_RC_FILES = "/home/holschcc/.gtkrc-2.0";
+        SSH_AUTH_SOCK = "$(gpgconf --list-dirs agent-ssh-socket)";
+        _JAVA_AWT_WM_NONREPARENTING = "1";
+        PATH = "/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/holschcc/bin:/home/holschcc/.nix-profile/bin";
+      };
     };
-  };
 }
 #+end_src
 
@@ -777,30 +804,31 @@ aliasesStr = concatStringsSep "\n"
 { inputs, ... }:
 
 {
-  flake.homeModules.aesthetics = { ... }:
+  flake.homeModules.aesthetics =
+    { ... }:
 
-  {
-    programs.emacs.init = {
-      aesthetics = {
-        dashboard.enable = true;
-        icons = {
-          enable = true;
-          forceInstallAllTheIcons = true;
+    {
+      programs.emacs.init = {
+        aesthetics = {
+          dashboard.enable = true;
+          icons = {
+            enable = true;
+            forceInstallAllTheIcons = true;
+          };
+        };
+        usePackage = {
+          prettify-symbols = {
+            enable = true;
+            ghookf = [ "('prog-mode 'prettify-symbols-mode)" ];
+          };
+
+          dashboard.setopt = {
+            dashboard-banner-logo-title = ''"Emacs: The one true desktop environment"'';
+            dashboard-startup-banner = "'logo";
+          };
         };
       };
-      usePackage = {
-	prettify-symbols = {
-	  enable = true;
-	  ghookf = ["('prog-mode 'prettify-symbols-mode)"];
-	};
-
-        dashboard.setopt = {
-	  dashboard-banner-logo-title = ''"Emacs: The one true desktop environment"'';
-	  dashboard-startup-banner = "'logo";
-	};
-      };
     };
-  };
 }
 #+end_src
 
@@ -808,28 +836,28 @@ aliasesStr = concatStringsSep "\n"
 At the moment we're using picom
 #+begin_src nix-ts :tangle modules/aesthetics/transparency.nix
 {
-  flake.homeModules.aesthetics = {config, pkgs, ... }: {
+  flake.homeModules.aesthetics = { config, pkgs, ... }: {
     services.picom = {
       enable = true;
       backend = "glx";
       opacityRules = [ "70:class_g = 'lmms'" ];
       settings = {
-	use-damage = true;
-	vsync = true;
-	blur = {
-	  method = "gaussian";
-	  size = 5;
-	  deviation = 2.0;
-	};
-	shadow-exclude = [ "class_g != 'emacs'" ];
+        use-damage = true;
+        vsync = true;
+        blur = {
+          method = "gaussian";
+          size = 5;
+          deviation = 2.0;
+        };
+        shadow-exclude = [ "class_g != 'emacs'" ];
       };
       shadow = true;
     };
     programs.emacs.init = {
       usePackage.solaire-mode = {
-	enable = true;
-	demand = true;
-	config = "(solaire-global-mode)";
+        enable = true;
+        demand = true;
+        config = "(solaire-global-mode)";
       };
       # Stolen from Derek Taylor's config.
       postlude = "(add-to-list 'default-frame-alist '(alpha-background . 90))";
@@ -846,73 +874,80 @@ Pywal integration: https://github.com/danth/stylix/issues/99
 { inputs, ... }:
 
 {
-  flake.homeModules.aesthetics = { config, lib, pkgs, ... }: {
-    stylix = {
-      enable = true;
-      polarity = "dark";
-      targets.emacs.enable = false;
-      image = ../../wallpaper.png;
-      cursor = {
-	package = pkgs.nordzy-cursor-theme;
-	name = "Nordzy-cursors-white";
-	size = 16;
+  flake.homeModules.aesthetics =
+    {
+      config,
+      lib,
+      pkgs,
+      ...
+    }:
+    {
+      stylix = {
+        enable = true;
+        polarity = "dark";
+        targets.emacs.enable = false;
+        image = ../../wallpaper.png;
+        cursor = {
+          package = pkgs.nordzy-cursor-theme;
+          name = "Nordzy-cursors-white";
+          size = 16;
+        };
+        opacity = {
+          applications = 0.9;
+          popups = 0.9;
+          terminal = 0.9;
+        };
+        fonts = with pkgs; rec {
+          monospace = {
+            package = pkgs.jetbrains-mono;
+            name = "JetBrains Mono";
+          };
+          sansSerif = {
+            package = inputs.apple-fonts.packages.${system}.sf-pro;
+            name = "SF Pro";
+          };
+          serif = sansSerif;
+        };
       };
-      opacity = {
-	applications = 0.9;
-	popups = 0.9;
-	terminal = 0.9;
+
+      home.file = {
+        ".cache/colors.json".source = config.lib.stylix.colors {
+          template = builtins.readFile ./pywal.json.mustache;
+          extension = ".json";
+        };
       };
-      fonts = with pkgs; rec {
-	monospace = {
-	  package = pkgs.jetbrains-mono;
-	  name = "JetBrains Mono";
-	};
-	sansSerif = {
-	  package = inputs.apple-fonts.packages.${system}.sf-pro;
-	  name = "SF Pro";
-	};
-	serif = sansSerif;
+
+      home.activation = # ALSO ACTIVATES AT REBOOT
+        {
+          generate_pywal_colors = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+            	  $DRY_RUN_CMD ${lib.getExe pkgs.pywal} -f ~/.cache/colors.json
+                   $DRY_RUN_CMD ${lib.getExe pkgs.pywal} -R
+            	'';
+        };
+
+      programs.emacs.init.usePackage = {
+        ewal-doom-themes = {
+          enable = true;
+          demand = true;
+          config = ''
+            	  <<Emacs Colors>>
+            	'';
+          setopt = {
+            ewal-use-built-in-always-p = false;
+            ewal-use-built-in-on-failure-p = true;
+            ewal-built-in-palette = ''"sexy-material"'';
+            doom-themes-enable-bold = true;
+            doom-themes-enable-italic = true;
+          };
+        };
+
+        ewal-evil-cursors = {
+          enable = true;
+          demand = true;
+          config = "(ewal-evil-cursors-get-colors :apply t)";
+        };
       };
     };
-
-    home.file = {
-      ".cache/colors.json".source = config.lib.stylix.colors {
-	template = builtins.readFile ./pywal.json.mustache;
-	extension = ".json";
-      };
-    };
-
-    home.activation =  #ALSO ACTIVATES AT REBOOT
-      {
-	generate_pywal_colors = lib.hm.dag.entryAfter ["writeBoundary"] ''
-	  $DRY_RUN_CMD ${lib.getExe pkgs.pywal} -f ~/.cache/colors.json
-       $DRY_RUN_CMD ${lib.getExe pkgs.pywal} -R
-	'';
-      };
-
-    programs.emacs.init.usePackage = {
-      ewal-doom-themes = {
-	enable = true;
-	demand = true;
-	config = ''
-	  <<Emacs Colors>>
-	'';
-	setopt = {
-	  ewal-use-built-in-always-p = false;
-	  ewal-use-built-in-on-failure-p = true;
-	  ewal-built-in-palette = ''"sexy-material"'';
-	  doom-themes-enable-bold = true;
-	  doom-themes-enable-italic = true;
-	};
-      };
-
-      ewal-evil-cursors = {
-	enable = true;
-	demand = true;
-	config = ''(ewal-evil-cursors-get-colors :apply t)'';
-      };
-    };
-  };
 }
 #+end_src
 
@@ -951,51 +986,56 @@ We use this to format the date, time, & battery percentage in our modeline.
     '';
   };
 
-  flake.homeModules.aesthetics = { pkgs, lib, config, ... }:
-  {
-    programs = {
-      i3status-rust = {
-	enable = true;
-	bars."default" = {
-	  blocks = [
-            {
-              block = "time";
-              format =  "$icon $timestamp.datetime(f:'%a %d/%m %R')";
-              interval = 60;
-            }
-	    (lib.mkIf config.hosts.wantBattery
-	    {
-              block = "battery";
-              format =  "$icon $percentage";
-              interval = 60;
-            })
-	  ];
-	  icons = "awesome6";
-	  settings.theme.overrides = {
-	    idle_bg = "#" + config.lib.stylix.colors.base00;
-	    idle_fg = "#" + config.lib.stylix.colors.base05;
-	    info_bg = "#" + config.lib.stylix.colors.base00;
-	    info_fg = "#" + config.lib.stylix.colors.base05;
-	    good_bg = "#" + config.lib.stylix.colors.base00;
-	    good_fg = "#" + config.lib.stylix.colors.base05;
-	    warning_bg = "#" + config.lib.stylix.colors.base00;
-	    warning_fg = "#" + config.lib.stylix.colors.base05;
-	    critical_bg = "#" + config.lib.stylix.colors.base00;
-	    critical_fg = "#" + config.lib.stylix.colors.base05;
-	    separator_bg = "#" + config.lib.stylix.colors.base00;
-	    separator_fg = "#" + config.lib.stylix.colors.base05;
-	    separator = "  ";
-	  };
-	};
-      };
+  flake.homeModules.aesthetics =
+    {
+      pkgs,
+      lib,
+      config,
+      ...
+    }:
+    {
+      programs = {
+        i3status-rust = {
+          enable = true;
+          bars."default" = {
+            blocks = [
+              {
+                block = "time";
+                format = "$icon $timestamp.datetime(f:'%a %d/%m %R')";
+                interval = 60;
+              }
+              (lib.mkIf config.hosts.wantBattery {
+                block = "battery";
+                format = "$icon $percentage";
+                interval = 60;
+              })
+            ];
+            icons = "awesome6";
+            settings.theme.overrides = {
+              idle_bg = "#" + config.lib.stylix.colors.base00;
+              idle_fg = "#" + config.lib.stylix.colors.base05;
+              info_bg = "#" + config.lib.stylix.colors.base00;
+              info_fg = "#" + config.lib.stylix.colors.base05;
+              good_bg = "#" + config.lib.stylix.colors.base00;
+              good_fg = "#" + config.lib.stylix.colors.base05;
+              warning_bg = "#" + config.lib.stylix.colors.base00;
+              warning_fg = "#" + config.lib.stylix.colors.base05;
+              critical_bg = "#" + config.lib.stylix.colors.base00;
+              critical_fg = "#" + config.lib.stylix.colors.base05;
+              separator_bg = "#" + config.lib.stylix.colors.base00;
+              separator_fg = "#" + config.lib.stylix.colors.base05;
+              separator = "  ";
+            };
+          };
+        };
 
-      emacs.init.usePackage.i3bar = {
-	enable = true;
-	ghookf = ["('tab-bar-mode 'i3bar-mode)"];
-	setopt.i3bar-command = ''"${lib.getExe pkgs.i3status-rs}"'';
+        emacs.init.usePackage.i3bar = {
+          enable = true;
+          ghookf = [ "('tab-bar-mode 'i3bar-mode)" ];
+          setopt.i3bar-command = ''"${lib.getExe pkgs.i3status-rs}"'';
+        };
       };
     };
-  };
 }
 #+end_src
 
@@ -1009,33 +1049,38 @@ The powerline separators were borrowed from punchline, because I think they look
 { inputs, ... }:
 
 {
-  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages.doom-nano-modeline = (epkgs.callPackage
-      epkgs.trivialBuild rec {
-	pname = "doom-nano-modeline";
-	version = "current";
-	src = inputs.doom-nano-modeline;
+  perSystem =
+    { pkgs, ... }:
+    let
+      epkgs = pkgs.emacs.pkgs;
+    in
+    {
+      packages.doom-nano-modeline = (
+        epkgs.callPackage epkgs.trivialBuild rec {
+          pname = "doom-nano-modeline";
+          version = "current";
+          src = inputs.doom-nano-modeline;
 
-	propagatedUserEnvPkgs = [
-	  epkgs.doom-themes
-	];
+          propagatedUserEnvPkgs = [
+            epkgs.doom-themes
+          ];
 
-	buildInputs = propagatedUserEnvPkgs;
-      }
-    );
-  };
-  flake.homeModules.aesthetics = { ... }:
-  {
-    programs.emacs.init.usePackage.doom-nano-modeline = {
-      enable = true;
-      afterCall = ["after-init-hook"];
-      setopt.mode-line-format = false;
-      config = ''
-	<<Emacs Doom Nano Modeline Config>>
-      '';
+          buildInputs = propagatedUserEnvPkgs;
+        }
+      );
     };
-  };
+  flake.homeModules.aesthetics =
+    { ... }:
+    {
+      programs.emacs.init.usePackage.doom-nano-modeline = {
+        enable = true;
+        afterCall = [ "after-init-hook" ];
+        setopt.mode-line-format = false;
+        config = ''
+          	<<Emacs Doom Nano Modeline Config>>
+        '';
+      };
+    };
 }
 #+end_src
 
@@ -1209,16 +1254,27 @@ This is just overriding a bunch of functions so that I can put all the info in t
 **** Tab Bar
 #+begin_src nix-ts :tangle modules/aesthetics/modeline/tab.nix
 {
-  flake.homeModules.aesthetics = { ... }:
-  {
-    programs.emacs.init.usePackage.tab-bar = {
-      custom.tab-bar-format = ["'tab-bar-format-tabs-groups" "'tab-bar-separator" "'pertab-get-lighter" "'doom-nano-tabline" "'tab-bar-format-align-right" "'tab-bar-format-global"];
-      setopt = {
-	tab-bar-close-button-show = false;
-	tab-bar-auto-width-max = ["'(150)" "20"];
+  flake.homeModules.aesthetics =
+    { ... }:
+    {
+      programs.emacs.init.usePackage.tab-bar = {
+        custom.tab-bar-format = [
+          "'tab-bar-format-tabs-groups"
+          "'tab-bar-separator"
+          "'pertab-get-lighter"
+          "'doom-nano-tabline"
+          "'tab-bar-format-align-right"
+          "'tab-bar-format-global"
+        ];
+        setopt = {
+          tab-bar-close-button-show = false;
+          tab-bar-auto-width-max = [
+            "'(150)"
+            "20"
+          ];
+        };
       };
     };
-  };
 }
 #+end_src
 
@@ -1226,17 +1282,18 @@ This is just overriding a bunch of functions so that I can put all the info in t
 Vertico Posframe puts vertico in a separate frame, causing it to actually look like dmenu.
 #+begin_src nix-ts :tangle modules/aesthetics/posframe.nix
 {
-  flake.homeModules.aesthetics = { ... }:
-  {
-    programs.emacs.init = {
-      keybinds.whichKey.posframe = {
-	enable = true;
-	unparent = true;
+  flake.homeModules.aesthetics =
+    { ... }:
+    {
+      programs.emacs.init = {
+        keybinds.whichKey.posframe = {
+          enable = true;
+          unparent = true;
+        };
+        completions.vertico.posframe = true;
+        usePackage.vertico-posframe.config = "(set-face-attribute 'vertico-posframe-face nil :family 'variable-pitch)";
       };
-      completions.vertico.posframe = true;
-      usePackage.vertico-posframe.config = ''(set-face-attribute 'vertico-posframe-face nil :family 'variable-pitch)'';
     };
-  };
 }
 #+end_src
 
@@ -1247,37 +1304,39 @@ A great deal was borrowed from:
 + https://github.com/Panadestein/emacsd/
 #+begin_src nix-ts :tangle modules/aesthetics/shrface.nix :noweb yes
 {
-  flake.homeModules.aesthetics = { ... }:
-  {
-    programs.emacs.init.usePackage = {
-      shr-tag-pre-highlight = {
-	enable = true;
-	after = ["shrface"];
-	preface = ''
-	  <<Emacs Ricing Shr Tag Pre Highlight Preface>>
-	'';
-	config = ''
-	  <<Emacs Ricing Shr Tag Pre Highlight Config>>
-	'';
-      };
+  flake.homeModules.aesthetics =
+    { ... }:
+    {
+      programs.emacs.init.usePackage = {
+        shr-tag-pre-highlight = {
+          enable = true;
+          after = [ "shrface" ];
+          preface = ''
+            <<Emacs Ricing Shr Tag Pre Highlight Preface>>
+          '';
+          config = ''
+            <<Emacs Ricing Shr Tag Pre Highlight Config>>
+          '';
+        };
 
-      shrface = {
-	enable = true;
-	ghookf = ["('(eww-mode elfeed-show-mode nov-mode) 'shrface-mode)"];
-	setopt.shrface-header-line-max-level = 0;
-	config = ''
-	  <<Emacs Ricing Shrface Config>>
-	'';
-	generalOneConfig.shr-map."RET" = "`,(cmd! (if (major-mode? 'eww-mode) (eww-follow-link) (shr-browse-url)))";
-	generalTwoConfig.local-leader.shrface-mode-map = {
-	  "l" = "'shrface-links-consult";
-	  "o" = "'shrface-headline-consult";
-	  "]c" = "'org-next-block";
-	  "[c" = "'org-previous-block";
-	};
+        shrface = {
+          enable = true;
+          ghookf = [ "('(eww-mode elfeed-show-mode nov-mode) 'shrface-mode)" ];
+          setopt.shrface-header-line-max-level = 0;
+          config = ''
+            	  <<Emacs Ricing Shrface Config>>
+            	'';
+          generalOneConfig.shr-map."RET" =
+            "`,(cmd! (if (major-mode? 'eww-mode) (eww-follow-link) (shr-browse-url)))";
+          generalTwoConfig.local-leader.shrface-mode-map = {
+            "l" = "'shrface-links-consult";
+            "o" = "'shrface-headline-consult";
+            "]c" = "'org-next-block";
+            "[c" = "'org-previous-block";
+          };
+        };
       };
     };
-  };
 }
 #+end_src
 
@@ -1406,20 +1465,21 @@ A great deal was borrowed from:
 I couldn't get olivetti to work.
 #+begin_src nix-ts :tangle modules/aesthetics/writeroom.nix
 {
-  flake.homeModules.aesthetics = { ... }:
-  {
-    programs.emacs.init.usePackage.writeroom-mode = {
-      enable = true;
-      ghookf = ["((gen-mode-hooks '(Man org-agenda org Info markdown shrface)) 'writeroom-mode)"];
-      gfhookf = ["('writeroom-mode-enable 'visual-line-mode)"];
-      setopt = {
-	writeroom-mode-line = true;
-	writeroom-maximize-window = false;
-	writeroom-global-effects = false;
+  flake.homeModules.aesthetics =
+    { ... }:
+    {
+      programs.emacs.init.usePackage.writeroom-mode = {
+        enable = true;
+        ghookf = [ "((gen-mode-hooks '(Man org-agenda org Info markdown shrface)) 'writeroom-mode)" ];
+        gfhookf = [ "('writeroom-mode-enable 'visual-line-mode)" ];
+        setopt = {
+          writeroom-mode-line = true;
+          writeroom-maximize-window = false;
+          writeroom-global-effects = false;
+        };
+        generalOne.global-leader."w" = '''("writeroom" . writeroom-mode)'';
       };
-      generalOne.global-leader."w" = '''("writeroom" . writeroom-mode)'';
     };
-  };
 }
 #+end_src
 
@@ -1430,28 +1490,28 @@ I couldn't get olivetti to work.
     programs.qutebrowser.settings = {
       window.transparent = true;
       colors = {
-	completion = {
-	  category = {
-	    bg = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
-	    border = {
+        completion = {
+          category = {
+            bg = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
+            border = {
               bottom = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
               top = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
-	    };
-	  };
-	  even.bg = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
-	  odd.bg = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
-	};
-	statusbar = {
-	  command = {
-	    bg = lib.mkForce ("#50" + config.lib.stylix.colors.base00);
-	    private.bg = lib.mkForce ("#50" + config.lib.stylix.colors.base00);
-	  };
-	};
-	webpage.darkmode = {
-	  enabled = true;
-	  algorithm = "lightness-cielab";
-	  policy.images = "never";
-	};
+            };
+          };
+          even.bg = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
+          odd.bg = lib.mkForce ("#90" + config.lib.stylix.colors.base00);
+        };
+        statusbar = {
+          command = {
+            bg = lib.mkForce ("#50" + config.lib.stylix.colors.base00);
+            private.bg = lib.mkForce ("#50" + config.lib.stylix.colors.base00);
+          };
+        };
+        webpage.darkmode = {
+          enabled = true;
+          algorithm = "lightness-cielab";
+          policy.images = "never";
+        };
       };
     };
   };
@@ -1490,33 +1550,35 @@ I couldn't get olivetti to work.
 ** Extra Packages
 #+begin_src nix-ts :tangle modules/extra-packages.nix
 {
-  flake.homeModules.extraPackages = { config, pkgs, ... }:
+  flake.homeModules.extraPackages =
+    { config, pkgs, ... }:
 
-  {
-    home.packages = with pkgs; [
-      gimp
-      blockbench
-      tor-browser
-      wget
-      zbar
-      # scripts
-      hdmihelper
-      pkg
-    ];
-  };
+    {
+      home.packages = with pkgs; [
+        gimp
+        blockbench
+        tor-browser
+        wget
+        zbar
+        # scripts
+        hdmihelper
+        pkg
+      ];
+    };
 }
 #+end_src
 
 ** startx
 #+begin_src nix-ts :tangle modules/gui.nix :noweb yes
 {
-  flake.homeModules.startx = { config, pkgs, ... }:
+  flake.homeModules.startx =
+    { config, pkgs, ... }:
 
-  {
-    home.file.".config/X11/xinitrc".text = ''
-      <<xinitrc-config>>
-    '';
-  };
+    {
+      home.file.".config/X11/xinitrc".text = ''
+        <<xinitrc-config>>
+      '';
+    };
 }
 #+end_src
 
@@ -1549,81 +1611,98 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 *** Misc
 #+begin_src nix-ts :tangle modules/development/misc.nix
 {
-  flake.homeModules.development = { ... }:
+  flake.homeModules.development =
+    { ... }:
 
-  {
-    programs.emacs.init = {
-      ide = {
-	dape.enable = true;
-	direnv = true;
-	treesit-fold.enable = true;
-	languages = {
-          bash.enable = true;
-          json.enable = true;
-          nix.enable = true;
-          toml.enable = true;
-          xml.enable = true;
-          zenscript.enable = true;
-	  yaml.enable = true;
-	};
-      };
+    {
+      programs.emacs.init = {
+        ide = {
+          dape.enable = true;
+          direnv = true;
+          treesit-fold.enable = true;
+          languages = {
+            bash.enable = true;
+            json.enable = true;
+            nix.enable = true;
+            toml.enable = true;
+            xml.enable = true;
+            zenscript.enable = true;
+            yaml.enable = true;
+          };
+        };
 
-      usePackage = {
-	rainbow-delimiters = {
-	  enable = true;
-	  ghookf = ["('prog-mode 'rainbow-delimiters-mode)"];
-	};
+        tools.apheleia = {
+          autoFormat = true;
+          modeFormatters = {
+            bash-ts-mode = "eglot";
+            nix-ts-mode = "nixfmt";
+            java-ts-mode = "eglot";
+            js-ts-mode = "eglot";
+            typescript-ts-mode = "eglot";
+          };
+          formatters.nixfmt = [
+            "nixfmt"
+            "-"
+          ];
+        };
 
-	racket-mode.gfhookf = ["('racket-mode 'hs-minor-mode)"];
+        usePackage = {
+          rainbow-delimiters = {
+            enable = true;
+            ghookf = [ "('prog-mode 'rainbow-delimiters-mode)" ];
+          };
+
+          racket-mode.gfhookf = [ "('racket-mode 'hs-minor-mode)" ];
+        };
       };
     };
-  };
 }
 #+end_src
 
 *** Project Management
 #+begin_src nix-ts :tangle modules/development/project-management.nix :noweb yes
 {
-  flake.homeModules.development = { ... }:
-  {
-    programs.emacs.init = {
-      ide = {
-	magit = {
-	  enable = true;
-	  forge = true;
-	  todo = true;
-	};
-	project = true;
-      };
-      usePackage = {
-	magit = {
-	  setopt.magit-process-find-password-functions = ["'magit-process-password-auth-source"];
-	  generalOneConfig = {
-	    magit-mode-map = {
-	      "e" = "'evil-next-visual-line";
-	      "B" = "'evil-goto-line";
-	    };
-	    magit-status-mode-map."j" = "'magit-unstage-files";
-	  };
-	  # https://github.com/magit/magit/issues/5557
-	  config = ''
-	    (defalias 'magit--any
-              (static-if (fboundp 'member-if) #'member-if #'cl-member-if))
-	  '';
-	};
+  flake.homeModules.development =
+    { ... }:
+    {
+      programs.emacs.init = {
+        ide = {
+          magit = {
+            enable = true;
+            forge = true;
+            todo = true;
+          };
+          project = true;
+        };
+        usePackage = {
+          magit = {
+            setopt.magit-process-find-password-functions = [ "'magit-process-password-auth-source" ];
+            generalOneConfig = {
+              magit-mode-map = {
+                "e" = "'evil-next-visual-line";
+                "B" = "'evil-goto-line";
+              };
+              magit-status-mode-map."j" = "'magit-unstage-files";
+            };
+            # https://github.com/magit/magit/issues/5557
+            config = ''
+              	    (defalias 'magit--any
+                            (static-if (fboundp 'member-if) #'member-if #'cl-member-if))
+              	  '';
+          };
 
-	projection-ibuffer = {
-	  enable = true;
-	  generalOne.project-prefix-map = {
-	    C-b = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
-	    i = '''("info" . projection-show-project-info)'';
-	  };
-	};
+          projection-ibuffer = {
+            enable = true;
+            generalOne.project-prefix-map = {
+              C-b = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
+              i = '''("info" . projection-show-project-info)'';
+            };
+          };
 
-	projection-multi.custom.projection-gradle-use-daemon = false;
+          projection-multi.custom.projection-gradle-use-daemon = false;
+        };
       };
     };
-  };
 }
 #+end_src
 
@@ -1637,66 +1716,72 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 *** Web
 #+begin_src nix-ts :tangle modules/development/web.nix :noweb yes
 {
-  flake.homeModules.webdev = { config, pkgs, lib, ... }:
-  {
-    programs.emacs.init = {
-      ide.languages = {
-	javascript = {
-	  enable = true;
-	  wantOxlint = true;
-	  wantOxfmt = true;
-	};
-	html = {
-	  enable = true;
-	  emmet = true;
-	};
-	css = {
-	  enable = true;
-	  emmet = true;
-	};
-      };
+  flake.homeModules.webdev =
+    {
+      config,
+      pkgs,
+      lib,
+      ...
+    }:
+    {
+      programs.emacs.init = {
+        ide.languages = {
+          javascript = {
+            enable = true;
+            wantOxlint = true;
+            wantOxfmt = true;
+          };
+          html = {
+            enable = true;
+            emmet = true;
+          };
+          css = {
+            enable = true;
+            emmet = true;
+          };
+        };
 
-      usePackage = {
-	jtsx = {
-	  enable = true;
-	  mode = [
-	    ''("\\.jsx?\\'" . jtsx-jsx-mode)''
-	    ''("\\.tsx\\'" . jtsx-tsx-mode)''
-	  ];
-	  ghookf = ["('(jtsx-jsx-mode jtsx-tsx-mode) '(hs-minor-mode emmet-mode))"];
-	  config = ''
-	    <<Jtsx Config>>
-	  '';
-	  symex = true;
-	  eglot = true;
-	  generalTwoConfig = {
-	    local-leader."'(jtsx-jsx-mode-map jtsx-tsx-mode-map)" = {
-	      "z" = "'jtsx-jump-jsx-element-tag-dwim";
-	      "R" = "'jtsx-rename-jsx-element";
-	      "w" = "'jtsx-wrap-in-jsx-element";
-	      "u" = "'jtsx-unwrap-jsx";
-	      "c" = "'jtsx-jump-jsx-opening-tag";
-	      "o" = "'jtsx-jump-jsx-closing-tag";
-	      "t" = "'jtsx-toggle-jsx-attributes-orientation";
-	      "h" = "'jtsx-rearrange-jsx-attributes-horizontally";
-	      "d" = "'jtsx-rearrange-jsx-attributes-vertically";
-	    };
-	    ":n"."'(jtsx-jsx-mode-map jtsx-tsx-mode-map)" = {
-	      "M-i" = "'jtsx-move-jsx-element-tag-forward";
-	      "M-n" = "'jtsx-move-jsx-element-tag-backward";
-	      "C-M-i" = "'jtsx-move-jsx-element-forward";
-	      "C-M-n" = "'jtsx-move-jsx-element-backward";
-	      "C-M-I" = "'jtsx-move-jsx-element-step-in-forward";
-	      "C-M-N" = "'jtsx-move-jsx-element-step-in-backward";
-	    };
-	  };
-	};
-	emmet.config = ''
-	  <<Emmet Config>>
-	'';
+        usePackage = {
+          jtsx = {
+            enable = true;
+            mode = [
+              ''("\\.jsx?\\'" . jtsx-jsx-mode)''
+              ''("\\.tsx\\'" . jtsx-tsx-mode)''
+            ];
+            ghookf = [ "('(jtsx-jsx-mode jtsx-tsx-mode) '(hs-minor-mode emmet-mode))" ];
+            config = ''
+              	    <<Jtsx Config>>
+              	  '';
+            symex = true;
+            eglot = true;
+            generalTwoConfig = {
+              local-leader."'(jtsx-jsx-mode-map jtsx-tsx-mode-map)" = {
+                "z" = "'jtsx-jump-jsx-element-tag-dwim";
+                "R" = "'jtsx-rename-jsx-element";
+                "w" = "'jtsx-wrap-in-jsx-element";
+                "u" = "'jtsx-unwrap-jsx";
+                "c" = "'jtsx-jump-jsx-opening-tag";
+                "o" = "'jtsx-jump-jsx-closing-tag";
+                "t" = "'jtsx-toggle-jsx-attributes-orientation";
+                "h" = "'jtsx-rearrange-jsx-attributes-horizontally";
+                "d" = "'jtsx-rearrange-jsx-attributes-vertically";
+              };
+              ":n"."'(jtsx-jsx-mode-map jtsx-tsx-mode-map)" = {
+                "M-i" = "'jtsx-move-jsx-element-tag-forward";
+                "M-n" = "'jtsx-move-jsx-element-tag-backward";
+                "C-M-i" = "'jtsx-move-jsx-element-forward";
+                "C-M-n" = "'jtsx-move-jsx-element-backward";
+                "C-M-I" = "'jtsx-move-jsx-element-step-in-forward";
+                "C-M-N" = "'jtsx-move-jsx-element-step-in-backward";
+              };
+            };
+          };
+          emmet.config = ''
+            <<Emmet Config>>
+          '';
+        };
       };
     };
-  };
 }
 #+end_src
 
@@ -1716,49 +1801,53 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 *** Elisp
 #+begin_src nix-ts :tangle modules/development/elisp.nix
 {
-  flake.homeModules.elisp = { ... }:
-  {
-    programs.emacs.init = {
-      completions.tempel.templates.emacs-lisp-mode = {
-	wcd = ''"(with-current-buffer " "q)"'';
-	gbc = ''"(get-buffer-create " "q)"'';
+  flake.homeModules.elisp =
+    { ... }:
+    {
+      programs.emacs.init = {
+        completions.tempel.templates.emacs-lisp-mode = {
+          wcd = ''"(with-current-buffer " "q)"'';
+          gbc = ''"(get-buffer-create " "q)"'';
+        };
+        ide.languages.emacs-lisp = {
+          enable = true;
+          semel = true;
+        };
+        usePackage.elisp-mode.gfhookf = [
+          "('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"
+        ];
       };
-      ide.languages.emacs-lisp = {
-	enable = true;
-	semel = true;
-      };
-      usePackage.elisp-mode.gfhookf = ["('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"];
     };
-  };
 }
 #+end_src
 
 *** Java
 #+begin_src nix-ts :tangle modules/development/java.nix :noweb yes
 {
-  flake.homeModules.java = { ... }:
-  {
-    programs.emacs.init = {
-      ide.languages = {
-	java = {
-	  enable = true;
-	  moreEglot = true;
-	};
-        gradle.enable = true;
-      };
-      usePackage.java-ts-mode = {
-	preface = ''
-	  <<Java Preface>>
-	'';
-	generalTwoConfig.":n".java-ts-mode-map = {
-	  "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "block_comment"))'';
-	  "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "block_comment"))'';
-	  "o" = "'evil-previous-visual-line";
-	  "O" = "'evil-scroll-up";
-	};
+  flake.homeModules.java =
+    { ... }:
+    {
+      programs.emacs.init = {
+        ide.languages = {
+          java = {
+            enable = true;
+            moreEglot = true;
+          };
+          gradle.enable = true;
+        };
+        usePackage.java-ts-mode = {
+          preface = ''
+            	  <<Java Preface>>
+            	'';
+          generalTwoConfig.":n".java-ts-mode-map = {
+            "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "block_comment"))'';
+            "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "block_comment"))'';
+            "o" = "'evil-previous-visual-line";
+            "O" = "'evil-scroll-up";
+          };
+        };
       };
     };
-  };
 }
 #+end_src
 
@@ -1791,37 +1880,39 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 *** C
 #+begin_src nix-ts :tangle modules/development/c.nix
 {
-  flake.homeModules.c = { ... }:
-  {
-    programs.emacs.init = {
-      ide.languages.c.enable = true;
-      usePackage.c-ts-mode.generalTwoConfig.":n".c-ts-mode-map = {
-	"S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "comment"))'';
-	"R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "comment"))'';
-	"o" = "'evil-previous-visual-line";
-	"O" = "'evil-scroll-up";
+  flake.homeModules.c =
+    { ... }:
+    {
+      programs.emacs.init = {
+        ide.languages.c.enable = true;
+        usePackage.c-ts-mode.generalTwoConfig.":n".c-ts-mode-map = {
+          "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "comment"))'';
+          "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "comment"))'';
+          "o" = "'evil-previous-visual-line";
+          "O" = "'evil-scroll-up";
+        };
       };
     };
-  };
 }
 #+end_src
 
 *** Python
 #+begin_src nix-ts :tangle modules/development/python.nix
 {
-  flake.homeModules.python = { pkgs, ... }:
-  {
-    programs.emacs.init = {
-      ide.languages.python = {
-	enable = true;
-	wantRuff = true;
-      };
-      usePackage.python-ts-mode.setopt = {
-	python-shell-interpreter = ''"ipython"'';
-	python-shell-interpreter-args = ''"-i --simple-prompt"'';
+  flake.homeModules.python =
+    { pkgs, ... }:
+    {
+      programs.emacs.init = {
+        ide.languages.python = {
+          enable = true;
+          wantRuff = true;
+        };
+        usePackage.python-ts-mode.setopt = {
+          python-shell-interpreter = ''"ipython"'';
+          python-shell-interpreter-args = ''"-i --simple-prompt"'';
+        };
       };
     };
-  };
 }
 #+end_src
 
@@ -1831,101 +1922,181 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 Citre was borrowed from jweigley's config
 #+begin_src nix-ts :tangle modules/development/eglot.nix :noweb yes
 {
-  flake.homeModules.development = { pkgs, ... }:
-  {
-    programs.emacs.init = {
-      ide = {
-	hoverDoc = true;
-	eglot = {
-          enable = true;
-          preset = true;
-	};
-	flymake = {
-          enable = true;
-          preset = true;
-	};
-      };
-      usePackage = {
-	eglot = {
-	  preface = "(defvar efs/autoformat t) ";
-	  gfhookf = [
-	    ''('eglot-managed-mode (local! completion-at-point-functions (list (cape-capf-super #'tempel-complete
-	      #'eglot-completion-at-point
-											     #'cape-file))))
-	    ''
-	    "('before-save (lambda () (when (and eglot--managed-mode efs/autoformat) (eglot-format-buffer))))"
-	  ];
-	  config = ''
-	    <<Development Eglot Config>>
-	  '';
-	};
-
-	flymake-popon.setopt.flymake-popon-posframe-extra-arguments = [
-	  "':poshandler" "'posframe-poshandler-point-bottom-left-corner-upward"
-	  "':refposhandler" "'vertico-posframe-refposhandler-default"
-	];
-
-	eglot-java = {
-	  setopt.eglot-java-user-init-opts-fn = "'eglot-java-init-opts";
-	  preface = ''
-	    (defun eglot-java-init-opts (server eglot-java-eclipse-jdt)
-                   '(:bundles ["/usr/share/java-debug/com.microsoft.java.debug.plugin.jar"]))
-	  '';
-	};
-
-	citre = {
-	  enable = true;
-	  ghookf = ["('prog-mode 'citre-mode)"];
-	  gfhookf = ["('doom-escape 'citre-peek-abort)"];
-	  setopt = {
-	    citre-prompt-language-for-ctags-command = true;
-	    citre-use-project-root-when-creating-ctags = true;
-	    citre-ctags-program = ''"${pkgs.universal-ctags}/bin/ctags"'';
-	    citre-readtags-program = ''"${pkgs.universal-ctags}/bin/readtags"'';
+  flake.homeModules.development =
+    { pkgs, ... }:
+    {
+      programs.emacs.init = {
+        ide = {
+          hoverDoc = true;
+          eglot = {
+            enable = true;
+            preset = true;
           };
-	  custom.citre-peek-ace-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
-	  generalTwoConfig = {
-	    local-leader.citre-mode-map = {
-	      "p" = "'citre-ace-peek";
-	      "u" = "'citre-update-this-tags-file";
-            };
-	    ":nvm".citre-peek-keymap = {
-	      "M-e" = "'citre-peek-next-line";
-	      "M-o" = "'citre-peek-prev-line";
-            };
+          flymake = {
+            enable = true;
+            preset = true;
           };
-	  generalOneConfig.citre-peek-keymap = {
-	    "M-e" = "'citre-peek-next-line";
-	    "M-o" = "'citre-peek-prev-line";
+        };
+
+        # https://github.com/radian-software/apheleia/issues/153
+        tools.apheleia.formatters.eglot = ''
+          (cl-defun apheleia-indent-eglot-managed-buffer
+                  (&key buffer scratch callback &allow-other-keys)
+                "Copy BUFFER to SCRATCH, then format scratch, then call CALLBACK."
+                (with-current-buffer scratch
+                  (setq-local eglot--cached-server
+                              (with-current-buffer buffer
+                                (eglot-current-server)))
+                  (let ((buffer-file-name (buffer-local-value 'buffer-file-name buffer)))
+                    (eglot-format-buffer))
+                  (funcall callback)))
+        '';
+
+        usePackage = {
+          eglot = {
+            preface = "(defvar efs/autoformat t) ";
+            gfhookf = [
+              ''
+                ('eglot-managed-mode (local! completion-at-point-functions (list (cape-capf-super #'tempel-complete
+                	      #'eglot-completion-at-point
+                											     #'cape-file))))
+                	    ''
+            ];
+            config = ''
+              	    <<Development Eglot Config>>
+              	  '';
+          };
+
+          flymake-popon.setopt.flymake-popon-posframe-extra-arguments = [
+            "':poshandler"
+            "'posframe-poshandler-point-bottom-left-corner-upward"
+            "':refposhandler"
+            "'vertico-posframe-refposhandler-default"
+          ];
+
+          eglot-java = {
+            setopt.eglot-java-user-init-opts-fn = "'eglot-java-init-opts";
+            preface = ''
+              	    (defun eglot-java-init-opts (server eglot-java-eclipse-jdt)
+                                 '(:bundles ["/usr/share/java-debug/com.microsoft.java.debug.plugin.jar"]))
+              	  '';
+          };
+
+          citre = {
+            enable = true;
+            ghookf = [ "('prog-mode 'citre-mode)" ];
+            gfhookf = [ "('doom-escape 'citre-peek-abort)" ];
+            setopt = {
+              citre-prompt-language-for-ctags-command = true;
+              citre-use-project-root-when-creating-ctags = true;
+              citre-ctags-program = ''"${pkgs.universal-ctags}/bin/ctags"'';
+              citre-readtags-program = ''"${pkgs.universal-ctags}/bin/readtags"'';
+            };
+            custom.citre-peek-ace-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
+            generalTwoConfig = {
+              local-leader.citre-mode-map = {
+                "p" = "'citre-ace-peek";
+                "u" = "'citre-update-this-tags-file";
+              };
+              ":nvm".citre-peek-keymap = {
+                "M-e" = "'citre-peek-next-line";
+                "M-o" = "'citre-peek-prev-line";
+              };
+            };
+            generalOneConfig.citre-peek-keymap = {
+              "M-e" = "'citre-peek-next-line";
+              "M-o" = "'citre-peek-prev-line";
+            };
           };
         };
       };
     };
-  };
 }
 #+end_src
 
 #+NAME: Development Eglot Config
 #+begin_src emacs-lisp
 (efs/evil-collection-remap 'evil-collection-eglot-setup 'normal eglot-mode-map
-			   ;; "gd" 'citre-jump
-			   ;; "gr" 'citre-jump-to-reference
 			   "K" 'evil-substitute)
+#+end_src
+
+*** Aphelia
+#+begin_src nix-ts :tangle modules/development/apheleia.nix
+{ ... }:
+
+{
+  flake.homeModules.development =
+    {
+      pkgs,
+      config,
+      lib,
+      ...
+    }:
+    let
+      tools = config.programs.emacs.init.tools;
+      makeModeFormatters =
+        vs:
+        lib.concatStringsSep "\n" (
+          lib.optionals (vs != { }) (lib.mapAttrsToList (mode: formatter: "(${mode} . ${formatter})") vs)
+        );
+      makeFormattersHelper =
+        formatter:
+        if lib.isList formatter then "'(${lib.concatMapStrings (k: ''"${k}" '') formatter})" else formatter;
+      makeFormatters =
+        vs:
+        lib.concatStringsSep "\n" (
+          lib.optionals (vs != { }) (
+            lib.mapAttrsToList (
+              name: formatter: "(setf (alist-get '${name} apheleia-formatters) ${makeFormattersHelper formatter})"
+            ) vs
+          )
+        );
+    in
+    {
+      options.programs.emacs.init.tools.apheleia = {
+        autoFormat = lib.mkEnableOption "Auto-format buffers on save with apheleia.";
+        modeFormatters = lib.mkOption {
+          type = lib.types.attrsOf lib.types.str;
+          default = { };
+          description = "Aphelia formatters for each major mode";
+        };
+        formatters = lib.mkOption {
+          type = lib.types.attrsOf (lib.types.either lib.types.str (lib.types.listOf lib.types.str));
+          default = { };
+          description = "Aphelia formatters & their commands";
+        };
+      };
+
+      config.programs.emacs.init.usePackage.apheleia = lib.mkIf (tools.apheleia.formatters != { }) {
+        enable = true;
+        ghookf = lib.mkIf tools.apheleia.autoFormat [ "('on-first-file 'apheleia-global-mode)" ];
+        config = ''
+          ${makeFormatters tools.apheleia.formatters}
+
+          (dolist (pair '(${makeModeFormatters tools.apheleia.modeFormatters}))
+            (add-to-list 'apheleia-mode-alist pair))
+        '';
+        generalOne.global-leader."F" =
+          lib.mkIf config.programs.emacs.init.keybinds.leader-key.enable "'apheleia-format-buffer";
+      };
+    };
+}
 #+end_src
 
 *** Ledger
 #+begin_src nix-ts :tangle modules/development/ledger.nix
 {
-  flake.homeModules.ledger = { ... }:
-  {
-    programs.emacs.init = {
-      completions.tempel.templates.ledger-mode = {
-	payroll = ''p "Rose-Hulman Payroll" n> "Income:TeachingAssistant" > "-" p n> "*Assets:Checking"'';
-	checking = ''"Assets:Checking"'';
+  flake.homeModules.ledger =
+    { ... }:
+    {
+      programs.emacs.init = {
+        completions.tempel.templates.ledger-mode = {
+          payroll = ''p "Rose-Hulman Payroll" n> "Income:TeachingAssistant" > "-" p n> "*Assets:Checking"'';
+          checking = ''"Assets:Checking"'';
+        };
+        ide.languages.ledger.enable = true;
       };
-      ide.languages.ledger.enable = true;
     };
-  };
 }
 #+end_src
 
@@ -1934,71 +2105,76 @@ I'm running dired with a couple of small packages that improve on it
 #+begin_src nix-ts :tangle modules/file-management.nix :noweb yes
 { inputs, ... }:
 {
-  perSystem = { pkgs, ... }:
-  {
-    packages.mpvmacs = pkgs.writeShellScriptBin "mpvmacs" ''
-	emacsclient -e "(mpv-play \"$1\")"
+  perSystem =
+    { pkgs, ... }:
+    {
+      packages.mpvmacs = pkgs.writeShellScriptBin "mpvmacs" ''
+        	emacsclient -e "(mpv-play \"$1\")"
       '';
-  };
+    };
 
   flake.homeModules.fileManager = { pkgs, ... }: {
     programs.emacs.init = {
       tools.dired = {
-	enable = true;
-	narrow = true;
-	posframe = true;
-	async = true;
+        enable = true;
+        narrow = true;
+        posframe = true;
+        async = true;
       };
       usePackage = {
-	dired = {
-	  generalOne.ctl-x-map."d" = "'consult-dir";
+        dired = {
+          generalOne.ctl-x-map."d" = "'consult-dir";
           # We're doing our best to get rid of that 1st extraneous line
-	  setopt = {
-	    dired-free-space = false;
-	    dired-kill-when-opening-new-dired-buffer = true;
-	    dired-auto-revert-buffer = "#'dired-directory-changed-p";
-	    dired-recursive-copies = "'always";
-	    dired-recursive-deletes = "'always";
-	    dired-create-destination-dirs = "'ask";
-	    dired-create-destination-dirs-on-trailing-dirstep = true;
-	  };
-	  config = ''(with-eval-after-load 'dired-x (gsetq dired-omit-extensions (delete ".class" dired-omit-extensions)))'';
-	  ghookf = [''
-            ('dired-mode (lambda () (general-def 'normal dired-mode-map
-               "B" 'evil-goto-line
-               "n" 'dired-up-directory
-               "i" 'dired-find-file)))
-	  ''];
-	};
+          setopt = {
+            dired-free-space = false;
+            dired-kill-when-opening-new-dired-buffer = true;
+            dired-auto-revert-buffer = "#'dired-directory-changed-p";
+            dired-recursive-copies = "'always";
+            dired-recursive-deletes = "'always";
+            dired-create-destination-dirs = "'ask";
+            dired-create-destination-dirs-on-trailing-dirstep = true;
+          };
+          config = ''(with-eval-after-load 'dired-x (gsetq dired-omit-extensions (delete ".class" dired-omit-extensions)))'';
+          ghookf = [
+            ''
+                          ('dired-mode (lambda () (general-def 'normal dired-mode-map
+                             "B" 'evil-goto-line
+                             "n" 'dired-up-directory
+                             "i" 'dired-find-file)))
+              	  ''
+          ];
+        };
 
-	openwith = {
-	  enable = true;
-	  defer = true;
-	  ghookf = ["('dired-mode 'openwith-mode)"];
-	  config = ''
-            <<Emacs Openwith Config>>
-	  '';
-	};
+        openwith = {
+          enable = true;
+          defer = true;
+          ghookf = [ "('dired-mode 'openwith-mode)" ];
+          config = ''
+                        <<Emacs Openwith Config>>
+            	  '';
+        };
 
-	dired-ranger = {
-	  enable = true;
-	  ghookf = [''
-            ('dired-mode (lambda () (general-def 'normal dired-mode-map
-               "d" 'dired-ranger-copy
-               "O" 'dired-ranger-move
-               "G" 'dired-ranger-paste)))
-	  ''];
-	};
+        dired-ranger = {
+          enable = true;
+          ghookf = [
+            ''
+                          ('dired-mode (lambda () (general-def 'normal dired-mode-map
+                             "d" 'dired-ranger-copy
+                             "O" 'dired-ranger-move
+                             "G" 'dired-ranger-paste)))
+              	  ''
+          ];
+        };
 
-	image = {
-	  enable = true;
-	  gfhookf = ["('image-mode 'image-transform-fit-to-window)"];
-	  generalTwoConfig.":n".image-map = {
+        image = {
+          enable = true;
+          gfhookf = [ "('image-mode 'image-transform-fit-to-window)" ];
+          generalTwoConfig.":n".image-map = {
             "E" = "'image-next-file";
             "O" = "'image-previous-file";
-	  };
-	  setopt.image-animate-loop = true;
-	};
+          };
+          setopt.image-animate-loop = true;
+        };
       };
     };
   };
@@ -2032,41 +2208,42 @@ I'm running dired with a couple of small packages that improve on it
 { inputs, ... }:
 
 {
-  flake.homeModules.emacs = { config, pkgs, ... }:
+  flake.homeModules.emacs =
+    { config, pkgs, ... }:
 
-  {
-    home.packages = with pkgs; [
-      xclip
-      xsel
-      xdotool
-      zip
-      unzip
-    ];
-    programs.emacs = {
-      enable = true;
-      package = pkgs.emacs30-gtk3;
-      init = {
+    {
+      home.packages = with pkgs; [
+        xclip
+        xsel
+        xdotool
+        zip
+        unzip
+      ];
+      programs.emacs = {
         enable = true;
-        packageQuickstart = false;
-        recommendedGcSettings = true;
-        usePackageVerbose = false;
-        largeFileHandling = true;
-	keybinds = {
-	  doomEscape.enable = true;
-	  undo.enable = true;
-	  electricPair.enable = true;
-	};
+        package = pkgs.emacs30-gtk3;
+        init = {
+          enable = true;
+          packageQuickstart = false;
+          recommendedGcSettings = true;
+          usePackageVerbose = false;
+          largeFileHandling = true;
+          keybinds = {
+            doomEscape.enable = true;
+            undo.enable = true;
+            electricPair.enable = true;
+          };
 
-	prelude = ''
-	  <<Emacs Prelude>>
-	'';
+          prelude = ''
+            <<Emacs Prelude>>
+          '';
 
-	postlude = ''
-	  <<Emacs Postlude>>
-	'';
+          postlude = ''
+            <<Emacs Postlude>>
+          '';
+        };
       };
     };
-  };
 }
 #+end_src
 
@@ -2119,23 +2296,23 @@ Most of this was shamelessly lifted from Emacs from Scratch.
     programs.emacs.init = {
       aesthetics.declutter.enable = true;
       tools = {
-	noLittering.enable = true;
-	lineNumbers.enable = true;
-	sensibleDefaults.enable = true;
+        noLittering.enable = true;
+        lineNumbers.enable = true;
+        sensibleDefaults.enable = true;
       };
       usePackage = {
-	display-line-numbers.setopt.display-line-numbers-type = "'relative";
+        display-line-numbers.setopt.display-line-numbers-type = "'relative";
 
-	server = {
-	  enable = true;
-	  deferIncrementally = true;
-	  config = "(server-start)";
-	};
+        server = {
+          enable = true;
+          deferIncrementally = true;
+          config = "(server-start)";
+        };
 
-	loaddefs = {
-	  enable = true;
-	  ghookf = ["('on-first-file 'save-place-mode)"];
-	};
+        loaddefs = {
+          enable = true;
+          ghookf = [ "('on-first-file 'save-place-mode)" ];
+        };
       };
     };
   };
@@ -2168,13 +2345,14 @@ Wgrep basically turns grep into sed.
 *** Early Init
 #+begin_src nix-ts :tangle modules/emacs/early-init.nix :noweb yes
 {
-  flake.homeModules.emacs = { ... }:
+  flake.homeModules.emacs =
+    { ... }:
 
-  {
-    programs.emacs.init.earlyInit = ''
-      <<Emacs Early Init>>
-    '';
-  };
+    {
+      programs.emacs.init.earlyInit = ''
+        <<Emacs Early Init>>
+      '';
+    };
 }
 #+end_src
 
@@ -2199,20 +2377,26 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
 { inputs, ... }:
 
 {
-  flake.homeModules.emacs = { lib, pkgs, config, ... }:
+  flake.homeModules.emacs =
+    {
+      lib,
+      pkgs,
+      config,
+      ...
+    }:
 
-  {
-    programs.emacs.init = {
-      keybinds = {
-	evil.enable = true;
-	evilNerdCommenter.enable = true;
-	god.enable = true;
+    {
+      programs.emacs.init = {
+        keybinds = {
+          evil.enable = true;
+          evilNerdCommenter.enable = true;
+          god.enable = true;
+        };
+        usePackage.evil.config = ''
+          <<Evil Config>>
+        '';
       };
-      usePackage.evil.config = ''
-	<<Evil Config>>
-      '';
     };
-  };
 }
 #+end_src
 
@@ -2253,15 +2437,15 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
     programs.emacs.init = {
       keybinds.evil.surround = true;
       usePackage.evil-surround.generalTwoConfig = {
-	":v".evil-surround-mode-map = {
-	  "r" = "'evil-surround-region";
-	  "R" = "'evil-surround-region";
-	};
-	":o".evil-surround-mode-map = {
-	  "s" = "nil";
-	  "r" = "'evil-surround-edit";
-	  "R" = "'evil-Surround-edit";
-	};
+        ":v".evil-surround-mode-map = {
+          "r" = "'evil-surround-region";
+          "R" = "'evil-surround-region";
+        };
+        ":o".evil-surround-mode-map = {
+          "s" = "nil";
+          "r" = "'evil-surround-edit";
+          "R" = "'evil-Surround-edit";
+        };
       };
     };
   };
@@ -2271,43 +2455,44 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
 ***** Easymotion
 #+begin_src nix-ts :tangle modules/emacs/evil/easymotion.nix :noweb yes
 {
-  flake.homeModules.emacs = { ... }:
-  {
-    programs.emacs.init = {
-      keybinds.avy = {
-        enable = true;
-        evilModifierKey = "H";
-      };
-      usePackage.evil-easymotion = {
-	generalOne.":nvo" = {
-	  "H-m" = "'evilem-motion-search-next";
-	  "H-U" = "'evilem-motion-forward-word-begin";
-	  "H-u" = "'evilem-motion-forward-WORD-begin";
-	  "H-X" = "'evilem-motion-backward-word-begin";
-	  "H-x" = "'evilem-motion-backward-WORD-begin";
-	  "H-M" = "'evilem-motion-search-previous";
-	  "H-)" = "'evilem-motion-forward-sentence-begin";
-	  "H-(" = "'evilem-motion-backward-sentence-begin";
-	};
-	custom.avy-dispatch-alist = [
-	  "'(?u . avy-action-cursor)"
-	  "'(?l . avy-action-ispell)"
-	  "'(?o . nix-emacs-avy-action-embark)"
-	  "'(?h . avy-action-helpful)"
-	  "'(?g . avy-action-yank)"
-	  "'(?p . avy-action-teleport)"
-	  "'(?q . nix-emacs-avy-action-fold)"
-	];
-	setopt = {
-	  avy-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
-	  avy-all-windows = false;
-	};
-	config = ''
-	  <<Easymotion Config>>
-	'';
+  flake.homeModules.emacs =
+    { ... }:
+    {
+      programs.emacs.init = {
+        keybinds.avy = {
+          enable = true;
+          evilModifierKey = "H";
+        };
+        usePackage.evil-easymotion = {
+          generalOne.":nvo" = {
+            "H-m" = "'evilem-motion-search-next";
+            "H-U" = "'evilem-motion-forward-word-begin";
+            "H-u" = "'evilem-motion-forward-WORD-begin";
+            "H-X" = "'evilem-motion-backward-word-begin";
+            "H-x" = "'evilem-motion-backward-WORD-begin";
+            "H-M" = "'evilem-motion-search-previous";
+            "H-)" = "'evilem-motion-forward-sentence-begin";
+            "H-(" = "'evilem-motion-backward-sentence-begin";
+          };
+          custom.avy-dispatch-alist = [
+            "'(?u . avy-action-cursor)"
+            "'(?l . avy-action-ispell)"
+            "'(?o . nix-emacs-avy-action-embark)"
+            "'(?h . avy-action-helpful)"
+            "'(?g . avy-action-yank)"
+            "'(?p . avy-action-teleport)"
+            "'(?q . nix-emacs-avy-action-fold)"
+          ];
+          setopt = {
+            avy-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
+            avy-all-windows = false;
+          };
+          config = ''
+            	  <<Easymotion Config>>
+            	'';
+        };
       };
     };
-  };
 }
 #+end_src
 
@@ -2331,45 +2516,53 @@ Maybe try lasgun? https://github.com/aatmunbaxi/lasgun.el/blob/master/lasgun.el
 Cursors hydra: https://hungyi.net/posts/hydra-for-evil-mc/
 #+begin_src nix-ts :tangle modules/emacs/evil/multicursor.nix :noweb yes
 {
-  flake.homeModules.emacs = { ... }:
-  {
-    programs.emacs.init.usePackage.evil-mc = {
-      enable = true;
-      defer = true;
-      command = ["evil-mc-pause-cursors" "evil-mc-make-cursor-here"];
-      gfhookf = [''('doom-escape (lambda () (when (and (featurep 'evil-mc) (evil-mc-has-cursors-p))
-	(evil-mc-undo-all-cursors)
-						 (evil-mc-resume-cursors) t)))''];
-      generalOne = {
-	":nv"."bz" = "'evil-mc-hydra/body";
-	global-leader."C" = "`,(cmd! (if (eq evil-state 'visual) (evil-mc-make-cursor-in-visual-selection-beg) (evil-mc-hydra/body)))";
+  flake.homeModules.emacs =
+    { ... }:
+    {
+      programs.emacs.init.usePackage.evil-mc = {
+        enable = true;
+        defer = true;
+        command = [
+          "evil-mc-pause-cursors"
+          "evil-mc-make-cursor-here"
+        ];
+        gfhookf = [
+          ''
+            ('doom-escape (lambda () (when (and (featurep 'evil-mc) (evil-mc-has-cursors-p))
+            	(evil-mc-undo-all-cursors)
+            						 (evil-mc-resume-cursors) t)))''
+        ];
+        generalOne = {
+          ":nv"."bz" = "'evil-mc-hydra/body";
+          global-leader."C" =
+            "`,(cmd! (if (eq evil-state 'visual) (evil-mc-make-cursor-in-visual-selection-beg) (evil-mc-hydra/body)))";
+        };
+        config = ''
+          <<Evil-MC Config>>
+        '';
+        extraConfig = ''
+          :pretty-hydra
+          ((:color pink :pre (evil-mc-pause-cursors))
+           ("Search"
+            (("m" #'evil-mc-make-and-goto-next-match "Search forward")
+             ("M" #'evil-mc-make-and-goto-prev-match "Search backward")
+             ("C-m" #'evil-mc-skip-and-goto-next-match "Skip forward")
+             ("C-M" #'evil-mc-skip-and-goto-prev-match "Skip backward"))
+            "Undo"
+            (("q" #'evil-mc-undo-all-cursors)
+             ("j" #'evil-mc-undo-last-added-cursor))
+            "Pause/Resume"
+            (("r" #'evil-mc-resume-cursors "Resume")
+             ("p" #'evil-mc-pause-cursors "Pause")
+             ("<return>" #'evil-mc-resume-cursors "Quit" :color blue))
+            "Create Cursors"
+            (("h" #'evil-mc-make-all-cursors "All")
+             ("s" #'evil-mc-make-cursor-here "Here")
+             ("E" #'evil-mc-make-cursor-move-next-line "Next Line")
+             ("O" #'evil-mc-make-cursor-move-prev-line "Prev Line"))))
+        '';
       };
-      config = ''
-	<<Evil-MC Config>>
-      '';
-      extraConfig = ''
-	:pretty-hydra
-        ((:color pink :pre (evil-mc-pause-cursors))
-         ("Search"
-          (("m" #'evil-mc-make-and-goto-next-match "Search forward")
-           ("M" #'evil-mc-make-and-goto-prev-match "Search backward")
-           ("C-m" #'evil-mc-skip-and-goto-next-match "Skip forward")
-           ("C-M" #'evil-mc-skip-and-goto-prev-match "Skip backward"))
-          "Undo"
-          (("q" #'evil-mc-undo-all-cursors)
-           ("j" #'evil-mc-undo-last-added-cursor))
-          "Pause/Resume"
-          (("r" #'evil-mc-resume-cursors "Resume")
-           ("p" #'evil-mc-pause-cursors "Pause")
-           ("<return>" #'evil-mc-resume-cursors "Quit" :color blue))
-          "Create Cursors"
-          (("h" #'evil-mc-make-all-cursors "All")
-           ("s" #'evil-mc-make-cursor-here "Here")
-           ("E" #'evil-mc-make-cursor-move-next-line "Next Line")
-           ("O" #'evil-mc-make-cursor-move-prev-line "Prev Line"))))
-      '';
     };
-  };
 }
 #+end_src
 
@@ -2396,17 +2589,18 @@ Cursors hydra: https://hungyi.net/posts/hydra-for-evil-mc/
 ***** Exchange
 #+begin_src nix-ts :tangle modules/emacs/evil/exchange.nix
 {
-  flake.homeModules.emacs = { ... }:
-  {
-    programs.emacs.init.usePackage.evil-exchange = {
-      enable = true;
-      generalOne = {
-	evil-operator-state-map."k" = "'evil-exchange/cx";
-	evil-visual-state-map."k" = "'evil-exchange";
+  flake.homeModules.emacs =
+    { ... }:
+    {
+      programs.emacs.init.usePackage.evil-exchange = {
+        enable = true;
+        generalOne = {
+          evil-operator-state-map."k" = "'evil-exchange/cx";
+          evil-visual-state-map."k" = "'evil-exchange";
+        };
+        gfhookf = [ "('doom-escape (lambda () (when (featurep 'evil-exchange) (evil-exchange-cancel))))" ];
       };
-      gfhookf = ["('doom-escape (lambda () (when (featurep 'evil-exchange) (evil-exchange-cancel))))"];
     };
-  };
 }
 #+end_src
 
@@ -2416,15 +2610,19 @@ Note: You still need to install udisks manually if you're not using this on nixo
 { inputs, ... }:
 
 {
-  perSystem = { pkgs, self', ... }: let ezf = self'.packages.ezf;
-  in {
-    packages.udisksmenu = pkgs.writeShellScriptBin "udisksmenu" ''
-      action=$(${pkgs.coreutils}/bin/printf 'mount\nunmount' | ${ezf}/bin/ezf)
-      disk=$(${pkgs.coreutils}/bin/ls /dev | ${pkgs.ripgrep}/bin/rg sd[a-z] | ${ezf}/bin/ezf)
+  perSystem =
+    { pkgs, self', ... }:
+    let
+      ezf = self'.packages.ezf;
+    in
+    {
+      packages.udisksmenu = pkgs.writeShellScriptBin "udisksmenu" ''
+        action=$(${pkgs.coreutils}/bin/printf 'mount\nunmount' | ${ezf}/bin/ezf)
+        disk=$(${pkgs.coreutils}/bin/ls /dev | ${pkgs.ripgrep}/bin/rg sd[a-z] | ${ezf}/bin/ezf)
 
-      ${pkgs.udisks}/bin/udisksctl $action -b /dev/$disk
-    '';
-  };
+        ${pkgs.udisks}/bin/udisksctl $action -b /dev/$disk
+      '';
+    };
 
   flake.homeModules.emacs = { pkgs, lib, ... }: {
     programs.emacs.init = {
@@ -2433,9 +2631,11 @@ Note: You still need to install udisks manually if you're not using this on nixo
         globalPrefix = "s";
       };
       usePackage.emacs.generalOneConfig.global-leader = {
-	"l" = ''`("Compile" . ,(cmd! (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k")))))'';
-	"L" = ''`("Recompile" . ,(cmd! (if (project-current) (project-recompile) (recompile))))'';
-	"u" = ''`("Mount USB" . ,(cmd! (start-process-shell-command "udisksmenu" nil "${lib.getExe pkgs.udisksmenu}")))'';
+        "l" =
+          ''`("Compile" . ,(cmd! (if (project-current) (project-compile) (compile (read-string "Compile command: " "make -k")))))'';
+        "L" = ''`("Recompile" . ,(cmd! (if (project-current) (project-recompile) (recompile))))'';
+        "u" =
+          ''`("Mount USB" . ,(cmd! (start-process-shell-command "udisksmenu" nil "${lib.getExe pkgs.udisksmenu}")))'';
       };
     };
   };
@@ -2456,141 +2656,141 @@ Differences from the spec:
   flake.homeModules.emacs = { pkgs, ... }: {
     programs.emacs.init = {
       keybinds.evil.keys = {
-	forward = "i";
-	backward = "n";
-	up = "o";
-	down = "e";
-	prefer-visual-line = true;
-	evil-collection-swap-keys = ''
-          "x" "B"
-          "X" "b"
-          "u" "W"
-          "U" "w"
-          "j" "u"
-          "a" ":"
-          "m" "n"
-          "M" "N"
-          "h" "m"
-          "b" "g"
-	'';
+        forward = "i";
+        backward = "n";
+        up = "o";
+        down = "e";
+        prefer-visual-line = true;
+        evil-collection-swap-keys = ''
+                    "x" "B"
+                    "X" "b"
+                    "u" "W"
+                    "U" "w"
+                    "j" "u"
+                    "a" ":"
+                    "m" "n"
+                    "M" "N"
+                    "h" "m"
+                    "b" "g"
+          	'';
       };
       usePackage.evil = {
-	generalOneConfig = {
-	  ":n" = {
-	    "I" = "'evil-window-top";
-	    "C-i" = "'evil-goto-line";
-	    "N" = "'evil-window-bottom";
-	    "C-n" = "'evil-goto-first-line";
-	    "E" = "'evil-scroll-down";
-	    "O" = "'evil-scroll-up";
-	    "x" = "'evil-backward-WORD-begin";
-	    "X" = "'evil-backward-word-begin";
-	    "C-x" = "'evil-backward-WORD-end";
-	    "j" = "'evil-undo";
-	    "J" = "'evil-redo";
-	    "a" = "'evil-ex";
-	    "r" = "'evil-insert-line";
-	    "R" = "'evil-open-above";
-	    "s" = "'evil-append-line";
-	    "S" = "'evil-open-below";
-	    "t" = "'evil-insert";
-	    "T" = "'evil-append";
-	    "C-t" = "'evil-replace-state";
-	    "u" = "'evil-forward-WORD-begin";
-	    "U" = "'evil-forward-word-begin";
-	    "C-u" = "'evil-forward-WORD-end";
-	    "-" = "'evil-jump-backward";
-	    "_" = "'evil-jump-forward";
-	    "m" = "'evil-search-next";
-	    "M" = "'evil-search-previous";
-	    "k" = "'evil-delete-char";
-	    "K" = "'evil-substitute";
-	    "c" = "'evil-visual-char";
-	    "C" = "'evil-visual-line";
-	    "C-c" = "'evil-visual-block";
-	    "v" = "'evil-delete";
-	    "V" = "'evil-change";
-	    "C-v" = "'evil-delete-line";
-	    "d" = "'evil-yank";
-	    "D" = "'evil-yank-line";
-	    "G" = "'evil-paste-after";
-	    ";" = "'evil-end-of-visual-line";
-	    ":" = "'evil-end-of-line";
-	    "C-;" = "'evil-end-of-line";
-	    "p" = "'ergo-word-delete";
-	    "P" = "'ergo-word-change";
-	    "C-p" = "'ergo-word-change";
-	    "$" = "'evil-execute-macro";
-	    "~" = "'evil-record-macro";
-	    "C-z" = "'evil-goto-last-change-reverse";
-	    "w" = "'evil-repeat";
-	    "W" = "'evil-ex-repeat";
-	    "C-w" = "'evil-ex-repeat";
-	    "l" = "'evil-shift-right-line";
-	    "L" = "'evil-shift-left-line";
-	    "C-l" = "'evil-shift-left-line";
-	    "/" = "'isearch-forward-regexp";
-	    "?" = "'isearch-backward-regexp";
-	    "y" = "'evil-shift-right";
-	    "Y" = "'evil-shift-left";
-	    "C-s" = "'evil-write";
-	  } ;
-	  ":m" = {
-	    "I" = "'evil-window-top";
-	    "C-i" = "'evil-goto-line";
-	    "N" = "'evil-window-bottom";
-	    "C-n" = "'evil-goto-first-line";
-	    "C-e" = "'evil-scroll-page-down";
-	    "C-o" = "'evil-scroll-page-up";
-	    "a" = "'evil-ex";
-	    "h" = "'evil-set-marker";
-	    "m" = "'evil-search-next";
-	    "M" = "'evil-search-previous";
-	    "-" = "'evil-jump-backward";
-	    "_" = "'evil-jump-forward";
-	    "/" = "'isearch-forward-regexp";
-	    "?" = "'isearch-backward-regexp";
-	    "f" = "'evil-first-non-blank-of-visual-line";
-	    "F" = "'evil-beginning-of-visual-line";
-	    "C-f" = "'evil-first-non-blank";
-	    "B" = "'evil-goto-line";
-	    "C-M-o" = "'scroll-other-window-down";
-	    "C-M-e" = "'scroll-other-window";
-	  };
-	  ":v" = {
-	    "U" = "'evil-forward-word-begin";
-	    "u" = "'evil-forward-WORD-begin";
-	    "X" = "'evil-backward-word-begin";
-	    "x" = "'evil-backward-WORD-begin";
-	    "v" = "'evil-delete-char";
-	    "V" = "'evil-substitute";
-	    "C-v" = "'evil-substitute";
-	    "t" = "evil-outer-text-objects-map";
-	    "s" = "evil-inner-text-objects-map";
-	    "l" = "'evil-invert-case";
-	    "y" = "'evil-shift-right";
-	    "Y" = "'evil-shift-left";
-	    "C-t" = "'evil-replace";
-	    "R" = "'evil-insert-line";
-	    "C-r" = "'evil-append-line";
-	    "d" = "'evil-yank-line";
-	    "D" = "'evil-yank-line";
-	    "C-d" = "'evil-yank-line";
-	    "/" = "'isearch-forward-regexp";
-	    "?" = "'isearch-backward-regexp";
-	    "G" = "'evil-paste";
-	  };
-	  ":i" = {
-	    "C-s" = "'insert-char";
-	    "C-k" = "'kill-line";
-	  };
-	};
-	extraConfig = ''
-	  <<Ergovim Extraconfig>>
-	'';
-	config = ''
-	  <<Ergovim Config>>
-	'';
+        generalOneConfig = {
+          ":n" = {
+            "I" = "'evil-window-top";
+            "C-i" = "'evil-goto-line";
+            "N" = "'evil-window-bottom";
+            "C-n" = "'evil-goto-first-line";
+            "E" = "'evil-scroll-down";
+            "O" = "'evil-scroll-up";
+            "x" = "'evil-backward-WORD-begin";
+            "X" = "'evil-backward-word-begin";
+            "C-x" = "'evil-backward-WORD-end";
+            "j" = "'evil-undo";
+            "J" = "'evil-redo";
+            "a" = "'evil-ex";
+            "r" = "'evil-insert-line";
+            "R" = "'evil-open-above";
+            "s" = "'evil-append-line";
+            "S" = "'evil-open-below";
+            "t" = "'evil-insert";
+            "T" = "'evil-append";
+            "C-t" = "'evil-replace-state";
+            "u" = "'evil-forward-WORD-begin";
+            "U" = "'evil-forward-word-begin";
+            "C-u" = "'evil-forward-WORD-end";
+            "-" = "'evil-jump-backward";
+            "_" = "'evil-jump-forward";
+            "m" = "'evil-search-next";
+            "M" = "'evil-search-previous";
+            "k" = "'evil-delete-char";
+            "K" = "'evil-substitute";
+            "c" = "'evil-visual-char";
+            "C" = "'evil-visual-line";
+            "C-c" = "'evil-visual-block";
+            "v" = "'evil-delete";
+            "V" = "'evil-change";
+            "C-v" = "'evil-delete-line";
+            "d" = "'evil-yank";
+            "D" = "'evil-yank-line";
+            "G" = "'evil-paste-after";
+            ";" = "'evil-end-of-visual-line";
+            ":" = "'evil-end-of-line";
+            "C-;" = "'evil-end-of-line";
+            "p" = "'ergo-word-delete";
+            "P" = "'ergo-word-change";
+            "C-p" = "'ergo-word-change";
+            "$" = "'evil-execute-macro";
+            "~" = "'evil-record-macro";
+            "C-z" = "'evil-goto-last-change-reverse";
+            "w" = "'evil-repeat";
+            "W" = "'evil-ex-repeat";
+            "C-w" = "'evil-ex-repeat";
+            "l" = "'evil-shift-right-line";
+            "L" = "'evil-shift-left-line";
+            "C-l" = "'evil-shift-left-line";
+            "/" = "'isearch-forward-regexp";
+            "?" = "'isearch-backward-regexp";
+            "y" = "'evil-shift-right";
+            "Y" = "'evil-shift-left";
+            "C-s" = "'evil-write";
+          };
+          ":m" = {
+            "I" = "'evil-window-top";
+            "C-i" = "'evil-goto-line";
+            "N" = "'evil-window-bottom";
+            "C-n" = "'evil-goto-first-line";
+            "C-e" = "'evil-scroll-page-down";
+            "C-o" = "'evil-scroll-page-up";
+            "a" = "'evil-ex";
+            "h" = "'evil-set-marker";
+            "m" = "'evil-search-next";
+            "M" = "'evil-search-previous";
+            "-" = "'evil-jump-backward";
+            "_" = "'evil-jump-forward";
+            "/" = "'isearch-forward-regexp";
+            "?" = "'isearch-backward-regexp";
+            "f" = "'evil-first-non-blank-of-visual-line";
+            "F" = "'evil-beginning-of-visual-line";
+            "C-f" = "'evil-first-non-blank";
+            "B" = "'evil-goto-line";
+            "C-M-o" = "'scroll-other-window-down";
+            "C-M-e" = "'scroll-other-window";
+          };
+          ":v" = {
+            "U" = "'evil-forward-word-begin";
+            "u" = "'evil-forward-WORD-begin";
+            "X" = "'evil-backward-word-begin";
+            "x" = "'evil-backward-WORD-begin";
+            "v" = "'evil-delete-char";
+            "V" = "'evil-substitute";
+            "C-v" = "'evil-substitute";
+            "t" = "evil-outer-text-objects-map";
+            "s" = "evil-inner-text-objects-map";
+            "l" = "'evil-invert-case";
+            "y" = "'evil-shift-right";
+            "Y" = "'evil-shift-left";
+            "C-t" = "'evil-replace";
+            "R" = "'evil-insert-line";
+            "C-r" = "'evil-append-line";
+            "d" = "'evil-yank-line";
+            "D" = "'evil-yank-line";
+            "C-d" = "'evil-yank-line";
+            "/" = "'isearch-forward-regexp";
+            "?" = "'isearch-backward-regexp";
+            "G" = "'evil-paste";
+          };
+          ":i" = {
+            "C-s" = "'insert-char";
+            "C-k" = "'kill-line";
+          };
+        };
+        extraConfig = ''
+          <<Ergovim Extraconfig>>
+        '';
+        config = ''
+          <<Ergovim Config>>
+        '';
       };
     };
   };
@@ -2643,56 +2843,57 @@ Gives us an entire state where we can rapidly make specific edits to code.
     programs.emacs.init = {
       ide.symex = true;
       usePackage.symex = {
-	enable = true;
-	command = ["evil-symex-state"];
-	defer = true;
-	generalTwo.":n"."(racket-repl-mode-map lisp-interaction-mode-map lisp-mode-map)"."RET" = "'symex-mode-interface";
-	config = ''
-	  <<Emacs Symex Config>>
-	'';
-	generalOneConfig.evil-symex-state-map = {
-	  "n" = "'symex-go-backward";
-	  "H-n" = "'efs/evilem-motion-symex-go-backward";
-	  "H-o" = "'efs/evilem-motion-symex-go-down";
-	  "C-o" = "'symex-climb-branch";
-	  "o" = "'symex-go-down";
-	  "H-e" = "'efs/evilem-motion-symex-go-up";
-	  "C-e" = "'symex-descend-branch";
-	  "e" = "'symex-go-up";
-	  "i" = "'symex-go-forward";
-	  "H-i" = "'efs/evilem-motion-symex-go-forward";
-	  "bn" = "'evil-backward-char";
-	  "bi" = "'evil-forward-char";
-	  "d" = "'symex-yank";
-	  "D" = "'symex-yank-remaining";
-	  "G" = "'symex-paste-after";
-	  "g" = "'symex-paste-before";
-	  "k" = "'symex-delete";
-	  "C-k" = "'symex-delete-backward";
-	  "p" = "'symex-delete-remaining";
-	  "K" = "'symex-change";
-	  "P" = "'symex-change-remaining";
-	  "N" = "'symex-shift-backward";
-	  "I" = "'symex-shift-forward";
-	  "M-N" = "'symex-shift-backward-most";
-	  "M-I" = "'symex-shift-forward-most";
-	  "M-n" = "'symex-goto-first";
-	  "M-i" = "'symex-goto-last";
-	  "t" = "'symex-insert-at-beginning";
-	  "T" = "'symex-append-at-end";
-	  "S" = "'symex-open-line-after";
-	  "R" = "'symex-open-line-before";
-	  "j" = "'evil-undo";
-	  "J" = "'evil-redo";
-	  "s" = "'symex-append-after";
-	  "r" = "'symex-insert-before";
-	  "w" = "'evil-repeat";
-	  "C-w" = "'evil-repeat-pop";
-	  "W" = "'evil-ex-repeat";
-	  "a" = "'evil-ex";
-	  "~" = "'evil-record-macro";
-	  "$" = "'evil-execute-macro";
-	};
+        enable = true;
+        command = [ "evil-symex-state" ];
+        defer = true;
+        generalTwo.":n"."(racket-repl-mode-map lisp-interaction-mode-map lisp-mode-map)"."RET" =
+          "'symex-mode-interface";
+        config = ''
+          <<Emacs Symex Config>>
+        '';
+        generalOneConfig.evil-symex-state-map = {
+          "n" = "'symex-go-backward";
+          "H-n" = "'efs/evilem-motion-symex-go-backward";
+          "H-o" = "'efs/evilem-motion-symex-go-down";
+          "C-o" = "'symex-climb-branch";
+          "o" = "'symex-go-down";
+          "H-e" = "'efs/evilem-motion-symex-go-up";
+          "C-e" = "'symex-descend-branch";
+          "e" = "'symex-go-up";
+          "i" = "'symex-go-forward";
+          "H-i" = "'efs/evilem-motion-symex-go-forward";
+          "bn" = "'evil-backward-char";
+          "bi" = "'evil-forward-char";
+          "d" = "'symex-yank";
+          "D" = "'symex-yank-remaining";
+          "G" = "'symex-paste-after";
+          "g" = "'symex-paste-before";
+          "k" = "'symex-delete";
+          "C-k" = "'symex-delete-backward";
+          "p" = "'symex-delete-remaining";
+          "K" = "'symex-change";
+          "P" = "'symex-change-remaining";
+          "N" = "'symex-shift-backward";
+          "I" = "'symex-shift-forward";
+          "M-N" = "'symex-shift-backward-most";
+          "M-I" = "'symex-shift-forward-most";
+          "M-n" = "'symex-goto-first";
+          "M-i" = "'symex-goto-last";
+          "t" = "'symex-insert-at-beginning";
+          "T" = "'symex-append-at-end";
+          "S" = "'symex-open-line-after";
+          "R" = "'symex-open-line-before";
+          "j" = "'evil-undo";
+          "J" = "'evil-redo";
+          "s" = "'symex-append-after";
+          "r" = "'symex-insert-before";
+          "w" = "'evil-repeat";
+          "C-w" = "'evil-repeat-pop";
+          "W" = "'evil-ex-repeat";
+          "a" = "'evil-ex";
+          "~" = "'evil-record-macro";
+          "$" = "'evil-execute-macro";
+        };
       };
     };
   };
@@ -2721,17 +2922,17 @@ Gives us an entire state where we can rapidly make specific edits to code.
   flake.homeModules.emacs = { ... }: {
     programs.emacs.init.usePackage = {
       evil-org.config = ''
-	<<Emacs Evil Org Config>>
+        <<Emacs Evil Org Config>>
       '';
 
       evil-org-agenda = {
-	generalTwoConfig.":m".evil-org-agenda-mode-map = {
-	  "bn" = "'org-agenda-next-item";
-	  "bI" = "'evil-window-bottom";
-	  "I" = "'org-agenda-do-date-later";
-	  "C-S-i" = "'org-agenda-todo-nextset"; # Original binding "C-S-<right>"
-	  "l" = "'org-agenda-diary-entry";
-	};
+        generalTwoConfig.":m".evil-org-agenda-mode-map = {
+          "bn" = "'org-agenda-next-item";
+          "bI" = "'evil-window-bottom";
+          "I" = "'org-agenda-do-date-later";
+          "C-S-i" = "'org-agenda-todo-nextset"; # Original binding "C-S-<right>"
+          "l" = "'org-agenda-diary-entry";
+        };
       };
     };
   };
@@ -2768,31 +2969,31 @@ Vertico is basically dmenu for emacs. It lists out all the options in a command 
   flake.homeModules.emacs = { ... }: {
     programs.emacs.init = {
       completions = {
-	vertico.enable = true;
-	prescient = true;
-	orderless = true;
+        vertico.enable = true;
+        prescient = true;
+        orderless = true;
       };
       usePackage = {
-	vertico = {
-	  generalTwoConfig.":n".vertico-map = {
-	    "C-o" = "'vertico-scroll-down";
-	    "C-e" = "'vertico-scroll-up";
-	    "j" = "'evil-undo";
-	    "I" = "'vertico-last";
-	    "N" = "'vertico-first";
-	    "B" = "'vertico-last";
-	    "bg" = "'vertico-first";
-	    "G" = "'evil-paste-after";
-	  };
-	  config = ''
-	    <<Emacs Vertico Config>>
-	  '';
-	};
+        vertico = {
+          generalTwoConfig.":n".vertico-map = {
+            "C-o" = "'vertico-scroll-down";
+            "C-e" = "'vertico-scroll-up";
+            "j" = "'evil-undo";
+            "I" = "'vertico-last";
+            "N" = "'vertico-first";
+            "B" = "'vertico-last";
+            "bg" = "'vertico-first";
+            "G" = "'evil-paste-after";
+          };
+          config = ''
+            	    <<Emacs Vertico Config>>
+            	  '';
+        };
 
-	vertico-quick.setopt = {
-	  vertico-quick1 = ''"crst"'';
-	  vertico-quick2 = ''"neia"'';
-	};
+        vertico-quick.setopt = {
+          vertico-quick1 = ''"crst"'';
+          vertico-quick2 = ''"neia"'';
+        };
       };
     };
   };
@@ -2833,35 +3034,35 @@ I took a lot of this from Gavin Freeborn's config
   flake.homeModules.emacs = { ... }: {
     programs.emacs.init = {
       completions = {
-	tempel.enable = true;
-	corfu = {
-	  enable = true;
-	  wantTabComplete = false;
-	  wantRetConfirm = false;
-	  wantMinibuffer = true;
-	  popupInfo = true;
-	};
+        tempel.enable = true;
+        corfu = {
+          enable = true;
+          wantTabComplete = false;
+          wantRetConfirm = false;
+          wantMinibuffer = true;
+          popupInfo = true;
+        };
       };
 
       usePackage = {
-	corfu-quick = {
-	  enable = true;
-	  setopt = {
-	    corfu-quick1 = ''"crst"'';
-	    corfu-quick2 = ''"neia"'';
-	  };
-	};
+        corfu-quick = {
+          enable = true;
+          setopt = {
+            corfu-quick1 = ''"crst"'';
+            corfu-quick2 = ''"neia"'';
+          };
+        };
 
-	cape = {
-	  enable = true;
-	  after = ["corfu"];
-	  config = ''
-	    <<Emacs Cape Config>>
-	  '';
-	};
+        cape = {
+          enable = true;
+          after = [ "corfu" ];
+          config = ''
+            <<Emacs Cape Config>>
+          '';
+        };
       };
     };
-  } ;
+  };
 }
 #+end_src
 
@@ -2879,52 +3080,55 @@ Evil integration is from noctuid & minad
   flake.homeModules.emacs = { ... }: {
     programs.emacs.init = {
       completions.smallExtras = {
-	enable = true;
-	evilConsultLine = true;
+        enable = true;
+        evilConsultLine = true;
       };
       usePackage = {
-	consult = {
-	  ghookf = ["('minibuffer-setup 'consult-initial-narrow)"];
-	  command = ["consult-goto-line" "consult-keep-lines"];
-	  setopt = {
-	    consult-buffer-sources = "'(consult-source-buffer)";
-	    consult-bookmark-narrow = [
-	      '''(?b "Bufler" bufler-workspace-bookmark-handler)''
-	      '''(?f "File" bookmark-default-handler)''
-	      '''(?h "Help" help-bookmark-jump Info-bookmark-jump Man-bookmark-jump woman-bookmark-jump)''
-	      '''(?p "Picture" image-bookmark-jump)''
-	      '''(?d "Docview" doc-view-bookmark-jump)''
-	      '''(?m "Mail" gnus-summary-bookmark-jump)''
-	      '''(?s "Eshell" eshell-bookmark-jump)''
-	      '''(?w "Web" qutebrowser-bookmark-jump eww-bookmark-jump xwidget-webkit-bookmark-jump-handler)''
-	      '''(?v "VC Directory" vc-dir-bookmark-jump)''
-	      '''(nil "Other")''
-	    ];
-	    kill-do-not-save-duplicates = true;
-	  };
-	  generalOne = {
-	    ":n" = {
-	      "M-g" = "'consult-yank-pop"; # orig. evil-paste-pop
-	      "M-E" = "'consult-isearch-history "; # orig. isearch-edit-string
-	      "H-'" = "'evil-collection-consult-mark";
-	      "H--" = "'evil-collection-consult-jump-list";
-	      "H-q" = "'consult-flymake"; # Alternative: consult-flycheck
-	      "[i" = '''("Previous Imenu" . efs/consult-imenu-previous)'';
-	      "]i" = '''("Next Imenu" . efs/consult-imenu-next)'';
-	    } ;
-	    ctl-x-map."C-f" = "'consult-fd";
-	    global-leader."R" = "'consult-recent-file";
-	  };
-	  bindLocal.help-map."M" = "man";
-	  config = ''
-	    <<Emacs Consult Config>>
-	  '';
-	};
+        consult = {
+          ghookf = [ "('minibuffer-setup 'consult-initial-narrow)" ];
+          command = [
+            "consult-goto-line"
+            "consult-keep-lines"
+          ];
+          setopt = {
+            consult-buffer-sources = "'(consult-source-buffer)";
+            consult-bookmark-narrow = [
+              '''(?b "Bufler" bufler-workspace-bookmark-handler)''
+              '''(?f "File" bookmark-default-handler)''
+              '''(?h "Help" help-bookmark-jump Info-bookmark-jump Man-bookmark-jump woman-bookmark-jump)''
+              '''(?p "Picture" image-bookmark-jump)''
+              '''(?d "Docview" doc-view-bookmark-jump)''
+              '''(?m "Mail" gnus-summary-bookmark-jump)''
+              '''(?s "Eshell" eshell-bookmark-jump)''
+              '''(?w "Web" qutebrowser-bookmark-jump eww-bookmark-jump xwidget-webkit-bookmark-jump-handler)''
+              '''(?v "VC Directory" vc-dir-bookmark-jump)''
+              '''(nil "Other")''
+            ];
+            kill-do-not-save-duplicates = true;
+          };
+          generalOne = {
+            ":n" = {
+              "M-g" = "'consult-yank-pop"; # orig. evil-paste-pop
+              "M-E" = "'consult-isearch-history "; # orig. isearch-edit-string
+              "H-'" = "'evil-collection-consult-mark";
+              "H--" = "'evil-collection-consult-jump-list";
+              "H-q" = "'consult-flymake"; # Alternative: consult-flycheck
+              "[i" = '''("Previous Imenu" . efs/consult-imenu-previous)'';
+              "]i" = '''("Next Imenu" . efs/consult-imenu-next)'';
+            };
+            ctl-x-map."C-f" = "'consult-fd";
+            global-leader."R" = "'consult-recent-file";
+          };
+          bindLocal.help-map."M" = "man";
+          config = ''
+            <<Emacs Consult Config>>
+          '';
+        };
 
-	bookmark = {
-	  enable = true;
-	  generalOne."ctl-x-r-map"."S" = "'bookmark-save";
-	};
+        bookmark = {
+          enable = true;
+          generalOne."ctl-x-r-map"."S" = "'bookmark-save";
+        };
       };
     };
   };
@@ -2998,70 +3202,73 @@ avy actions from karthink
 { inputs, ... }:
 
 {
-  perSystem = { pkgs, ... }:
-  let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages.embark = epkgs.callPackage (
-      {
-        org,
-        consult,
-        avy,
-        compat,
-        elpaBuild,
-        fetchurl,
-        lib,
-      }:
-      elpaBuild {
-        pname = "embark";
-        ename = "embark";
-        version = "1.1";
-        src = fetchurl {
-	  url = "https://elpa.gnu.org/packages/embark-1.1.tar";
-	  sha256 = "074ggh7dkr5jdkwcndl6znhkq48jmc62rp7mc6vjidr6yxf8d1rn";
-        };
-        packageRequires = [
-	  org
-	  consult
-	  avy
-	  compat
-        ];
-        meta = {
-	  homepage = "https://elpa.gnu.org/packages/embark.html";
-	  license = lib.licenses.free;
-        };
-      }
-    ) { };
-  };
+  perSystem =
+    { pkgs, ... }:
+    let
+      epkgs = pkgs.emacs.pkgs;
+    in
+    {
+      packages.embark = epkgs.callPackage (
+        {
+          org,
+          consult,
+          avy,
+          compat,
+          elpaBuild,
+          fetchurl,
+          lib,
+        }:
+        elpaBuild {
+          pname = "embark";
+          ename = "embark";
+          version = "1.1";
+          src = fetchurl {
+            url = "https://elpa.gnu.org/packages/embark-1.1.tar";
+            sha256 = "074ggh7dkr5jdkwcndl6znhkq48jmc62rp7mc6vjidr6yxf8d1rn";
+          };
+          packageRequires = [
+            org
+            consult
+            avy
+            compat
+          ];
+          meta = {
+            homepage = "https://elpa.gnu.org/packages/embark.html";
+            license = lib.licenses.free;
+          };
+        }
+      ) { };
+    };
 
   flake.homeModules.emacs = { pkgs, ... }: {
     programs.emacs.init = {
       completions.smallExtras.embark = true;
       usePackage.embark = {
-	general."M-a" = "'embark-dwim";
-	generalTwo.":n".vertico-map."a" = "'embark-act";
-	generalOneConfig = {
-	  embark-file-map = {
-	    "v" = "(my/embark-split-action find-file pertab-vertical-split)";
-	    "h" = "(my/embark-split-action find-file pertab-horizontal-split)";
-	    "t" = "(my/embark-split-action find-file tab-new)";
-	    "o" = "(my/embark-ace-action find-file)";
-	  };
-	  embark-buffer-map = {
-	    "v" = "(my/embark-split-action switch-to-buffer pertab-vertical-split)";
-	    "h" = "(my/embark-split-action switch-to-buffer pertab-horizontal-split)";
-	    "t" = "(my/embark-split-action switch-to-buffer tab-new)";
-	    "o" = "(my/embark-ace-action switch-to-buffer)";
-	  };
-	  embark-bookmark-map = {
-	    "v" = "(my/embark-split-action bookmark-jump pertab-vertical-split)";
-	    "h" = "(my/embark-split-action bookmark-jump pertab-horizontal-split)";
-	    "t" = "(my/embark-split-action bookmark-jump tab-new)";
-	    "o" = "(my/embark-ace-action bookmark-jump)";
-	  };
-	};
-	preface = ''
-	  <<Emacs Embark Preface>>
-	'';
+        general."M-a" = "'embark-dwim";
+        generalTwo.":n".vertico-map."a" = "'embark-act";
+        generalOneConfig = {
+          embark-file-map = {
+            "v" = "(my/embark-split-action find-file pertab-vertical-split)";
+            "h" = "(my/embark-split-action find-file pertab-horizontal-split)";
+            "t" = "(my/embark-split-action find-file tab-new)";
+            "o" = "(my/embark-ace-action find-file)";
+          };
+          embark-buffer-map = {
+            "v" = "(my/embark-split-action switch-to-buffer pertab-vertical-split)";
+            "h" = "(my/embark-split-action switch-to-buffer pertab-horizontal-split)";
+            "t" = "(my/embark-split-action switch-to-buffer tab-new)";
+            "o" = "(my/embark-ace-action switch-to-buffer)";
+          };
+          embark-bookmark-map = {
+            "v" = "(my/embark-split-action bookmark-jump pertab-vertical-split)";
+            "h" = "(my/embark-split-action bookmark-jump pertab-horizontal-split)";
+            "t" = "(my/embark-split-action bookmark-jump tab-new)";
+            "o" = "(my/embark-ace-action bookmark-jump)";
+          };
+        };
+        preface = ''
+          <<Emacs Embark Preface>>
+        '';
       };
     };
   };
@@ -3095,25 +3302,29 @@ Borrowed from Karthinks
 
 **** App Launcher
 #+begin_src nix-ts :tangle modules/emacs/completions/app-launcher.nix
-{ inputs, ... } :
+{ inputs, ... }:
 
 {
-  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages.app-launcher = (epkgs.callPackage
-      epkgs.trivialBuild rec {
-	pname = "app-launcher";
-	version = "current";
-	src = inputs.app-launcher;
-      }
-    );
-  };
+  perSystem =
+    { pkgs, ... }:
+    let
+      epkgs = pkgs.emacs.pkgs;
+    in
+    {
+      packages.app-launcher = (
+        epkgs.callPackage epkgs.trivialBuild rec {
+          pname = "app-launcher";
+          version = "current";
+          src = inputs.app-launcher;
+        }
+      );
+    };
 
   flake.homeModules.emacs = { ... }: {
     programs.emacs.init.usePackage.app-launcher = {
       enable = true;
       defer = true;
-      command = ["app-launcher-run-app"];
+      command = [ "app-launcher-run-app" ];
     };
   };
 }
@@ -3126,24 +3337,24 @@ Borrowed from Karthinks
 
     programs.emacs.init.usePackage = {
       ace-isearch = {
-	enable = true;
-	demand = true;
-	gfhookf = ["('pdf-view-mode (lambda () (ace-isearch-mode -1)))"];
-	generalOneConfig.isearch-mode-map."C-a" = "'avy-isearch";
-	config = "(global-ace-isearch-mode)";
-	setopt = {
-	  ace-isearch-on-evil-mode = true;
-	  ace-isearch-input-length = 5;
-	  ace-isearch-jump-based-on-one-char = false;
-	  isearch-wrap-pause = "'no-ding";
-	  isearch-lazy-count = true;
-	};
+        enable = true;
+        demand = true;
+        gfhookf = [ "('pdf-view-mode (lambda () (ace-isearch-mode -1)))" ];
+        generalOneConfig.isearch-mode-map."C-a" = "'avy-isearch";
+        config = "(global-ace-isearch-mode)";
+        setopt = {
+          ace-isearch-on-evil-mode = true;
+          ace-isearch-input-length = 5;
+          ace-isearch-jump-based-on-one-char = false;
+          isearch-wrap-pause = "'no-ding";
+          isearch-lazy-count = true;
+        };
       };
 
       replace = {
-	enable = true;
-	defer = true;
-	generalTwoConfig.":n".occur-mode-map."w" = "'occur-edit-mode";
+        enable = true;
+        defer = true;
+        generalTwoConfig.":n".occur-mode-map."w" = "'occur-edit-mode";
       };
     };
   };
@@ -3153,34 +3364,39 @@ Borrowed from Karthinks
 **** Ezf
 An alternative to fzf.
 #+begin_src nix-ts :tangle modules/emacs/completions/ezf.nix :noweb yes
-{ inputs, ... } :
+{ inputs, ... }:
 {
-  perSystem = { pkgs, self', ... }: let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages = {
-      emacs-ezf = (epkgs.callPackage
-	epkgs.trivialBuild rec {
-	  pname = "ezf";
-	  version = "current";
-	  src = inputs.ezf;
-	}
-      );
-      ezf = pkgs.writeShellScriptBin "ezf" ''
-	<<Ezf>>
-      '';
-    };
-  };
-
-  flake.homeModules.emacs = { ... }:
-
-  {
-    programs.emacs.init.usePackage = {
-      ezf = {
-	enable = true;
-	deferIncrementally = true;
+  perSystem =
+    { pkgs, self', ... }:
+    let
+      epkgs = pkgs.emacs.pkgs;
+    in
+    {
+      packages = {
+        emacs-ezf = (
+          epkgs.callPackage epkgs.trivialBuild rec {
+            pname = "ezf";
+            version = "current";
+            src = inputs.ezf;
+          }
+        );
+        ezf = pkgs.writeShellScriptBin "ezf" ''
+          <<Ezf>>
+        '';
       };
     };
-  };
+
+  flake.homeModules.emacs =
+    { ... }:
+
+    {
+      programs.emacs.init.usePackage = {
+        ezf = {
+          enable = true;
+          deferIncrementally = true;
+        };
+      };
+    };
 }
 #+end_src
 
@@ -3239,10 +3455,10 @@ Helpful gives more information, & which-key tells what keybinds you have availab
     programs.emacs.init = {
       keybinds.whichKey.enable = true;
       usePackage = {
-	helpful = {
-	  enable = true;
-	  defer = true;
-	  generalOne = {
+        helpful = {
+          enable = true;
+          defer = true;
+          generalOne = {
             global-leader = {
               "hf" = "'helpful-function";
               "hs" = "'helpful-symbol";
@@ -3257,28 +3473,34 @@ Helpful gives more information, & which-key tells what keybinds you have availab
               "v" = "'helpful-variable";
             };
             embark-symbol-map."h" = "'helpful-symbol";
-	  };
-	};
+          };
+        };
 
-	info = {
-	  enable = true;
-	  config = ''
-	    <<Emacs Info Config>>
-	  '';
-	};
+        info = {
+          enable = true;
+          config = ''
+            <<Emacs Info Config>>
+          '';
+        };
 
-	evil-owl = {
-	  enable = true;
-	  setopt = {
-	    evil-owl-max-string-length = 50;
-	    evil-owl-extra-posframe-args = [ "':width" 50 "':height" 20 ];
-	    evil-owl-display-method = "'posframe";
-	  };
-	  ghookf = ["('evil-mode 'evil-owl-mode)"];
-	};
+        evil-owl = {
+          enable = true;
+          setopt = {
+            evil-owl-max-string-length = 50;
+            evil-owl-extra-posframe-args = [
+              "':width"
+              50
+              "':height"
+              20
+            ];
+            evil-owl-display-method = "'posframe";
+          };
+          ghookf = [ "('evil-mode 'evil-owl-mode)" ];
+        };
 
-	emacs.generalOne.help-map."A" = ''`("Arch Wiki" . ,(cmd! (async-shell-command "${lib.getExe pkgs.wiki}")))'';
-      } ;
+        emacs.generalOne.help-map."A" =
+          ''`("Arch Wiki" . ,(cmd! (async-shell-command "${lib.getExe pkgs.wiki}")))'';
+      };
     };
   };
 }
@@ -3313,25 +3535,29 @@ All of this config was origally stolen from Karthinks. I don't think any of the 
 #+begin_src nix-ts :tangle modules/emacs/repeaters.nix :noweb yes
 { inputs, ... }:
 {
-  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages.repeaters = (epkgs.callPackage
-      epkgs.trivialBuild rec {
-	pname = "repeaters";
-	version = "current";
-	src = inputs.repeaters;
-      }
-    );
-  };
+  perSystem =
+    { pkgs, ... }:
+    let
+      epkgs = pkgs.emacs.pkgs;
+    in
+    {
+      packages.repeaters = (
+        epkgs.callPackage epkgs.trivialBuild rec {
+          pname = "repeaters";
+          version = "current";
+          src = inputs.repeaters;
+        }
+      );
+    };
 
   flake.homeModules.emacs = { ... }: {
     programs.emacs = {
       extraPackages = epkgs: [ epkgs.repeaters ];
       init = {
-	prelude = ''
-	  <<Repeaters Prelude>>
-	'';
-	usePackage.evil-collection.setopt.evil-collection-unimpaired-want-repeat-mode-integration = true;
+        prelude = ''
+          <<Repeaters Prelude>>
+        '';
+        usePackage.evil-collection.setopt.evil-collection-unimpaired-want-repeat-mode-integration = true;
       };
     };
   };
@@ -3361,7 +3587,7 @@ All of this config was origally stolen from Karthinks. I don't think any of the 
     programs.emacs = {
       extraPackages = epkgs: [ epkgs.pretty-hydra ];
       init.prelude = ''
-	<<Hydra Prelude>>
+        <<Hydra Prelude>>
       '';
     };
   };
@@ -3388,10 +3614,10 @@ All of this config was origally stolen from Karthinks. I don't think any of the 
   flake.homeModules.emacs = { ... }: {
     programs.emacs.init.usePackage.proced = {
       enable = true;
-      command = ["proced"];
+      command = [ "proced" ];
       generalTwoConfig.":n".proced-mode-map = {
-	"j" = "'proced-unmark";
-	"k" = "'proced-send-signal";
+        "j" = "'proced-unmark";
+        "k" = "'proced-send-signal";
       };
     };
   };
@@ -3404,19 +3630,20 @@ Stolen from EDNC's github page.
 EDNC does the same thing as dunst. It will pop up any new notifications inside of a text buffer.
 #+begin_src nix-ts :tangle modules/notifications.nix :noweb yes
 {
-  flake.homeModules.notifications = { ... }:
-  {
-    programs.emacs.init.usePackage.ednc = {
-      enable = true;
-      gfhook = [
-	"('ednc-notification-presentation-functions #'show-notification-in-echo-area)"
-      ];
-      deferIncrementally = true;
-      config = ''
-	<<Emacs EDNC Config>>
-      '';
+  flake.homeModules.notifications =
+    { ... }:
+    {
+      programs.emacs.init.usePackage.ednc = {
+        enable = true;
+        gfhook = [
+          "('ednc-notification-presentation-functions #'show-notification-in-echo-area)"
+        ];
+        deferIncrementally = true;
+        config = ''
+          <<Emacs EDNC Config>>
+        '';
+      };
     };
-  };
 }
 #+end_src
 
@@ -3436,72 +3663,108 @@ How to add a latex package
 #+begin_src nix-ts :tangle modules/writing/org.nix :noweb yes
 { inputs, ... }:
 {
-  flake.homeModules.writing = { config, pkgs, ... }:
+  flake.homeModules.writing =
+    { config, pkgs, ... }:
 
-  {
-    home.packages = with pkgs; [ libreoffice-fresh ];
+    {
+      home.packages = with pkgs; [ libreoffice-fresh ];
 
-    programs.emacs.init = {
-      writing.denote = {
-	 enable = true;
-	 sequence = true;
-      };
-      completions.tempel.templates.org-mode.exp = ''"#+export: " q'';
-      ide.languages.org = {
-        enable = true;
-        aesthetics = {
+      programs.emacs.init = {
+        writing.denote = {
           enable = true;
-          headerFont = config.stylix.fonts.sansSerif.name;
+          sequence = true;
         };
-        captureTemplates.enable = true;
-      };
+        completions.tempel.templates.org-mode.exp = ''"#+export: " q'';
+        ide.languages.org = {
+          enable = true;
+          aesthetics = {
+            enable = true;
+            headerFont = config.stylix.fonts.sansSerif.name;
+          };
+          captureTemplates.enable = true;
+        };
 
-      usePackage = {
-	org = {
-	  gfhookf = [''('org-mode (list 'ispell-minor-mode
-	    (local! completion-at-point-functions (list (cape-capf-super
-                                                 #'tempel-complete
-						 #'cape-file)
-                                                #'pcomplete-completions-at-point
-						#'ob-gptel-capf
-						#'cape-tex
-						#'cape-elisp-block
-						#'cape-dict
-                                                #'cape-dabbrev))))''
-	  ];
-	  custom.org-directory = ''"~/doc"'';
-	  setopt = {
-	    org-export-with-section-numbers = false;
-	    org-export-with-toc = false;
-	  };
-	  generalTwoConfig.local-leader.org-mode-map = {
-	    "a" = '''("avy" . avy-org-goto-heading-timer)'';
-	    "e" = "'smart-export";
-	  };
+        usePackage = {
+          org = {
+            gfhookf = [
+              ''
+                ('org-mode (list 'ispell-minor-mode
+                	    (local! completion-at-point-functions (list (cape-capf-super
+                                                                           #'tempel-complete
+                						           #'cape-file)
+                                                                        #'pcomplete-completions-at-point
+                						        #'ob-gptel-capf
+                						        #'cape-tex
+                						        #'cape-elisp-block
+                						        #'cape-dict
+                                                                        #'cape-dabbrev))))''
+            ];
+            custom.org-directory = ''"~/doc"'';
+            setopt = {
+              org-export-with-section-numbers = false;
+              org-export-with-toc = false;
+            };
+            generalTwoConfig.local-leader.org-mode-map = {
+              "a" = '''("avy" . avy-org-goto-heading-timer)'';
+              "e" = "'smart-export";
+            };
 
-	  config = ''
-	    <<Emacs Org Config>>
-	  '' ;
-	};
+            config = ''
+              	    <<Emacs Org Config>>
+              	  '';
+          };
 
-	org-auto-tangle = {
-	  enable = true;
-	  ghookf = ["('org-mode 'org-auto-tangle-mode)"];
-	};
+          org-auto-tangle = {
+            enable = true;
+            ghookf = [ "('org-mode 'org-auto-tangle-mode)" ];
+          };
 
-	denote.setopt.denote-known-keywords = [ ''"quotes"'' ''"chem"'' ''"emacs"'' ''"java"'' ''"physics"'' ''"calculus"'' ''"minecraft"'' ''"de"'' ''"proofs"'' ''"csse230"'' ''"os"'' ''"databases"'' ''"scifi"'' ''"softwarerequirements"'' ''"anthropology"'' ''"theoryofcomputation"'' ''"parallelcomp"'' ''"cybersecurity"'' ''"probstats"'' ''"scheme"'' ''"dreams"'' ''"softwaredevelopment"'' ''"ethics"'' ''"plp"'' ''"malwareanalysis"'' ''"bio"'' ''"ai"'' ''"resolve"'' ''"psychology"'' ''"algorithmanalysis"'' ''"music"'' ''"people"''];
+          denote.setopt.denote-known-keywords = [
+            ''"quotes"''
+            ''"chem"''
+            ''"emacs"''
+            ''"java"''
+            ''"physics"''
+            ''"calculus"''
+            ''"minecraft"''
+            ''"de"''
+            ''"proofs"''
+            ''"csse230"''
+            ''"os"''
+            ''"databases"''
+            ''"scifi"''
+            ''"softwarerequirements"''
+            ''"anthropology"''
+            ''"theoryofcomputation"''
+            ''"parallelcomp"''
+            ''"cybersecurity"''
+            ''"probstats"''
+            ''"scheme"''
+            ''"dreams"''
+            ''"softwaredevelopment"''
+            ''"ethics"''
+            ''"plp"''
+            ''"malwareanalysis"''
+            ''"bio"''
+            ''"ai"''
+            ''"resolve"''
+            ''"psychology"''
+            ''"algorithmanalysis"''
+            ''"music"''
+            ''"people"''
+          ];
 
-	biblio = {
-	  enable = true;
-	  generalOne.global-leader = {
-	    "ob" = '''(:ignore t :which-key "biblio")'';
-	    "obl" = "'biblio-lookup";
-	    "obi" = "'biblio-doi-insert-bibtex";
-	  };
-	};
+          biblio = {
+            enable = true;
+            generalOne.global-leader = {
+              "ob" = '''(:ignore t :which-key "biblio")'';
+              "obl" = "'biblio-lookup";
+              "obi" = "'biblio-doi-insert-bibtex";
+            };
+          };
+        };
       };
     };
-  };
 }
 #+end_src
 
@@ -3536,30 +3799,31 @@ No idea what the rest of this is for.
 
 #+begin_src nix-ts :tangle modules/writing/latex.nix
 {
-  flake.homeModules.writing = { pkgs, ... }:
-  {
-    home.packages = with pkgs; [ texlive.combined.scheme-full ];
-    programs.emacs.init = {
-      ide.languages.latex = {
-	enable = true;
-	magicLatexBuffer = true;
-	cdlatex = true;
-      };
-      usePackage = {
-	cdlatex.generalTwoConfig.":i" = {
-	  cdlatex-mode-map."TAB" = "'cdlatex-tab";
-	  org-cdlatex-mode-map."TAB" = "'cdlatex-tab";
-	};
+  flake.homeModules.writing =
+    { pkgs, ... }:
+    {
+      home.packages = with pkgs; [ texlive.combined.scheme-full ];
+      programs.emacs.init = {
+        ide.languages.latex = {
+          enable = true;
+          magicLatexBuffer = true;
+          cdlatex = true;
+        };
+        usePackage = {
+          cdlatex.generalTwoConfig.":i" = {
+            cdlatex-mode-map."TAB" = "'cdlatex-tab";
+            org-cdlatex-mode-map."TAB" = "'cdlatex-tab";
+          };
 
-	tex.generalTwoConfig.local-leader.LaTeX-mode-map."e" = "'TeX-command-run-all";
+          tex.generalTwoConfig.local-leader.LaTeX-mode-map."e" = "'TeX-command-run-all";
 
-	evil-tex.generalOneConfig.":ov" = {
-	  "t" = "evil-tex-outer-text-objects-map";
-	  "s" = "evil-tex-inner-text-objects-map";
-	};
+          evil-tex.generalOneConfig.":ov" = {
+            "t" = "evil-tex-outer-text-objects-map";
+            "s" = "evil-tex-inner-text-objects-map";
+          };
+        };
       };
     };
-  };
 }
 #+end_src
 
@@ -3570,21 +3834,21 @@ No idea what the rest of this is for.
     programs.emacs.init = {
       ide.languages.markdown.enable = true;
       usePackage.markdown = {
-	generalOneConfig.markdown-mode-map."C-c C-e" = "'markdown-do";
-	gfhookf = ["('markdown-mode 'efs/markdown-font-setup)"];
-	setopt = {
-	  markdown-command = ''"multimarkdown"'';
-	  markdown-hide-markup = true;
-	};
-	generalTwoConfig = {
-	  ":nm".gfm-mode-map = {
-	    "[h" = "'markdown-previous-visible-heading";
-	    "]h" = "'markdown-next-visible-heading";
-	  };
-	};
-	preface = ''
-	  <<Emacs Markdown Init>>
-	'';
+        generalOneConfig.markdown-mode-map."C-c C-e" = "'markdown-do";
+        gfhookf = [ "('markdown-mode 'efs/markdown-font-setup)" ];
+        setopt = {
+          markdown-command = ''"multimarkdown"'';
+          markdown-hide-markup = true;
+        };
+        generalTwoConfig = {
+          ":nm".gfm-mode-map = {
+            "[h" = "'markdown-previous-visible-heading";
+            "]h" = "'markdown-next-visible-heading";
+          };
+        };
+        preface = ''
+          <<Emacs Markdown Init>>
+        '';
       };
     };
   };
@@ -3607,48 +3871,50 @@ No idea what the rest of this is for.
 *** Tools
 #+begin_src nix-ts :tangle modules/writing/tools.nix
 {
-  flake.homeModules.writing = { pkgs, ... }:
-  {
-    home.packages = with pkgs; [
-      hunspell
-      hunspellDicts.en-us-large
-    ];
-    programs.emacs.init = {
-      tools = {
-	nov = true;
-	pdf = true;
-      };
-      writing.citar = true;
-      completions.tempel.templates.org-mode.ci = ''"* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q'';
-      usePackage = {
-	flyspell = {
-	  enable = true;
-	  ghookf = [
-	    "('text-mode 'flyspell-mode)"
-	    "('prog-mode 'flyspell-prog-mode)"
-	  ];
-	};
+  flake.homeModules.writing =
+    { pkgs, ... }:
+    {
+      home.packages = with pkgs; [
+        hunspell
+        hunspellDicts.en-us-large
+      ];
+      programs.emacs.init = {
+        tools = {
+          nov = true;
+          pdf = true;
+        };
+        writing.citar = true;
+        completions.tempel.templates.org-mode.ci =
+          ''"* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q'';
+        usePackage = {
+          flyspell = {
+            enable = true;
+            ghookf = [
+              "('text-mode 'flyspell-mode)"
+              "('prog-mode 'flyspell-prog-mode)"
+            ];
+          };
 
-	pdf-tools = {
-	  generalOneConfig.pdf-view-mode-map."C-s" = "'search-forward";
-	  gfhookf = ["('pdf-view-mode 'pdf-view-midnight-minor-mode)"];
-	};
+          pdf-tools = {
+            generalOneConfig.pdf-view-mode-map."C-s" = "'search-forward";
+            gfhookf = [ "('pdf-view-mode 'pdf-view-midnight-minor-mode)" ];
+          };
 
-	evil-collection-pdf = {
-	  defer = true;
-	  enable = true;
-	  generalTwoConfig.":n".pdf-view-mode-map = {
-	    "C-e" = "'pdf-view-scroll-up-or-next-page";
-	    "E" = "'pdf-view-scroll-up-or-next-page";
-	    "C-o" = "'pdf-view-scroll-down-or-previous-page";
-	    "O" = "'pdf-view-scroll-down-or-previous-page";
-	  };
-	};
+          evil-collection-pdf = {
+            defer = true;
+            enable = true;
+            generalTwoConfig.":n".pdf-view-mode-map = {
+              "C-e" = "'pdf-view-scroll-up-or-next-page";
+              "E" = "'pdf-view-scroll-up-or-next-page";
+              "C-o" = "'pdf-view-scroll-down-or-previous-page";
+              "O" = "'pdf-view-scroll-down-or-previous-page";
+            };
+          };
 
-        citar.setopt.citar-bibliography = [''"~/doc/uni.bib"''];
+          citar.setopt.citar-bibliography = [ ''"~/doc/uni.bib"'' ];
+        };
       };
     };
-  };
 }
 #+end_src
 
@@ -3658,28 +3924,29 @@ This is a pinentry program (alternative to pinentry-dmenu)
 When you're prompted for your gpg password, the place for entry will be your modeline.
 #+begin_src nix-ts :tangle modules/passwords/pinentry.nix
 {
-  flake.homeModules.passwordManagement = { ... }:
-  {
-    home.file = {
-      ".local/share/gnupg/gpg-agent.conf".text = ''
-	pinentry-program /usr/bin/pinentry-emacs
-        allow-loopback-pinentry
-        allow-emacs-pinentry
-        default-cache-ttl 600
-        max-cache-ttl 7200
-        enable-ssh-support
-      '';
-      ".local/share/gnupg/gpg.conf".text = ''
-	use-agent
-      '';
+  flake.homeModules.passwordManagement =
+    { ... }:
+    {
+      home.file = {
+        ".local/share/gnupg/gpg-agent.conf".text = ''
+          pinentry-program /usr/bin/pinentry-emacs
+          allow-loopback-pinentry
+          allow-emacs-pinentry
+          default-cache-ttl 600
+          max-cache-ttl 7200
+          enable-ssh-support
+        '';
+        ".local/share/gnupg/gpg.conf".text = ''
+          use-agent
+        '';
+      };
+      programs.emacs.init.usePackage.pinentry = {
+        enable = true;
+        setopt.epa-pinentry-mode = "'loopback";
+        deferIncrementally = true;
+        config = "(pinentry-start)";
+      };
     };
-    programs.emacs.init.usePackage.pinentry = {
-	enable = true;
-	setopt.epa-pinentry-mode = "'loopback";
-	deferIncrementally = true;
-	config = "(pinentry-start)";
-    };
-  };
 }
 #+end_src
 
@@ -3690,39 +3957,40 @@ Everything is bound to SPC p
 #+NAME: Emacs Pass
 #+begin_src nix-ts :tangle modules/passwords/pass.nix
 {
-  flake.homeModules.passwordManagement = { pkgs, ... }:
-  {
-    home.packages = with pkgs; [ (pass.withExtensions (exts:
-    with exts; [ pass-otp ]
-    ))];
-    programs.emacs.init.usePackage = {
-      password-store = {
-	enable = true;
-	defer = true;
-	generalOne.global-leader = {
-	  "p" = '''(:ignore t :which-key "pass")'';
-	  "py" = '''("yank" . password-store-copy)'';
-	  "pi" = '''("insert" . password-store-insert)'';
-	  "pg" = '''("generate" . password-store-generate)'';
-	  "pe" = '''("edit" . password-store-edit)'';
-	  "pd" = '''("delete" . password-store-delete)'';
-	};
-	extraConfig = ":autoload pass-entries password-store-list";
-      };
+  flake.homeModules.passwordManagement =
+    { pkgs, ... }:
+    {
+      home.packages = with pkgs; [
+        (pass.withExtensions (exts: with exts; [ pass-otp ]))
+      ];
+      programs.emacs.init.usePackage = {
+        password-store = {
+          enable = true;
+          defer = true;
+          generalOne.global-leader = {
+            "p" = '''(:ignore t :which-key "pass")'';
+            "py" = '''("yank" . password-store-copy)'';
+            "pi" = '''("insert" . password-store-insert)'';
+            "pg" = '''("generate" . password-store-generate)'';
+            "pe" = '''("edit" . password-store-edit)'';
+            "pd" = '''("delete" . password-store-delete)'';
+          };
+          extraConfig = ":autoload pass-entries password-store-list";
+        };
 
-      password-store-otp = {
-	enable = true;
-	defer = true;
-	generalOne.global-leader."po" = '''("copy otp" . password-store-otp-token-copy)'';
-      };
+        password-store-otp = {
+          enable = true;
+          defer = true;
+          generalOne.global-leader."po" = '''("copy otp" . password-store-otp-token-copy)'';
+        };
 
-      auth-source-pass = {
-	enable = true;
-	after = ["magit"];
-	config = "(auth-source-pass-enable)";
+        auth-source-pass = {
+          enable = true;
+          after = [ "magit" ];
+          config = "(auth-source-pass-enable)";
+        };
       };
     };
-  };
 }
 #+end_src
 
@@ -3733,108 +4001,115 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
 { inputs, ... }:
 
 {
-  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
-    roll = (epkgs.callPackage
-	epkgs.trivialBuild rec {
-	pname = "roll";
-	version = "current";
-	src = inputs.roll;
-	});
-  in {
-    packages = {
-      roll = roll;
-      pertab = (epkgs.callPackage
-	epkgs.trivialBuild rec {
-	pname = "pertab";
-	version = "current";
-	src = inputs.pertab;
-
-	propagatedUserEnvPkgs = with epkgs; [
-	  elwm
-	  roll
-	];
-
-	buildInputs = propagatedUserEnvPkgs;
-	}
+  perSystem =
+    { pkgs, ... }:
+    let
+      epkgs = pkgs.emacs.pkgs;
+      roll = (
+        epkgs.callPackage epkgs.trivialBuild rec {
+          pname = "roll";
+          version = "current";
+          src = inputs.roll;
+        }
       );
+    in
+    {
+      packages = {
+        roll = roll;
+        pertab = (
+          epkgs.callPackage epkgs.trivialBuild rec {
+            pname = "pertab";
+            version = "current";
+            src = inputs.pertab;
+
+            propagatedUserEnvPkgs = with epkgs; [
+              elwm
+              roll
+            ];
+
+            buildInputs = propagatedUserEnvPkgs;
+          }
+        );
+      };
     };
-  };
 
-  flake.homeModules.exwm = { ... }:
-  let pertabExtension = {
-    enable = true;
-    package = epkgs: epkgs.pertab;
-    after = ["pertab"];
-  };
-  in
-  {
-    programs.emacs.init.usePackage = {
-      tab-bar = {
-	enable = true;
-	config = ''
-	  <<Tab Bar Config>>
-	'';
-	ghookf = ["('exwm-init 'tab-bar-mode)"];
-	general."s-u" = "'tab-bar-hydra/body";
-	setopt.tab-bar-select-restore-windows = false;
-	extraConfig = ''
-	  :pretty-hydra
-            ((:color amaranth)
-             ("Navigation"
-              (("e" #'evil-tab-next "next")
-               ("o" #'tab-bar-switch-to-prev-tab "prev")
-               ("v" #'tab-recent "recent")
-               ("b" #'tab-bar-lost-commands-switch-to-first-tab "first")
-               ("B" #'tab-bar-lost-commands-switch-to-last-tab "last")
-               ("/" #'efs/tab-bar-select "search"))
-              "Creation/Deletion"
-              (("s" #'tab-new "new")
-               ("k" #'tab-close "close")
-               ("r" #'tab-rename "rename")
-               ("j" #'tab-undo "undo"))
-              "Groups"
-              (("g" #'tab-group "add to group")
-               ("K" #'tab-close-group "close group"))
-              "Organization"
-              (("E" #'tab-bar-lost-commands-move-tab-forward "forward")
-               ("O" #'tab-bar-lost-commands-move-tab-backward "backward"))
-              "Exit"
-              (("<return>" nil "" :color blue)
-               ("<escape>" nil "" :color blue))))
-	'';
+  flake.homeModules.exwm =
+    { ... }:
+    let
+      pertabExtension = {
+        enable = true;
+        package = epkgs: epkgs.pertab;
+        after = [ "pertab" ];
       };
+    in
+    {
+      programs.emacs.init.usePackage = {
+        tab-bar = {
+          enable = true;
+          config = ''
+            <<Tab Bar Config>>
+          '';
+          ghookf = [ "('exwm-init 'tab-bar-mode)" ];
+          general."s-u" = "'tab-bar-hydra/body";
+          setopt.tab-bar-select-restore-windows = false;
+          extraConfig = ''
+            	  :pretty-hydra
+                  ((:color amaranth)
+                   ("Navigation"
+                    (("e" #'evil-tab-next "next")
+                     ("o" #'tab-bar-switch-to-prev-tab "prev")
+                     ("v" #'tab-recent "recent")
+                     ("b" #'tab-bar-lost-commands-switch-to-first-tab "first")
+                     ("B" #'tab-bar-lost-commands-switch-to-last-tab "last")
+                     ("/" #'efs/tab-bar-select "search"))
+                    "Creation/Deletion"
+                    (("s" #'tab-new "new")
+                     ("k" #'tab-close "close")
+                     ("r" #'tab-rename "rename")
+                     ("j" #'tab-undo "undo"))
+                    "Groups"
+                    (("g" #'tab-group "add to group")
+                     ("K" #'tab-close-group "close group"))
+                    "Organization"
+                    (("E" #'tab-bar-lost-commands-move-tab-forward "forward")
+                     ("O" #'tab-bar-lost-commands-move-tab-backward "backward"))
+                    "Exit"
+                    (("<return>" nil "" :color blue)
+                     ("<escape>" nil "" :color blue))))
+            	'';
+        };
 
-      tab-bar-lost-commands = {
-	enable = true;
-	command = [
-	  "tab-bar-lost-commands-move-tab-forward"
-	  "tab-bar-lost-commands-move-tab-backward"
-	  "tab-bar-lost-commands-switch-to-first-tab"
-	  "tab-bar-lost-commands-switch-to-last-tab"
-	];
+        tab-bar-lost-commands = {
+          enable = true;
+          command = [
+            "tab-bar-lost-commands-move-tab-forward"
+            "tab-bar-lost-commands-move-tab-backward"
+            "tab-bar-lost-commands-switch-to-first-tab"
+            "tab-bar-lost-commands-switch-to-last-tab"
+          ];
+        };
+
+        pertab = {
+          enable = true;
+          ghookf = [ "('tab-bar-mode 'pertab-mode)" ];
+          setopt = {
+            pertab-default-layout = "'master-stack";
+            pertab-next-buffer-function = "'bufler-cycle-buffers-forward";
+            pertab-previous-buffer-function = "'bufler-cycle-buffers-backward";
+            roll-debug-enabled = false;
+          };
+          gfhookf = [
+            "('(pertab-follow-enter pertab-scroll-enter) (lambda () (golden-ratio-mode -1)))"
+            "('(pertab-follow-exit pertab-scroll-exit) (lambda () (golden-ratio-mode +1)))"
+          ];
+        };
+
+        pertab-monocle = pertabExtension;
+        pertab-follow = pertabExtension;
+        pertab-master-stack = pertabExtension;
+        pertab-scroll = pertabExtension;
       };
-
-      pertab = {
-	enable = true;
-	ghookf = ["('tab-bar-mode 'pertab-mode)"];
-	setopt = {
-	  pertab-default-layout  = "'master-stack";
-	  pertab-next-buffer-function = "'bufler-cycle-buffers-forward";
-	  pertab-previous-buffer-function = "'bufler-cycle-buffers-backward";
-	  roll-debug-enabled = false;
-	};
-	gfhookf = [
-	  "('(pertab-follow-enter pertab-scroll-enter) (lambda () (golden-ratio-mode -1)))"
-	  "('(pertab-follow-exit pertab-scroll-exit) (lambda () (golden-ratio-mode +1)))"
-	];
-      };
-
-      pertab-monocle = pertabExtension;
-      pertab-follow = pertabExtension;
-      pertab-master-stack = pertabExtension;
-      pertab-scroll = pertabExtension;
     };
-  } ;
 }
 #+end_src
 
@@ -3852,27 +4127,28 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
 { ... }:
 
 {
-  flake.homeModules.exwm = { ... }:
-  {
-    programs.emacs.init.usePackage.buffer-terminator = {
-      enable = true;
-      preface = ''
-	<<Buffer Terminator Preface>>
-      '';
-      ghookf = ["('on-first-buffer 'buffer-terminator-mode)"];
-      setopt.buffer-terminator-rules-alist = [
-	'''(kill-buffer-name-regexp . "magit-process:.\\*$")''
-	'''(kill-buffer-name-regexp . "magit-diff:.\\*$")''
-	'''(keep-buffer-name . ("tasks.org"))''
-	"'(keep-buffer-property . special)"
-	"'(keep-buffer-property . process)"
-	"'(keep-buffer-property . visible)"
-	"'(call-function . efs/check-for-roll-buffers)"
-	"'(kill-buffer-property . inactive)"
-	"'(return . :keep)"
-      ];
+  flake.homeModules.exwm =
+    { ... }:
+    {
+      programs.emacs.init.usePackage.buffer-terminator = {
+        enable = true;
+        preface = ''
+          <<Buffer Terminator Preface>>
+        '';
+        ghookf = [ "('on-first-buffer 'buffer-terminator-mode)" ];
+        setopt.buffer-terminator-rules-alist = [
+          '''(kill-buffer-name-regexp . "magit-process:.\\*$")''
+          '''(kill-buffer-name-regexp . "magit-diff:.\\*$")''
+          '''(keep-buffer-name . ("tasks.org"))''
+          "'(keep-buffer-property . special)"
+          "'(keep-buffer-property . process)"
+          "'(keep-buffer-property . visible)"
+          "'(call-function . efs/check-for-roll-buffers)"
+          "'(kill-buffer-property . inactive)"
+          "'(return . :keep)"
+        ];
+      };
     };
-  };
 }
 #+end_src
 
@@ -3893,44 +4169,45 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
 *** Javelin
 #+begin_src nix-ts :tangle modules/window-manager/javelin.nix
 {
-  flake.homeModules.exwm = { lib, ... }:
-  {
-    programs.emacs.init.usePackage = {
-      javelin = {
-	enable = true;
-	gfhookf = ["('kill-emacs 'javelin-clear-all)"];
-	custom.javelin-disable-confirmation = true;
-	general = {
-	  "s-1" = "'javelin-go-to-1";
-	  "s-2" = "'javelin-go-to-2";
-	  "s-3" = "'javelin-go-to-3";
-	  "s-4" = "'javelin-go-to-4";
-	  "s-5" = "'javelin-go-to-5";
-	  "s-6" = "'javelin-go-to-6";
-	  "s-7" = "'javelin-go-to-7";
-	  "s-8" = "'javelin-go-to-8";
-	  "s-9" = "'javelin-go-to-9";
-	  "s--" = "'javelin-toggle-quick-menu";
-	  "s-h" = "'javelin-add-file";
-	  "s-H" = "'javelin-clear";
-	};
+  flake.homeModules.exwm =
+    { lib, ... }:
+    {
+      programs.emacs.init.usePackage = {
+        javelin = {
+          enable = true;
+          gfhookf = [ "('kill-emacs 'javelin-clear-all)" ];
+          custom.javelin-disable-confirmation = true;
+          general = {
+            "s-1" = "'javelin-go-to-1";
+            "s-2" = "'javelin-go-to-2";
+            "s-3" = "'javelin-go-to-3";
+            "s-4" = "'javelin-go-to-4";
+            "s-5" = "'javelin-go-to-5";
+            "s-6" = "'javelin-go-to-6";
+            "s-7" = "'javelin-go-to-7";
+            "s-8" = "'javelin-go-to-8";
+            "s-9" = "'javelin-go-to-9";
+            "s--" = "'javelin-toggle-quick-menu";
+            "s-h" = "'javelin-add-file";
+            "s-H" = "'javelin-clear";
+          };
+        };
+        exwm.custom.exwm-input-prefix-keys = lib.mkForce [
+          '''?\s-1''
+          '''?\s-2''
+          '''?\s-3''
+          '''?\s-4''
+          '''?\s-5''
+          '''?\s-6''
+          '''?\s-7''
+          '''?\s-8''
+          '''?\s-9''
+          '''?\s--''
+          '''?\s-h''
+          '''?\s-H''
+        ];
       };
-      exwm.custom.exwm-input-prefix-keys = lib.mkForce [
-	'''?\s-1''
-	'''?\s-2''
-	'''?\s-3''
-	'''?\s-4''
-	'''?\s-5''
-	'''?\s-6''
-	'''?\s-7''
-	'''?\s-8''
-	'''?\s-9''
-	'''?\s--''
-	'''?\s-h''
-	'''?\s-H''
-      ];
     };
-  };
 }
 #+end_src
 
@@ -3938,54 +4215,55 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
 Bufler is the other half of tab bar. It lets us automatically narrow buffers down to a given workspace
 #+begin_src nix-ts :tangle modules/window-manager/bufler.nix :noweb yes
 {
-  flake.homeModules.exwm = { ... }:
+  flake.homeModules.exwm =
+    { ... }:
 
-  {
-    programs.emacs.init.usePackage = {
-      bufler = {
-	enable = true;
-	ghookf = ["('tab-bar-mode 'bufler-mode)"];
-	general = {
-	  "s-b" = "'bufler-hydra/body";
-	  "s-f" = "'bufler-workspace-focus-buffer";
-	  "s-F" = "'bufler-workspace-set";
-	};
-	generalTwo."'normal".evil-collection-unimpaired-mode-map = {
-	  "]b" = "'bufler-cycle-buffers-forward";
-	  "[b" = "'bufler-cycle-buffers-backward";
-	};
-	custom.bufler-groups = ''
-	  <<Emacs Bufler Defgroups>>
-	'' ;
-	init = ''
-	  <<Emacs Bufler Init>>
-	'';
-	extraConfig = ''
-	  :pretty-hydra
-          ((:color amaranth)
-            ("Move"
-             (("o" bufler-cycle-buffers-backward "prev")
-              ("e" bufler-cycle-buffers-forward "next"))
-             "Tricks"
-             (("/" consult-buffer "search" :color blue :exit t)
-              ("i" ibuffer "list (ibuffer)" :color blue :exit t)
-              ("k" kill-current-buffer "delete"))
-             "Quit"
-             (("<escape>" nil "quit" :color blue :exit t)
-              ("<return>" nil "quit" :color blue :exit t))))
-	'';
-	config = ''
-	  <<Emacs Bufler Config>>
-	'';
-      } ;
+    {
+      programs.emacs.init.usePackage = {
+        bufler = {
+          enable = true;
+          ghookf = [ "('tab-bar-mode 'bufler-mode)" ];
+          general = {
+            "s-b" = "'bufler-hydra/body";
+            "s-f" = "'bufler-workspace-focus-buffer";
+            "s-F" = "'bufler-workspace-set";
+          };
+          generalTwo."'normal".evil-collection-unimpaired-mode-map = {
+            "]b" = "'bufler-cycle-buffers-forward";
+            "[b" = "'bufler-cycle-buffers-backward";
+          };
+          custom.bufler-groups = ''
+            <<Emacs Bufler Defgroups>>
+          '';
+          init = ''
+            <<Emacs Bufler Init>>
+          '';
+          extraConfig = ''
+            	  :pretty-hydra
+                  ((:color amaranth)
+                    ("Move"
+                     (("o" bufler-cycle-buffers-backward "prev")
+                      ("e" bufler-cycle-buffers-forward "next"))
+                     "Tricks"
+                     (("/" consult-buffer "search" :color blue :exit t)
+                      ("i" ibuffer "list (ibuffer)" :color blue :exit t)
+                      ("k" kill-current-buffer "delete"))
+                     "Quit"
+                     (("<escape>" nil "quit" :color blue :exit t)
+                      ("<return>" nil "quit" :color blue :exit t))))
+            	'';
+          config = ''
+            <<Emacs Bufler Config>>
+          '';
+        };
 
-      bufler-workspace-tabs = {
-	enable = true;
-	ghookf = ["('bufler-mode 'bufler-workspace-workspaces-as-tabs-mode)"];
-	gfhookf = ["('bufler-workspace-workspaces-as-tabs-mode '(global-tab-line-mode burly-tabs-mode))"];
+        bufler-workspace-tabs = {
+          enable = true;
+          ghookf = [ "('bufler-mode 'bufler-workspace-workspaces-as-tabs-mode)" ];
+          gfhookf = [ "('bufler-workspace-workspaces-as-tabs-mode '(global-tab-line-mode burly-tabs-mode))" ];
+        };
       };
     };
-  };
 }
 #+end_src
 
@@ -4104,21 +4382,28 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 *** ELWM
 #+begin_src nix-ts :tangle modules/window-manager/elwm.nix :noweb yes
 {
-  flake.homeModules.exwm = { ... }:
+  flake.homeModules.exwm =
+    { ... }:
 
-  {
-    programs.emacs.init.usePackage.elwm = {
-      enable = true;
-      defer = true;
-      command = ["elwm-next" "elwm-prev" "elwm-rotate-window" "elwm-derotate-window" "elwm-split-window"];
-      config = ''
-	<<Emacs Elwm Config>>
-      '';
-      preface = ''
-	<<Emacs Elwm Preface>>
-      '';
+    {
+      programs.emacs.init.usePackage.elwm = {
+        enable = true;
+        defer = true;
+        command = [
+          "elwm-next"
+          "elwm-prev"
+          "elwm-rotate-window"
+          "elwm-derotate-window"
+          "elwm-split-window"
+        ];
+        config = ''
+          <<Emacs Elwm Config>>
+        '';
+        preface = ''
+          <<Emacs Elwm Preface>>
+        '';
+      };
     };
-  } ;
 }
 #+end_src
 
@@ -4176,120 +4461,128 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 *** EXWM
 #+begin_src nix-ts :tangle modules/window-manager/exwm.nix :noweb yes
 {
-  flake.homeModules.exwm = { config, pkgs, lib, ... }:
+  flake.homeModules.exwm =
+    {
+      config,
+      pkgs,
+      lib,
+      ...
+    }:
 
-  {
-    programs.emacs.init = {
-      tools = {
-	goldenRatio = true;
-	exwm = {
-	  enable = true;
-	  wantMouseWarping = true;
-	  useGaps = true;
-	  bindings = {
-	    "?\\s-r" = "exwm-reset";
-	    "?\\s-a" = "evil-ex";
-	    "?\\s-d" = "app-launcher-run-app";
-	    "?\\s-t" = "proced";
+    {
+      programs.emacs.init = {
+        tools = {
+          goldenRatio = true;
+          exwm = {
+            enable = true;
+            wantMouseWarping = true;
+            useGaps = true;
+            bindings = {
+              "?\\s-r" = "exwm-reset";
+              "?\\s-a" = "evil-ex";
+              "?\\s-d" = "app-launcher-run-app";
+              "?\\s-t" = "proced";
 
-	    # Movement
-	    "?\\s-e" = "pertab-focus-down";
-	    "?\\s-o" = "pertab-focus-up";
-	    "?\\s-i" = "pertab-focus-right";
-	    "?\\s-n" = "pertab-focus-left";
-	    "?\\s-." = "other-frame";
-	    "?\\s->" = "tab-bar-move-tab-to-frame";
+              # Movement
+              "?\\s-e" = "pertab-focus-down";
+              "?\\s-o" = "pertab-focus-up";
+              "?\\s-i" = "pertab-focus-right";
+              "?\\s-n" = "pertab-focus-left";
+              "?\\s-." = "other-frame";
+              "?\\s->" = "tab-bar-move-tab-to-frame";
 
-	    # Arrangement
-	    "?\\s-E" = "pertab-move-down";
-	    "?\\s-O" = "pertab-move-up";
-	    "?\\s-I" = "pertab-move-right";
-	    "?\\s-N" = "pertab-move-left";
-	    "?\\s-c" = "pertab-horizontal-split";
-	    "?\\s-C" = "pertab-vertical-split";
-	    "?\\s-j" = "winner-undo";
-	    "?\\s-J" = "winner-redo";
-	    "?\\s-x" = "pertab-layout-menu";
-	    "?\\s-k" = "pertab-close-window";
-	    "?\\s-K" = "pertab-kill-buffer-close-window";
+              # Arrangement
+              "?\\s-E" = "pertab-move-down";
+              "?\\s-O" = "pertab-move-up";
+              "?\\s-I" = "pertab-move-right";
+              "?\\s-N" = "pertab-move-left";
+              "?\\s-c" = "pertab-horizontal-split";
+              "?\\s-C" = "pertab-vertical-split";
+              "?\\s-j" = "winner-undo";
+              "?\\s-J" = "winner-redo";
+              "?\\s-x" = "pertab-layout-menu";
+              "?\\s-k" = "pertab-close-window";
+              "?\\s-K" = "pertab-kill-buffer-close-window";
 
-	    #Shell bindings
-	    "?\\s-s" = '',(cmd! (shell-command "slock"))'';
-	    "?\\s-y" = '',(cmd! (start-process-shell-command "maim" nil  "${lib.getExe pkgs.maim} ~/pic/screenshot.png"))'';
-	    "XF86MonBrightnessDown" = '',(cmd! (efs/alter-monitor-brightness 5 t))'';
-	    "XF86MonBrightnessUp" = '',(cmd! (efs/alter-monitor-brightness 5))'';
-	  };
-	  titleAlterations = {
-	    qutebrowser = ''(exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title))'';
-	    mpv = ''(exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title))'';
-	  };
-	};
-      };
-      usePackage.exwm = {
-	gfhookf = [
-	  # When window "class" updates, use it to set the buffer name
-	  "('exwm-update-class (lambda () (exwm-workspace-rename-buffer exwm-class-name)))"
-	  # When EXWM starts up, do some extra configuration
-	  ''('exwm-init (lambda ()
-            (start-process-shell-command "xbanish" nil "${lib.getExe pkgs.xbanish}")))''
-	];
-	# Ctrl+q will enable the next key to be sent directly
-	generalOneConfig.exwm-mode-map = {
-	  "C-c" = "mode-specific-map";
-	};
-	custom = {
-	  exwm-manage-force-tiling = true;
-	  # Emacs everywhere
-	  exwm-input-simulation-keys = '''(([?\C-h] . [backspace]))'';
-	  exwm-workspace-number = lib.lists.length config.hosts.exwm-monitors;
-	  # This will need to be updated to the name of a display!  You can find
-	  # the names of your displays by looking at arandr or the output of xrandr
-	  exwm-randr-workspace-monitor-plist = config.hosts.exwm-monitors;
-	  # Window focus should follow the mouse pointer
-	  mouse-autoselect-window = false;
-	  focus-follows-mouse = false;
-	  # These keys should always pass through to Emacs
-	  exwm-input-prefix-keys = lib.mkForce [
-	    '''?\M-`''
-	    '''?\C-^''
-	    '''?\M-&''
-	    "?\\s-\\M-'"
-	    '''?\s-b''
-	    '''?\M-u''
-	    '''?\M-:''
-	    '''?\s-o''
-	    '''?\s-c''
-	    '''?\s-v''
-	    '''?\s-n''
-	    '''?\s-i''
-	    '''?\s-e''
-	    '''?\s-f''
-	    '''?\s-F''
-	    '''?\s-u''
-	    '''?\s-/''
-	    '''?\s-\H-i''
-	    '''?\s-\H-n''
-	    '''?\s-\H-e''
-	    '''?\s-\H-o''
-	    "?\\s-'"	# popper-toggle-latest
-	    '''?\s-\"'' # popper-toggle-type
-	    '''?\s-\ ''
-	    '''XF86AudioRaiseVolume''
-	    '''XF86AudioLowerVolume''
-	    '''XF86AudioMute''
-	    '''?\M-\ ''
-	  ];
-	};
-	init = ''
-	  <<Emacs Exwm Init>>
-	'';
-	config = ''
-	  <<Emacs Exwm Config>>
-	'';
-	after = ["repeaters"];
+              #Shell bindings
+              "?\\s-s" = '',(cmd! (shell-command "slock"))'';
+              "?\\s-y" =
+                '',(cmd! (start-process-shell-command "maim" nil  "${lib.getExe pkgs.maim} ~/pic/screenshot.png"))'';
+              "XF86MonBrightnessDown" = ",(cmd! (efs/alter-monitor-brightness 5 t))";
+              "XF86MonBrightnessUp" = ",(cmd! (efs/alter-monitor-brightness 5))";
+            };
+            titleAlterations = {
+              qutebrowser = ''(exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title))'';
+              mpv = ''(exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title))'';
+            };
+          };
+        };
+        usePackage.exwm = {
+          gfhookf = [
+            # When window "class" updates, use it to set the buffer name
+            "('exwm-update-class (lambda () (exwm-workspace-rename-buffer exwm-class-name)))"
+            # When EXWM starts up, do some extra configuration
+            ''
+              ('exwm-init (lambda ()
+                          (start-process-shell-command "xbanish" nil "${lib.getExe pkgs.xbanish}")))''
+          ];
+          # Ctrl+q will enable the next key to be sent directly
+          generalOneConfig.exwm-mode-map = {
+            "C-c" = "mode-specific-map";
+          };
+          custom = {
+            exwm-manage-force-tiling = true;
+            # Emacs everywhere
+            exwm-input-simulation-keys = '''(([?\C-h] . [backspace]))'';
+            exwm-workspace-number = lib.lists.length config.hosts.exwm-monitors;
+            # This will need to be updated to the name of a display!  You can find
+            # the names of your displays by looking at arandr or the output of xrandr
+            exwm-randr-workspace-monitor-plist = config.hosts.exwm-monitors;
+            # Window focus should follow the mouse pointer
+            mouse-autoselect-window = false;
+            focus-follows-mouse = false;
+            # These keys should always pass through to Emacs
+            exwm-input-prefix-keys = lib.mkForce [
+              '''?\M-`''
+              '''?\C-^''
+              '''?\M-&''
+              "?\\s-\\M-'"
+              '''?\s-b''
+              '''?\M-u''
+              '''?\M-:''
+              '''?\s-o''
+              '''?\s-c''
+              '''?\s-v''
+              '''?\s-n''
+              '''?\s-i''
+              '''?\s-e''
+              '''?\s-f''
+              '''?\s-F''
+              '''?\s-u''
+              '''?\s-/''
+              '''?\s-\H-i''
+              '''?\s-\H-n''
+              '''?\s-\H-e''
+              '''?\s-\H-o''
+              "?\\s-'" # popper-toggle-latest
+              '''?\s-\"'' # popper-toggle-type
+              '''?\s-\ ''
+              "'XF86AudioRaiseVolume"
+              "'XF86AudioLowerVolume"
+              "'XF86AudioMute"
+              '''?\M-\ ''
+            ];
+          };
+          init = ''
+            <<Emacs Exwm Init>>
+          '';
+          config = ''
+            <<Emacs Exwm Config>>
+          '';
+          after = [ "repeaters" ];
+        };
       };
     };
-  };
 }
 #+end_src
 
@@ -4322,84 +4615,87 @@ NEG subtracts if it is true."
 *** Popper
 #+begin_src nix-ts :tangle modules/window-manager/popper.nix
 {
-  flake.homeModules.exwm = { ... }:
-  {
-    programs.emacs.init.usePackage.popper = {
-      enable = true;
-      ghookf = ["('on-first-buffer 'popper-mode)"];
-      general = {
-	"s-'" = "'popper-toggle";
-	"s-\\\"" = "'popper-cycle";
-	"C-s-'" = "'popper-toggle-type";
-      };
-      setopt = {
-	popper-window-height = 30;
-	popper-group-function = "'popper-group-by-project";
-	popper-reference-buffers = [
-	  "'help-mode"
-	  "'helpful-mode"
-	  "'compilation-mode"
-	  "'inferior-python-mode"
-	  "'occur-mode"
-	  "'grep-mode"
-	  ''"^\\*.*eshell\\*"''
-	  ''"^\\*eat\\*"''
-	  ''"^\\*Sage\\*"''
-	  ''"^\\*prolog\\*"''
-	  "'xref--xref-buffer-mode"
-	  "'flymake-diagnostics-buffer-mode"
-	  "'rustic-cargo-test-mode"
-	  "'rustic-cargo-run-mode"
-	  "'geiser-repl-mode"
-	  "'dape-repl-mode"
-	  "'racket-repl-mode"
-	  "'inferior-ess-r-mode"
-	  "'cider-repl-mode"
-	];
+  flake.homeModules.exwm =
+    { ... }:
+    {
+      programs.emacs.init.usePackage.popper = {
+        enable = true;
+        ghookf = [ "('on-first-buffer 'popper-mode)" ];
+        general = {
+          "s-'" = "'popper-toggle";
+          "s-\\\"" = "'popper-cycle";
+          "C-s-'" = "'popper-toggle-type";
+        };
+        setopt = {
+          popper-window-height = 30;
+          popper-group-function = "'popper-group-by-project";
+          popper-reference-buffers = [
+            "'help-mode"
+            "'helpful-mode"
+            "'compilation-mode"
+            "'inferior-python-mode"
+            "'occur-mode"
+            "'grep-mode"
+            ''"^\\*.*eshell\\*"''
+            ''"^\\*eat\\*"''
+            ''"^\\*Sage\\*"''
+            ''"^\\*prolog\\*"''
+            "'xref--xref-buffer-mode"
+            "'flymake-diagnostics-buffer-mode"
+            "'rustic-cargo-test-mode"
+            "'rustic-cargo-run-mode"
+            "'geiser-repl-mode"
+            "'dape-repl-mode"
+            "'racket-repl-mode"
+            "'inferior-ess-r-mode"
+            "'cider-repl-mode"
+          ];
+        };
       };
     };
-  };
 }
 #+end_src
 
 *** Ace Window
 #+begin_src nix-ts :tangle modules/window-manager/ace.nix :noweb yes
 {
-  flake.homeModules.exwm = { ... }:
-  {
-    programs.emacs.init.usePackage.ace-window = {
-      enable = true;
-      setopt = {
-	aw-scope = "'frame";
-	aw-keys = "'(?c ?r ?s ?t ?n ?e ?i ?a)";
+  flake.homeModules.exwm =
+    { ... }:
+    {
+      programs.emacs.init.usePackage.ace-window = {
+        enable = true;
+        setopt = {
+          aw-scope = "'frame";
+          aw-keys = "'(?c ?r ?s ?t ?n ?e ?i ?a)";
+        };
+        preface = ''
+          <<Emacs Ace Window Preface>>
+        '';
+        init = ''
+          (setopt aw-dispatch-alist '((?k aw-delete-window "Delete Window")
+          	                      (?K efs-aw-kill-buffer-and-window "Delete Buffer and Window")
+                                      (?m aw-swap-window "Swap Windows")
+                                      (?M aw-move-window "Move Window")
+                                      (?d aw-copy-window "Copy Window")
+                                      (?b aw-switch-buffer-in-window "Select Buffer")
+                                      (?f aw-flip-window)
+                                      (?u aw-switch-buffer-other-window "Switch Buffer Other Window")
+                                      (?x aw-execute-command-other-window "Execute Command Other Window")
+                                      (?v efs-aw-split-window-elwm "Split Window")
+                                      (?o delete-other-windows "Delete Other Windows")
+                                      (?T aw-transpose-frame "Transpose Frame")
+                                      (?? aw-show-dispatch-help)))'';
+        general = {
+          "s-H-i" = "'ace-window";
+          "s-H-n" = "'ace-window";
+          "s-H-o" = "'ace-window";
+          "s-H-e" = "'ace-window";
+        };
+        config = ''
+          	<<Emacs Ace Window Config>>
+        '';
       };
-      preface = ''
-	<<Emacs Ace Window Preface>>
-      '';
-      init = ''(setopt aw-dispatch-alist '((?k aw-delete-window "Delete Window")
-	(?K efs-aw-kill-buffer-and-window "Delete Buffer and Window")
-                                           (?m aw-swap-window "Swap Windows")
-                                           (?M aw-move-window "Move Window")
-                                           (?d aw-copy-window "Copy Window")
-                                           (?b aw-switch-buffer-in-window "Select Buffer")
-                                           (?f aw-flip-window)
-                                           (?u aw-switch-buffer-other-window "Switch Buffer Other Window")
-                                           (?x aw-execute-command-other-window "Execute Command Other Window")
-                                           (?v efs-aw-split-window-elwm "Split Window")
-                                           (?o delete-other-windows "Delete Other Windows")
-                                           (?T aw-transpose-frame "Transpose Frame")
-                                           (?? aw-show-dispatch-help)))'';
-      general = {
-	"s-H-i" = "'ace-window";
-	"s-H-n" = "'ace-window";
-	"s-H-o" = "'ace-window";
-	"s-H-e" = "'ace-window";
-      };
-      config = ''
-	<<Emacs Ace Window Config>>
-      '';
     };
-  } ;
 }
 #+end_src
 
@@ -4472,121 +4768,139 @@ https://github.com/skissue/llm-tool-collection
 
 {
   perSystem = { lib, pkgs, ... }: {
-    packages = let
-      epkgs = pkgs.emacs.pkgs;
-    in {
-      startOllama = pkgs.writeShellScriptBin "start-ollama" ''
-	if [[ "$(pidof ollama)" -gt 0 ]]; then
-          echo "ollama already running"
-        else
-          ${lib.getExe pkgs.ollama} serve
-        fi
-      '';
-      macher-agent = (epkgs.callPackage
-	epkgs.trivialBuild rec {
-	pname = "macher-agent";
-	version = "current";
-	src = inputs.macher-agent;
+    packages =
+      let
+        epkgs = pkgs.emacs.pkgs;
+      in
+      {
+        startOllama = pkgs.writeShellScriptBin "start-ollama" ''
+          	if [[ "$(pidof ollama)" -gt 0 ]]; then
+                  echo "ollama already running"
+                else
+                  ${lib.getExe pkgs.ollama} serve
+                fi
+        '';
+        macher-agent = (
+          epkgs.callPackage epkgs.trivialBuild rec {
+            pname = "macher-agent";
+            version = "current";
+            src = inputs.macher-agent;
 
-	propagatedUserEnvPkgs = with epkgs; [
-	  macher
-	  gptel
-	];
+            propagatedUserEnvPkgs = with epkgs; [
+              macher
+              gptel
+            ];
 
-	buildInputs = propagatedUserEnvPkgs;
-	}
-      );
-      gptel-got = (epkgs.callPackage
-	epkgs.trivialBuild rec {
-	pname = "gptel-got";
-	version = "current";
-	src = inputs.gptel-got;
+            buildInputs = propagatedUserEnvPkgs;
+          }
+        );
+        gptel-got = (
+          epkgs.callPackage epkgs.trivialBuild rec {
+            pname = "gptel-got";
+            version = "current";
+            src = inputs.gptel-got;
 
-	propagatedUserEnvPkgs = with epkgs; [
-	  org-ql
-	  gptel
-	];
+            propagatedUserEnvPkgs = with epkgs; [
+              org-ql
+              gptel
+            ];
 
-	buildInputs = propagatedUserEnvPkgs;
-	}
-      );
-    } ;
+            buildInputs = propagatedUserEnvPkgs;
+          }
+        );
+      };
   };
 
-  flake.homeModules.ai = { lib, config, pkgs, ... }: {
-    home.packages = [pkgs.ollama];
-    programs.emacs.init = {
-      ai = {
-	copilot = {
-	  enable = true;
-	  keepOutOf = ["c-ts-mode" "json5-ts-mode" "json-ts-mode" "LaTeX-mode" "zenscript-mode"];
-	};
-	gptel = {
-	  enable = true;
-	  macher.enable = true;
-	};
-      };
-      usePackage = let
-      mkOllama = models: infix: {
-	"gptel${infix}-model" = "'${lib.findFirst (x: true) "" models}";
-	"gptel${infix}-backend" = ''
-	    (gptel-make-ollama "Ollama"
-	        :stream t
-	        :protocol "http"
-	        :host "localhost:11434"
-	        :models '(${lib.concatMapStrings (k: "${k} ") models}))
-	  '';
-      };
-      in {
-	gptel = {
-	  command = ["start-ollama"];
-	  generalOne.global-leader."gs" = '''("start" . start-ollama)'';
-	  setopt = {
-	    gptel-max-tokens = 10000000;
-	    gptel-prompt-prefix-alist = [
-	      ''`(markdown-mode . ,(concat "meatbag ›  "))''
-              ''`(org-mode . ,(concat  "meatbag ›  "))''
-              ''`(text-mode . ,(concat "meatbag ›  "))''
-	    ];
-	    gptel-response-prefix-alist = [
-	      '''(markdown-mode . "HK-47  ")''
-              '''(org-mode . "HK-47  ")''
-              '''(text-mode . "HK-47  ")''
-	    ];
-	  } // mkOllama ["llama3.2:3b" "qwen2.5-coder:7b" "llama3.2:1b"] "";
-	  preface = ''
-	    <<Emacs Gptel Preface>>
-	  '';
-	  config = ''
-	    (start-ollama)
-	    (gptel-make-gh-copilot "copilot")
-	  '';
-	};
+  flake.homeModules.ai =
+    {
+      lib,
+      config,
+      pkgs,
+      ...
+    }:
+    {
+      home.packages = [ pkgs.ollama ];
+      programs.emacs.init = {
+        ai = {
+          copilot = {
+            enable = true;
+            keepOutOf = [
+              "c-ts-mode"
+              "json5-ts-mode"
+              "json-ts-mode"
+              "LaTeX-mode"
+              "zenscript-mode"
+            ];
+          };
+          gptel = {
+            enable = true;
+            macher.enable = true;
+          };
+        };
+        usePackage =
+          let
+            mkOllama = models: infix: {
+              "gptel${infix}-model" = "'${lib.findFirst (x: true) "" models}";
+              "gptel${infix}-backend" = ''
+                (gptel-make-ollama "Ollama"
+                	           :stream t
+                	           :protocol "http"
+                	           :host "localhost:11434"
+                	           :models '(${lib.concatMapStrings (k: "${k} ") models}))
+              '';
+            };
+          in
+          {
+            gptel = {
+              command = [ "start-ollama" ];
+              generalOne.global-leader."gs" = '''("start" . start-ollama)'';
+              setopt = {
+                gptel-max-tokens = 10000000;
+                gptel-prompt-prefix-alist = [
+                  ''`(markdown-mode . ,(concat "meatbag ›  "))''
+                  ''`(org-mode . ,(concat  "meatbag ›  "))''
+                  ''`(text-mode . ,(concat "meatbag ›  "))''
+                ];
+                gptel-response-prefix-alist = [
+                  '''(markdown-mode . "HK-47  ")''
+                  '''(org-mode . "HK-47  ")''
+                  '''(text-mode . "HK-47  ")''
+                ];
+              }
+              // mkOllama [ "llama3.2:3b" "qwen2.5-coder:7b" "llama3.2:1b" ] "";
+              preface = ''
+                <<Emacs Gptel Preface>>
+              '';
+              config = ''
+                (start-ollama)
+                (gptel-make-gh-copilot "copilot")
+              '';
+            };
 
-	gptel-quick.setopt = mkOllama ["llama3.2:1b"] "-quick";
+            gptel-quick.setopt = mkOllama [ "llama3.2:1b" ] "-quick";
 
-	macher-agent = {
-	  enable = true;
-	  after = ["macher"];
-	  generalOneConfig.global-leader."gMt" = '''("inject thought" . macher-agent-inject-thought)'';
-	};
+            macher-agent = {
+              enable = true;
+              after = [ "macher" ];
+              generalOneConfig.global-leader."gMt" = '''("inject thought" . macher-agent-inject-thought)'';
+            };
 
-	# gptel-got = {
-	#   enable = true;
-	#   after = ["gptel"];
-	# };
+            # gptel-got = {
+            #   enable = true;
+            #   after = ["gptel"];
+            # };
 
-	# mcp = {
-	#   enable = true;
-	#   after = ["gptel"];
-	#   config = ''
-	# 	(require 'mcp-hub)
-	#     (require 'gptel-integrations)
-	#   '';
-	# };
+            # mcp = {
+            #   enable = true;
+            #   after = ["gptel"];
+            #   config = ''
+            # 	(require 'mcp-hub)
+            #     (require 'gptel-integrations)
+            #   '';
+            # };
+          };
       };
     };
-  } ;
 }
 #+end_src
 
@@ -4603,12 +4917,13 @@ https://github.com/skissue/llm-tool-collection
 { inputs, ... }:
 
 {
-  perSystem = { pkgs, ... }:
-  {
-    packages.doomer = pkgs.writeShellScriptBin "doomer" ''
-      ${pkgs.sox}/bin/sox "$1" "$1.flac" pitch -500 treble -20 pad 0 3 reverb 80 tempo .8 highpass 1000 lowpass 700 compand 0.3,0.8 0
-    '';
-  };
+  perSystem =
+    { pkgs, ... }:
+    {
+      packages.doomer = pkgs.writeShellScriptBin "doomer" ''
+        ${pkgs.sox}/bin/sox "$1" "$1.flac" pitch -500 treble -20 pad 0 3 reverb 80 tempo .8 highpass 1000 lowpass 700 compand 0.3,0.8 0
+      '';
+    };
 
   flake.homeModules.media = { pkgs, config, ... }: {
     home.packages = with pkgs; [
@@ -4627,50 +4942,55 @@ https://github.com/skissue/llm-tool-collection
 { inputs, ... }:
 
 {
-  perSystem = { pkgs, ... }: let epkgs = pkgs.emacs.pkgs;
-  in {
-    packages.mpc-wrapper = (epkgs.callPackage
-      epkgs.trivialBuild rec {
-	pname = "mpc-wrapper";
-	version = "current";
-	src = inputs.mpc-wrapper;
-      }
-    );
-  };
-
-  flake.homeModules.media = { pkgs, config, ... }:
-  {
-    services.mpd = {
-      enable = true;
-      musicDirectory = "${config.home.homeDirectory}/mus/mpd";
-      extraConfig = ''
-	audio_output {
-          type "pipewire"
-          name "My Pipewire Output"
-          mixer_type "hardware"
-          mixer_device "default"
-          mixer_control "PCM"
+  perSystem =
+    { pkgs, ... }:
+    let
+      epkgs = pkgs.emacs.pkgs;
+    in
+    {
+      packages.mpc-wrapper = (
+        epkgs.callPackage epkgs.trivialBuild rec {
+          pname = "mpc-wrapper";
+          version = "current";
+          src = inputs.mpc-wrapper;
         }
-      '';
+      );
     };
 
-    programs.emacs.init.usePackage.mpc-wrapper = {
-      enable = true;
-      extraPackages = [pkgs.mpc];
-      generalOne.global-leader = {
-	"m" = '''(:ignore t :which-key "mpd")'';
-	"mp" = '''("replay file" . mpc-play)'';
-	"mm" = '''("menu" . music-menu)'';
-	"ms" = '''("stop" . mpc-stop)'';
-	"m+" = "'mpc-inc-by-five";
-	"m-" = "'mpc-dec-by-five";
+  flake.homeModules.media =
+    { pkgs, config, ... }:
+    {
+      services.mpd = {
+        enable = true;
+        musicDirectory = "${config.home.homeDirectory}/mus/mpd";
+        extraConfig = ''
+          audio_output {
+            type "pipewire"
+            name "My Pipewire Output"
+            mixer_type "hardware"
+            mixer_device "default"
+            mixer_control "PCM"
+          }
+        '';
       };
-      deferIncrementally = true;
-      config = ''
-	<<Emacs Mpc Wrapper Config>>
-      '';
+
+      programs.emacs.init.usePackage.mpc-wrapper = {
+        enable = true;
+        extraPackages = [ pkgs.mpc ];
+        generalOne.global-leader = {
+          "m" = '''(:ignore t :which-key "mpd")'';
+          "mp" = '''("replay file" . mpc-play)'';
+          "mm" = '''("menu" . music-menu)'';
+          "ms" = '''("stop" . mpc-stop)'';
+          "m+" = "'mpc-inc-by-five";
+          "m-" = "'mpc-dec-by-five";
+        };
+        deferIncrementally = true;
+        config = ''
+          <<Emacs Mpc Wrapper Config>>
+        '';
+      };
     };
-  };
 }
 #+end_src
 
@@ -4707,31 +5027,36 @@ The mpv package lets us start an mpv process & puppeteer it with emacs. I'm defi
 
 {
   perSystem = { pkgs, ... }: {
-    packages.mpv = (inputs.wrapper-modules.wrappers.mpv.wrap {
-      pkgs = pkgs;
-      script = {
-	thumbnail.path = pkgs.mpvScripts.thumbnail;
-	sponsorblock.path = pkgs.mpvScripts.sponsorblock;
-	quality-menu.path = pkgs.mpvScripts.quality-menu;
-      };
-      "mpv.conf".content = ''
-	 fs=no
-	 hwdec=auto
-	 x11-bypass-compositor=no
-	 volume-max=250
-      '';
-    });
+    packages.mpv = (
+      inputs.wrapper-modules.wrappers.mpv.wrap {
+        pkgs = pkgs;
+        script = {
+          thumbnail.path = pkgs.mpvScripts.thumbnail;
+          sponsorblock.path = pkgs.mpvScripts.sponsorblock;
+          quality-menu.path = pkgs.mpvScripts.quality-menu;
+        };
+        "mpv.conf".content = ''
+          fs=no
+          hwdec=auto
+          x11-bypass-compositor=no
+          volume-max=250
+        '';
+      }
+    );
   };
 
   flake.homeModules.media = { pkgs, config, ... }: {
     home.packages = [ pkgs.yt-dlp ];
     programs = {
       emacs.init.usePackage.mpv = {
-	enable = true;
-	command = ["efs/mpv-browse-url" "efs/mpv-eww-url"];
-	config = ''
-	  <<Emacs Mpv Config>>
-	'';
+        enable = true;
+        command = [
+          "efs/mpv-browse-url"
+          "efs/mpv-eww-url"
+        ];
+        config = ''
+          <<Emacs Mpv Config>>
+        '';
       };
 
       mpv.enable = true;
@@ -4753,22 +5078,23 @@ The mpv package lets us start an mpv process & puppeteer it with emacs. I'm defi
 *** Pulseaudio Control
 #+begin_src nix-ts :tangle modules/multimedia/pavucontrol.nix
 {
-  flake.homeModules.media = { pkgs, ... }:
-  {
-    home.packages = [ pkgs.pavucontrol ];
-    programs.emacs.init.usePackage.pulseaudio-control = {
-      enable = true;
-      deferIncrementally = true;
-      setopt.pulseaudio-control-volume-step = ''"5%"'';
-      general = {
-	"<XF86AudioRaiseVolume>" = "'pulseaudio-control-increase-sink-volume";
-	"<XF86AudioLowerVolume>" = "'pulseaudio-control-decrease-sink-volume";
-	"<XF86AudioMute>" = "'pulseaudio-control-toggle-current-sink-mute";
-	"s-v" = "'pulseaudio-control-default-sink-mode";
+  flake.homeModules.media =
+    { pkgs, ... }:
+    {
+      home.packages = [ pkgs.pavucontrol ];
+      programs.emacs.init.usePackage.pulseaudio-control = {
+        enable = true;
+        deferIncrementally = true;
+        setopt.pulseaudio-control-volume-step = ''"5%"'';
+        general = {
+          "<XF86AudioRaiseVolume>" = "'pulseaudio-control-increase-sink-volume";
+          "<XF86AudioLowerVolume>" = "'pulseaudio-control-decrease-sink-volume";
+          "<XF86AudioMute>" = "'pulseaudio-control-toggle-current-sink-mute";
+          "s-v" = "'pulseaudio-control-default-sink-mode";
+        };
+        config = "(pulseaudio-control-default-sink-mode)";
       };
-      config = "(pulseaudio-control-default-sink-mode)";
     };
-  };
 }
 #+end_src
 
@@ -4776,20 +5102,28 @@ The mpv package lets us start an mpv process & puppeteer it with emacs. I'm defi
 For moving massive quantities of Jordan Peterson's podcast into my mp3 player
 #+begin_src nix-ts :tangle modules/multimedia/podcast.nix :noweb yes
 {
-  perSystem = { pkgs, self', ... }: let packages = self'.packages;
-  in {
-    packages = {
-      cast = (pkgs.writeShellScriptBin "cast" ''
-	<<Cast>>
-      '');
-      ffmpeg-bulk = (pkgs.writeShellScriptBin "ffmpeg-bulk" ''
-	<<FFmpeg Bulk>>
-      '');
-      masstube = pkgs.writeShellScriptBin "masstube" ''
-	<<Masstube>>
-      '';
+  perSystem =
+    { pkgs, self', ... }:
+    let
+      packages = self'.packages;
+    in
+    {
+      packages = {
+        cast = (
+          pkgs.writeShellScriptBin "cast" ''
+            <<Cast>>
+          ''
+        );
+        ffmpeg-bulk = (
+          pkgs.writeShellScriptBin "ffmpeg-bulk" ''
+            <<FFmpeg Bulk>>
+          ''
+        );
+        masstube = pkgs.writeShellScriptBin "masstube" ''
+          <<Masstube>>
+        '';
+      };
     };
-  } ;
 
   flake.homeModules.media = { pkgs, ... }: {
     home.packages = with pkgs; [
@@ -4958,29 +5292,33 @@ Putting =:session= in an org block is necessary for evaluation
 ,cc evaluates the sage commands in an org file.
 #+begin_src nix-ts :tangle modules/sage.nix :noweb yes
 {
-  flake.homeModules.sage = { pkgs, ... }:
-  {
-    home.file.".config/sage/ipython-5.0.0/profile_default/startup/00nix.py".text = ''
-      <<sage-config>>
-    '';
+  flake.homeModules.sage =
+    { pkgs, ... }:
+    {
+      home.file.".config/sage/ipython-5.0.0/profile_default/startup/00nix.py".text = ''
+        <<sage-config>>
+      '';
 
-    programs.emacs.init.usePackage = {
-      sage-shell-mode = {
-	enable = true;
-	extraPackages = [ pkgs.sage ];
-	defer = true;
-	setopt."sage-shell-edit:display-function" = ''"display-buffer"'';
-	config = ''(sage-shell:define-alias)'';
-	generalOne.global-leader."S" = '''("sage" . run-sage)'';
-	generalTwoConfig."local-leader"."sage-shell-mode-map"."h" = "'sage-shell:help";
-      };
+      programs.emacs.init.usePackage = {
+        sage-shell-mode = {
+          enable = true;
+          extraPackages = [ pkgs.sage ];
+          defer = true;
+          setopt."sage-shell-edit:display-function" = ''"display-buffer"'';
+          config = "(sage-shell:define-alias)";
+          generalOne.global-leader."S" = '''("sage" . run-sage)'';
+          generalTwoConfig."local-leader"."sage-shell-mode-map"."h" = "'sage-shell:help";
+        };
 
-      ob-sagemath = {
-	enable = true;
-	afterCall = ["sage-shell-mode" "ob"];
+        ob-sagemath = {
+          enable = true;
+          afterCall = [
+            "sage-shell-mode"
+            "ob"
+          ];
+        };
       };
     };
-  };
 }
 #+end_src
 
@@ -5036,38 +5374,39 @@ Canary is my layout of choice.
 *Important*: Add your user to the input & uinput groups
 #+begin_src nix-ts :tangle modules/keyboard.nix :noweb yes
 {
-  flake.homeModules.canary = { pkgs, lib, ... }:
+  flake.homeModules.canary =
+    { pkgs, lib, ... }:
 
-  {
-    home.file = {
-      ".config/kmonad/kmonad.kbd".text = ''
-	<<Kmonad>>
-      '' ;
+    {
+      home.file = {
+        ".config/kmonad/kmonad.kbd".text = ''
+          <<Kmonad>>
+        '';
 
-      ".Xmodmap".text = ''
-	clear lock
-        clear mod3
-        clear mod4
-        keycode 66 = Hyper_R
-        keycode 105 = Caps_Lock
-        add mod3 = Hyper_L Hyper_R
-        add mod4 = Super_L Super_R
-      '';
-    };
+        ".Xmodmap".text = ''
+          clear lock
+          clear mod3
+          clear mod4
+          keycode 66 = Hyper_R
+          keycode 105 = Caps_Lock
+          add mod3 = Hyper_L Hyper_R
+          add mod4 = Super_L Super_R
+        '';
+      };
 
-    systemd.user = {
-      services.kmonad = {
-	Unit = lib.mkMerge [{ Description = "KMonad service"; }];
-	Install = {
-	  WantedBy = [ "default.target" ];
-	};
-	Service = {
-	  Type = "simple";
-	  ExecStart = "${pkgs.kmonad}/bin/kmonad %h/.config/kmonad/kmonad.kbd";
-	};
+      systemd.user = {
+        services.kmonad = {
+          Unit = lib.mkMerge [ { Description = "KMonad service"; } ];
+          Install = {
+            WantedBy = [ "default.target" ];
+          };
+          Service = {
+            Type = "simple";
+            ExecStart = "${pkgs.kmonad}/bin/kmonad %h/.config/kmonad/kmonad.kbd";
+          };
+        };
       };
     };
-  };
 }
 #+end_src
 
@@ -5166,22 +5505,23 @@ This lets us decide how emacs will handle certain urls
 You need regexes to do this, & you can build them easily using =rx=
 #+begin_src nix-ts :tangle modules/web/browseurl.nix
 {
-  flake.homeModules.web = { ... }:
-  {
-    programs.emacs.init.usePackage.browse-url = {
-      enable = true;
-      config = "(defun qutebrowser-browse-url (url &rest args) (qutebrowser-open-url url 'tab))";
-      custom.browse-url-handlers = [
-	'''("https:\\/\\/www\\.youtu\\.*be." . efs/mpv-browse-url)''
-	'''("https:\\/\\/yewtu\\.*be." . efs/mpv-browse-url)''
-	'''("https:\\/\\/inv\\.*nadeko\\.*net\\/watch." . efs/mpv-browse-url)''
-	'''("search\\.nixos\\.org[^z-a]*" . qutebrowser-browse-url)''
-	'''("melpa\.org\.*" . qutebrowser-browse-url)''
-	'''("." . (lambda (url &rest args) (eww url (prefix-numeric-value 4))))''
-      ];
-      setopt.browse-url-secondary-browser-function = "'browse-url-default-browser";
+  flake.homeModules.web =
+    { ... }:
+    {
+      programs.emacs.init.usePackage.browse-url = {
+        enable = true;
+        config = "(defun qutebrowser-browse-url (url &rest args) (qutebrowser-open-url url 'tab))";
+        custom.browse-url-handlers = [
+          '''("https:\\/\\/www\\.youtu\\.*be." . efs/mpv-browse-url)''
+          '''("https:\\/\\/yewtu\\.*be." . efs/mpv-browse-url)''
+          '''("https:\\/\\/inv\\.*nadeko\\.*net\\/watch." . efs/mpv-browse-url)''
+          '''("search\\.nixos\\.org[^z-a]*" . qutebrowser-browse-url)''
+          '''("melpa\.org\.*" . qutebrowser-browse-url)''
+          '''("." . (lambda (url &rest args) (eww url (prefix-numeric-value 4))))''
+        ];
+        setopt.browse-url-secondary-browser-function = "'browse-url-default-browser";
+      };
     };
-  };
 }
 #+end_src
 
@@ -5193,26 +5533,26 @@ It's a simple text based web browser. I use it for short web searches
     programs.emacs.init.usePackage.eww = {
       enable = true;
       setopt = {
-	eww-search-prefix = ''"https://search.inetol.net/?q="'';
-	eww-header-line-format = false;
-	eww-desktop-remove-duplicates = true;
-	eww-download-directory = ''(expand-file-name "~/dwn")'';
-	eww-history-limit = 10;
-	# External Browser
-	eww-use-external-browser-for-content-type = ''"\\`\\(video/\\|audio\\)"''; # On GNU/Linux check your mimeapps.list
-	eww-browse-url-new-windowis-tab = false;
-	eww-form-checkbox-selected-symbol = ''"[X]"'';
-	eww-form-checkbox-symbol = ''"[ ]"'';
-	eww-auto-rename-buffer = "'title";
+        eww-search-prefix = ''"https://search.inetol.net/?q="'';
+        eww-header-line-format = false;
+        eww-desktop-remove-duplicates = true;
+        eww-download-directory = ''(expand-file-name "~/dwn")'';
+        eww-history-limit = 10;
+        # External Browser
+        eww-use-external-browser-for-content-type = ''"\\`\\(video/\\|audio\\)"''; # On GNU/Linux check your mimeapps.list
+        eww-browse-url-new-windowis-tab = false;
+        eww-form-checkbox-selected-symbol = ''"[X]"'';
+        eww-form-checkbox-symbol = ''"[ ]"'';
+        eww-auto-rename-buffer = "'title";
       };
       generalTwoConfig.":n".eww-mode-map = {
-	"N" = "#'eww-back-url";
-	"I" = "#'eww-forward-url";
-	"P" = "#'eww-copy-page-url";
-	"R" = "'eww-readable";
+        "N" = "#'eww-back-url";
+        "I" = "#'eww-forward-url";
+        "P" = "#'eww-copy-page-url";
+        "R" = "'eww-readable";
       };
       init = ''
-	<<Emacs Internet Eww Config>>
+        <<Emacs Internet Eww Config>>
       '';
     };
   };
@@ -5236,13 +5576,13 @@ It's a simple text based web browser. I use it for short web searches
       setopt.yeetube-play-function = "'mpv-play-url";
       generalOne.global-leader."y" = '''("search" . yeetube-search)'';
       generalTwoConfig.":n"."yeetube-mode-map" = {
-	"RET" = "'yeetube-play";
-	"r" = "'yeetube-channel-videos";
-	"s" = "'yeetube-channel-search";
-	"d" = "'yeetube-download-video";
+        "RET" = "'yeetube-play";
+        "r" = "'yeetube-channel-videos";
+        "s" = "'yeetube-channel-search";
+        "d" = "'yeetube-download-video";
       };
     };
-  } ;
+  };
 }
 #+end_src
 
@@ -5254,15 +5594,15 @@ It's a simple text based web browser. I use it for short web searches
       enable = true;
       generalOne.global-leader."s" = "'webjump";
       setopt.webjump-sites = [
-	'''("DuckDuckGo" . [simple-query "duckduckgo.com" "duckduckgo.com/?q=" ""])''
-	'''("Invidious" . [simple-query "inv.nadeko.net" "inv.nadeko.net/search?q=" ""])''
-	'''("Aur" . [simple-query "aur.archlinux.org" "aur.archlinux.org/packages/?K=" ""])''
-	'''("Nixpkgs" . [simple-query "search.nixos.org" "search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=" ""])''
-	'''("Curseforge" . webjump-to-curseforge)''
-	'''("Modrinth" . webjump-to-modrinth)''
+        '''("DuckDuckGo" . [simple-query "duckduckgo.com" "duckduckgo.com/?q=" ""])''
+        '''("Invidious" . [simple-query "inv.nadeko.net" "inv.nadeko.net/search?q=" ""])''
+        '''("Aur" . [simple-query "aur.archlinux.org" "aur.archlinux.org/packages/?K=" ""])''
+        '''("Nixpkgs" . [simple-query "search.nixos.org" "search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=" ""])''
+        '''("Curseforge" . webjump-to-curseforge)''
+        '''("Modrinth" . webjump-to-modrinth)''
       ];
       config = ''
-	<<Emacs Internet Webjump Config>>
+        <<Emacs Internet Webjump Config>>
       '';
     };
   };
@@ -5293,28 +5633,29 @@ NAME is the term to search for."
 *** Elfeed
 #+begin_src nix-ts :tangle modules/web/elfeed.nix
 {
-  flake.homeModules.web = { ... }:
-  {
-    programs.emacs.init.usePackage.elfeed = {
-      enable = true;
-      defer = true;
-      setopt.elfeed-feeds = [
-	''"https://lukesmith.xyz/index.xml"''
-	''"https://youtube.com/feeds/videos.xml?channel_id=UCSJPFQdZwrOutnmSFYtbstA"''
-	''"https://planet.emacslife.com/atom.xml"''
-	''"https://youtube.com/feeds/videos.xml?channel_id=UC_GQ4mac4oN3wl1UdbFuTEA"''
-	''"https://youtube.com/feeds/videos.xml?channel_id=UC6UBbvEA8uh6Ulc6ax1Zs0g"''
-	''"https://youtube.com/feeds/videos.xml?channel_id=UCNzZD3otfZVlIdvYYRRqNSw"''
-	''"https://youtube.com/feeds/videos.xml?channel_id=UCnnkTXnyn0uZzmArZO99Klg"''
-	''"https://youtube.com/feeds/videos.xml?channel_id=UCq-VIBjS6Ia1r1IR_j-7NUw"''
-	''"https://youtube.com/feeds/videos.xml?channel_id=UC0E_vIe1e1lVeojYOgVg_5Q"''
-	''"https://youtube.com/feeds/videos.xml?channel_id=UCUQs6rEz6lRGHn6DWqss0hA"''
-	''"https://youtube.com/feeds/videos.xml?channel_id=UC_zBdZ0_H_jn41FDRG7q4Tw"''
-	''"https://notrelated.xyz/rss"''
-      ];
-      generalOne.global-leader."r" = ''`("elfeed" . ,(cmd! (elfeed) (elfeed-update)))'';
+  flake.homeModules.web =
+    { ... }:
+    {
+      programs.emacs.init.usePackage.elfeed = {
+        enable = true;
+        defer = true;
+        setopt.elfeed-feeds = [
+          ''"https://lukesmith.xyz/index.xml"''
+          ''"https://youtube.com/feeds/videos.xml?channel_id=UCSJPFQdZwrOutnmSFYtbstA"''
+          ''"https://planet.emacslife.com/atom.xml"''
+          ''"https://youtube.com/feeds/videos.xml?channel_id=UC_GQ4mac4oN3wl1UdbFuTEA"''
+          ''"https://youtube.com/feeds/videos.xml?channel_id=UC6UBbvEA8uh6Ulc6ax1Zs0g"''
+          ''"https://youtube.com/feeds/videos.xml?channel_id=UCNzZD3otfZVlIdvYYRRqNSw"''
+          ''"https://youtube.com/feeds/videos.xml?channel_id=UCnnkTXnyn0uZzmArZO99Klg"''
+          ''"https://youtube.com/feeds/videos.xml?channel_id=UCq-VIBjS6Ia1r1IR_j-7NUw"''
+          ''"https://youtube.com/feeds/videos.xml?channel_id=UC0E_vIe1e1lVeojYOgVg_5Q"''
+          ''"https://youtube.com/feeds/videos.xml?channel_id=UCUQs6rEz6lRGHn6DWqss0hA"''
+          ''"https://youtube.com/feeds/videos.xml?channel_id=UC_zBdZ0_H_jn41FDRG7q4Tw"''
+          ''"https://notrelated.xyz/rss"''
+        ];
+        generalOne.global-leader."r" = ''`("elfeed" . ,(cmd! (elfeed) (elfeed-update)))'';
+      };
     };
-  };
 }
 #+end_src
 
@@ -5323,44 +5664,45 @@ https://greasyfork.org/en/scripts/374833-yt2invidio
 #+NAME: Internet Qutebrowser
 #+begin_src nix-ts :tangle modules/web/qutebrowser/misc.nix :noweb yes
 {
-  flake.homeModules.web = { config, pkgs, ... }:
+  flake.homeModules.web =
+    { config, pkgs, ... }:
 
-  {
-    home.packages = with pkgs; [
-      python313Packages.adblock
-      libfido2
-      yubikey-manager
-    ];
+    {
+      home.packages = with pkgs; [
+        python313Packages.adblock
+        libfido2
+        yubikey-manager
+      ];
 
-    programs.qutebrowser = {
-      enable = true;
-      enableDefaultBindings = true;
-      loadAutoconfig = false;
+      programs.qutebrowser = {
+        enable = true;
+        enableDefaultBindings = true;
+        loadAutoconfig = false;
 
-      aliases = {
-	"q" = "quit";
-	"w" = "session-save";
-	"wq" = "quit --save";
+        aliases = {
+          "q" = "quit";
+          "w" = "session-save";
+          "wq" = "quit --save";
+        };
+
+        searchEngines = {
+          "DEFAULT" = "https://duckduckgo.com/?q={}";
+        };
+
+        settings = {
+          downloads.location.directory = "~/dwn";
+          url = {
+            default_page = "https://search.inetol.net";
+            start_pages = "https://search.inetol.net";
+          };
+          hints.chars = "crstbfneia";
+        };
+
+        extraConfig = ''
+          <<Qutebrowser Config>>
+        '';
       };
-
-      searchEngines = {
-	"DEFAULT" = "https://duckduckgo.com/?q={}";
-      };
-
-      settings = {
-	downloads.location.directory = "~/dwn";
-	url = {
-	  default_page = "https://search.inetol.net";
-	  start_pages = "https://search.inetol.net";
-	};
-	hints.chars = "crstbfneia";
-      };
-
-      extraConfig = ''
-<<Qutebrowser Config>>
-      '';
     };
-  };
 }
 #+end_src
 
@@ -5586,50 +5928,56 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
 { inputs, ... }:
 
 {
-  flake.homeModules.chat = { config, pkgs, ... }:
-  {
-    home.packages = with pkgs; [
-      thunderbird
-    ];
+  flake.homeModules.chat =
+    { config, pkgs, ... }:
+    {
+      home.packages = with pkgs; [
+        thunderbird
+      ];
 
-    programs.vesktop = {
-      enable = true;
-      settings = {
-        minimizeToTray = false;
-        tray = false;
-        hardwareAcceleration = true;
-      };
-      vencord = {
-        useSystem = true;
+      programs.vesktop = {
+        enable = true;
         settings = {
-          autoUpdate = false;
-          autoUpdateNotification = false;
-          plugins = {
-            FakeNitro.enabled = true;
-            AnonymizeFileNames.enabled = true;
-            BetterSettings.enabled = true;
-            FixYoutubeEmbeds.enabled = true;
-            ImageZoom.enabled = true;
-            YoutubeAdblock.enabled = true;
+          minimizeToTray = false;
+          tray = false;
+          hardwareAcceleration = true;
+        };
+        vencord = {
+          useSystem = true;
+          settings = {
+            autoUpdate = false;
+            autoUpdateNotification = false;
+            plugins = {
+              FakeNitro.enabled = true;
+              AnonymizeFileNames.enabled = true;
+              BetterSettings.enabled = true;
+              FixYoutubeEmbeds.enabled = true;
+              ImageZoom.enabled = true;
+              YoutubeAdblock.enabled = true;
+            };
           };
         };
       };
     };
-  };
 }
 #+end_src
+
 ** Mutype
 #+begin_src nix-ts :tangle modules/mutype.nix
 {
   flake.homeModules.mutype = { ... }: {
     programs.emacs.init.usePackage.mutype = {
       enable = true;
-      command = ["mutype-mode" "mutype-mode-custom"];
+      command = [
+        "mutype-mode"
+        "mutype-mode-custom"
+      ];
       setopt.mutype-source-directory = ''"~/.config/emacs/mutype"'';
     };
   };
 }
 #+end_src
+
 ** Gaming
 Setting up your alsoftrc correctly makes Minecraft happy
 #+begin_src nix-ts :tangle modules/gaming.nix
@@ -5637,17 +5985,17 @@ Setting up your alsoftrc correctly makes Minecraft happy
   flake.homeModules.gaming = { config, pkgs, ... }: {
     home = {
       file.".alsoftrc".text = ''
-	[general]
+        [general]
         drivers=pulse
         hrtf=true
       '';
       packages = with pkgs; [
-	# steam
-	# lutris
-	# retroarch
-	# gamemode
-	prismlauncher
-	graalvmPackages.graalvm-oracle_17
+        # steam
+        # lutris
+        # retroarch
+        # gamemode
+        prismlauncher
+        graalvmPackages.graalvm-oracle_17
       ];
     };
   };
