@@ -7,6 +7,7 @@
       ...
     }:
     {
+      home.packages = [ pkgs.vscode-eslint-language-server ];
       programs.emacs.init = {
         ide.languages = {
           javascript = {
@@ -33,10 +34,10 @@
             ];
             ghookf = [ "('(jtsx-jsx-mode jtsx-tsx-mode) '(hs-minor-mode emmet-mode))" ];
             config = ''
-              	    (dolist (lang '(javascript jsdoc tsx typescript))
-              	      (unless (treesit-language-available-p lang)
-              	        (jtsx-install-treesit-language lang)))
-              	  '';
+              (dolist (lang '(javascript jsdoc tsx typescript))
+                (unless (treesit-language-available-p lang)
+                  (jtsx-install-treesit-language lang)))
+            '';
             symex = true;
             eglot = true;
             generalTwoConfig = {
@@ -61,6 +62,7 @@
               };
             };
           };
+
           emmet.config = ''
             (dolist (mode '(jtsx-jsx-mode jtsx-tsx-mode))
               (add-to-list 'emmet-jsx-major-modes mode))

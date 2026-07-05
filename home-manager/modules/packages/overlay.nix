@@ -4,7 +4,12 @@ let
   system = "x86_64-linux";
   pkgs-stable = import inputs.nixpkgs-stable {
     inherit system;
-    config.allowUnfree = true;
+    config = {
+      allowUnfree = true;
+      permittedInsecurePackages = [
+        "pnpm-10.29.2"
+      ];
+    };
   };
 in
 {

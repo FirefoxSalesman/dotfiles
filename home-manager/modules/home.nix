@@ -3,7 +3,12 @@ let
   system = "x86_64-linux";
   pkgs = import inputs.nixpkgs {
     inherit system;
-    config.allowUnfree = true;
+    config = {
+      allowUnfree = true;
+      permittedInsecurePackages = [
+        "pnpm-10.29.2"
+      ];
+    };
     overlays = [
       (final: prev: self.overlay final prev pkgs inputs)
       inputs.emacs-init.overlay

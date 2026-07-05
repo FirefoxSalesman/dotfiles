@@ -10,7 +10,12 @@
       usePackage = {
         display-line-numbers.setopt.display-line-numbers-type = "'relative";
 
-        server = {
+	files = {
+	  enable = true;
+	  setopt.trusted-content = [''"~/projects/generic-todo/"''];
+	};
+
+	server = {
           enable = true;
           deferIncrementally = true;
           config = "(server-start)";

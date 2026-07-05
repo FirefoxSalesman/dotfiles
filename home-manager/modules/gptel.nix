@@ -43,7 +43,7 @@
       programs.emacs.init = {
         ai = {
           copilot = {
-            enable = true;
+            enable = false;
             keepOutOf = [
               "c-ts-mode"
               "json5-ts-mode"
@@ -54,10 +54,7 @@
           };
           gptel = {
             enable = true;
-            macher = {
-	      enable = true;
-	      agent = true;
-	    };
+	    agent.enable = true;
           };
         };
         usePackage =

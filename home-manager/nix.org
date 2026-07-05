@@ -93,7 +93,12 @@ let
   system = "x86_64-linux";
   pkgs-stable = import inputs.nixpkgs-stable {
     inherit system;
-    config.allowUnfree = true;
+    config = {
+      allowUnfree = true;
+      permittedInsecurePackages = [
+        "pnpm-10.29.2"
+      ];
+    };
   };
 in
 {
@@ -260,7 +265,12 @@ let
   system = "x86_64-linux";
   pkgs = import inputs.nixpkgs {
     inherit system;
-    config.allowUnfree = true;
+    config = {
+      allowUnfree = true;
+      permittedInsecurePackages = [
+        "pnpm-10.29.2"
+      ];
+    };
     overlays = [
       (final: prev: self.overlay final prev pkgs inputs)
       inputs.emacs-init.overlay
@@ -1816,6 +1826,18 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 (require 'projection)
 (global-projection-hook-mode)
 (oset projection-project-type-maven build "mvn -B clean compile")
+(advice-add
+ 'projection-multi-npm-scripts--targets-from-file2
+ :override
+ (lambda ()
+   (hash-table-keys
+    (gethash
+     "scripts"
+     (with-temp-buffer
+       (insert-file-contents
+        (expand-file-name
+         (concat (project-root (project-current)) "package.json")))
+       (json-parse-string (buffer-string)))))))
 #+end_src
 
 *** Web
@@ -1829,6 +1851,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
       ...
     }:
     {
+      home.packages = [ pkgs.vscode-eslint-language-server ];
       programs.emacs.init = {
         ide.languages = {
           javascript = {
@@ -1855,8 +1878,8 @@ I think most of it was from the github page for lsp mode, but it's been a while,
             ];
             ghookf = [ "('(jtsx-jsx-mode jtsx-tsx-mode) '(hs-minor-mode emmet-mode))" ];
             config = ''
-              	    <<Jtsx Config>>
-              	  '';
+              <<Jtsx Config>>
+            '';
             symex = true;
             eglot = true;
             generalTwoConfig = {
@@ -1881,6 +1904,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
               };
             };
           };
+
           emmet.config = ''
             <<Emmet Config>>
           '';
@@ -2359,7 +2383,12 @@ Most of this was shamelessly lifted from Emacs from Scratch.
       usePackage = {
         display-line-numbers.setopt.display-line-numbers-type = "'relative";
 
-        server = {
+	files = {
+	  enable = true;
+	  setopt.trusted-content = [''"~/projects/generic-todo/"''];
+	};
+
+	server = {
           enable = true;
           deferIncrementally = true;
           config = "(server-start)";
@@ -4962,9 +4991,6 @@ NEG subtracts if it is true."
 
 ** Gptel
 https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
-https://github.com/skissue/llm-tool-collection
-*RAG tools:*
-+ [ ] https://git.bajsicki.com/phil/gptel-got should probably be another preset, but I'm not sure how that would look right now.
 
 #+begin_src nix-ts :tangle modules/gptel.nix :noweb yes
 { inputs, ... }:
@@ -5012,7 +5038,7 @@ https://github.com/skissue/llm-tool-collection
       programs.emacs.init = {
         ai = {
           copilot = {
-            enable = true;
+            enable = false;
             keepOutOf = [
               "c-ts-mode"
               "json5-ts-mode"
@@ -5023,10 +5049,7 @@ https://github.com/skissue/llm-tool-collection
           };
           gptel = {
             enable = true;
-            macher = {
-	      enable = true;
-	      agent = true;
-	    };
+	    agent.enable = true;
           };
         };
         usePackage =

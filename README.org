@@ -46,18 +46,13 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 ** Emacs
 + [ ] The python files from emacs-qutebrowser should be part of the emacs package & be provided by nix
 + [ ] See if there's anything to glean from here: https://www.reddit.com/r/emacs/comments/1nwgygm/building_workflows_with_gptel/
-+ [ ] https://github.com/cosmicz/clime
-  I'd like to see if I could integrate this into the nix framework
 + [ ] dash template gets cleaned up & goes to live in its own repo
-+ [ ] https://github.com/isamert/corg.el
 + [ ] Try out trust manager
 + [ ] toc-org
-+ [ ] highlight-symbol
 + [ ] git-modes
 + [ ] diff-hl
 + [ ] goto chg
 + [ ] undo-fu-session
-+ [ ] elisp-auto-fmt
 + [ ] quick-fasd (probably not)
 + [ ] switch to ewm https://idlip.in/posts/may-i-recommend/
 + [ ] https://ianyepan.github.io/posts/git-blame-emacs/
