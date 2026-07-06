@@ -28,24 +28,6 @@
               	  '';
           };
 
-	  projection.config = ''
-	    (require 'projection)
-	    (global-projection-hook-mode)
-	    (oset projection-project-type-maven build "mvn -B clean compile")
-	    (advice-add
-	     'projection-multi-npm-scripts--targets-from-file2
-	     :override
-	     (lambda ()
-	       (hash-table-keys
-	        (gethash
-	         "scripts"
-	         (with-temp-buffer
-	           (insert-file-contents
-	            (expand-file-name
-	             (concat (project-root (project-current)) "package.json")))
-	           (json-parse-string (buffer-string)))))))
-	  '';
-
           projection-ibuffer = {
             enable = true;
             generalOne.project-prefix-map = {
@@ -54,7 +36,23 @@
             };
           };
 
-          projection-multi.custom.projection-gradle-use-daemon = false;
+          projection-multi = {
+            custom.projection-gradle-use-daemon = false;
+            config = ''
+              (advice-add
+               'projection-multi-npm-scripts--targets-from-file2
+               :override
+               (lambda ()
+                 (hash-table-keys
+                  (gethash
+                   "scripts"
+                   (with-temp-buffer
+                     (insert-file-contents
+                      (expand-file-name
+                       (concat (project-root (project-current)) "package.json")))
+                     (json-parse-string (buffer-string)))))))
+            '';
+          };
         };
       };
     };

@@ -1806,10 +1806,6 @@ I think most of it was from the github page for lsp mode, but it's been a while,
               	  '';
           };
 
-	  projection.config = ''
-	    <<Emacs Development Projection Config>>
-	  '';
-
           projection-ibuffer = {
             enable = true;
             generalOne.project-prefix-map = {
@@ -1818,7 +1814,12 @@ I think most of it was from the github page for lsp mode, but it's been a while,
             };
           };
 
-          projection-multi.custom.projection-gradle-use-daemon = false;
+          projection-multi = {
+            custom.projection-gradle-use-daemon = false;
+            config = ''
+              <<Emacs Development Projection Config>>
+            '';
+          };
         };
       };
     };
@@ -1827,9 +1828,6 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 
 #+NAME: Emacs Development Projection Config
 #+begin_src emacs-lisp
-(require 'projection)
-(global-projection-hook-mode)
-(oset projection-project-type-maven build "mvn -B clean compile")
 (advice-add
  'projection-multi-npm-scripts--targets-from-file2
  :override
@@ -5077,7 +5075,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
           };
           gptel = {
             enable = true;
-	    agent.enable = true;
+            agent.enable = true;
           };
         };
         usePackage =
@@ -5117,6 +5115,12 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
               config = ''
                 (start-ollama)
                 (gptel-make-gh-copilot "copilot")
+                (efs/evil-collection-remap 'evil-collection-gptel-setup 'normal gptel-mode-map
+                    			   "RET" 'gptel-send
+                    			   "<return>" 'gptel-send)
+                (efs/evil-collection-remap 'evil-collection-gptel-setup 'insert gptel-mode-map
+                    			   "RET" 'newline
+                    			   "<return>" 'newline)
               '';
             };
 

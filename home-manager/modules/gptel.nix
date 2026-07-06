@@ -54,7 +54,7 @@
           };
           gptel = {
             enable = true;
-	    agent.enable = true;
+            agent.enable = true;
           };
         };
         usePackage =
@@ -97,6 +97,12 @@
               config = ''
                 (start-ollama)
                 (gptel-make-gh-copilot "copilot")
+                (efs/evil-collection-remap 'evil-collection-gptel-setup 'normal gptel-mode-map
+                    			   "RET" 'gptel-send
+                    			   "<return>" 'gptel-send)
+                (efs/evil-collection-remap 'evil-collection-gptel-setup 'insert gptel-mode-map
+                    			   "RET" 'newline
+                    			   "<return>" 'newline)
               '';
             };
 
