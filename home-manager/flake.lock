@@ -293,15 +293,15 @@
     "exwm-qutebrowser": {
       "flake": false,
       "locked": {
-        "lastModified": 1771356239,
-        "narHash": "sha256-9BOC9qDnKH566pd3ihQ3DqAfJF+cF+1p9A2VE3aK8Tc=",
-        "owner": "lrustand",
+        "lastModified": 1783306511,
+        "narHash": "sha256-P3+enffSLj6xUAY/t27+EvaQ8F2l3EqE9tKrlBWs4oQ=",
+        "owner": "firefoxsalesman",
         "repo": "qutebrowser.el",
-        "rev": "bafeea87e9e1d8319642e8189fbd5fc8c9981b11",
+        "rev": "01ba23e1b72767dde341ffe3d9c0fa935a4c26da",
         "type": "github"
       },
       "original": {
-        "owner": "lrustand",
+        "owner": "firefoxsalesman",
         "repo": "qutebrowser.el",
         "type": "github"
       }

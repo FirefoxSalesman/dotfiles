@@ -55,7 +55,7 @@
     };
 
     exwm-qutebrowser = {
-      url = "github:lrustand/qutebrowser.el";
+      url = "github:firefoxsalesman/qutebrowser.el";
       flake = false;
     };
 
