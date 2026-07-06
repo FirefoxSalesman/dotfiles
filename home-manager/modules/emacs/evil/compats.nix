@@ -1,6 +1,7 @@
 {
   flake.homeModules.emacs = { ... }: {
     programs.emacs.init.usePackage = {
+      evil-collection.setopt.evil-collection-repl-submit-state = "'insert";
       evil-org.config = ''
         (evil-define-key 'operator 'evil-org-mode "i" 'evil-forward-char)
         (evil-define-key

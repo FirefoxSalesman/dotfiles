@@ -61,15 +61,9 @@
               citre-readtags-program = ''"${pkgs.universal-ctags}/bin/readtags"'';
             };
             custom.citre-peek-ace-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
-            generalTwoConfig = {
-              local-leader.citre-mode-map = {
+            generalTwoConfig.local-leader.citre-mode-map = {
                 "p" = "'citre-ace-peek";
                 "u" = "'citre-update-this-tags-file";
-              };
-              ":nvm".citre-peek-keymap = {
-                "M-e" = "'citre-peek-next-line";
-                "M-o" = "'citre-peek-prev-line";
-              };
             };
             generalOneConfig.citre-peek-keymap = {
               "M-e" = "'citre-peek-next-line";
