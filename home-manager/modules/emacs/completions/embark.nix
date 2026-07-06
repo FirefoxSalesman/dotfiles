@@ -20,10 +20,10 @@
         elpaBuild {
           pname = "embark";
           ename = "embark";
-          version = "1.1";
+          version = "1.2";
           src = fetchurl {
-            url = "https://elpa.gnu.org/packages/embark-1.1.tar";
-            sha256 = "074ggh7dkr5jdkwcndl6znhkq48jmc62rp7mc6vjidr6yxf8d1rn";
+            url = "https://elpa.gnu.org/packages/embark-1.2.tar";
+            sha256 = "sha256-ZeRVPnCalhkBamNcQ19kit0xDHVgGzsIGMpxxbRmeOo=";
           };
           packageRequires = [
             org

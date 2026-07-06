@@ -1,5 +1,34 @@
 { inputs, ... }:
 {
+  perSystem =
+    { pkgs, ... }:
+    let
+      epkgs = pkgs.emacs.pkgs;
+    in
+    {
+      packages.org = epkgs.callPackage (
+        {
+          elpaBuild,
+          fetchurl,
+          lib,
+        }:
+        elpaBuild {
+          pname = "org";
+          ename = "org";
+          version = "9.8.6";
+          src = fetchurl {
+            url = "https://elpa.gnu.org/packages/org-9.8.6.tar";
+            sha256 = "sha256-QyrhwAW55Y4vtgMbIjSQOkNr+8uTSmXdumi2qc8dTIE=";
+          };
+          packageRequires = [ ];
+          meta = {
+            homepage = "https://elpa.gnu.org/packages/org.html";
+            license = lib.licenses.free;
+          };
+        }
+      ) { };
+    };
+
   flake.homeModules.writing =
     { config, pkgs, ... }:
 

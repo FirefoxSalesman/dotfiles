@@ -9,8 +9,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
-    emacs-overlay.url = "github:nix-community/emacs-overlay/1746faa";
-    # emacs-overlay.url  = "github:nix-community/emacs-overlay";
+    emacs-overlay.url  = "github:nix-community/emacs-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
     import-tree.url = "github:vic/import-tree";
 
@@ -141,6 +140,7 @@ in
             roll = packages.roll;
             pertab = packages.pertab;
             embark = packages.embark;
+            org = packages.org;
             gptel-got = packages.gptel-got;
           }
         ));
@@ -3384,10 +3384,10 @@ avy actions from karthink
         elpaBuild {
           pname = "embark";
           ename = "embark";
-          version = "1.1";
+          version = "1.2";
           src = fetchurl {
-            url = "https://elpa.gnu.org/packages/embark-1.1.tar";
-            sha256 = "074ggh7dkr5jdkwcndl6znhkq48jmc62rp7mc6vjidr6yxf8d1rn";
+            url = "https://elpa.gnu.org/packages/embark-1.2.tar";
+            sha256 = "sha256-ZeRVPnCalhkBamNcQ19kit0xDHVgGzsIGMpxxbRmeOo=";
           };
           packageRequires = [
             org
@@ -3835,6 +3835,35 @@ How to add a latex package
 #+begin_src nix-ts :tangle modules/writing/org.nix :noweb yes
 { inputs, ... }:
 {
+  perSystem =
+    { pkgs, ... }:
+    let
+      epkgs = pkgs.emacs.pkgs;
+    in
+    {
+      packages.org = epkgs.callPackage (
+        {
+          elpaBuild,
+          fetchurl,
+          lib,
+        }:
+        elpaBuild {
+          pname = "org";
+          ename = "org";
+          version = "9.8.6";
+          src = fetchurl {
+            url = "https://elpa.gnu.org/packages/org-9.8.6.tar";
+            sha256 = "sha256-QyrhwAW55Y4vtgMbIjSQOkNr+8uTSmXdumi2qc8dTIE=";
+          };
+          packageRequires = [ ];
+          meta = {
+            homepage = "https://elpa.gnu.org/packages/org.html";
+            license = lib.licenses.free;
+          };
+        }
+      ) { };
+    };
+
   flake.homeModules.writing =
     { config, pkgs, ... }:
 

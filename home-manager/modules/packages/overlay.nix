@@ -52,6 +52,7 @@ in
             roll = packages.roll;
             pertab = packages.pertab;
             embark = packages.embark;
+            org = packages.org;
             gptel-got = packages.gptel-got;
           }
         ));
