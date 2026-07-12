@@ -9,6 +9,8 @@
       ...
     }:
     {
+      wayland.windowManager.hyprland.configType = "lua";
+
       stylix = {
         enable = true;
         polarity = "dark";
@@ -37,20 +39,24 @@
         };
       };
 
-      home.file = {
-        ".cache/colors.json".source = config.lib.stylix.colors {
-          template = builtins.readFile ./pywal.json.mustache;
-          extension = ".json";
+      home = {
+        file = {
+          ".cache/colors.json".source = config.lib.stylix.colors {
+            template = builtins.readFile ./pywal.json.mustache;
+            extension = ".json";
+          };
         };
-      };
 
-      home.activation = # ALSO ACTIVATES AT REBOOT
-        {
-          generate_pywal_colors = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-            	  $DRY_RUN_CMD ${lib.getExe pkgs.pywal} -f ~/.cache/colors.json
-                   $DRY_RUN_CMD ${lib.getExe pkgs.pywal} -R
-            	'';
-        };
+        activation = # ALSO ACTIVATES AT REBOOT
+          {
+            generate_pywal_colors = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+              $DRY_RUN_CMD ${lib.getExe pkgs.pywal} -f ~/.cache/colors.json
+              $DRY_RUN_CMD ${lib.getExe pkgs.pywal} -R
+            '';
+          };
+
+        pointerCursor.enable = true;
+      };
 
       programs.emacs.init.usePackage = {
         ewal-doom-themes = {

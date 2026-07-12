@@ -4,40 +4,111 @@
     { pkgs, ... }:
     {
       packages.mpvmacs = pkgs.writeShellScriptBin "mpvmacs" ''
-        	emacsclient -e "(mpv-play \"$1\")"
+        emacsclient -e "(mpv-play \"$1\")"
       '';
     };
 
-  flake.homeModules.fileManager = { pkgs, ... }: {
+  flake.homeModules.fileManager = { pkgs, lib, ... }: {
     programs.emacs.init = {
       tools.dired = {
         enable = true;
-        narrow = true;
-        posframe = true;
+        # narrow = true;
+        # posframe = true;
         async = true;
       };
       usePackage = {
+        nerd-icons-dired.enable = lib.mkForce false;
+
         dired = {
           generalOne.ctl-x-map."d" = "'consult-dir";
-          # We're doing our best to get rid of that 1st extraneous line
           setopt = {
             dired-free-space = false;
-            dired-kill-when-opening-new-dired-buffer = true;
-            dired-auto-revert-buffer = "#'dired-directory-changed-p";
-            dired-recursive-copies = "'always";
-            dired-recursive-deletes = "'always";
-            dired-create-destination-dirs = "'ask";
-            dired-create-destination-dirs-on-trailing-dirstep = true;
+            # Borrowed from Doom
+            image-dired-thumb-size = 150;
           };
-          config = ''(with-eval-after-load 'dired-x (gsetq dired-omit-extensions (delete ".class" dired-omit-extensions)))'';
-          ghookf = [
-            ''
-                          ('dired-mode (lambda () (general-def 'normal dired-mode-map
-                             "B" 'evil-goto-line
-                             "n" 'dired-up-directory
-                             "i" 'dired-find-file)))
-              	  ''
-          ];
+          config = ''
+            (with-eval-after-load 'dired-x
+              (gsetq
+               dired-omit-extensions (delete ".class" dired-omit-extensions)))
+          '';
+        };
+
+        dirvish = {
+          enable = true;
+          afterCall = [ "on-first-input-hook" ];
+          generalOne.global-leader."T" = "'dirvish-side";
+          # Borrowed from doom
+          generalTwoConfig.":n".dirvish-mode-map = {
+            "n" = "'dired-up-directory";
+            "i" = "'dired-find-file";
+            "N" = "'dirvish-narrow";
+            "M-m" = "'dirvish-mark-menu";
+            "B" = "'evil-goto-line";
+            "f" = "'dirvish-file-info-menu";
+            "G" = "'dirvish-yank";
+            "S" = "'dirvish-quicksort";
+            "F" = "'dirvish-layout-toggle";
+            "q" = "'dirvish-history-jump";
+            "bn" = "'dirvish-subtree-up";
+            "bi" = "'dirvish-subtree-toggle";
+            "C-i" = "'dirvish-subtree-toggle";
+            "[h" = "'dirvish-history-go-backward";
+            "]h" = "'dirvish-history-go-forward";
+            "[e" = "'dirvish-emerge-next-group";
+            "]e" = "'dirvish-emerge-previous-group";
+            "M-e" = "'dirvish-emerge-menu";
+            "g" = '''(:ignore t :which-key "yank")'';
+            "gl" = "'dirvish-copy-file-true-path";
+            "gn" = "'dirvish-copy-file-name";
+            "gp" = "'dirvish-copy-file-path";
+            "s" = '''(:ignore t :which-key "symlinks")'';
+            "ss" = "'dirvish-symlink";
+            "sS" = "'dirvish-relative-symlink";
+            "sh" = "'dirvish-hardlink";
+	    "O" = "'dirvish-move";
+          };
+          # Borrowed from doom
+          setopt =
+            let
+              dirvishTypes = [
+                "'dirvish"
+                "'dirvish-side"
+              ];
+            in
+            {
+              dirvish-reuse-session = "'open";
+              dirvish-attributes = [
+                "'file-size"
+                "'nerd-icons"
+                "'subtree-state"
+              ];
+              dirvish-hide-details = dirvishTypes;
+              dirvish-hide-cursor = dirvishTypes;
+              dirvish-use-mode-line = false;
+            };
+          config = ''
+            (dirvish-override-dired-mode)
+            (advice-add #'dired--find-file :override #'dirvish--find-entry)
+            (advice-add #'dired-noselect :around #'dirvish-dired-noselect-a)
+            (advice-add #'dirvish-side :after (local! window-size-fixed t))
+            (add-to-list
+             #'golden-ratio-inhibit-functions
+             (lambda ()
+               (string-prefix-p " *SIDE :: " (buffer-name (current-buffer)))))
+            (with-eval-after-load 'dirvish-yank
+              (defun dirvish-yank--apply (method dest)
+                "Apply yank METHOD to DEST."
+                (setq dest (expand-file-name (or dest (dired-current-directory))))
+                (let ((srcs
+                       (or (and (not
+                                 (member
+                                  dirvish-yank-sources '(all session buffer)))
+                                (functionp dirvish-yank-sources)
+                                (funcall dirvish-yank-sources))
+                           (dirvish-yank--get-srcs dirvish-yank-sources)
+                           (user-error "DIRVISH[yank]: no marked files"))))
+                  (dirvish-yank-default-handler method srcs dest))))
+          '';
         };
 
         openwith = {
@@ -45,45 +116,33 @@
           defer = true;
           ghookf = [ "('dired-mode 'openwith-mode)" ];
           config = ''
-                        (gsetq
-                         openwith-associations
-                         (list
-                          (list (openwith-make-extension-regexp '("xcf")) "gimp" '(file))
-                          (list
-                           (openwith-make-extension-regexp
-                            '("odt" "doc" "docx" "odp" "pptx" "xlsx"))
-                           "libreoffice" '(file))
-                          (list
-                           (openwith-make-extension-regexp
-                            '("mpg"
-                              "mpeg"
-                              "mp3"
-                              "mp4"
-                              "avi"
-                              "wmv"
-                              "wav"
-                              "mov"
-                              "flv"
-                              "ogm"
-                              "ogg"
-                              "mkv"
-                              "webm"
-                              "opus"
-                              "flac"))
-                           "${pkgs.mpvmacs}/bin/mpvmacs" '(file))))
-            	  '';
-        };
-
-        dired-ranger = {
-          enable = true;
-          ghookf = [
-            ''
-                          ('dired-mode (lambda () (general-def 'normal dired-mode-map
-                             "d" 'dired-ranger-copy
-                             "O" 'dired-ranger-move
-                             "G" 'dired-ranger-paste)))
-              	  ''
-          ];
+            (gsetq
+             openwith-associations
+             (list
+              (list (openwith-make-extension-regexp '("xcf")) "gimp" '(file))
+              (list
+               (openwith-make-extension-regexp
+                '("odt" "doc" "docx" "odp" "pptx" "xlsx"))
+               "libreoffice" '(file))
+              (list
+               (openwith-make-extension-regexp
+                '("mpg"
+                  "mpeg"
+                  "mp3"
+                  "mp4"
+                  "avi"
+                  "wmv"
+                  "wav"
+                  "mov"
+                  "flv"
+                  "ogm"
+                  "ogg"
+                  "mkv"
+                  "webm"
+                  "opus"
+                  "flac"))
+               "${lib.getExe pkgs.mpvmacs}" '(file))))
+          '';
         };
 
         image = {

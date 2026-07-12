@@ -42,7 +42,7 @@
             
             (defmacro local! (var body)
               "Creates a lambda that runs setq-local on the variable VAR with the value provided by BODY."
-              `(lambda () (setq-local ,var ,body)))
+              `(lambda (&rest args) (setq-local ,var ,body)))
             
             (defun gen-mode-hooks (modes)
               "Takes a list of symbols, MODES, & appends -mode to them."

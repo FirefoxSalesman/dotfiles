@@ -55,6 +55,10 @@
           gptel = {
             enable = true;
             agent.enable = true;
+	    introspection = {
+	      enable = true;
+	      model = "qwen3:8b";
+	    };
           };
         };
         usePackage =
@@ -87,7 +91,8 @@
                   '''(text-mode . "HK-47  ")''
                 ];
               }
-              // mkOllama [ "llama3.2:3b" "qwen2.5-coder:7b" "llama3.2:1b" ] "";
+              // mkOllama [ "llama3.2:3b" "qwen2.5-coder:7b" "qwen3:8b" "llama3.2:1b" ] "";
+              generalOne.global-leader."gi" = "'gptel-inline";
               preface = ''
                 (defun start-ollama ()
                   (interactive)
@@ -95,14 +100,24 @@
                    "startOllama" nil "${pkgs.startOllama}/bin/start-ollama"))
               '';
               config = ''
-                (start-ollama)
-                (gptel-make-gh-copilot "copilot")
-                (efs/evil-collection-remap 'evil-collection-gptel-setup 'normal gptel-mode-map
-                    			   "RET" 'gptel-send
-                    			   "<return>" 'gptel-send)
-                (efs/evil-collection-remap 'evil-collection-gptel-setup 'insert gptel-mode-map
-                    			   "RET" 'newline
-                    			   "<return>" 'newline)
+                		(start-ollama)
+                		(gptel-make-gh-copilot "copilot")
+                		(efs/evil-collection-remap
+                		 'evil-collection-gptel-setup
+                		 'normal
+                		 gptel-mode-map
+                		 "<return>"
+                		 'gptel-send
+                		 "RET"
+                		 'gptel-send)
+                		(efs/evil-collection-remap
+                		 'evil-collection-gptel-setup
+                		 'insert
+                		 gptel-mode-map
+                		 "<return>"
+                		 'newline
+                		 "RET"
+                		 'newline)
               '';
             };
 
@@ -113,14 +128,29 @@
             #   after = ["gptel"];
             # };
 
-            # mcp = {
-            #   enable = true;
-            #   after = ["gptel"];
-            #   config = ''
-            # 	(require 'mcp-hub)
-            #     (require 'gptel-integrations)
-            #   '';
-            # };
+            mcp = {
+              enable = true;
+              after = [ "gptel" ];
+              config = ''
+                (require 'mcp-hub)
+                (require 'gptel-integrations)
+                ;; Borrowed from Karthinks
+                (gptel-make-preset
+                 'nixos
+                 :description "TOOLS: Add NixOS MCP"
+                 :pre (lambda () (gptel-mcp-connect '("nixos") 'sync))
+                 :system
+                 '(:append
+                   "\n\nUse the provided NixOS tools to look for up-to-date information and\
+                 examine the state of my system")
+                 :tools '(:append ("mcp-nixos"))
+                 :model 'qwen3:8b
+                 :backend "Ollama")
+              '';
+              setopt.mcp-hub-servers = [
+                '''("nixos" :command "${pkgs.uv}/bin/uvx" :args ("mcp-nixos"))''
+              ];
+            };
           };
       };
     };
