@@ -35,6 +35,10 @@
 
         dirvish = {
           enable = true;
+          extraPackages = with pkgs; [
+            vips
+            mediainfo
+          ];
           afterCall = [ "on-first-input-hook" ];
           generalOne.global-leader."T" = "'dirvish-side";
           # Borrowed from doom
@@ -65,7 +69,7 @@
             "ss" = "'dirvish-symlink";
             "sS" = "'dirvish-relative-symlink";
             "sh" = "'dirvish-hardlink";
-	    "O" = "'dirvish-move";
+            "O" = "'dirvish-move";
           };
           # Borrowed from doom
           setopt =
@@ -85,16 +89,34 @@
               dirvish-hide-details = dirvishTypes;
               dirvish-hide-cursor = dirvishTypes;
               dirvish-use-mode-line = false;
+              dirvish-preview-disabled-exts = [
+                ''"bin"''
+                ''"exe"''
+                ''"gpg"''
+                ''"elc"''
+                ''"eln"''
+                ''"xcf"''
+                ''"odt"''
+                ''"doc"''
+                ''"docx"''
+                ''"odp"''
+                ''"pptx"''
+                ''"xlsx"''
+              ];
             };
           config = ''
             (dirvish-override-dired-mode)
             (advice-add #'dired--find-file :override #'dirvish--find-entry)
             (advice-add #'dired-noselect :around #'dirvish-dired-noselect-a)
             (advice-add #'dirvish-side :after (local! window-size-fixed t))
+            
             (add-to-list
              #'golden-ratio-inhibit-functions
              (lambda ()
-               (string-prefix-p " *SIDE :: " (buffer-name (current-buffer)))))
+               (let ((matches (lambda (prefix) (string-prefix-p prefix (buffer-name (current-buffer))))))
+                 (or (funcall matches " *SIDE :: ")
+            	 (funcall matches "*dirvish-parent-1")))))
+            
             (with-eval-after-load 'dirvish-yank
               (defun dirvish-yank--apply (method dest)
                 "Apply yank METHOD to DEST."
@@ -108,6 +130,8 @@
                            (dirvish-yank--get-srcs dirvish-yank-sources)
                            (user-error "DIRVISH[yank]: no marked files"))))
                   (dirvish-yank-default-handler method srcs dest))))
+            
+            (dirvish-peek-mode)
           '';
         };
 
