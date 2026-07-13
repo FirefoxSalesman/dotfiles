@@ -1,6 +1,6 @@
 {
   flake.homeModules.development =
-    { ... }:
+    { pkgs, ... }:
     {
       programs.emacs.init = {
         ide = {
@@ -23,9 +23,15 @@
             };
             # https://github.com/magit/magit/issues/5557
             config = ''
-              	    (defalias 'magit--any
-                            (static-if (fboundp 'member-if) #'member-if #'cl-member-if))
-              	  '';
+                (defalias 'magit--any
+                        (static-if (fboundp 'member-if) #'member-if #'cl-member-if))
+              '';
+          };
+
+          majutsu = {
+            enable = true;
+	    extraPackages = [pkgs.jujutsu];
+	    command = ["majutsu"];
           };
 
           projection-ibuffer = {
