@@ -18,33 +18,37 @@
               	      (eshell 'N))
               	  '';
             config = ''
-              	    (defun efs/configure-eshell ()
-              	      ;; Bind some useful keys for evil-mode
-              	      (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
-              	      (evil-normalize-keymaps))
-
-              	    ;; https://xenodium.com/rinku-cli-link-previews
-              	    (defun adviced:eshell/cat (orig-fun &rest args)
-              	      "Like `eshell/cat' but with image support."
-              	      (if (seq-every-p (lambda (arg)
-              	                         (and (stringp arg)
-              	                              (file-exists-p arg)
-              	                              (image-supported-file-p arg)))
-              	                       args)
-              	          (with-temp-buffer
-              	            (insert "\n")
-              	            (dolist (path args)
-              	              (let ((newpath (expand-file-name path)))
-              	    	    (insert-image (create-image
-              	    			   newpath (image-type-from-file-name newpath)
-              	    			   nil :max-width 350)))
-              	              (insert "\n"))
-              	            (insert "\n")
-              	            (buffer-string))
-              	        (apply orig-fun args)))
-
-              	    (advice-add #'eshell/cat :around #'adviced:eshell/cat)
-              	  '';
+              	      (defun efs/configure-eshell ()
+              	        ;; Bind some useful keys for evil-mode
+              	        (evil-define-key
+              	         '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
+              	        (evil-normalize-keymaps))
+              	      
+              	      ;; https://xenodium.com/rinku-cli-link-previews
+              	      (defun adviced:eshell/cat (orig-fun &rest args)
+              	        "Like `eshell/cat' but with image support."
+              	        (if (seq-every-p
+              	             (lambda (arg)
+              	               (and (stringp arg)
+              	                    (file-exists-p arg)
+              	                    (image-supported-file-p arg)))
+              	             args)
+              	            (with-temp-buffer
+              	              (insert "\n")
+              	              (dolist (path args)
+              	                (let ((newpath (expand-file-name path)))
+              	                  (insert-image
+              	                   (create-image newpath
+              	                                 (image-type-from-file-name newpath)
+              	                                 nil
+              	                                 :max-width 350)))
+              	                (insert "\n"))
+              	              (insert "\n")
+              	              (buffer-string))
+              	          (apply orig-fun args)))
+              	      
+              	      (advice-add #'eshell/cat :around #'adviced:eshell/cat)
+              	    '';
           };
 
           fish-completion.gfhookf = [
@@ -66,6 +70,13 @@
               	    			   "c" 'evil-visual-state
               	    			   "C" 'evil-visual-line)
               	  '';
+          };
+
+          esh-help = {
+            enable = true;
+            after = [ "eshell" ];
+            gfhookf = [ "('eshell-mode 'eldoc-box-hover-at-point-mode)" ];
+            config = "(setup-esh-help-eldoc)";
           };
         };
       };

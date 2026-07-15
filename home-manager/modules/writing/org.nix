@@ -91,6 +91,11 @@
               	          (org-md-export-to-markdown))
               	         ((equal export-type "html")
               	          (org-html-export-to-html)))))
+              	    
+              	    (with-eval-after-load 'dashboard
+              	      (dolist (file (mapcar (lambda (x) (concat (car x) "todo.org")) project--list))
+              	        (add-to-list 'org-agenda-files file))
+              	      (dashboard-open))
               	  '';
           };
 

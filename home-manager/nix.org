@@ -497,7 +497,7 @@ It's mostly here for eshell to get completions from, but it's a usable shell
 #+end_src
 
 *** eshell
-#+begin_src nix-ts :tangle modules/shells/eshell.nix
+#+begin_src nix-ts :tangle modules/shells/eshell.nix :noweb yes
 {
   flake.homeModules.shellConfig =
     { pkgs, ... }:
@@ -518,33 +518,8 @@ It's mostly here for eshell to get completions from, but it's a usable shell
               	      (eshell 'N))
               	  '';
             config = ''
-              	    (defun efs/configure-eshell ()
-              	      ;; Bind some useful keys for evil-mode
-              	      (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
-              	      (evil-normalize-keymaps))
-
-              	    ;; https://xenodium.com/rinku-cli-link-previews
-              	    (defun adviced:eshell/cat (orig-fun &rest args)
-              	      "Like `eshell/cat' but with image support."
-              	      (if (seq-every-p (lambda (arg)
-              	                         (and (stringp arg)
-              	                              (file-exists-p arg)
-              	                              (image-supported-file-p arg)))
-              	                       args)
-              	          (with-temp-buffer
-              	            (insert "\n")
-              	            (dolist (path args)
-              	              (let ((newpath (expand-file-name path)))
-              	    	    (insert-image (create-image
-              	    			   newpath (image-type-from-file-name newpath)
-              	    			   nil :max-width 350)))
-              	              (insert "\n"))
-              	            (insert "\n")
-              	            (buffer-string))
-              	        (apply orig-fun args)))
-
-              	    (advice-add #'eshell/cat :around #'adviced:eshell/cat)
-              	  '';
+              	      <<Eshell Config>>
+              	    '';
           };
 
           fish-completion.gfhookf = [
@@ -567,10 +542,51 @@ It's mostly here for eshell to get completions from, but it's a usable shell
               	    			   "C" 'evil-visual-line)
               	  '';
           };
+
+          esh-help = {
+            enable = true;
+            after = [ "eshell" ];
+            gfhookf = [ "('eshell-mode 'eldoc-box-hover-at-point-mode)" ];
+            config = "(setup-esh-help-eldoc)";
+          };
         };
       };
     };
 }
+#+end_src
+
+#+NAME: Eshell Config
+#+begin_src emacs-lisp
+(defun efs/configure-eshell ()
+  ;; Bind some useful keys for evil-mode
+  (evil-define-key
+   '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
+  (evil-normalize-keymaps))
+
+;; https://xenodium.com/rinku-cli-link-previews
+(defun adviced:eshell/cat (orig-fun &rest args)
+  "Like `eshell/cat' but with image support."
+  (if (seq-every-p
+       (lambda (arg)
+         (and (stringp arg)
+              (file-exists-p arg)
+              (image-supported-file-p arg)))
+       args)
+      (with-temp-buffer
+        (insert "\n")
+        (dolist (path args)
+          (let ((newpath (expand-file-name path)))
+            (insert-image
+             (create-image newpath
+                           (image-type-from-file-name newpath)
+                           nil
+                           :max-width 350)))
+          (insert "\n"))
+        (insert "\n")
+        (buffer-string))
+    (apply orig-fun args)))
+
+(advice-add #'eshell/cat :around #'adviced:eshell/cat)
 #+end_src
 
 *** starship
@@ -1784,7 +1800,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 #+begin_src nix-ts :tangle modules/development/project-management.nix :noweb yes
 {
   flake.homeModules.development =
-    { pkgs, ... }:
+    { pkgs, lib, ... }:
     {
       programs.emacs.init = {
         ide = {
@@ -1798,7 +1814,21 @@ I think most of it was from the github page for lsp mode, but it's been a while,
         usePackage = {
           magit = {
             setopt.magit-process-find-password-functions = [ "'magit-process-password-auth-source" ];
-            generalOneConfig = {
+generalOne.project-prefix-map =
+              let
+                mkMajutsuCmd =
+                  magitCommand: majutsuCommand:
+                  "`,(cmd! (if (majutsu-repository-config-id) (progn ${majutsuCommand}) ${magitCommand}))";
+              in
+              {
+                "v" = mkMajutsuCmd "(magit)" "(majutsu)";
+                "c" = mkMajutsuCmd "(magit-commit)" "(majutsu-describe)";
+		"p" = mkMajutsuCmd "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)";
+		"P" = mkMajutsuCmd "(magit-push)" "(majutsu-git-push)";
+		"b" = mkMajutsuCmd "(magit-bookmark)" "(majutsu-bookmark)";
+              };
+            bindLocal.project-prefix-map = lib.mkForce { };
+	    generalOneConfig = {
               magit-mode-map = {
                 "e" = "'evil-next-visual-line";
                 "B" = "'evil-goto-line";
@@ -1807,15 +1837,16 @@ I think most of it was from the github page for lsp mode, but it's been a while,
             };
             # https://github.com/magit/magit/issues/5557
             config = ''
-                (defalias 'magit--any
-                        (static-if (fboundp 'member-if) #'member-if #'cl-member-if))
-              '';
+              (defalias 'magit--any
+                      (static-if (fboundp 'member-if) #'member-if #'cl-member-if))
+            '';
           };
 
           majutsu = {
             enable = true;
-	    extraPackages = [pkgs.jujutsu];
-	    command = ["majutsu"];
+            extraPackages = [ pkgs.jujutsu ];
+            command = [ "majutsu-git-fetch" ];
+	    extraConfig = ":autoload majutsu-repository-config-id";
           };
 
           projection-ibuffer = {
@@ -4004,6 +4035,11 @@ How to add a latex package
       (org-md-export-to-markdown))
      ((equal export-type "html")
       (org-html-export-to-html)))))
+
+(with-eval-after-load 'dashboard
+  (dolist (file (mapcar (lambda (x) (concat (car x) "todo.org")) project--list))
+    (add-to-list 'org-agenda-files file))
+  (dashboard-open))
 #+end_src
 
 *** Latex
