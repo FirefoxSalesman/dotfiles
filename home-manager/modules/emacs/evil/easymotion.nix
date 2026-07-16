@@ -6,6 +6,7 @@
         keybinds.avy = {
           enable = true;
           evilModifierKey = "H";
+          avyKeys = ["c" "r" "s" "t" "b" "f" "n" "e" "i" "a"];
         };
         usePackage.evil-easymotion = {
           generalOne.":nvo" = {
@@ -27,13 +28,10 @@
             "'(?p . avy-action-teleport)"
             "'(?q . nix-emacs-avy-action-fold)"
           ];
-          setopt = {
-            avy-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
-            avy-all-windows = false;
-          };
+          setopt.avy-all-windows = false;
           config = ''
-            	  
-            	'';
+            
+          '';
         };
       };
     };

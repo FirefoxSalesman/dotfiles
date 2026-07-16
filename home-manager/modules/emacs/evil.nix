@@ -41,12 +41,12 @@
                      citre-peek-jump))
             (evil-add-command-properties command :jump t))
           
-          (repeaters-define-maps
-           '(("flyspell"
-              evil-prev-flyspell-error
-              "S"
-              evil-next-flyspell-error
-              "s")))
+          ;; (repeaters-define-maps
+          ;;  '(("flyspell"
+          ;;     evil-prev-flyspell-error
+          ;;     "S"
+          ;;     evil-next-flyspell-error
+          ;;     "s")))
         '';
       };
     };

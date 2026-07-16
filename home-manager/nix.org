@@ -96,6 +96,7 @@ let
       allowUnfree = true;
       permittedInsecurePackages = [
         "pnpm-10.29.2"
+        "electron-40.10.5"
       ];
     };
   };
@@ -269,6 +270,7 @@ let
       allowUnfree = true;
       permittedInsecurePackages = [
         "pnpm-10.29.2"
+        "electron-40.10.5"
       ];
     };
     overlays = [
@@ -1764,6 +1766,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
     {
       programs.emacs.init = {
         ide = {
+          citre.enable = true;
           dape.enable = true;
           direnv = true;
           treesit-fold.enable = true;
@@ -1814,21 +1817,23 @@ I think most of it was from the github page for lsp mode, but it's been a while,
         usePackage = {
           magit = {
             setopt.magit-process-find-password-functions = [ "'magit-process-password-auth-source" ];
-generalOne.project-prefix-map =
+            generalOne.project-prefix-map =
               let
-                mkMajutsuCmd =
-                  magitCommand: majutsuCommand:
-                  "`,(cmd! (if (majutsu-repository-config-id) (progn ${majutsuCommand}) ${magitCommand}))";
+                mkMajutsuCmd = magitCommand: majutsuCommand: ''
+                  `,(cmd! (if (file-exists-p (nix-emacs-project-file ".jj"))
+                          (progn ${majutsuCommand})
+                          ${magitCommand}))
+                '';
               in
               {
                 "v" = mkMajutsuCmd "(magit)" "(majutsu)";
                 "c" = mkMajutsuCmd "(magit-commit)" "(majutsu-describe)";
-		"p" = mkMajutsuCmd "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)";
-		"P" = mkMajutsuCmd "(magit-push)" "(majutsu-git-push)";
-		"b" = mkMajutsuCmd "(magit-bookmark)" "(majutsu-bookmark)";
+                "p" = mkMajutsuCmd "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)";
+                "P" = mkMajutsuCmd "(magit-push)" "(call-interactively 'majutsu-git-push)";
+                "b" = mkMajutsuCmd "(magit-bookmark)" "(majutsu-bookmark)";
               };
             bindLocal.project-prefix-map = lib.mkForce { };
-	    generalOneConfig = {
+            generalOneConfig = {
               magit-mode-map = {
                 "e" = "'evil-next-visual-line";
                 "B" = "'evil-goto-line";
@@ -1846,7 +1851,7 @@ generalOne.project-prefix-map =
             enable = true;
             extraPackages = [ pkgs.jujutsu ];
             command = [ "majutsu-git-fetch" ];
-	    extraConfig = ":autoload majutsu-repository-config-id";
+            extraConfig = ":autoload majutsu-repository-config-id";
           };
 
           projection-ibuffer = {
@@ -2103,7 +2108,12 @@ Citre was borrowed from jweigley's config
 #+begin_src nix-ts :tangle modules/development/eglot.nix :noweb yes
 {
   flake.homeModules.development =
-    { pkgs, ... }:
+    {
+      pkgs,
+      lib,
+      config,
+      ...
+    }:
     {
       programs.emacs.init = {
         ide = {
@@ -2120,7 +2130,6 @@ Citre was borrowed from jweigley's config
 
         usePackage = {
           eglot = {
-            preface = "(defvar efs/autoformat t) ";
             gfhookf = [
               ''
                 ('eglot-managed-mode (local! completion-at-point-functions (list (cape-capf-super #'tempel-complete
@@ -2146,27 +2155,6 @@ Citre was borrowed from jweigley's config
               (defun eglot-java-init-opts (server eglot-java-eclipse-jdt)
                                  '(:bundles ["/usr/share/java-debug/com.microsoft.java.debug.plugin.jar"]))
             '';
-          };
-
-          citre = {
-            enable = true;
-            ghookf = [ "('prog-mode 'citre-mode)" ];
-            gfhookf = [ "('doom-escape 'citre-peek-abort)" ];
-            setopt = {
-              citre-prompt-language-for-ctags-command = true;
-              citre-use-project-root-when-creating-ctags = true;
-              citre-ctags-program = ''"${pkgs.universal-ctags}/bin/ctags"'';
-              citre-readtags-program = ''"${pkgs.universal-ctags}/bin/readtags"'';
-            };
-            custom.citre-peek-ace-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
-            generalTwoConfig.local-leader.citre-mode-map = {
-                "p" = "'citre-ace-peek";
-                "u" = "'citre-update-this-tags-file";
-            };
-            generalOneConfig.citre-peek-keymap = {
-              "M-e" = "'citre-peek-next-line";
-              "M-o" = "'citre-peek-prev-line";
-            };
           };
         };
       };
@@ -2562,12 +2550,12 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
            citre-peek-jump))
   (evil-add-command-properties command :jump t))
 
-(repeaters-define-maps
- '(("flyspell"
-    evil-prev-flyspell-error
-    "S"
-    evil-next-flyspell-error
-    "s")))
+;; (repeaters-define-maps
+;;  '(("flyspell"
+;;     evil-prev-flyspell-error
+;;     "S"
+;;     evil-next-flyspell-error
+;;     "s")))
 #+end_src
 
 **** Extensions
@@ -2603,6 +2591,7 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
         keybinds.avy = {
           enable = true;
           evilModifierKey = "H";
+          avyKeys = ["c" "r" "s" "t" "b" "f" "n" "e" "i" "a"];
         };
         usePackage.evil-easymotion = {
           generalOne.":nvo" = {
@@ -2624,13 +2613,10 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
             "'(?p . avy-action-teleport)"
             "'(?q . nix-emacs-avy-action-fold)"
           ];
-          setopt = {
-            avy-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
-            avy-all-windows = false;
-          };
+          setopt.avy-all-windows = false;
           config = ''
-            	  <<Easymotion Config>>
-            	'';
+            <<Easymotion Config>>
+          '';
         };
       };
     };
@@ -3161,13 +3147,8 @@ Vertico is basically dmenu for emacs. It lists out all the options in a command 
             "G" = "'evil-paste-after";
           };
           config = ''
-            	    <<Emacs Vertico Config>>
-            	  '';
-        };
-
-        vertico-quick.setopt = {
-          vertico-quick1 = ''"crst"'';
-          vertico-quick2 = ''"neia"'';
+            <<Emacs Vertico Config>>
+          '';
         };
       };
     };
@@ -4152,13 +4133,19 @@ No idea what the rest of this is for.
         completions.tempel.templates.org-mode.ci =
           ''"* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q'';
         usePackage = {
-          flyspell = {
-            enable = true;
-            ghookf = [
-              "('text-mode 'flyspell-mode)"
-              "('prog-mode 'flyspell-prog-mode)"
-            ];
-          };
+          # flyspell = {
+          #   enable = true;
+          #   ghookf = [
+          #     "('text-mode 'flyspell-mode)"
+          #     "('prog-mode 'flyspell-prog-mode)"
+          #   ];
+          # };
+
+	  jinx = {
+	    enable = true;
+	    ghookf = ["('on-init-ui 'global-jinx-mode)"];
+	    generalOneConfig.":n"."C-M-i" = "'jinx-correct";
+	  };
 
           pdf-tools = {
             generalOneConfig.pdf-view-mode-map."C-s" = "'search-forward";

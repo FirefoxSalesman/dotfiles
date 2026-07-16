@@ -14,21 +14,23 @@
         usePackage = {
           magit = {
             setopt.magit-process-find-password-functions = [ "'magit-process-password-auth-source" ];
-generalOne.project-prefix-map =
+            generalOne.project-prefix-map =
               let
-                mkMajutsuCmd =
-                  magitCommand: majutsuCommand:
-                  "`,(cmd! (if (majutsu-repository-config-id) (progn ${majutsuCommand}) ${magitCommand}))";
+                mkMajutsuCmd = magitCommand: majutsuCommand: ''
+                  `,(cmd! (if (file-exists-p (nix-emacs-project-file ".jj"))
+                          (progn ${majutsuCommand})
+                          ${magitCommand}))
+                '';
               in
               {
                 "v" = mkMajutsuCmd "(magit)" "(majutsu)";
                 "c" = mkMajutsuCmd "(magit-commit)" "(majutsu-describe)";
-		"p" = mkMajutsuCmd "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)";
-		"P" = mkMajutsuCmd "(magit-push)" "(majutsu-git-push)";
-		"b" = mkMajutsuCmd "(magit-bookmark)" "(majutsu-bookmark)";
+                "p" = mkMajutsuCmd "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)";
+                "P" = mkMajutsuCmd "(magit-push)" "(call-interactively 'majutsu-git-push)";
+                "b" = mkMajutsuCmd "(magit-bookmark)" "(majutsu-bookmark)";
               };
             bindLocal.project-prefix-map = lib.mkForce { };
-	    generalOneConfig = {
+            generalOneConfig = {
               magit-mode-map = {
                 "e" = "'evil-next-visual-line";
                 "B" = "'evil-goto-line";
@@ -46,7 +48,7 @@ generalOne.project-prefix-map =
             enable = true;
             extraPackages = [ pkgs.jujutsu ];
             command = [ "majutsu-git-fetch" ];
-	    extraConfig = ":autoload majutsu-repository-config-id";
+            extraConfig = ":autoload majutsu-repository-config-id";
           };
 
           projection-ibuffer = {

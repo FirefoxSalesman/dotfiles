@@ -52,7 +52,6 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] git-modes
 + [ ] diff-hl
 + [ ] goto chg
-+ [ ] undo-fu-session
 + [ ] quick-fasd (probably not)
 + [ ] switch to ewm https://idlip.in/posts/may-i-recommend/
 + [ ] https://ianyepan.github.io/posts/git-blame-emacs/
