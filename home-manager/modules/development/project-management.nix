@@ -12,6 +12,24 @@
           project = true;
         };
         usePackage = {
+          git-modes = {
+            enable = true;
+            mode = [
+              ''("/\\.gitattributes\\'" . gitattributes-mode)''
+              ''("/info/attributes\\'" . gitattributes-mode)''
+              ''("/git/attributes\\'" . gitattributes-mode)''
+	      ''("/\\.gitconfig\\'" . gitconfig-mode)''
+	      ''("/\\.git/config\\'" . gitconfig-mode)''
+	      ''("/modules/.*/config\\'" . gitconfig-mode)''
+	      ''("/git/config\\'" . gitconfig-mode)''
+	      ''("/\\.gitmodules\\'" . gitconfig-mode)''
+	      ''("/etc/gitconfig\\'" . gitconfig-mode)''
+	      ''("/\\.gitignore\\'" . gitignore-mode)''
+	      ''("/info/exclude\\'" . gitignore-mode)''
+	      ''("/git/ignore\\'" . gitignore-mode)''
+            ];
+          };
+
           magit = {
             setopt.magit-process-find-password-functions = [ "'magit-process-password-auth-source" ];
             generalOne.project-prefix-map =
@@ -24,7 +42,7 @@
               in
               {
                 "v" = mkMajutsuCmd "(magit)" "(majutsu)";
-                "c" = mkMajutsuCmd "(magit-commit)" "(majutsu-describe)";
+                "c" = mkMajutsuCmd "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-describe)";
                 "p" = mkMajutsuCmd "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)";
                 "P" = mkMajutsuCmd "(magit-push)" "(call-interactively 'majutsu-git-push)";
                 "b" = mkMajutsuCmd "(magit-bookmark)" "(majutsu-bookmark)";

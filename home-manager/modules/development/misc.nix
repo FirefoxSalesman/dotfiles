@@ -11,6 +11,8 @@
           treesit-fold.enable = true;
           languages = {
             bash.enable = true;
+            clojure.enable = true;
+            kotlin.enable = true;
             json.enable = true;
             nix.enable = true;
             toml.enable = true;

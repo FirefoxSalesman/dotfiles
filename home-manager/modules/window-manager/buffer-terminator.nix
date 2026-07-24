@@ -1,7 +1,7 @@
 { ... }:
 
 {
-  flake.homeModules.exwm =
+  flake.homeModules.bufferTerminator =
     { ... }:
     {
       programs.emacs.init.usePackage.buffer-terminator = {

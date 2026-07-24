@@ -8,15 +8,21 @@
       };
       usePackage = {
         vertico = {
-          generalTwoConfig.":n".vertico-map = {
-            "C-o" = "'vertico-scroll-down";
-            "C-e" = "'vertico-scroll-up";
-            "j" = "'evil-undo";
-            "I" = "'vertico-last";
-            "N" = "'vertico-first";
-            "B" = "'vertico-last";
-            "bg" = "'vertico-first";
-            "G" = "'evil-paste-after";
+          generalTwoConfig.":n" = {
+	    vertico-grid-map = {
+	      "i" = "'vertico-grid-right";
+	      "n" = "'vertico-grid-left";
+	    };
+            vertico-map = {
+              "C-o" = "'vertico-scroll-down";
+              "C-e" = "'vertico-scroll-up";
+              "j" = "'evil-undo";
+              "I" = "'vertico-last";
+              "N" = "'vertico-first";
+              "B" = "'vertico-last";
+              "bg" = "'vertico-first";
+              "G" = "'evil-paste-after";
+            };
           };
           config = ''
             (with-eval-after-load 'evil-collection-vertico
@@ -62,7 +68,14 @@
                              :weight
                              ,(face-attribute 'bold :weight nil 'default)))
                " "))
+            
+            (vertico-multiform-mode)
           '';
+          setopt.vertico-multiform-commands =
+            [
+              "'(man grid)"
+              "'(t posframe)"
+            ];
         };
       };
     };

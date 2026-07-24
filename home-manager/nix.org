@@ -384,8 +384,8 @@ in
       hosts = {
         xrandr-command = ''
           	xrandr --setprovideroutputsource modesetting NVIDIA-0
-                  xrandr --auto
-                  xrandr --dpi 96
+                xrandr --auto
+                xrandr --dpi 96
         '';
         exwm-monitors = [ ''0 "eDP-1-1"'' ];
         wantBattery = true;
@@ -396,10 +396,10 @@ in
     {
       hosts = {
         xrandr-command = ''
-          xrandr --auto
+	  xrandr --output DP-4 --primary --mode 1920x1080 --output DVI-I-1 --mode 1920x1200
         '';
         exwm-monitors = [
-          ''0 "DP-1"''
+          ''0 "DP-4"''
           ''1 "DVI-I-1"''
         ];
         wantBattery = false;
@@ -525,7 +525,7 @@ It's mostly here for eshell to get completions from, but it's a usable shell
           };
 
           fish-completion.gfhookf = [
-            "('fish-completion-mode (local! completion-at-point-functions '(tempel-complete pcomplete-completions-at-point)))"
+            "('fish-completion-mode (local! completion-at-point-functions (list 'tempel-complete 'pcomplete-completions-at-point)))"
           ];
 
           evil-collection-eshell = {
@@ -1772,6 +1772,8 @@ I think most of it was from the github page for lsp mode, but it's been a while,
           treesit-fold.enable = true;
           languages = {
             bash.enable = true;
+            clojure.enable = true;
+            kotlin.enable = true;
             json.enable = true;
             nix.enable = true;
             toml.enable = true;
@@ -1815,6 +1817,24 @@ I think most of it was from the github page for lsp mode, but it's been a while,
           project = true;
         };
         usePackage = {
+          git-modes = {
+            enable = true;
+            mode = [
+              ''("/\\.gitattributes\\'" . gitattributes-mode)''
+              ''("/info/attributes\\'" . gitattributes-mode)''
+              ''("/git/attributes\\'" . gitattributes-mode)''
+	      ''("/\\.gitconfig\\'" . gitconfig-mode)''
+	      ''("/\\.git/config\\'" . gitconfig-mode)''
+	      ''("/modules/.*/config\\'" . gitconfig-mode)''
+	      ''("/git/config\\'" . gitconfig-mode)''
+	      ''("/\\.gitmodules\\'" . gitconfig-mode)''
+	      ''("/etc/gitconfig\\'" . gitconfig-mode)''
+	      ''("/\\.gitignore\\'" . gitignore-mode)''
+	      ''("/info/exclude\\'" . gitignore-mode)''
+	      ''("/git/ignore\\'" . gitignore-mode)''
+            ];
+          };
+
           magit = {
             setopt.magit-process-find-password-functions = [ "'magit-process-password-auth-source" ];
             generalOne.project-prefix-map =
@@ -1827,7 +1847,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
               in
               {
                 "v" = mkMajutsuCmd "(magit)" "(majutsu)";
-                "c" = mkMajutsuCmd "(magit-commit)" "(majutsu-describe)";
+                "c" = mkMajutsuCmd "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-describe)";
                 "p" = mkMajutsuCmd "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)";
                 "P" = mkMajutsuCmd "(magit-push)" "(call-interactively 'majutsu-git-push)";
                 "b" = mkMajutsuCmd "(magit-bookmark)" "(majutsu-bookmark)";
@@ -2014,15 +2034,17 @@ I think most of it was from the github page for lsp mode, but it's been a while,
           };
           gradle.enable = true;
         };
-        usePackage.java-ts-mode = {
-          preface = ''
-            	  <<Java Preface>>
-            	'';
-          generalTwoConfig.":n".java-ts-mode-map = {
-            "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "block_comment"))'';
-            "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "block_comment"))'';
-            "o" = "'evil-previous-visual-line";
-            "O" = "'evil-scroll-up";
+        usePackage = {
+          java-ts-mode = {
+            preface = ''
+              <<Java Preface>>
+            '';
+            generalTwoConfig.":n".java-ts-mode-map = {
+              "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "block_comment"))'';
+              "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "block_comment"))'';
+              "o" = "'evil-previous-visual-line";
+              "O" = "'evil-scroll-up";
+            };
           };
         };
       };
@@ -2104,7 +2126,6 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 *** Eglot
 https://github.com/joaotavora/eglot/discussions/888
 https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
-Citre was borrowed from jweigley's config
 #+begin_src nix-ts :tangle modules/development/eglot.nix :noweb yes
 {
   flake.homeModules.development =
@@ -2132,9 +2153,14 @@ Citre was borrowed from jweigley's config
           eglot = {
             gfhookf = [
               ''
-                ('eglot-managed-mode (local! completion-at-point-functions (list (cape-capf-super #'tempel-complete
-                	      #'eglot-completion-at-point
-                											     #'cape-file))))
+                ('eglot-managed-mode (local! completion-at-point-functions
+                                             (list (cape-capf-choose
+					            (cape-capf-super
+                                                     #'tempel-complete
+                                                     (cape-capf-buster #'eglot-completion-at-point)
+                                                     (cape-capf-inside-comment #'cape-dict)
+                                                     (cape-capf-inside-string #'cape-dict)
+                                                     #'cape-dabbrev)))))
               ''
             ];
             config = ''
@@ -3136,19 +3162,30 @@ Vertico is basically dmenu for emacs. It lists out all the options in a command 
       };
       usePackage = {
         vertico = {
-          generalTwoConfig.":n".vertico-map = {
-            "C-o" = "'vertico-scroll-down";
-            "C-e" = "'vertico-scroll-up";
-            "j" = "'evil-undo";
-            "I" = "'vertico-last";
-            "N" = "'vertico-first";
-            "B" = "'vertico-last";
-            "bg" = "'vertico-first";
-            "G" = "'evil-paste-after";
+          generalTwoConfig.":n" = {
+	    vertico-grid-map = {
+	      "i" = "'vertico-grid-right";
+	      "n" = "'vertico-grid-left";
+	    };
+            vertico-map = {
+              "C-o" = "'vertico-scroll-down";
+              "C-e" = "'vertico-scroll-up";
+              "j" = "'evil-undo";
+              "I" = "'vertico-last";
+              "N" = "'vertico-first";
+              "B" = "'vertico-last";
+              "bg" = "'vertico-first";
+              "G" = "'evil-paste-after";
+            };
           };
           config = ''
             <<Emacs Vertico Config>>
           '';
+          setopt.vertico-multiform-commands =
+            [
+              "'(man grid)"
+              "'(t posframe)"
+            ];
         };
       };
     };
@@ -3202,6 +3239,8 @@ format count borrowed from: https://github.com/rougier/nano-vertico
                  :weight
                  ,(face-attribute 'bold :weight nil 'default)))
    " "))
+
+(vertico-multiform-mode)
 #+end_src
 
 **** Corfu
@@ -4380,7 +4419,7 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
 { ... }:
 
 {
-  flake.homeModules.exwm =
+  flake.homeModules.bufferTerminator =
     { ... }:
     {
       programs.emacs.init.usePackage.buffer-terminator = {

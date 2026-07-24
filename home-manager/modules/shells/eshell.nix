@@ -52,7 +52,7 @@
           };
 
           fish-completion.gfhookf = [
-            "('fish-completion-mode (local! completion-at-point-functions '(tempel-complete pcomplete-completions-at-point)))"
+            "('fish-completion-mode (local! completion-at-point-functions (list 'tempel-complete 'pcomplete-completions-at-point)))"
           ];
 
           evil-collection-eshell = {
