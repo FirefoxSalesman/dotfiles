@@ -54,11 +54,10 @@
           };
           gptel = {
             enable = true;
-            agent.enable = true;
-	    introspection = {
-	      enable = true;
-	      model = "qwen3:8b";
-	    };
+            introspection = {
+              enable = true;
+              model = "qwen3:8b";
+            };
           };
         };
         usePackage =
@@ -150,6 +149,14 @@
               setopt.mcp-hub-servers = [
                 '''("nixos" :command "${pkgs.uv}/bin/uvx" :args ("mcp-nixos"))''
               ];
+            };
+
+            aidermacs = {
+              enable = true;
+              extraPackages = [ pkgs.aider-chat ];
+              generalOne.global-leader."gA" = "'aidermacs-transient-menu";
+              config = "(start-ollama)";
+              setopt.aidermacs-default-model = ''"ollama/qwen3:8b"'';
             };
           };
       };

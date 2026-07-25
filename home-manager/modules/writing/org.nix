@@ -147,6 +147,12 @@
               "obi" = "'biblio-doi-insert-bibtex";
             };
           };
+
+          toc-org = {
+            enable = true;
+            ghookf = [ "('(org-mode markdown-mode) 'toc-org-mode)" ];
+	    generalOneConfig.markdown-mode-map."C-c C-o" = "'toc-org-markdown-follow-thing-at-point";
+          };
         };
       };
     };

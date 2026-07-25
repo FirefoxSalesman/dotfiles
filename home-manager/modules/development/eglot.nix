@@ -3,7 +3,6 @@
     {
       pkgs,
       lib,
-      config,
       ...
     }:
     {
@@ -24,14 +23,14 @@
           eglot = {
             gfhookf = [
               ''
-                ('eglot-managed-mode (local! completion-at-point-functions
-                                             (list (cape-capf-choose
-					            (cape-capf-super
-                                                     #'tempel-complete
-                                                     (cape-capf-buster #'eglot-completion-at-point)
-                                                     (cape-capf-inside-comment #'cape-dict)
-                                                     (cape-capf-inside-string #'cape-dict)
-                                                     #'cape-dabbrev)))))
+                                ('eglot-managed-mode (local! completion-at-point-functions
+                                                             (list (cape-capf-choose
+                					            (cape-capf-super
+                                                                     #'tempel-complete
+                                                                     (cape-capf-buster #'eglot-completion-at-point)
+                                                                     (cape-capf-inside-comment #'cape-dict)
+                                                                     (cape-capf-inside-string #'cape-dict)
+                                                                     #'cape-dabbrev)))))
               ''
             ];
             config = ''
@@ -44,12 +43,8 @@
             '';
           };
 
-          flymake-popon.setopt.flymake-popon-posframe-extra-arguments = [
-            "':poshandler"
-            "'posframe-poshandler-point-bottom-left-corner-upward"
-            "':refposhandler"
-            "'vertico-posframe-refposhandler-default"
-          ];
+          flymake.setopt.flymake-show-diagnostics-at-end-of-line = "'short";
+          flymake-popon.enable = lib.mkForce false;
 
           eglot-java = {
             setopt.eglot-java-user-init-opts-fn = "'eglot-java-init-opts";

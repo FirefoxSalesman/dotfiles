@@ -41,18 +41,14 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 ** Home Manager
 + [ ] Figure out how to auto install photogimp
 + [ ] Add qutebrowser's userscripts to nix
-+ [ ] Add csl to the flake so we don't have to transfer it with a thumbdrive anymore
 
 ** Emacs
 + [ ] The python files from emacs-qutebrowser should be part of the emacs package & be provided by nix
 + [ ] See if there's anything to glean from here: https://www.reddit.com/r/emacs/comments/1nwgygm/building_workflows_with_gptel/
 + [ ] dash template gets cleaned up & goes to live in its own repo
-+ [ ] toc-org
 + [ ] diff-hl
-+ [ ] quick-fasd (probably not)
 + [ ] switch to ewm https://idlip.in/posts/may-i-recommend/
 + [ ] https://ianyepan.github.io/posts/git-blame-emacs/
 + [ ] https://blog.sidhartharya.com/posts/integrating-org-protocol-with-qutebrowser/
 + [ ] doxygen
 + [ ] easysession
-+ [ ] aidermacs

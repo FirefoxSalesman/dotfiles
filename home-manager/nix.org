@@ -815,6 +815,7 @@ aliasesStr = concatStringsSep "\n"
         SSH_AUTH_SOCK = "$(gpgconf --list-dirs agent-ssh-socket)";
         _JAVA_AWT_WM_NONREPARENTING = "1";
         PATH = "/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/holschcc/bin:/home/holschcc/.nix-profile/bin";
+        OLLAMA_API_BASE = "http://127.0.0.1:11434";
       };
     };
 }
@@ -2132,7 +2133,6 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
     {
       pkgs,
       lib,
-      config,
       ...
     }:
     {
@@ -2153,14 +2153,14 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
           eglot = {
             gfhookf = [
               ''
-                ('eglot-managed-mode (local! completion-at-point-functions
-                                             (list (cape-capf-choose
-					            (cape-capf-super
-                                                     #'tempel-complete
-                                                     (cape-capf-buster #'eglot-completion-at-point)
-                                                     (cape-capf-inside-comment #'cape-dict)
-                                                     (cape-capf-inside-string #'cape-dict)
-                                                     #'cape-dabbrev)))))
+                                ('eglot-managed-mode (local! completion-at-point-functions
+                                                             (list (cape-capf-choose
+                					            (cape-capf-super
+                                                                     #'tempel-complete
+                                                                     (cape-capf-buster #'eglot-completion-at-point)
+                                                                     (cape-capf-inside-comment #'cape-dict)
+                                                                     (cape-capf-inside-string #'cape-dict)
+                                                                     #'cape-dabbrev)))))
               ''
             ];
             config = ''
@@ -2168,12 +2168,8 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
             '';
           };
 
-          flymake-popon.setopt.flymake-popon-posframe-extra-arguments = [
-            "':poshandler"
-            "'posframe-poshandler-point-bottom-left-corner-upward"
-            "':refposhandler"
-            "'vertico-posframe-refposhandler-default"
-          ];
+          flymake.setopt.flymake-show-diagnostics-at-end-of-line = "'short";
+          flymake-popon.enable = lib.mkForce false;
 
           eglot-java = {
             setopt.eglot-java-user-init-opts-fn = "'eglot-java-init-opts";
@@ -3012,6 +3008,7 @@ Gives us an entire state where we can rapidly make specific edits to code.
         enable = true;
         command = [ "evil-symex-state" ];
         defer = true;
+        gfhookf = [ "('evil-symex-state-exit 'deactivate-mark)" ];
         generalTwo.":n"."(racket-repl-mode-map lisp-interaction-mode-map lisp-mode-map)"."RET" =
           "'symex-mode-interface";
         config = ''
@@ -3084,6 +3081,24 @@ Gives us an entire state where we can rapidly make specific edits to code.
  efs/evilem-motion-symex-go-backward #'symex-go-backward)
 (evilem-make-motion efs/evilem-motion-symex-go-down #'symex-go-down)
 (evilem-make-motion efs/evilem-motion-symex-go-up #'symex-go-up)
+
+(defun evil-visual-activate-hook (&optional _command)
+  "Enable Visual state if the region is activated."
+  (unless (evil-visual-state-p)
+    (evil-with-delay
+     nil (post-command-hook nil t "evil-activate-visual-state")
+     ;; the activation may only be momentary, so re-check
+     ;; in `post-command-hook' before entering Visual state
+     (unless (or (evil-visual-state-p)
+                 (evil-insert-state-p)
+                 (evil-symex-state-p)
+                 (evil-emacs-state-p))
+       (when (and (region-active-p) (not deactivate-mark))
+         (evil-visual-state))))))
+
+(advice-add
+ 'symex--update-overlay
+ :after (lambda () (set-mark (symex--get-end-point 1))))
 #+end_src
 
 **** Compats
@@ -3166,6 +3181,8 @@ Vertico is basically dmenu for emacs. It lists out all the options in a command 
 	    vertico-grid-map = {
 	      "i" = "'vertico-grid-right";
 	      "n" = "'vertico-grid-left";
+              "C-o" = "'vertico-grid-scroll-down";
+              "C-e" = "'vertico-grid-scroll-up";
 	    };
             vertico-map = {
               "C-o" = "'vertico-scroll-down";
@@ -3183,6 +3200,7 @@ Vertico is basically dmenu for emacs. It lists out all the options in a command 
           '';
           setopt.vertico-multiform-commands =
             [
+              "'(music-menu grid)"
               "'(man grid)"
               "'(t posframe)"
             ];
@@ -4031,6 +4049,12 @@ How to add a latex package
               "obl" = "'biblio-lookup";
               "obi" = "'biblio-doi-insert-bibtex";
             };
+          };
+
+          toc-org = {
+            enable = true;
+            ghookf = [ "('(org-mode markdown-mode) 'toc-org-mode)" ];
+	    generalOneConfig.markdown-mode-map."C-c C-o" = "'toc-org-markdown-follow-thing-at-point";
           };
         };
       };
@@ -5158,11 +5182,10 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
           };
           gptel = {
             enable = true;
-            agent.enable = true;
-	    introspection = {
-	      enable = true;
-	      model = "qwen3:8b";
-	    };
+            introspection = {
+              enable = true;
+              model = "qwen3:8b";
+            };
           };
         };
         usePackage =
@@ -5221,6 +5244,14 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
               setopt.mcp-hub-servers = [
                 '''("nixos" :command "${pkgs.uv}/bin/uvx" :args ("mcp-nixos"))''
               ];
+            };
+
+            aidermacs = {
+              enable = true;
+              extraPackages = [ pkgs.aider-chat ];
+              generalOne.global-leader."gA" = "'aidermacs-transient-menu";
+              config = "(start-ollama)";
+              setopt.aidermacs-default-model = ''"ollama/qwen3:8b"'';
             };
           };
       };

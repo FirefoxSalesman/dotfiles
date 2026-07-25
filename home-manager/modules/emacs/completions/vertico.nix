@@ -12,6 +12,8 @@
 	    vertico-grid-map = {
 	      "i" = "'vertico-grid-right";
 	      "n" = "'vertico-grid-left";
+              "C-o" = "'vertico-grid-scroll-down";
+              "C-e" = "'vertico-grid-scroll-up";
 	    };
             vertico-map = {
               "C-o" = "'vertico-scroll-down";
@@ -73,6 +75,7 @@
           '';
           setopt.vertico-multiform-commands =
             [
+              "'(music-menu grid)"
               "'(man grid)"
               "'(t posframe)"
             ];
