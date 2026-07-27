@@ -9,12 +9,12 @@
       usePackage = {
         vertico = {
           generalTwoConfig.":n" = {
-	    vertico-grid-map = {
-	      "i" = "'vertico-grid-right";
-	      "n" = "'vertico-grid-left";
+            vertico-grid-map = {
+              "i" = "'vertico-grid-right";
+              "n" = "'vertico-grid-left";
               "C-o" = "'vertico-grid-scroll-down";
               "C-e" = "'vertico-grid-scroll-up";
-	    };
+            };
             vertico-map = {
               "C-o" = "'vertico-scroll-down";
               "C-e" = "'vertico-scroll-up";
@@ -70,15 +70,22 @@
                              :weight
                              ,(face-attribute 'bold :weight nil 'default)))
                " "))
-            
-            (vertico-multiform-mode)
           '';
-          setopt.vertico-multiform-commands =
-            [
-              "'(music-menu grid)"
-              "'(man grid)"
-              "'(t posframe)"
-            ];
+        };
+
+        vertico-multiform = {
+          enable = true;
+          setopt.vertico-multiform-commands = [
+            "'(music-menu grid)"
+            "'(man grid)"
+            "'(t posframe)"
+          ];
+          ghookf = [ "('vertico-mode 'vertico-multiform-mode)" ];
+        };
+
+        vertico-quick.setopt = {
+          vertico-quick1 = ''"crstbfneia"'';
+          vertico-quick2 = ''"crstbfneia"'';
         };
       };
     };

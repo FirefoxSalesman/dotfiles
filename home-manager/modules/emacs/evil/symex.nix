@@ -6,7 +6,6 @@
         enable = true;
         command = [ "evil-symex-state" ];
         defer = true;
-        gfhookf = [ "('evil-symex-state-exit 'deactivate-mark)" ];
         generalTwo.":n"."(racket-repl-mode-map lisp-interaction-mode-map lisp-mode-map)"."RET" =
           "'symex-mode-interface";
         config = ''
@@ -26,26 +25,9 @@
            efs/evilem-motion-symex-go-backward #'symex-go-backward)
           (evilem-make-motion efs/evilem-motion-symex-go-down #'symex-go-down)
           (evilem-make-motion efs/evilem-motion-symex-go-up #'symex-go-up)
-          
-          (defun evil-visual-activate-hook (&optional _command)
-            "Enable Visual state if the region is activated."
-            (unless (evil-visual-state-p)
-              (evil-with-delay
-               nil (post-command-hook nil t "evil-activate-visual-state")
-               ;; the activation may only be momentary, so re-check
-               ;; in `post-command-hook' before entering Visual state
-               (unless (or (evil-visual-state-p)
-                           (evil-insert-state-p)
-                           (evil-symex-state-p)
-                           (evil-emacs-state-p))
-                 (when (and (region-active-p) (not deactivate-mark))
-                   (evil-visual-state))))))
-          
-          (advice-add
-           'symex--update-overlay
-           :after (lambda () (set-mark (symex--get-end-point 1))))
         '';
         generalOneConfig.evil-symex-state-map = {
+	  "c" = "(cmd! (set-mark (symex--get-end-point 1)))";
           "n" = "'symex-go-backward";
           "H-n" = "'efs/evilem-motion-symex-go-backward";
           "H-o" = "'efs/evilem-motion-symex-go-down";

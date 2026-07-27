@@ -43,7 +43,7 @@
       programs.emacs.init = {
         ai = {
           copilot = {
-            enable = false;
+            enable = true;
             keepOutOf = [
               "c-ts-mode"
               "json5-ts-mode"
@@ -156,8 +156,13 @@
               extraPackages = [ pkgs.aider-chat ];
               generalOne.global-leader."gA" = "'aidermacs-transient-menu";
               config = "(start-ollama)";
-              setopt.aidermacs-default-model = ''"ollama/qwen3:8b"'';
+              setopt = {
+                aidermacs-default-model = ''"ollama/qwen3:8b"'';
+                aidermacs-extra-args = [ ''"--no-git"'' ];
+              };
             };
+
+            popper.setopt.popper-reference-buffers = [ "'aidermacs-comint-mode" ];
           };
       };
     };

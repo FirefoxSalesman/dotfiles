@@ -242,11 +242,11 @@
         "use-package-eglot": "use-package-eglot"
       },
       "locked": {
-        "lastModified": 1784682971,
-        "narHash": "sha256-pUtgo6XvVRnUrFCfYZMLqm1JeL41qAjsS9pGfcNztyM=",
+        "lastModified": 1785083101,
+        "narHash": "sha256-dFda7jxym4MFZqsN+YVhyPdP32/NulixkvwlbDqM7+U=",
         "owner": "firefoxsalesman",
         "repo": "NixEmacs",
-        "rev": "f6ea1fe16209524bf1a9cc2af1902617412ce118",
+        "rev": "19e04ea752aa34b7349372617e1045732c6c03d6",
         "type": "github"
       },
       "original": {
@@ -521,11 +521,11 @@
     "macher-agent": {
       "flake": false,
       "locked": {
-        "lastModified": 1784989290,
-        "narHash": "sha256-yDBZ4RBOeln+q6xCxu3NkywtsXMiCw6aEHsHJPSpzK0=",
+        "lastModified": 1785075584,
+        "narHash": "sha256-NGNvVo0Sub1ZzHADiT95B7ZVSsF1ENw51BCwvXQ5IbE=",
         "owner": "elij",
         "repo": "macher-agent",
-        "rev": "0213cff0892da6e42d0f5ed586bec3b266fcd92a",
+        "rev": "594ca425b967985960ef1a45eabf2ba51ec925ea",
         "type": "github"
       },
       "original": {
@@ -599,16 +599,16 @@
     },
     "nixpkgs-stable_2": {
       "locked": {
-        "lastModified": 1782847189,
-        "narHash": "sha256-twXPFqFsrrY5r28Zh7Homgcp2gUMBgQ6WDS98Q/3xFI=",
+        "lastModified": 1784856561,
+        "narHash": "sha256-J+Bx1Z6Oeoj2FgnBhRMKyUhhtDoOpTgXYaVLZpDjW4A=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "b6018f87da91d19d0ab4cf979885689b469cdd41",
+        "rev": "597283ad8aa0b331c788e97c4c262d58877074ef",
         "type": "github"
       },
       "original": {
         "owner": "nixos",
-        "ref": "nixos-25.11",
+        "ref": "nixos-26.05",
         "repo": "nixpkgs",
         "type": "github"
       }

@@ -21,8 +21,6 @@ in
     in
     {
       # shell scripts
-      kmonad = inputs.kmonad.packages.${pkgs.system}.default;
-      sage = pkgs-stable.sage;
       ezf = packages.ezf;
       cast = packages.cast;
       doomer = packages.doomer;
@@ -38,6 +36,10 @@ in
 
       # overrides
       mpv = packages.mpv;
+      rassumfrassum = pkgs-stable.rassumfrassum;
+      kmonad = inputs.kmonad.packages.${pkgs.system}.default;
+      lutris = pkgs-stable.lutris;
+      sage = pkgs-stable.sage;
 
       #emacs packages
       emacsPackagesFor =
@@ -53,7 +55,6 @@ in
             roll = packages.roll;
             pertab = packages.pertab;
             embark = packages.embark;
-            org = packages.org;
             gptel-got = packages.gptel-got;
           }
         ));

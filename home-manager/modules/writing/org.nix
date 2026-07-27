@@ -1,34 +1,5 @@
 { inputs, ... }:
 {
-  perSystem =
-    { pkgs, ... }:
-    let
-      epkgs = pkgs.emacs.pkgs;
-    in
-    {
-      packages.org = epkgs.callPackage (
-        {
-          elpaBuild,
-          fetchurl,
-          lib,
-        }:
-        elpaBuild {
-          pname = "org";
-          ename = "org";
-          version = "9.8.6";
-          src = fetchurl {
-            url = "https://elpa.gnu.org/packages/org-9.8.6.tar";
-            sha256 = "sha256-QyrhwAW55Y4vtgMbIjSQOkNr+8uTSmXdumi2qc8dTIE=";
-          };
-          packageRequires = [ ];
-          meta = {
-            homepage = "https://elpa.gnu.org/packages/org.html";
-            license = lib.licenses.free;
-          };
-        }
-      ) { };
-    };
-
   flake.homeModules.writing =
     { config, pkgs, ... }:
 
@@ -76,27 +47,27 @@
             };
 
             config = ''
-              	    (require 'ol-man)
-              	    (defun smart-export ()
-              	      "Export the current buffer, according to its heading."
-              	      (interactive)
-              	      (let ((export-type
-              	             (cadr (assoc "EXPORT" (org-collect-keywords '("EXPORT"))))))
-              	        (cond
-              	         ((equal export-type "pdf")
-              	          (org-latex-export-to-pdf))
-              	         ((equal export-type "odt")
-              	          (org-odt-export-to-odt))
-              	         ((equal export-type "md")
-              	          (org-md-export-to-markdown))
-              	         ((equal export-type "html")
-              	          (org-html-export-to-html)))))
-              	    
-              	    (with-eval-after-load 'dashboard
-              	      (dolist (file (mapcar (lambda (x) (concat (car x) "todo.org")) project--list))
-              	        (add-to-list 'org-agenda-files file))
-              	      (dashboard-open))
-              	  '';
+              (require 'ol-man)
+              (defun smart-export ()
+                "Export the current buffer, according to its heading."
+                (interactive)
+                (let ((export-type
+                       (cadr (assoc "EXPORT" (org-collect-keywords '("EXPORT"))))))
+                  (cond
+                   ((equal export-type "pdf")
+                    (org-latex-export-to-pdf))
+                   ((equal export-type "odt")
+                    (org-odt-export-to-odt))
+                   ((equal export-type "md")
+                    (org-md-export-to-markdown))
+                   ((equal export-type "html")
+                    (org-html-export-to-html)))))
+              
+              (with-eval-after-load 'dashboard
+                (dolist (file (mapcar (lambda (x) (concat (car x) "todo.org")) project--list))
+                  (add-to-list 'org-agenda-files file))
+                (dashboard-open))
+            '';
           };
 
           org-auto-tangle = {
@@ -146,12 +117,6 @@
               "obl" = "'biblio-lookup";
               "obi" = "'biblio-doi-insert-bibtex";
             };
-          };
-
-          toc-org = {
-            enable = true;
-            ghookf = [ "('(org-mode markdown-mode) 'toc-org-mode)" ];
-	    generalOneConfig.markdown-mode-map."C-c C-o" = "'toc-org-markdown-follow-thing-at-point";
           };
         };
       };

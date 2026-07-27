@@ -23,7 +23,7 @@
           eglot = {
             gfhookf = [
               ''
-                                ('eglot-managed-mode (local! completion-at-point-functions
+                ('eglot-managed-mode (local! completion-at-point-functions
                                                              (list (cape-capf-choose
                 					            (cape-capf-super
                                                                      #'tempel-complete

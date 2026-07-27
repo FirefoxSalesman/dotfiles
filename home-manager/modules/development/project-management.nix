@@ -42,7 +42,7 @@
               in
               {
                 "v" = mkMajutsuCmd "(magit)" "(majutsu)";
-                "c" = mkMajutsuCmd "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-describe)";
+                "c" = mkMajutsuCmd "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-commit)";
                 "p" = mkMajutsuCmd "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)";
                 "P" = mkMajutsuCmd "(magit-push)" "(call-interactively 'majutsu-git-push)";
                 "b" = mkMajutsuCmd "(magit-bookmark)" "(majutsu-bookmark)";

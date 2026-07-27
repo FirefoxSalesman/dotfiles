@@ -8,7 +8,7 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
+    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-26.05";
     emacs-overlay.url = "github:nix-community/emacs-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
     import-tree.url = "github:vic/import-tree";
@@ -109,8 +109,6 @@ in
     in
     {
       # shell scripts
-      kmonad = inputs.kmonad.packages.${pkgs.system}.default;
-      sage = pkgs-stable.sage;
       ezf = packages.ezf;
       cast = packages.cast;
       doomer = packages.doomer;
@@ -126,6 +124,10 @@ in
 
       # overrides
       mpv = packages.mpv;
+      rassumfrassum = pkgs-stable.rassumfrassum;
+      kmonad = inputs.kmonad.packages.${pkgs.system}.default;
+      lutris = pkgs-stable.lutris;
+      sage = pkgs-stable.sage;
 
       #emacs packages
       emacsPackagesFor =
@@ -141,7 +143,6 @@ in
             roll = packages.roll;
             pertab = packages.pertab;
             embark = packages.embark;
-            org = packages.org;
             gptel-got = packages.gptel-got;
           }
         ));
@@ -312,6 +313,7 @@ in
           self.homeModules.emacs
           self.homeModules.elisp
           self.homeModules.extraPackages
+          self.homeModules.easysession
           self.homeModules.exwm
           self.homeModules.fileManager
           self.homeModules.gaming
@@ -1848,7 +1850,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
               in
               {
                 "v" = mkMajutsuCmd "(magit)" "(majutsu)";
-                "c" = mkMajutsuCmd "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-describe)";
+                "c" = mkMajutsuCmd "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-commit)";
                 "p" = mkMajutsuCmd "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)";
                 "P" = mkMajutsuCmd "(magit-push)" "(call-interactively 'majutsu-git-push)";
                 "b" = mkMajutsuCmd "(magit-bookmark)" "(majutsu-bookmark)";
@@ -2153,7 +2155,7 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
           eglot = {
             gfhookf = [
               ''
-                                ('eglot-managed-mode (local! completion-at-point-functions
+                ('eglot-managed-mode (local! completion-at-point-functions
                                                              (list (cape-capf-choose
                 					            (cape-capf-super
                                                                      #'tempel-complete
@@ -3008,13 +3010,13 @@ Gives us an entire state where we can rapidly make specific edits to code.
         enable = true;
         command = [ "evil-symex-state" ];
         defer = true;
-        gfhookf = [ "('evil-symex-state-exit 'deactivate-mark)" ];
         generalTwo.":n"."(racket-repl-mode-map lisp-interaction-mode-map lisp-mode-map)"."RET" =
           "'symex-mode-interface";
         config = ''
           <<Emacs Symex Config>>
         '';
         generalOneConfig.evil-symex-state-map = {
+	  "c" = "(cmd! (set-mark (symex--get-end-point 1)))";
           "n" = "'symex-go-backward";
           "H-n" = "'efs/evilem-motion-symex-go-backward";
           "H-o" = "'efs/evilem-motion-symex-go-down";
@@ -3081,24 +3083,6 @@ Gives us an entire state where we can rapidly make specific edits to code.
  efs/evilem-motion-symex-go-backward #'symex-go-backward)
 (evilem-make-motion efs/evilem-motion-symex-go-down #'symex-go-down)
 (evilem-make-motion efs/evilem-motion-symex-go-up #'symex-go-up)
-
-(defun evil-visual-activate-hook (&optional _command)
-  "Enable Visual state if the region is activated."
-  (unless (evil-visual-state-p)
-    (evil-with-delay
-     nil (post-command-hook nil t "evil-activate-visual-state")
-     ;; the activation may only be momentary, so re-check
-     ;; in `post-command-hook' before entering Visual state
-     (unless (or (evil-visual-state-p)
-                 (evil-insert-state-p)
-                 (evil-symex-state-p)
-                 (evil-emacs-state-p))
-       (when (and (region-active-p) (not deactivate-mark))
-         (evil-visual-state))))))
-
-(advice-add
- 'symex--update-overlay
- :after (lambda () (set-mark (symex--get-end-point 1))))
 #+end_src
 
 **** Compats
@@ -3178,12 +3162,12 @@ Vertico is basically dmenu for emacs. It lists out all the options in a command 
       usePackage = {
         vertico = {
           generalTwoConfig.":n" = {
-	    vertico-grid-map = {
-	      "i" = "'vertico-grid-right";
-	      "n" = "'vertico-grid-left";
+            vertico-grid-map = {
+              "i" = "'vertico-grid-right";
+              "n" = "'vertico-grid-left";
               "C-o" = "'vertico-grid-scroll-down";
               "C-e" = "'vertico-grid-scroll-up";
-	    };
+            };
             vertico-map = {
               "C-o" = "'vertico-scroll-down";
               "C-e" = "'vertico-scroll-up";
@@ -3198,12 +3182,21 @@ Vertico is basically dmenu for emacs. It lists out all the options in a command 
           config = ''
             <<Emacs Vertico Config>>
           '';
-          setopt.vertico-multiform-commands =
-            [
-              "'(music-menu grid)"
-              "'(man grid)"
-              "'(t posframe)"
-            ];
+        };
+
+        vertico-multiform = {
+          enable = true;
+          setopt.vertico-multiform-commands = [
+            "'(music-menu grid)"
+            "'(man grid)"
+            "'(t posframe)"
+          ];
+          ghookf = [ "('vertico-mode 'vertico-multiform-mode)" ];
+        };
+
+        vertico-quick.setopt = {
+          vertico-quick1 = ''"crstbfneia"'';
+          vertico-quick2 = ''"crstbfneia"'';
         };
       };
     };
@@ -3257,8 +3250,6 @@ format count borrowed from: https://github.com/rougier/nano-vertico
                  :weight
                  ,(face-attribute 'bold :weight nil 'default)))
    " "))
-
-(vertico-multiform-mode)
 #+end_src
 
 **** Corfu
@@ -3922,35 +3913,6 @@ How to add a latex package
 #+begin_src nix-ts :tangle modules/writing/org.nix :noweb yes
 { inputs, ... }:
 {
-  perSystem =
-    { pkgs, ... }:
-    let
-      epkgs = pkgs.emacs.pkgs;
-    in
-    {
-      packages.org = epkgs.callPackage (
-        {
-          elpaBuild,
-          fetchurl,
-          lib,
-        }:
-        elpaBuild {
-          pname = "org";
-          ename = "org";
-          version = "9.8.6";
-          src = fetchurl {
-            url = "https://elpa.gnu.org/packages/org-9.8.6.tar";
-            sha256 = "sha256-QyrhwAW55Y4vtgMbIjSQOkNr+8uTSmXdumi2qc8dTIE=";
-          };
-          packageRequires = [ ];
-          meta = {
-            homepage = "https://elpa.gnu.org/packages/org.html";
-            license = lib.licenses.free;
-          };
-        }
-      ) { };
-    };
-
   flake.homeModules.writing =
     { config, pkgs, ... }:
 
@@ -3998,8 +3960,8 @@ How to add a latex package
             };
 
             config = ''
-              	    <<Emacs Org Config>>
-              	  '';
+              <<Emacs Org Config>>
+            '';
           };
 
           org-auto-tangle = {
@@ -4049,12 +4011,6 @@ How to add a latex package
               "obl" = "'biblio-lookup";
               "obi" = "'biblio-doi-insert-bibtex";
             };
-          };
-
-          toc-org = {
-            enable = true;
-            ghookf = [ "('(org-mode markdown-mode) 'toc-org-mode)" ];
-	    generalOneConfig.markdown-mode-map."C-c C-o" = "'toc-org-markdown-follow-thing-at-point";
           };
         };
       };
@@ -4436,57 +4392,6 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
   (setq tab-bar-tab-hints t)
   (tab-bar-select-tab (string-to-number (read-string "Tab Number: ")))
   (setq tab-bar-tab-hints nil))
-#+end_src
-
-*** Buffer Terminator
-#+begin_src nix-ts :tangle modules/window-manager/buffer-terminator.nix :noweb yes
-{ ... }:
-
-{
-  flake.homeModules.bufferTerminator =
-    { ... }:
-    {
-      programs.emacs.init.usePackage.buffer-terminator = {
-        enable = true;
-        preface = ''
-          <<Buffer Terminator Preface>>
-        '';
-        ghookf = [ "('on-first-buffer 'buffer-terminator-mode)" ];
-        setopt.buffer-terminator-rules-alist = [
-          '''(kill-buffer-name-regexp . "magit-process:.\\*$")''
-          '''(kill-buffer-name-regexp . "magit-diff:.\\*$")''
-          '''(keep-buffer-name . ("tasks.org"))''
-          "'(keep-buffer-property . special)"
-          "'(keep-buffer-property . process)"
-          "'(keep-buffer-property . visible)"
-          "'(call-function . efs/check-for-roll-buffers)"
-          "'(kill-buffer-property . inactive)"
-          "'(return . :keep)"
-        ];
-      };
-    };
-}
-#+end_src
-
-#+NAME: Buffer Terminator Preface
-#+begin_src emacs-lisp
-(defun efs/check-for-roll-buffers ()
-  "Check for roll buffers for buffer-terminator."
-  (if (-contains?
-       (mapcar
-        'roll-pane-buffer
-        (car
-         (-filter
-          (lambda (x) (not (eq nil x)))
-          (mapcar
-           (lambda (tab)
-             (alist-get
-              'roll--panes
-              (alist-get 'pertab-local-variables (cdr tab))))
-           (funcall tab-bar-tabs-function)))))
-       (current-buffer))
-      ':keep
-    nil))
 #+end_src
 
 *** Javelin
@@ -5099,8 +5004,7 @@ NEG subtracts if it is true."
        bufname
        :string str
        :poshandler aw-posframe-position-handler
-       :refposhandler 'posframe-refposhandler-xwininfo
-       :parent-frame nil
+       :refposhandler 'vertico-posframe-refposhandler-default
        :font (face-font 'aw-leading-char-face)
        :foreground-color (face-foreground 'aw-leading-char-face nil t)
        :background-color (face-background 'aw-leading-char-face nil t)))))
@@ -5120,6 +5024,24 @@ NEG subtracts if it is true."
     (consult-buffer))
    (t
     (call-interactively 'switch-to-buffer))))
+#+end_src
+
+*** Easysession
+#+begin_src nix-ts :tangle modules/window-manager/easysession.nix
+{
+  flake.homeModules.easysession = { ... }: {
+    programs.emacs.init.usePackage.easysession = {
+      enable = true;
+      config = "(easysession-setup)";
+      setopt = {
+	easysession-save-interval = 600;
+	easysession-switch-to-save-session = true;
+	easysession-switch-to-exclude-current = false;
+	easyession-setup-load-session = true;
+      };
+    };
+  };
+}
 #+end_src
 
 ** Gptel
@@ -5171,7 +5093,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
       programs.emacs.init = {
         ai = {
           copilot = {
-            enable = false;
+            enable = true;
             keepOutOf = [
               "c-ts-mode"
               "json5-ts-mode"
@@ -5251,8 +5173,13 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
               extraPackages = [ pkgs.aider-chat ];
               generalOne.global-leader."gA" = "'aidermacs-transient-menu";
               config = "(start-ollama)";
-              setopt.aidermacs-default-model = ''"ollama/qwen3:8b"'';
+              setopt = {
+                aidermacs-default-model = ''"ollama/qwen3:8b"'';
+                aidermacs-extra-args = [ ''"--no-git"'' ];
+              };
             };
+
+            popper.setopt.popper-reference-buffers = [ "'aidermacs-comint-mode" ];
           };
       };
     };
@@ -6436,12 +6363,18 @@ Setting up your alsoftrc correctly makes Minecraft happy
       '';
       packages = with pkgs; [
         # steam
-        # lutris
-        # retroarch
         # gamemode
         prismlauncher
         graalvmPackages.graalvm-oracle_17
       ];
+    };
+
+    programs.lutris = {
+      enable = true;
+      runners = {
+	# libretro.package = pkgs.retroarch;
+	ppsspp.package = pkgs.ppsspp;
+      };
     };
   };
 }
