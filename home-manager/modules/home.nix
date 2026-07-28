@@ -49,7 +49,6 @@ in
           self.homeModules.emacs
           self.homeModules.elisp
           self.homeModules.extraPackages
-          self.homeModules.easysession
           self.homeModules.exwm
           self.homeModules.fileManager
           self.homeModules.gaming
