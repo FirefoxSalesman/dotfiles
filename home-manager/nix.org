@@ -447,10 +447,8 @@ in
         run = "cd /run/";
         l = "ls";
         ".." = "cd ..";
-        tortube = "yt-dlp --proxy socks://localhost:9050";
-        wget = "torsocks wget --hsts-file=$XDG_DATA_HOME/wget-hsts";
         ga = "git add";
-        gc = "torsocks git clone";
+        gc = "git clone";
         gp = "git pull";
         gP = "git push";
       };
@@ -503,7 +501,12 @@ It's mostly here for eshell to get completions from, but it's a usable shell
 #+begin_src nix-ts :tangle modules/shells/eshell.nix :noweb yes
 {
   flake.homeModules.shellConfig =
-    { pkgs, ... }:
+    {
+      pkgs,
+      lib,
+      config,
+      ...
+    }:
     {
       programs.emacs.init = {
         completions.tempel.templates.eshell-mode.gbc = ''"(get-buffer-create \"" q "\")"'';
@@ -521,8 +524,17 @@ It's mostly here for eshell to get completions from, but it's a usable shell
               	      (eshell 'N))
               	  '';
             config = ''
-              	      <<Eshell Config>>
-              	    '';
+              <<Eshell Config>>
+              (advice-add 'eshell-read-aliases-list :after (lambda (&rest _)
+                              (dolist (alias '(${
+                                lib.optionals (config.home.shellAliases != { }) (
+                                  lib.concatStringsSep " " (
+                                    lib.mapAttrsToList (n: v: ''("${n}" "${v} $*")'') config.home.shellAliases
+                                  )
+                                )
+                              }))
+                                            (add-to-list 'eshell-command-aliases-list alias))))
+            '';
           };
 
           fish-completion.gfhookf = [

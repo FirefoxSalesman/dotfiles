@@ -1,6 +1,11 @@
 {
   flake.homeModules.shellConfig =
-    { pkgs, ... }:
+    {
+      pkgs,
+      lib,
+      config,
+      ...
+    }:
     {
       programs.emacs.init = {
         completions.tempel.templates.eshell-mode.gbc = ''"(get-buffer-create \"" q "\")"'';
@@ -18,37 +23,46 @@
               	      (eshell 'N))
               	  '';
             config = ''
-              	      (defun efs/configure-eshell ()
-              	        ;; Bind some useful keys for evil-mode
-              	        (evil-define-key
-              	         '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
-              	        (evil-normalize-keymaps))
-              	      
-              	      ;; https://xenodium.com/rinku-cli-link-previews
-              	      (defun adviced:eshell/cat (orig-fun &rest args)
-              	        "Like `eshell/cat' but with image support."
-              	        (if (seq-every-p
-              	             (lambda (arg)
-              	               (and (stringp arg)
-              	                    (file-exists-p arg)
-              	                    (image-supported-file-p arg)))
-              	             args)
-              	            (with-temp-buffer
-              	              (insert "\n")
-              	              (dolist (path args)
-              	                (let ((newpath (expand-file-name path)))
-              	                  (insert-image
-              	                   (create-image newpath
-              	                                 (image-type-from-file-name newpath)
-              	                                 nil
-              	                                 :max-width 350)))
-              	                (insert "\n"))
-              	              (insert "\n")
-              	              (buffer-string))
-              	          (apply orig-fun args)))
-              	      
-              	      (advice-add #'eshell/cat :around #'adviced:eshell/cat)
-              	    '';
+              (defun efs/configure-eshell ()
+                ;; Bind some useful keys for evil-mode
+                (evil-define-key
+                 '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
+                (evil-normalize-keymaps))
+              
+              ;; https://xenodium.com/rinku-cli-link-previews
+              (defun adviced:eshell/cat (orig-fun &rest args)
+                "Like `eshell/cat' but with image support."
+                (if (seq-every-p
+                     (lambda (arg)
+                       (and (stringp arg)
+                            (file-exists-p arg)
+                            (image-supported-file-p arg)))
+                     args)
+                    (with-temp-buffer
+                      (insert "\n")
+                      (dolist (path args)
+                        (let ((newpath (expand-file-name path)))
+                          (insert-image
+                           (create-image newpath
+                                         (image-type-from-file-name newpath)
+                                         nil
+                                         :max-width 350)))
+                        (insert "\n"))
+                      (insert "\n")
+                      (buffer-string))
+                  (apply orig-fun args)))
+              
+              (advice-add #'eshell/cat :around #'adviced:eshell/cat)
+              (advice-add 'eshell-read-aliases-list :after (lambda (&rest _)
+                              (dolist (alias '(${
+                                lib.optionals (config.home.shellAliases != { }) (
+                                  lib.concatStringsSep " " (
+                                    lib.mapAttrsToList (n: v: ''("${n}" "${v} $*")'') config.home.shellAliases
+                                  )
+                                )
+                              }))
+                                            (add-to-list 'eshell-command-aliases-list alias))))
+            '';
           };
 
           fish-completion.gfhookf = [
