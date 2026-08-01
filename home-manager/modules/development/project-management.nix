@@ -1,6 +1,6 @@
 {
   flake.homeModules.development =
-    { pkgs, ... }:
+    { pkgs, lib, ... }:
     {
       programs.emacs.init = {
         ide = {
@@ -12,8 +12,42 @@
           project = true;
         };
         usePackage = {
+          git-modes = {
+            enable = true;
+            mode = [
+              ''("/\\.gitattributes\\'" . gitattributes-mode)''
+              ''("/info/attributes\\'" . gitattributes-mode)''
+              ''("/git/attributes\\'" . gitattributes-mode)''
+	      ''("/\\.gitconfig\\'" . gitconfig-mode)''
+	      ''("/\\.git/config\\'" . gitconfig-mode)''
+	      ''("/modules/.*/config\\'" . gitconfig-mode)''
+	      ''("/git/config\\'" . gitconfig-mode)''
+	      ''("/\\.gitmodules\\'" . gitconfig-mode)''
+	      ''("/etc/gitconfig\\'" . gitconfig-mode)''
+	      ''("/\\.gitignore\\'" . gitignore-mode)''
+	      ''("/info/exclude\\'" . gitignore-mode)''
+	      ''("/git/ignore\\'" . gitignore-mode)''
+            ];
+          };
+
           magit = {
             setopt.magit-process-find-password-functions = [ "'magit-process-password-auth-source" ];
+            generalOne.project-prefix-map =
+              let
+                mkMajutsuCmd = magitCommand: majutsuCommand: ''
+                  `,(cmd! (if (file-exists-p (nix-emacs-project-file ".jj"))
+                          (progn ${majutsuCommand})
+                          ${magitCommand}))
+                '';
+              in
+              {
+                "v" = mkMajutsuCmd "(magit)" "(majutsu)";
+                "c" = mkMajutsuCmd "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-commit)";
+                "p" = mkMajutsuCmd "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)";
+                "P" = mkMajutsuCmd "(magit-push)" "(call-interactively 'majutsu-git-push)";
+                "b" = mkMajutsuCmd "(magit-bookmark)" "(majutsu-bookmark)";
+              };
+            bindLocal.project-prefix-map = lib.mkForce { };
             generalOneConfig = {
               magit-mode-map = {
                 "e" = "'evil-next-visual-line";
@@ -23,15 +57,16 @@
             };
             # https://github.com/magit/magit/issues/5557
             config = ''
-                (defalias 'magit--any
-                        (static-if (fboundp 'member-if) #'member-if #'cl-member-if))
-              '';
+              (defalias 'magit--any
+                      (static-if (fboundp 'member-if) #'member-if #'cl-member-if))
+            '';
           };
 
           majutsu = {
             enable = true;
-	    extraPackages = [pkgs.jujutsu];
-	    command = ["majutsu"];
+            extraPackages = [ pkgs.jujutsu ];
+            command = [ "majutsu-git-fetch" ];
+            extraConfig = ":autoload majutsu-repository-config-id";
           };
 
           projection-ibuffer = {

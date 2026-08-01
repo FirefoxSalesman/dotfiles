@@ -43,9 +43,9 @@
           
           (repeaters-define-maps
            '(("flyspell"
-              evil-prev-flyspell-error
+              jinx-previous
               "S"
-              evil-next-flyspell-error
+              jinx-next
               "s")))
         '';
       };

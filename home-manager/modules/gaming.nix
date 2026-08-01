@@ -8,12 +8,18 @@
       '';
       packages = with pkgs; [
         # steam
-        # lutris
-        # retroarch
         # gamemode
         prismlauncher
         graalvmPackages.graalvm-oracle_17
       ];
+    };
+
+    programs.lutris = {
+      enable = true;
+      runners = {
+	# libretro.package = pkgs.retroarch;
+	ppsspp.package = pkgs.ppsspp;
+      };
     };
   };
 }

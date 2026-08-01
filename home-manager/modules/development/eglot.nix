@@ -1,6 +1,10 @@
 {
   flake.homeModules.development =
-    { pkgs, ... }:
+    {
+      pkgs,
+      lib,
+      ...
+    }:
     {
       programs.emacs.init = {
         ide = {
@@ -17,12 +21,16 @@
 
         usePackage = {
           eglot = {
-            preface = "(defvar efs/autoformat t) ";
             gfhookf = [
               ''
-                ('eglot-managed-mode (local! completion-at-point-functions (list (cape-capf-super #'tempel-complete
-                	      #'eglot-completion-at-point
-                											     #'cape-file))))
+                ('eglot-managed-mode (local! completion-at-point-functions
+                                                             (list (cape-capf-choose
+                					            (cape-capf-super
+                                                                     #'tempel-complete
+                                                                     (cape-capf-buster #'eglot-completion-at-point)
+                                                                     (cape-capf-inside-comment #'cape-dict)
+                                                                     (cape-capf-inside-string #'cape-dict)
+                                                                     #'cape-dabbrev)))))
               ''
             ];
             config = ''
@@ -35,12 +43,8 @@
             '';
           };
 
-          flymake-popon.setopt.flymake-popon-posframe-extra-arguments = [
-            "':poshandler"
-            "'posframe-poshandler-point-bottom-left-corner-upward"
-            "':refposhandler"
-            "'vertico-posframe-refposhandler-default"
-          ];
+          flymake.setopt.flymake-show-diagnostics-at-end-of-line = "'short";
+          flymake-popon.enable = lib.mkForce false;
 
           eglot-java = {
             setopt.eglot-java-user-init-opts-fn = "'eglot-java-init-opts";
@@ -48,27 +52,6 @@
               (defun eglot-java-init-opts (server eglot-java-eclipse-jdt)
                                  '(:bundles ["/usr/share/java-debug/com.microsoft.java.debug.plugin.jar"]))
             '';
-          };
-
-          citre = {
-            enable = true;
-            ghookf = [ "('prog-mode 'citre-mode)" ];
-            gfhookf = [ "('doom-escape 'citre-peek-abort)" ];
-            setopt = {
-              citre-prompt-language-for-ctags-command = true;
-              citre-use-project-root-when-creating-ctags = true;
-              citre-ctags-program = ''"${pkgs.universal-ctags}/bin/ctags"'';
-              citre-readtags-program = ''"${pkgs.universal-ctags}/bin/readtags"'';
-            };
-            custom.citre-peek-ace-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
-            generalTwoConfig.local-leader.citre-mode-map = {
-                "p" = "'citre-ace-peek";
-                "u" = "'citre-update-this-tags-file";
-            };
-            generalOneConfig.citre-peek-keymap = {
-              "M-e" = "'citre-peek-next-line";
-              "M-o" = "'citre-peek-prev-line";
-            };
           };
         };
       };

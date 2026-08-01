@@ -58,8 +58,7 @@
           	       bufname
           	       :string str
           	       :poshandler aw-posframe-position-handler
-          	       :refposhandler 'posframe-refposhandler-xwininfo
-          	       :parent-frame nil
+          	       :refposhandler 'vertico-posframe-refposhandler-default
           	       :font (face-font 'aw-leading-char-face)
           	       :foreground-color (face-foreground 'aw-leading-char-face nil t)
           	       :background-color (face-background 'aw-leading-char-face nil t)))))

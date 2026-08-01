@@ -27,6 +27,7 @@
           (evilem-make-motion efs/evilem-motion-symex-go-up #'symex-go-up)
         '';
         generalOneConfig.evil-symex-state-map = {
+	  "c" = "(cmd! (set-mark (symex--get-end-point 1)))";
           "n" = "'symex-go-backward";
           "H-n" = "'efs/evilem-motion-symex-go-backward";
           "H-o" = "'efs/evilem-motion-symex-go-down";

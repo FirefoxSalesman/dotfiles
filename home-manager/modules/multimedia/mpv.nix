@@ -37,6 +37,10 @@
             (interactive)
             (mpv-play-url (eww-current-url)))
         '';
+	generalOne.global-leader = {
+	  "mP" = '''mpv-pause'';
+	  "mj" = '''mpv-jump-to-chapter'';
+	};
       };
 
       mpv.enable = true;

@@ -13,7 +13,6 @@
     home.packages = with pkgs; [
       obs-studio
       kdePackages.kdenlive
-      # lmms
       audacity
       doomer
     ];

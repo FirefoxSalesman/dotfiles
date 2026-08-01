@@ -8,7 +8,7 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
+    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-26.05";
     emacs-overlay.url = "github:nix-community/emacs-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
     import-tree.url = "github:vic/import-tree";
@@ -96,6 +96,7 @@ let
       allowUnfree = true;
       permittedInsecurePackages = [
         "pnpm-10.29.2"
+        "electron-40.10.5"
       ];
     };
   };
@@ -108,8 +109,6 @@ in
     in
     {
       # shell scripts
-      kmonad = inputs.kmonad.packages.${pkgs.system}.default;
-      sage = pkgs-stable.sage;
       ezf = packages.ezf;
       cast = packages.cast;
       doomer = packages.doomer;
@@ -125,6 +124,10 @@ in
 
       # overrides
       mpv = packages.mpv;
+      rassumfrassum = pkgs-stable.rassumfrassum;
+      kmonad = inputs.kmonad.packages.${pkgs.system}.default;
+      lutris = pkgs-stable.lutris;
+      sage = pkgs-stable.sage;
 
       #emacs packages
       emacsPackagesFor =
@@ -140,7 +143,6 @@ in
             roll = packages.roll;
             pertab = packages.pertab;
             embark = packages.embark;
-            org = packages.org;
             gptel-got = packages.gptel-got;
           }
         ));
@@ -269,6 +271,7 @@ let
       allowUnfree = true;
       permittedInsecurePackages = [
         "pnpm-10.29.2"
+        "electron-40.10.5"
       ];
     };
     overlays = [
@@ -382,8 +385,8 @@ in
       hosts = {
         xrandr-command = ''
           	xrandr --setprovideroutputsource modesetting NVIDIA-0
-                  xrandr --auto
-                  xrandr --dpi 96
+                xrandr --auto
+                xrandr --dpi 96
         '';
         exwm-monitors = [ ''0 "eDP-1-1"'' ];
         wantBattery = true;
@@ -394,10 +397,10 @@ in
     {
       hosts = {
         xrandr-command = ''
-          xrandr --auto
+	  xrandr --output DP-4 --primary --mode 1920x1080 --output DVI-I-1 --mode 1920x1200
         '';
         exwm-monitors = [
-          ''0 "DP-1"''
+          ''0 "DP-4"''
           ''1 "DVI-I-1"''
         ];
         wantBattery = false;
@@ -497,7 +500,7 @@ It's mostly here for eshell to get completions from, but it's a usable shell
 #+end_src
 
 *** eshell
-#+begin_src nix-ts :tangle modules/shells/eshell.nix
+#+begin_src nix-ts :tangle modules/shells/eshell.nix :noweb yes
 {
   flake.homeModules.shellConfig =
     { pkgs, ... }:
@@ -518,37 +521,12 @@ It's mostly here for eshell to get completions from, but it's a usable shell
               	      (eshell 'N))
               	  '';
             config = ''
-              	    (defun efs/configure-eshell ()
-              	      ;; Bind some useful keys for evil-mode
-              	      (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
-              	      (evil-normalize-keymaps))
-
-              	    ;; https://xenodium.com/rinku-cli-link-previews
-              	    (defun adviced:eshell/cat (orig-fun &rest args)
-              	      "Like `eshell/cat' but with image support."
-              	      (if (seq-every-p (lambda (arg)
-              	                         (and (stringp arg)
-              	                              (file-exists-p arg)
-              	                              (image-supported-file-p arg)))
-              	                       args)
-              	          (with-temp-buffer
-              	            (insert "\n")
-              	            (dolist (path args)
-              	              (let ((newpath (expand-file-name path)))
-              	    	    (insert-image (create-image
-              	    			   newpath (image-type-from-file-name newpath)
-              	    			   nil :max-width 350)))
-              	              (insert "\n"))
-              	            (insert "\n")
-              	            (buffer-string))
-              	        (apply orig-fun args)))
-
-              	    (advice-add #'eshell/cat :around #'adviced:eshell/cat)
-              	  '';
+              	      <<Eshell Config>>
+              	    '';
           };
 
           fish-completion.gfhookf = [
-            "('fish-completion-mode (local! completion-at-point-functions '(tempel-complete pcomplete-completions-at-point)))"
+            "('fish-completion-mode (local! completion-at-point-functions (list 'tempel-complete 'pcomplete-completions-at-point)))"
           ];
 
           evil-collection-eshell = {
@@ -567,10 +545,51 @@ It's mostly here for eshell to get completions from, but it's a usable shell
               	    			   "C" 'evil-visual-line)
               	  '';
           };
+
+          esh-help = {
+            enable = true;
+            after = [ "eshell" ];
+            gfhookf = [ "('eshell-mode 'eldoc-box-hover-at-point-mode)" ];
+            config = "(setup-esh-help-eldoc)";
+          };
         };
       };
     };
 }
+#+end_src
+
+#+NAME: Eshell Config
+#+begin_src emacs-lisp
+(defun efs/configure-eshell ()
+  ;; Bind some useful keys for evil-mode
+  (evil-define-key
+   '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
+  (evil-normalize-keymaps))
+
+;; https://xenodium.com/rinku-cli-link-previews
+(defun adviced:eshell/cat (orig-fun &rest args)
+  "Like `eshell/cat' but with image support."
+  (if (seq-every-p
+       (lambda (arg)
+         (and (stringp arg)
+              (file-exists-p arg)
+              (image-supported-file-p arg)))
+       args)
+      (with-temp-buffer
+        (insert "\n")
+        (dolist (path args)
+          (let ((newpath (expand-file-name path)))
+            (insert-image
+             (create-image newpath
+                           (image-type-from-file-name newpath)
+                           nil
+                           :max-width 350)))
+          (insert "\n"))
+        (insert "\n")
+        (buffer-string))
+    (apply orig-fun args)))
+
+(advice-add #'eshell/cat :around #'adviced:eshell/cat)
 #+end_src
 
 *** starship
@@ -797,6 +816,7 @@ aliasesStr = concatStringsSep "\n"
         SSH_AUTH_SOCK = "$(gpgconf --list-dirs agent-ssh-socket)";
         _JAVA_AWT_WM_NONREPARENTING = "1";
         PATH = "/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/holschcc/bin:/home/holschcc/.nix-profile/bin";
+        OLLAMA_API_BASE = "http://127.0.0.1:11434";
       };
     };
 }
@@ -1748,11 +1768,14 @@ I think most of it was from the github page for lsp mode, but it's been a while,
     {
       programs.emacs.init = {
         ide = {
+          citre.enable = true;
           dape.enable = true;
           direnv = true;
           treesit-fold.enable = true;
           languages = {
             bash.enable = true;
+            clojure.enable = true;
+            kotlin.enable = true;
             json.enable = true;
             nix.enable = true;
             toml.enable = true;
@@ -1784,7 +1807,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 #+begin_src nix-ts :tangle modules/development/project-management.nix :noweb yes
 {
   flake.homeModules.development =
-    { pkgs, ... }:
+    { pkgs, lib, ... }:
     {
       programs.emacs.init = {
         ide = {
@@ -1796,8 +1819,42 @@ I think most of it was from the github page for lsp mode, but it's been a while,
           project = true;
         };
         usePackage = {
+          git-modes = {
+            enable = true;
+            mode = [
+              ''("/\\.gitattributes\\'" . gitattributes-mode)''
+              ''("/info/attributes\\'" . gitattributes-mode)''
+              ''("/git/attributes\\'" . gitattributes-mode)''
+	      ''("/\\.gitconfig\\'" . gitconfig-mode)''
+	      ''("/\\.git/config\\'" . gitconfig-mode)''
+	      ''("/modules/.*/config\\'" . gitconfig-mode)''
+	      ''("/git/config\\'" . gitconfig-mode)''
+	      ''("/\\.gitmodules\\'" . gitconfig-mode)''
+	      ''("/etc/gitconfig\\'" . gitconfig-mode)''
+	      ''("/\\.gitignore\\'" . gitignore-mode)''
+	      ''("/info/exclude\\'" . gitignore-mode)''
+	      ''("/git/ignore\\'" . gitignore-mode)''
+            ];
+          };
+
           magit = {
             setopt.magit-process-find-password-functions = [ "'magit-process-password-auth-source" ];
+            generalOne.project-prefix-map =
+              let
+                mkMajutsuCmd = magitCommand: majutsuCommand: ''
+                  `,(cmd! (if (file-exists-p (nix-emacs-project-file ".jj"))
+                          (progn ${majutsuCommand})
+                          ${magitCommand}))
+                '';
+              in
+              {
+                "v" = mkMajutsuCmd "(magit)" "(majutsu)";
+                "c" = mkMajutsuCmd "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-commit)";
+                "p" = mkMajutsuCmd "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)";
+                "P" = mkMajutsuCmd "(magit-push)" "(call-interactively 'majutsu-git-push)";
+                "b" = mkMajutsuCmd "(magit-bookmark)" "(majutsu-bookmark)";
+              };
+            bindLocal.project-prefix-map = lib.mkForce { };
             generalOneConfig = {
               magit-mode-map = {
                 "e" = "'evil-next-visual-line";
@@ -1807,15 +1864,16 @@ I think most of it was from the github page for lsp mode, but it's been a while,
             };
             # https://github.com/magit/magit/issues/5557
             config = ''
-                (defalias 'magit--any
-                        (static-if (fboundp 'member-if) #'member-if #'cl-member-if))
-              '';
+              (defalias 'magit--any
+                      (static-if (fboundp 'member-if) #'member-if #'cl-member-if))
+            '';
           };
 
           majutsu = {
             enable = true;
-	    extraPackages = [pkgs.jujutsu];
-	    command = ["majutsu"];
+            extraPackages = [ pkgs.jujutsu ];
+            command = [ "majutsu-git-fetch" ];
+            extraConfig = ":autoload majutsu-repository-config-id";
           };
 
           projection-ibuffer = {
@@ -1978,15 +2036,17 @@ I think most of it was from the github page for lsp mode, but it's been a while,
           };
           gradle.enable = true;
         };
-        usePackage.java-ts-mode = {
-          preface = ''
-            	  <<Java Preface>>
-            	'';
-          generalTwoConfig.":n".java-ts-mode-map = {
-            "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "block_comment"))'';
-            "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "block_comment"))'';
-            "o" = "'evil-previous-visual-line";
-            "O" = "'evil-scroll-up";
+        usePackage = {
+          java-ts-mode = {
+            preface = ''
+              <<Java Preface>>
+            '';
+            generalTwoConfig.":n".java-ts-mode-map = {
+              "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "block_comment"))'';
+              "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "block_comment"))'';
+              "o" = "'evil-previous-visual-line";
+              "O" = "'evil-scroll-up";
+            };
           };
         };
       };
@@ -2068,11 +2128,14 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 *** Eglot
 https://github.com/joaotavora/eglot/discussions/888
 https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
-Citre was borrowed from jweigley's config
 #+begin_src nix-ts :tangle modules/development/eglot.nix :noweb yes
 {
   flake.homeModules.development =
-    { pkgs, ... }:
+    {
+      pkgs,
+      lib,
+      ...
+    }:
     {
       programs.emacs.init = {
         ide = {
@@ -2089,12 +2152,16 @@ Citre was borrowed from jweigley's config
 
         usePackage = {
           eglot = {
-            preface = "(defvar efs/autoformat t) ";
             gfhookf = [
               ''
-                ('eglot-managed-mode (local! completion-at-point-functions (list (cape-capf-super #'tempel-complete
-                	      #'eglot-completion-at-point
-                											     #'cape-file))))
+                ('eglot-managed-mode (local! completion-at-point-functions
+                                                             (list (cape-capf-choose
+                					            (cape-capf-super
+                                                                     #'tempel-complete
+                                                                     (cape-capf-buster #'eglot-completion-at-point)
+                                                                     (cape-capf-inside-comment #'cape-dict)
+                                                                     (cape-capf-inside-string #'cape-dict)
+                                                                     #'cape-dabbrev)))))
               ''
             ];
             config = ''
@@ -2102,12 +2169,8 @@ Citre was borrowed from jweigley's config
             '';
           };
 
-          flymake-popon.setopt.flymake-popon-posframe-extra-arguments = [
-            "':poshandler"
-            "'posframe-poshandler-point-bottom-left-corner-upward"
-            "':refposhandler"
-            "'vertico-posframe-refposhandler-default"
-          ];
+          flymake.setopt.flymake-show-diagnostics-at-end-of-line = "'short";
+          flymake-popon.enable = lib.mkForce false;
 
           eglot-java = {
             setopt.eglot-java-user-init-opts-fn = "'eglot-java-init-opts";
@@ -2115,27 +2178,6 @@ Citre was borrowed from jweigley's config
               (defun eglot-java-init-opts (server eglot-java-eclipse-jdt)
                                  '(:bundles ["/usr/share/java-debug/com.microsoft.java.debug.plugin.jar"]))
             '';
-          };
-
-          citre = {
-            enable = true;
-            ghookf = [ "('prog-mode 'citre-mode)" ];
-            gfhookf = [ "('doom-escape 'citre-peek-abort)" ];
-            setopt = {
-              citre-prompt-language-for-ctags-command = true;
-              citre-use-project-root-when-creating-ctags = true;
-              citre-ctags-program = ''"${pkgs.universal-ctags}/bin/ctags"'';
-              citre-readtags-program = ''"${pkgs.universal-ctags}/bin/readtags"'';
-            };
-            custom.citre-peek-ace-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
-            generalTwoConfig.local-leader.citre-mode-map = {
-                "p" = "'citre-ace-peek";
-                "u" = "'citre-update-this-tags-file";
-            };
-            generalOneConfig.citre-peek-keymap = {
-              "M-e" = "'citre-peek-next-line";
-              "M-o" = "'citre-peek-prev-line";
-            };
           };
         };
       };
@@ -2533,9 +2575,9 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
 
 (repeaters-define-maps
  '(("flyspell"
-    evil-prev-flyspell-error
+    jinx-previous
     "S"
-    evil-next-flyspell-error
+    jinx-next
     "s")))
 #+end_src
 
@@ -2572,6 +2614,7 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
         keybinds.avy = {
           enable = true;
           evilModifierKey = "H";
+          avyKeys = ["c" "r" "s" "t" "b" "f" "n" "e" "i" "a"];
         };
         usePackage.evil-easymotion = {
           generalOne.":nvo" = {
@@ -2593,13 +2636,10 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
             "'(?p . avy-action-teleport)"
             "'(?q . nix-emacs-avy-action-fold)"
           ];
-          setopt = {
-            avy-keys = "'(?c ?r ?s ?t ?b ?f ?n ?e ?i ?a)";
-            avy-all-windows = false;
-          };
+          setopt.avy-all-windows = false;
           config = ''
-            	  <<Easymotion Config>>
-            	'';
+            <<Easymotion Config>>
+          '';
         };
       };
     };
@@ -2975,6 +3015,7 @@ Gives us an entire state where we can rapidly make specific edits to code.
           <<Emacs Symex Config>>
         '';
         generalOneConfig.evil-symex-state-map = {
+	  "c" = "(cmd! (set-mark (symex--get-end-point 1)))";
           "n" = "'symex-go-backward";
           "H-n" = "'efs/evilem-motion-symex-go-backward";
           "H-o" = "'efs/evilem-motion-symex-go-down";
@@ -3119,24 +3160,42 @@ Vertico is basically dmenu for emacs. It lists out all the options in a command 
       };
       usePackage = {
         vertico = {
-          generalTwoConfig.":n".vertico-map = {
-            "C-o" = "'vertico-scroll-down";
-            "C-e" = "'vertico-scroll-up";
-            "j" = "'evil-undo";
-            "I" = "'vertico-last";
-            "N" = "'vertico-first";
-            "B" = "'vertico-last";
-            "bg" = "'vertico-first";
-            "G" = "'evil-paste-after";
+          generalTwoConfig.":n" = {
+            vertico-grid-map = {
+              "i" = "'vertico-grid-right";
+              "n" = "'vertico-grid-left";
+              "C-o" = "'vertico-grid-scroll-down";
+              "C-e" = "'vertico-grid-scroll-up";
+            };
+            vertico-map = {
+              "C-o" = "'vertico-scroll-down";
+              "C-e" = "'vertico-scroll-up";
+              "j" = "'evil-undo";
+              "I" = "'vertico-last";
+              "N" = "'vertico-first";
+              "B" = "'vertico-last";
+              "bg" = "'vertico-first";
+              "G" = "'evil-paste-after";
+            };
           };
           config = ''
-            	    <<Emacs Vertico Config>>
-            	  '';
+            <<Emacs Vertico Config>>
+          '';
+        };
+
+        vertico-multiform = {
+          enable = true;
+          setopt.vertico-multiform-commands = [
+            "'(music-menu grid)"
+            "'(man grid)"
+            "'(t posframe)"
+          ];
+          ghookf = [ "('vertico-mode 'vertico-multiform-mode)" ];
         };
 
         vertico-quick.setopt = {
-          vertico-quick1 = ''"crst"'';
-          vertico-quick2 = ''"neia"'';
+          vertico-quick1 = ''"crstbfneia"'';
+          vertico-quick2 = ''"crstbfneia"'';
         };
       };
     };
@@ -3853,35 +3912,6 @@ How to add a latex package
 #+begin_src nix-ts :tangle modules/writing/org.nix :noweb yes
 { inputs, ... }:
 {
-  perSystem =
-    { pkgs, ... }:
-    let
-      epkgs = pkgs.emacs.pkgs;
-    in
-    {
-      packages.org = epkgs.callPackage (
-        {
-          elpaBuild,
-          fetchurl,
-          lib,
-        }:
-        elpaBuild {
-          pname = "org";
-          ename = "org";
-          version = "9.8.6";
-          src = fetchurl {
-            url = "https://elpa.gnu.org/packages/org-9.8.6.tar";
-            sha256 = "sha256-QyrhwAW55Y4vtgMbIjSQOkNr+8uTSmXdumi2qc8dTIE=";
-          };
-          packageRequires = [ ];
-          meta = {
-            homepage = "https://elpa.gnu.org/packages/org.html";
-            license = lib.licenses.free;
-          };
-        }
-      ) { };
-    };
-
   flake.homeModules.writing =
     { config, pkgs, ... }:
 
@@ -3929,8 +3959,8 @@ How to add a latex package
             };
 
             config = ''
-              	    <<Emacs Org Config>>
-              	  '';
+              <<Emacs Org Config>>
+            '';
           };
 
           org-auto-tangle = {
@@ -4004,6 +4034,11 @@ How to add a latex package
       (org-md-export-to-markdown))
      ((equal export-type "html")
       (org-html-export-to-html)))))
+
+(with-eval-after-load 'dashboard
+  (dolist (file (mapcar (lambda (x) (concat (car x) "todo.org")) project--list))
+    (add-to-list 'org-agenda-files file))
+  (dashboard-open))
 #+end_src
 
 *** Latex
@@ -4116,12 +4151,22 @@ No idea what the rest of this is for.
         completions.tempel.templates.org-mode.ci =
           ''"* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q'';
         usePackage = {
-          flyspell = {
+          # flyspell = {
+          #   enable = true;
+          #   ghookf = [
+          #     "('text-mode 'flyspell-mode)"
+          #     "('prog-mode 'flyspell-prog-mode)"
+          #   ];
+          # };
+
+          jinx = {
             enable = true;
-            ghookf = [
-              "('text-mode 'flyspell-mode)"
-              "('prog-mode 'flyspell-prog-mode)"
-            ];
+            ghookf = [ "('on-init-ui 'global-jinx-mode)" ];
+            generalOneConfig.":n" = {
+              "C-M-i" = "'jinx-correct";
+	      "]s" = "'jinx-next";
+	      "[s" = "'jinx-previous";
+            };
           };
 
           pdf-tools = {
@@ -4350,57 +4395,6 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
   (setq tab-bar-tab-hints t)
   (tab-bar-select-tab (string-to-number (read-string "Tab Number: ")))
   (setq tab-bar-tab-hints nil))
-#+end_src
-
-*** Buffer Terminator
-#+begin_src nix-ts :tangle modules/window-manager/buffer-terminator.nix :noweb yes
-{ ... }:
-
-{
-  flake.homeModules.exwm =
-    { ... }:
-    {
-      programs.emacs.init.usePackage.buffer-terminator = {
-        enable = true;
-        preface = ''
-          <<Buffer Terminator Preface>>
-        '';
-        ghookf = [ "('on-first-buffer 'buffer-terminator-mode)" ];
-        setopt.buffer-terminator-rules-alist = [
-          '''(kill-buffer-name-regexp . "magit-process:.\\*$")''
-          '''(kill-buffer-name-regexp . "magit-diff:.\\*$")''
-          '''(keep-buffer-name . ("tasks.org"))''
-          "'(keep-buffer-property . special)"
-          "'(keep-buffer-property . process)"
-          "'(keep-buffer-property . visible)"
-          "'(call-function . efs/check-for-roll-buffers)"
-          "'(kill-buffer-property . inactive)"
-          "'(return . :keep)"
-        ];
-      };
-    };
-}
-#+end_src
-
-#+NAME: Buffer Terminator Preface
-#+begin_src emacs-lisp
-(defun efs/check-for-roll-buffers ()
-  "Check for roll buffers for buffer-terminator."
-  (if (-contains?
-       (mapcar
-        'roll-pane-buffer
-        (car
-         (-filter
-          (lambda (x) (not (eq nil x)))
-          (mapcar
-           (lambda (tab)
-             (alist-get
-              'roll--panes
-              (alist-get 'pertab-local-variables (cdr tab))))
-           (funcall tab-bar-tabs-function)))))
-       (current-buffer))
-      ':keep
-    nil))
 #+end_src
 
 *** Javelin
@@ -5013,8 +5007,7 @@ NEG subtracts if it is true."
        bufname
        :string str
        :poshandler aw-posframe-position-handler
-       :refposhandler 'posframe-refposhandler-xwininfo
-       :parent-frame nil
+       :refposhandler 'vertico-posframe-refposhandler-default
        :font (face-font 'aw-leading-char-face)
        :foreground-color (face-foreground 'aw-leading-char-face nil t)
        :background-color (face-background 'aw-leading-char-face nil t)))))
@@ -5082,85 +5075,125 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
     }:
     {
       home.packages = [ pkgs.ollama ];
-      programs.emacs.init = {
-        ai = {
-          copilot = {
-            enable = false;
-            keepOutOf = [
-              "c-ts-mode"
-              "json5-ts-mode"
-              "json-ts-mode"
-              "LaTeX-mode"
-              "zenscript-mode"
-            ];
-          };
-          gptel = {
-            enable = true;
-            agent.enable = true;
-	    introspection = {
-	      enable = true;
-	      model = "qwen3:8b";
-	    };
-          };
+      programs = {
+        mcp.servers.nixos = {
+          command = "${pkgs.uv}/bin/uvx";
+          args = [ "mcp-nixos" ];
         };
-        usePackage =
-          let
-            mkOllama = models: infix: {
-              "gptel${infix}-model" = "'${lib.findFirst (x: true) "" models}";
-              "gptel${infix}-backend" = ''
-                (gptel-make-ollama "Ollama"
-                	           :stream t
-                	           :protocol "http"
-                	           :host "localhost:11434"
-                	           :models '(${lib.concatMapStrings (k: "${k} ") models}))
-              '';
-            };
-          in
-          {
-            gptel = {
-              command = [ "start-ollama" ];
-              generalOne.global-leader."gs" = '''("start" . start-ollama)'';
-              setopt = {
-                gptel-max-tokens = 10000000;
-                gptel-prompt-prefix-alist = [
-                  ''`(markdown-mode . ,(concat "meatbag ›  "))''
-                  ''`(org-mode . ,(concat  "meatbag ›  "))''
-                  ''`(text-mode . ,(concat "meatbag ›  "))''
-                ];
-                gptel-response-prefix-alist = [
-                  '''(markdown-mode . "HK-47  ")''
-                  '''(org-mode . "HK-47  ")''
-                  '''(text-mode . "HK-47  ")''
-                ];
-              }
-              // mkOllama [ "llama3.2:3b" "qwen2.5-coder:7b" "qwen3:8b" "llama3.2:1b" ] "";
-              generalOne.global-leader."gi" = "'gptel-inline";
-              preface = ''
-                <<Emacs Gptel Preface>>
-              '';
-              config = ''
-                		<<Emacs Gptel Config>>
-              '';
-            };
-
-            gptel-quick.setopt = mkOllama [ "llama3.2:1b" ] "-quick";
-
-            # gptel-got = {
-            #   enable = true;
-            #   after = ["gptel"];
-            # };
-
-            mcp = {
+        emacs.init = {
+          ai = {
+            copilot = {
               enable = true;
-              after = [ "gptel" ];
-              config = ''
-                <<Emacs MCP Config>>
-              '';
-              setopt.mcp-hub-servers = [
-                '''("nixos" :command "${pkgs.uv}/bin/uvx" :args ("mcp-nixos"))''
+              keepOutOf = [
+                "c-ts-mode"
+                "json5-ts-mode"
+                "json-ts-mode"
+                "LaTeX-mode"
+                "zenscript-mode"
               ];
             };
+            gptel = {
+              enable = true;
+              introspection = {
+                enable = true;
+                model = "qwen3:8b";
+              };
+            };
           };
+          usePackage =
+            let
+              mkOllama = models: infix: {
+                "gptel${infix}-model" = "'${lib.findFirst (x: true) "" models}";
+                "gptel${infix}-backend" = ''
+                  (gptel-make-ollama "Ollama"
+                  	           :stream t
+                  	           :protocol "http"
+                  	           :host "localhost:11434"
+                  	           :models '(${lib.concatMapStrings (k: "${k} ") models}))
+                '';
+              };
+            in
+            {
+              gptel = {
+                command = [ "start-ollama" ];
+                generalOne.global-leader."gs" = '''("start" . start-ollama)'';
+                setopt = {
+                  gptel-max-tokens = 10000000;
+                  gptel-prompt-prefix-alist = [
+                    ''`(markdown-mode . ,(concat "meatbag ›  "))''
+                    ''`(org-mode . ,(concat  "meatbag ›  "))''
+                    ''`(text-mode . ,(concat "meatbag ›  "))''
+                  ];
+                  gptel-response-prefix-alist = [
+                    '''(markdown-mode . "HK-47  ")''
+                    '''(org-mode . "HK-47  ")''
+                    '''(text-mode . "HK-47  ")''
+                  ];
+                }
+                // mkOllama [ "llama3.2:3b" "qwen2.5-coder:7b" "qwen3:8b" "llama3.2:1b" ] "";
+                generalOne.global-leader."gi" = "'gptel-inline";
+                preface = ''
+                  <<Emacs Gptel Preface>>
+                '';
+                config = ''
+                  <<Emacs Gptel Config>>
+                '';
+              };
+
+              gptel-quick.setopt = mkOllama [ "llama3.2:1b" ] "-quick";
+
+              # gptel-got = {
+              #   enable = true;
+              #   after = ["gptel"];
+              # };
+
+              mcp = {
+                enable = true;
+                after = [ "gptel" ];
+                config = ''
+                  <<Emacs MCP Config>>
+                '';
+                setopt.mcp-hub-servers = lib.optionals (config.programs.mcp.servers != { }) (
+                  lib.mapAttrsToList (
+                    n: v:
+                    "${
+                      if v.enabled != false || v.disabled != true then
+                        '''("${n}" ${
+                          if v.command != null then
+                            '':command "${v.command}" ${
+                              if v.args != null then ":args (${lib.concatMapStrings (x: ''"${x}" '') v.args}) " else ""
+                            }''
+                          else
+                            "${if v.url != null then '':url "${v.url} "'' else ""}"
+                        } ${
+                          if v.env != { } then
+                            ":env (${
+                              lib.concatStringsSep " " (lib.flatten (lib.mapAttrsToList (x: y: '':${x} "${y}"'') v.env))
+                            })"
+                          else
+                            ""
+                        })''
+                      else
+                        ""
+                    }"
+                  ) config.programs.mcp.servers
+                );
+              };
+
+              aidermacs = {
+                enable = true;
+                extraPackages = [ pkgs.aider-chat ];
+                generalOne.global-leader."gA" = "'aidermacs-transient-menu";
+                config = "(start-ollama)";
+                setopt = {
+                  aidermacs-default-model = ''"ollama/qwen3:8b"'';
+                  aidermacs-extra-args = [ ''"--no-git"'' ];
+                };
+              };
+
+              popper.setopt.popper-reference-buffers = [ "'aidermacs-comint-mode" ];
+            };
+        };
       };
     };
 }
@@ -5232,7 +5265,6 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
     home.packages = with pkgs; [
       obs-studio
       kdePackages.kdenlive
-      # lmms
       audacity
       doomer
     ];
@@ -5358,6 +5390,10 @@ The mpv package lets us start an mpv process & puppeteer it with emacs. I'm defi
         config = ''
           <<Emacs Mpv Config>>
         '';
+	generalOne.global-leader = {
+	  "mP" = '''mpv-pause'';
+	  "mj" = '''mpv-jump-to-chapter'';
+	};
       };
 
       mpv.enable = true;
@@ -6343,12 +6379,18 @@ Setting up your alsoftrc correctly makes Minecraft happy
       '';
       packages = with pkgs; [
         # steam
-        # lutris
-        # retroarch
         # gamemode
         prismlauncher
         graalvmPackages.graalvm-oracle_17
       ];
+    };
+
+    programs.lutris = {
+      enable = true;
+      runners = {
+	# libretro.package = pkgs.retroarch;
+	ppsspp.package = pkgs.ppsspp;
+      };
     };
   };
 }
