@@ -2178,30 +2178,6 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
               (defun eglot-java-init-opts (server eglot-java-eclipse-jdt)
                                  '(:bundles ["/usr/share/java-debug/com.microsoft.java.debug.plugin.jar"]))
             '';
-	    # https://github.com/yveszoundi/eglot-java/pull/68/files
-            config = lib.mkForce ''
-              (defun eglot-java--jdt-uri-handler (_operation &rest args)
-                "Support Eclipse jdtls `jdt://' uri scheme."
-                (let* ((uri (car args))
-                       (cache-dir (expand-file-name ".eglot-java" (project-root (project-current t))))
-                       (source-file
-                        (expand-file-name
-                         (eglot-java--make-path
-                          cache-dir
-                          (save-match-data
-                            (when (string-match "jdt://contents/\\(.*?\\)/\\(.*\\)\.\\(java\\|class\\)\\?" uri)
-                              (format "%s.java" (replace-regexp-in-string "/" "." (match-string 2 uri) t t))))))))
-                  (unless (file-readable-p source-file)
-                    (let ((content (jsonrpc-request (eglot-java--find-server) :java/classFileContents (list :uri uri)))
-                          (metadata-file (format "%s.%s.metadata"
-                                                 (file-name-directory source-file)
-                                                 (file-name-base source-file))))
-                      (unless (file-directory-p cache-dir) (make-directory cache-dir t))
-                      (with-temp-file source-file (insert content))
-                      (with-temp-file metadata-file (insert uri))))
-                  source-file))
-            '';
-            hook = [ "(java-ts-mode . eglot-java-mode)" ];
           };
         };
       };
@@ -2597,12 +2573,12 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
            citre-peek-jump))
   (evil-add-command-properties command :jump t))
 
-;; (repeaters-define-maps
-;;  '(("flyspell"
-;;     evil-prev-flyspell-error
-;;     "S"
-;;     evil-next-flyspell-error
-;;     "s")))
+(repeaters-define-maps
+ '(("flyspell"
+    jinx-previous
+    "S"
+    jinx-next
+    "s")))
 #+end_src
 
 **** Extensions
@@ -4183,11 +4159,15 @@ No idea what the rest of this is for.
           #   ];
           # };
 
-	  jinx = {
-	    enable = true;
-	    ghookf = ["('on-init-ui 'global-jinx-mode)"];
-	    generalOneConfig.":n"."C-M-i" = "'jinx-correct";
-	  };
+          jinx = {
+            enable = true;
+            ghookf = [ "('on-init-ui 'global-jinx-mode)" ];
+            generalOneConfig.":n" = {
+              "C-M-i" = "'jinx-correct";
+	      "]s" = "'jinx-next";
+	      "[s" = "'jinx-previous";
+            };
+          };
 
           pdf-tools = {
             generalOneConfig.pdf-view-mode-map."C-s" = "'search-forward";
@@ -5047,6 +5027,224 @@ NEG subtracts if it is true."
     (consult-buffer))
    (t
     (call-interactively 'switch-to-buffer))))
+#+end_src
+
+** Gptel
+https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
+
+#+begin_src nix-ts :tangle modules/gptel.nix :noweb yes
+{ inputs, ... }:
+
+{
+  perSystem = { lib, pkgs, ... }: {
+    packages =
+      let
+        epkgs = pkgs.emacs.pkgs;
+      in
+      {
+        startOllama = pkgs.writeShellScriptBin "start-ollama" ''
+          	if [[ "$(pidof ollama)" -gt 0 ]]; then
+                  echo "ollama already running"
+                else
+                  ${lib.getExe pkgs.ollama} serve
+                fi
+        '';
+        gptel-got = (
+          epkgs.callPackage epkgs.trivialBuild rec {
+            pname = "gptel-got";
+            version = "current";
+            src = inputs.gptel-got;
+
+            propagatedUserEnvPkgs = with epkgs; [
+              org-ql
+              gptel
+            ];
+
+            buildInputs = propagatedUserEnvPkgs;
+          }
+        );
+      };
+  };
+
+  flake.homeModules.ai =
+    {
+      lib,
+      config,
+      pkgs,
+      ...
+    }:
+    {
+      home.packages = [ pkgs.ollama ];
+      programs = {
+        mcp.servers.nixos = {
+          command = "${pkgs.uv}/bin/uvx";
+          args = [ "mcp-nixos" ];
+        };
+        emacs.init = {
+          ai = {
+            copilot = {
+              enable = true;
+              keepOutOf = [
+                "c-ts-mode"
+                "json5-ts-mode"
+                "json-ts-mode"
+                "LaTeX-mode"
+                "zenscript-mode"
+              ];
+            };
+            gptel = {
+              enable = true;
+              introspection = {
+                enable = true;
+                model = "qwen3:8b";
+              };
+            };
+          };
+          usePackage =
+            let
+              mkOllama = models: infix: {
+                "gptel${infix}-model" = "'${lib.findFirst (x: true) "" models}";
+                "gptel${infix}-backend" = ''
+                  (gptel-make-ollama "Ollama"
+                  	           :stream t
+                  	           :protocol "http"
+                  	           :host "localhost:11434"
+                  	           :models '(${lib.concatMapStrings (k: "${k} ") models}))
+                '';
+              };
+            in
+            {
+              gptel = {
+                command = [ "start-ollama" ];
+                generalOne.global-leader."gs" = '''("start" . start-ollama)'';
+                setopt = {
+                  gptel-max-tokens = 10000000;
+                  gptel-prompt-prefix-alist = [
+                    ''`(markdown-mode . ,(concat "meatbag ›  "))''
+                    ''`(org-mode . ,(concat  "meatbag ›  "))''
+                    ''`(text-mode . ,(concat "meatbag ›  "))''
+                  ];
+                  gptel-response-prefix-alist = [
+                    '''(markdown-mode . "HK-47  ")''
+                    '''(org-mode . "HK-47  ")''
+                    '''(text-mode . "HK-47  ")''
+                  ];
+                }
+                // mkOllama [ "llama3.2:3b" "qwen2.5-coder:7b" "qwen3:8b" "llama3.2:1b" ] "";
+                generalOne.global-leader."gi" = "'gptel-inline";
+                preface = ''
+                  <<Emacs Gptel Preface>>
+                '';
+                config = ''
+                  <<Emacs Gptel Config>>
+                '';
+              };
+
+              gptel-quick.setopt = mkOllama [ "llama3.2:1b" ] "-quick";
+
+              # gptel-got = {
+              #   enable = true;
+              #   after = ["gptel"];
+              # };
+
+              mcp = {
+                enable = true;
+                after = [ "gptel" ];
+                config = ''
+                  <<Emacs MCP Config>>
+                '';
+                setopt.mcp-hub-servers = lib.optionals (config.programs.mcp.servers != { }) (
+                  lib.mapAttrsToList (
+                    n: v:
+                    "${
+                      if v.enabled != false || v.disabled != true then
+                        '''("${n}" ${
+                          if v.command != null then
+                            '':command "${v.command}" ${
+                              if v.args != null then ":args (${lib.concatMapStrings (x: ''"${x}" '') v.args}) " else ""
+                            }''
+                          else
+                            "${if v.url != null then '':url "${v.url} "'' else ""}"
+                        } ${
+                          if v.env != { } then
+                            ":env (${
+                              lib.concatStringsSep " " (lib.flatten (lib.mapAttrsToList (x: y: '':${x} "${y}"'') v.env))
+                            })"
+                          else
+                            ""
+                        })''
+                      else
+                        ""
+                    }"
+                  ) config.programs.mcp.servers
+                );
+              };
+
+              aidermacs = {
+                enable = true;
+                extraPackages = [ pkgs.aider-chat ];
+                generalOne.global-leader."gA" = "'aidermacs-transient-menu";
+                config = "(start-ollama)";
+                setopt = {
+                  aidermacs-default-model = ''"ollama/qwen3:8b"'';
+                  aidermacs-extra-args = [ ''"--no-git"'' ];
+                };
+              };
+
+              popper.setopt.popper-reference-buffers = [ "'aidermacs-comint-mode" ];
+            };
+        };
+      };
+    };
+}
+#+end_src
+
+#+NAME: Emacs Gptel Preface
+#+begin_src emacs-lisp
+(defun start-ollama ()
+  (interactive)
+  (start-process-shell-command
+   "startOllama" nil "${pkgs.startOllama}/bin/start-ollama"))
+#+end_src
+
+#+NAME: Emacs Gptel Config
+#+begin_src emacs-lisp
+(start-ollama)
+(gptel-make-gh-copilot "copilot")
+(efs/evil-collection-remap
+ 'evil-collection-gptel-setup
+ 'normal
+ gptel-mode-map
+ "<return>"
+ 'gptel-send
+ "RET"
+ 'gptel-send)
+(efs/evil-collection-remap
+ 'evil-collection-gptel-setup
+ 'insert
+ gptel-mode-map
+ "<return>"
+ 'newline
+ "RET"
+ 'newline)
+#+end_src
+
+#+NAME: Emacs MCP Config
+#+begin_src emacs-lisp
+(require 'mcp-hub)
+(require 'gptel-integrations)
+;; Borrowed from Karthinks
+(gptel-make-preset
+ 'nixos
+ :description "TOOLS: Add NixOS MCP"
+ :pre (lambda () (gptel-mcp-connect '("nixos") 'sync))
+ :system
+ '(:append
+   "\n\nUse the provided NixOS tools to look for up-to-date information and\
+ examine the state of my system")
+ :tools '(:append ("mcp-nixos"))
+ :model 'qwen3:8b
+ :backend "Ollama")
 #+end_src
 
 ** Multimedia

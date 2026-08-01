@@ -40,130 +40,158 @@
     }:
     {
       home.packages = [ pkgs.ollama ];
-      programs.emacs.init = {
-        ai = {
-          copilot = {
-            enable = true;
-            keepOutOf = [
-              "c-ts-mode"
-              "json5-ts-mode"
-              "json-ts-mode"
-              "LaTeX-mode"
-              "zenscript-mode"
-            ];
-          };
-          gptel = {
-            enable = true;
-            introspection = {
-              enable = true;
-              model = "qwen3:8b";
-            };
-          };
+      programs = {
+        mcp.servers.nixos = {
+          command = "${pkgs.uv}/bin/uvx";
+          args = [ "mcp-nixos" ];
         };
-        usePackage =
-          let
-            mkOllama = models: infix: {
-              "gptel${infix}-model" = "'${lib.findFirst (x: true) "" models}";
-              "gptel${infix}-backend" = ''
-                (gptel-make-ollama "Ollama"
-                	           :stream t
-                	           :protocol "http"
-                	           :host "localhost:11434"
-                	           :models '(${lib.concatMapStrings (k: "${k} ") models}))
-              '';
-            };
-          in
-          {
-            gptel = {
-              command = [ "start-ollama" ];
-              generalOne.global-leader."gs" = '''("start" . start-ollama)'';
-              setopt = {
-                gptel-max-tokens = 10000000;
-                gptel-prompt-prefix-alist = [
-                  ''`(markdown-mode . ,(concat "meatbag ›  "))''
-                  ''`(org-mode . ,(concat  "meatbag ›  "))''
-                  ''`(text-mode . ,(concat "meatbag ›  "))''
-                ];
-                gptel-response-prefix-alist = [
-                  '''(markdown-mode . "HK-47  ")''
-                  '''(org-mode . "HK-47  ")''
-                  '''(text-mode . "HK-47  ")''
-                ];
-              }
-              // mkOllama [ "llama3.2:3b" "qwen2.5-coder:7b" "qwen3:8b" "llama3.2:1b" ] "";
-              generalOne.global-leader."gi" = "'gptel-inline";
-              preface = ''
-                (defun start-ollama ()
-                  (interactive)
-                  (start-process-shell-command
-                   "startOllama" nil "${pkgs.startOllama}/bin/start-ollama"))
-              '';
-              config = ''
-                		(start-ollama)
-                		(gptel-make-gh-copilot "copilot")
-                		(efs/evil-collection-remap
-                		 'evil-collection-gptel-setup
-                		 'normal
-                		 gptel-mode-map
-                		 "<return>"
-                		 'gptel-send
-                		 "RET"
-                		 'gptel-send)
-                		(efs/evil-collection-remap
-                		 'evil-collection-gptel-setup
-                		 'insert
-                		 gptel-mode-map
-                		 "<return>"
-                		 'newline
-                		 "RET"
-                		 'newline)
-              '';
-            };
-
-            gptel-quick.setopt = mkOllama [ "llama3.2:1b" ] "-quick";
-
-            # gptel-got = {
-            #   enable = true;
-            #   after = ["gptel"];
-            # };
-
-            mcp = {
+        emacs.init = {
+          ai = {
+            copilot = {
               enable = true;
-              after = [ "gptel" ];
-              config = ''
-                (require 'mcp-hub)
-                (require 'gptel-integrations)
-                ;; Borrowed from Karthinks
-                (gptel-make-preset
-                 'nixos
-                 :description "TOOLS: Add NixOS MCP"
-                 :pre (lambda () (gptel-mcp-connect '("nixos") 'sync))
-                 :system
-                 '(:append
-                   "\n\nUse the provided NixOS tools to look for up-to-date information and\
-                 examine the state of my system")
-                 :tools '(:append ("mcp-nixos"))
-                 :model 'qwen3:8b
-                 :backend "Ollama")
-              '';
-              setopt.mcp-hub-servers = [
-                '''("nixos" :command "${pkgs.uv}/bin/uvx" :args ("mcp-nixos"))''
+              keepOutOf = [
+                "c-ts-mode"
+                "json5-ts-mode"
+                "json-ts-mode"
+                "LaTeX-mode"
+                "zenscript-mode"
               ];
             };
-
-            aidermacs = {
+            gptel = {
               enable = true;
-              extraPackages = [ pkgs.aider-chat ];
-              generalOne.global-leader."gA" = "'aidermacs-transient-menu";
-              config = "(start-ollama)";
-              setopt = {
-                aidermacs-default-model = ''"ollama/qwen3:8b"'';
-                aidermacs-extra-args = [ ''"--no-git"'' ];
+              introspection = {
+                enable = true;
+                model = "qwen3:8b";
               };
             };
-
-            popper.setopt.popper-reference-buffers = [ "'aidermacs-comint-mode" ];
           };
+          usePackage =
+            let
+              mkOllama = models: infix: {
+                "gptel${infix}-model" = "'${lib.findFirst (x: true) "" models}";
+                "gptel${infix}-backend" = ''
+                  (gptel-make-ollama "Ollama"
+                  	           :stream t
+                  	           :protocol "http"
+                  	           :host "localhost:11434"
+                  	           :models '(${lib.concatMapStrings (k: "${k} ") models}))
+                '';
+              };
+            in
+            {
+              gptel = {
+                command = [ "start-ollama" ];
+                generalOne.global-leader."gs" = '''("start" . start-ollama)'';
+                setopt = {
+                  gptel-max-tokens = 10000000;
+                  gptel-prompt-prefix-alist = [
+                    ''`(markdown-mode . ,(concat "meatbag ›  "))''
+                    ''`(org-mode . ,(concat  "meatbag ›  "))''
+                    ''`(text-mode . ,(concat "meatbag ›  "))''
+                  ];
+                  gptel-response-prefix-alist = [
+                    '''(markdown-mode . "HK-47  ")''
+                    '''(org-mode . "HK-47  ")''
+                    '''(text-mode . "HK-47  ")''
+                  ];
+                }
+                // mkOllama [ "llama3.2:3b" "qwen2.5-coder:7b" "qwen3:8b" "llama3.2:1b" ] "";
+                generalOne.global-leader."gi" = "'gptel-inline";
+                preface = ''
+                  (defun start-ollama ()
+                    (interactive)
+                    (start-process-shell-command
+                     "startOllama" nil "${pkgs.startOllama}/bin/start-ollama"))
+                '';
+                config = ''
+                  (start-ollama)
+                  (gptel-make-gh-copilot "copilot")
+                  (efs/evil-collection-remap
+                   'evil-collection-gptel-setup
+                   'normal
+                   gptel-mode-map
+                   "<return>"
+                   'gptel-send
+                   "RET"
+                   'gptel-send)
+                  (efs/evil-collection-remap
+                   'evil-collection-gptel-setup
+                   'insert
+                   gptel-mode-map
+                   "<return>"
+                   'newline
+                   "RET"
+                   'newline)
+                '';
+              };
+
+              gptel-quick.setopt = mkOllama [ "llama3.2:1b" ] "-quick";
+
+              # gptel-got = {
+              #   enable = true;
+              #   after = ["gptel"];
+              # };
+
+              mcp = {
+                enable = true;
+                after = [ "gptel" ];
+                config = ''
+                  (require 'mcp-hub)
+                  (require 'gptel-integrations)
+                  ;; Borrowed from Karthinks
+                  (gptel-make-preset
+                   'nixos
+                   :description "TOOLS: Add NixOS MCP"
+                   :pre (lambda () (gptel-mcp-connect '("nixos") 'sync))
+                   :system
+                   '(:append
+                     "\n\nUse the provided NixOS tools to look for up-to-date information and\
+                   examine the state of my system")
+                   :tools '(:append ("mcp-nixos"))
+                   :model 'qwen3:8b
+                   :backend "Ollama")
+                '';
+                setopt.mcp-hub-servers = lib.optionals (config.programs.mcp.servers != { }) (
+                  lib.mapAttrsToList (
+                    n: v:
+                    "${
+                      if v.enabled != false || v.disabled != true then
+                        '''("${n}" ${
+                          if v.command != null then
+                            '':command "${v.command}" ${
+                              if v.args != null then ":args (${lib.concatMapStrings (x: ''"${x}" '') v.args}) " else ""
+                            }''
+                          else
+                            "${if v.url != null then '':url "${v.url} "'' else ""}"
+                        } ${
+                          if v.env != { } then
+                            ":env (${
+                              lib.concatStringsSep " " (lib.flatten (lib.mapAttrsToList (x: y: '':${x} "${y}"'') v.env))
+                            })"
+                          else
+                            ""
+                        })''
+                      else
+                        ""
+                    }"
+                  ) config.programs.mcp.servers
+                );
+              };
+
+              aidermacs = {
+                enable = true;
+                extraPackages = [ pkgs.aider-chat ];
+                generalOne.global-leader."gA" = "'aidermacs-transient-menu";
+                config = "(start-ollama)";
+                setopt = {
+                  aidermacs-default-model = ''"ollama/qwen3:8b"'';
+                  aidermacs-extra-args = [ ''"--no-git"'' ];
+                };
+              };
+
+              popper.setopt.popper-reference-buffers = [ "'aidermacs-comint-mode" ];
+            };
+        };
       };
     };
 }

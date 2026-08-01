@@ -242,11 +242,11 @@
         "use-package-eglot": "use-package-eglot"
       },
       "locked": {
-        "lastModified": 1785083101,
-        "narHash": "sha256-dFda7jxym4MFZqsN+YVhyPdP32/NulixkvwlbDqM7+U=",
+        "lastModified": 1785259471,
+        "narHash": "sha256-jEetVTzkbB+tnvrf22fGEPp1UebqnVCRJBO//mpscpk=",
         "owner": "firefoxsalesman",
         "repo": "NixEmacs",
-        "rev": "19e04ea752aa34b7349372617e1045732c6c03d6",
+        "rev": "2397b9a593e3ed4293876bb42e96aeaba90d21f6",
         "type": "github"
       },
       "original": {
@@ -521,11 +521,11 @@
     "macher-agent": {
       "flake": false,
       "locked": {
-        "lastModified": 1785075584,
-        "narHash": "sha256-NGNvVo0Sub1ZzHADiT95B7ZVSsF1ENw51BCwvXQ5IbE=",
+        "lastModified": 1785243966,
+        "narHash": "sha256-T7D9yLgawR44mPJzbEqvznHb6LQwiK8G1gITCb96aL0=",
         "owner": "elij",
         "repo": "macher-agent",
-        "rev": "594ca425b967985960ef1a45eabf2ba51ec925ea",
+        "rev": "c54a83a654b2c9b5ec5e95d4cb02a074c37067f0",
         "type": "github"
       },
       "original": {
