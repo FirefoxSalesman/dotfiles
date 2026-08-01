@@ -154,26 +154,30 @@
                 setopt.mcp-hub-servers = lib.optionals (config.programs.mcp.servers != { }) (
                   lib.mapAttrsToList (
                     n: v:
-                    "${
-                      if v.enabled != false || v.disabled != true then
-                        '''("${n}" ${
-                          if v.command != null then
-                            '':command "${v.command}" ${
-                              if v.args != null then ":args (${lib.concatMapStrings (x: ''"${x}" '') v.args}) " else ""
-                            }''
-                          else
-                            "${if v.url != null then '':url "${v.url} "'' else ""}"
-                        } ${
+                    if v.enabled != false || v.disabled != true then
+                      let
+                        name = ''"${n}"'';
+                        test =
+                          attr: pass: fail:
+                          if v."${attr}" != null then pass else fail;
+                        commandOrUrl = test "command" ''':command "${v.command}" ${
+                          test "args" "':args '(${lib.concatMapStrings (x: ''"${x}" '') v.args}) " ""
+                        }'' (test "url " ''':url "${v.url} "'' "");
+                        env =
                           if v.env != { } then
-                            ":env (${
-                              lib.concatStringsSep " " (lib.flatten (lib.mapAttrsToList (x: y: '':${x} "${y}"'') v.env))
+                            "':env '(${
+                              lib.concatStringsSep " " (lib.flatten (lib.mapAttrsToList (x: y: ''':${x} "${y}"'') v.env))
                             })"
                           else
-                            ""
-                        })''
-                      else
-                        ""
-                    }"
+                            "";
+                      in
+                      [
+                        name
+                        commandOrUrl
+                        env
+                      ]
+                    else
+                      ""
                   ) config.programs.mcp.servers
                 );
               };
