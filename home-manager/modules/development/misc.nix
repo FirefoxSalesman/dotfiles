@@ -1,6 +1,6 @@
 {
   flake.homeModules.development =
-    { ... }:
+    { pkgs, ... }:
 
     {
       programs.emacs.init = {
@@ -34,6 +34,11 @@
           };
 
           racket-mode.gfhookf = [ "('racket-mode 'hs-minor-mode)" ];
+
+          toml-ts-mode = {
+            extraPackages = [ pkgs.tombi ];
+            eglot = ''("tombi" "lsp")'';
+          };
         };
       };
     };

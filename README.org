@@ -51,4 +51,3 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] https://ianyepan.github.io/posts/git-blame-emacs/
 + [ ] https://blog.sidhartharya.com/posts/integrating-org-protocol-with-qutebrowser/
 + [ ] doxygen
-+ [ ] easysession

@@ -14,6 +14,8 @@
         gc = "git clone";
         gp = "git pull";
         gP = "git push";
+	reboot = "doas reboot";
+	halt = "doas shutdown -P now";
       };
     };
 }

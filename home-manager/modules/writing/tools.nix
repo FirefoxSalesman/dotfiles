@@ -15,21 +15,13 @@
         completions.tempel.templates.org-mode.ci =
           ''"* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q'';
         usePackage = {
-          # flyspell = {
-          #   enable = true;
-          #   ghookf = [
-          #     "('text-mode 'flyspell-mode)"
-          #     "('prog-mode 'flyspell-prog-mode)"
-          #   ];
-          # };
-
           jinx = {
             enable = true;
             ghookf = [ "('on-init-ui 'global-jinx-mode)" ];
             generalOneConfig.":n" = {
               "C-M-i" = "'jinx-correct";
-	      "]s" = "'jinx-next";
-	      "[s" = "'jinx-previous";
+              "]s" = "'jinx-next";
+              "[s" = "'jinx-previous";
             };
           };
 

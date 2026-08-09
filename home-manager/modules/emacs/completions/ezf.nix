@@ -52,15 +52,10 @@
       };
     };
 
-  flake.homeModules.emacs =
-    { ... }:
-
-    {
-      programs.emacs.init.usePackage = {
-        ezf = {
-          enable = true;
-          deferIncrementally = true;
-        };
-      };
+  flake.homeModules.emacs = {
+    programs.emacs.init.usePackage.ezf = {
+      enable = true;
+      deferIncrementally = true;
     };
+  };
 }

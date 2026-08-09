@@ -3,11 +3,7 @@
     { config, pkgs, ... }:
 
     {
-      home.packages = with pkgs; [
-        python313Packages.adblock
-        libfido2
-        yubikey-manager
-      ];
+      home.packages = [ pkgs.python313Packages.adblock ];
 
       programs.qutebrowser = {
         enable = true;

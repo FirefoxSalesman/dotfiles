@@ -1,30 +1,31 @@
 {
-  flake.homeModules.emacs = { ... }: {
-    programs.emacs.init = {
-      aesthetics.declutter.enable = true;
-      tools = {
-        noLittering.enable = true;
-        lineNumbers.enable = true;
-        sensibleDefaults.enable = true;
+  flake.homeModules.emacs.programs.emacs.init = {
+    aesthetics.declutter.enable = true;
+    tools = {
+      noLittering.enable = true;
+      lineNumbers.enable = true;
+      sensibleDefaults.enable = true;
+    };
+    usePackage = {
+      display-line-numbers.setopt.display-line-numbers-type = "'relative";
+
+      files = {
+        enable = true;
+        setopt = {
+          confirm-kill-processes = false;
+          trusted-content = [ ''"~/projects/generic-todo/"'' ];
+        };
       };
-      usePackage = {
-        display-line-numbers.setopt.display-line-numbers-type = "'relative";
 
-	files = {
-	  enable = true;
-	  setopt.trusted-content = [''"~/projects/generic-todo/"''];
-	};
+      server = {
+        enable = true;
+        deferIncrementally = true;
+        config = "(server-start)";
+      };
 
-	server = {
-          enable = true;
-          deferIncrementally = true;
-          config = "(server-start)";
-        };
-
-        loaddefs = {
-          enable = true;
-          ghookf = [ "('on-first-file 'save-place-mode)" ];
-        };
+      loaddefs = {
+        enable = true;
+        ghookf = [ "('on-first-file 'save-place-mode)" ];
       };
     };
   };
