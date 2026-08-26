@@ -11,22 +11,15 @@
       popper-window-height = 30;
       popper-group-function = "'popper-group-by-project";
       popper-reference-buffers = [
-        "'help-mode"
-        "'helpful-mode"
         "'compilation-mode"
         "'inferior-python-mode"
         "'occur-mode"
         "'grep-mode"
-        ''"^\\*.*eshell\\*"''
-        ''"^\\*eat\\*"''
-        ''"^\\*Sage\\*"''
         ''"^\\*prolog\\*"''
         "'xref--xref-buffer-mode"
         "'flymake-diagnostics-buffer-mode"
         "'rustic-cargo-test-mode"
         "'rustic-cargo-run-mode"
-        "'geiser-repl-mode"
-        "'dape-repl-mode"
         "'racket-repl-mode"
         "'inferior-ess-r-mode"
         "'cider-repl-mode"

@@ -29,12 +29,19 @@ in
       mpvmacs = packages.mpvmacs;
       hdmihelper = packages.hdmihelper;
       i3status-rs = packages.i3status-rs;
+      playAlbum = packages.playAlbum;
       pkg = packages.pkg;
       startOllama = packages.startOllama;
       udisksmenu = packages.udisksmenu;
       wiki = packages.wiki;
 
       # overrides
+      # mpd = prev.mpd.override {
+      #   features = [
+      #     "vorbis"
+      #     "vorbisenc"
+      #   ];
+      # };
       mpv = packages.mpv;
       rassumfrassum = pkgs-stable.rassumfrassum;
       kmonad = inputs.kmonad.packages.${pkgs.system}.default;

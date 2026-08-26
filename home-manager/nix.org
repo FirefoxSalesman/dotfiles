@@ -117,12 +117,19 @@ in
       mpvmacs = packages.mpvmacs;
       hdmihelper = packages.hdmihelper;
       i3status-rs = packages.i3status-rs;
+      playAlbum = packages.playAlbum;
       pkg = packages.pkg;
       startOllama = packages.startOllama;
       udisksmenu = packages.udisksmenu;
       wiki = packages.wiki;
 
       # overrides
+      # mpd = prev.mpd.override {
+      #   features = [
+      #     "vorbis"
+      #     "vorbisenc"
+      #   ];
+      # };
       mpv = packages.mpv;
       rassumfrassum = pkgs-stable.rassumfrassum;
       kmonad = inputs.kmonad.packages.${pkgs.system}.default;
@@ -201,35 +208,35 @@ Dev templates: https://github.com/the-nix-way/dev-templates
 #+NAME: Pkg Body
 #+begin_src bash-ts
 optimize() {
-  ${lib.getExe nh} clean user -q
-  nix-store --optimise
-  doas pacman -Sc --noconfirm
+    ${lib.getExe nh} clean user -q
+    nix-store --optimise
+    doas pacman -Sc --noconfirm
 }
 
 rebuild() {
-  ${lib.getExe nh} home switch -c $(printf "holschcc@" | cat - /etc/hostname)
+    ${lib.getExe nh} home switch -c $(printf "holschcc@" | cat - /etc/hostname)
 }
 
 update() {
-  nix flake update --flake ~/.config/home-manager/
-  rebuild
-  yay -Syu
+    nix flake update --flake ~/.config/home-manager/
+    rebuild
+    yay -Syu
 }
 
 help() {
-  ${pkgs.coreutils}/bin/echo "help: display this message"
-  ${pkgs.coreutils}/bin/echo "install [packages]: install packages with yay"
-  ${pkgs.coreutils}/bin/echo "optimize: clean up package cache"
-  ${pkgs.coreutils}/bin/echo "update: update all packages"
-  ${pkgs.coreutils}/bin/echo "add: install a package"
-  ${pkgs.coreutils}/bin/echo "rm: uninstall a package"
-  ${pkgs.coreutils}/bin/echo "flake: perform a nix flake operation"
-  ${pkgs.coreutils}/bin/echo "template: set up a devshell template"
-  ${pkgs.coreutils}/bin/echo "tmp: temporarily install a package"
+    ${pkgs.coreutils}/bin/echo "help: display this message"
+    ${pkgs.coreutils}/bin/echo "install [packages]: install packages with yay"
+    ${pkgs.coreutils}/bin/echo "optimize: clean up package cache"
+    ${pkgs.coreutils}/bin/echo "update: update all packages"
+    ${pkgs.coreutils}/bin/echo "add: install a package"
+    ${pkgs.coreutils}/bin/echo "rm: uninstall a package"
+    ${pkgs.coreutils}/bin/echo "flake: perform a nix flake operation"
+    ${pkgs.coreutils}/bin/echo "template: set up a devshell template"
+    ${pkgs.coreutils}/bin/echo "tmp: temporarily install a package"
 }
 
 getTemplates() {
-  ${pkgs.coreutils}/bin/printf "bun\nc-cpp\nclojure\ncsharp\ncue\ndhall\nelixir\nelm\nempty\ngleam\ngo\nhashi\nhaskell\nhaxe\njava\njupyter\nkotlin\nlatex\nnickel\nnim\nnix\nnode\nocaml\nopa\nphp\nplatformio\nprotobuf\npulumi\npurescript\npython\nr\nruby\nrust\nrust-toolchain\nscala\nshell\nswi-prolog\nswift\nvlang\nzig" | ${self'.packages.ezf}/bin/ezf
+    ${pkgs.coreutils}/bin/printf "bun\nc-cpp\nclojure\ncsharp\ncue\ndhall\nelixir\nelm\nempty\ngleam\ngo\nhashi\nhaskell\nhaxe\njava\njupyter\nkotlin\nlatex\nnickel\nnim\nnix\nnode\nocaml\nopa\nphp\nplatformio\nprotobuf\npulumi\npurescript\npython\nr\nruby\nrust\nrust-toolchain\nscala\nshell\nswi-prolog\nswift\nvlang\nzig" | ${self'.packages.ezf}/bin/ezf
 }
 
 template() {
@@ -513,7 +520,17 @@ It's mostly here for eshell to get completions from, but it's a usable shell
         usePackage = {
           eshell = {
             ghookf = [ "('eshell-first-time-mode 'efs/configure-eshell)" ];
+            gfhookf = [
+              ''
+                ('eshell-post-command (lambda () (eshell-write-history eshell-history-file-name t)
+                		                (eshell-read-history eshell-history-file-name t)))
+              ''
+            ];
             general."s-<enter>" = "'efs/make-eshell";
+            setopt = {
+              eshell-history-append = true;
+              eshell-save-history-on-exit = false;
+            };
             init = ''
               	    (defun efs/make-eshell ()
               	      (interactive)
@@ -560,6 +577,11 @@ It's mostly here for eshell to get completions from, but it's a usable shell
             gfhookf = [ "('eshell-mode 'eldoc-box-hover-at-point-mode)" ];
             config = "(setup-esh-help-eldoc)";
           };
+
+          popper.setopt.popper-reference-buffers = [
+            ''"^\\*.*eshell\\*"''
+            ''"^\\*eat\\*"''
+          ];
         };
       };
     };
@@ -1753,16 +1775,16 @@ I think most of it was from the github page for lsp mode, but it's been a while,
           treesit-fold.enable = true;
           languages = {
             bash.enable = true;
-            clojure.enable = true;
-            kotlin.enable = true;
             json.enable = true;
-            nix.enable = true;
             toml.enable = true;
             xml.enable = true;
             zenscript.enable = true;
             yaml.enable = true;
           };
         };
+
+        # Yoinked from heks-emacs
+        completions.tempel.templates.lisp-mode.lambda = ''"(lambda (" p ")" n> r> ")"'';
 
         tools.apheleia = {
           enable = true;
@@ -1781,6 +1803,8 @@ I think most of it was from the github page for lsp mode, but it's been a while,
             extraPackages = [ pkgs.tombi ];
             eglot = ''("tombi" "lsp")'';
           };
+
+          popper.setopt.popper-reference-buffers = [ "'dape-repl-mode" ];
         };
       };
     };
@@ -1983,6 +2007,40 @@ I think most of it was from the github page for lsp mode, but it's been a while,
   (add-to-list 'emmet-jsx-major-modes mode))
 #+end_src
 
+*** Nix
+#+begin_src nix-ts :tangle modules/development/nix.nix
+{
+  flake.homeModules.development.programs.emacs.init = {
+    ide.languages.nix.enable = true;
+    # Yoinked from heks-emacs
+    completions.tempel.templates.nix-ts-mode = {
+      buildphase = ''> "buildPhase= ''' " n (p " Build Instructions ") n " ''';"'';
+      checkPhase = ''> "checkPhase= ''' " n (p " ") n " ''';"'';
+      configurephase = ''> "configurePhase= ''' " n (p " ") n " ''';"'';
+      fixupphase = ''> "fixupPhase= ''' " n (p " ") n " ''';"'';
+      distphase = ''> "distPhase= ''' " n (p " ") n " ''';"'';
+      patchphase = ''> "patchPhase= ''' " n (p " ") n " ''';"'';
+      unpackphase = ''> "unpackPhase= ''' " n (p " ") n " ''';"'';
+      installCheckPhasephase = ''> "installCheckPhasePhase= ''' " n (p " ") n " ''';"'';
+      installphase = ''> "installphase= '''" n p " mkdir -p $out/bin" n> "for f in $(find . -executable -type f);" n> "do" n> "cp $f $out/bin" n> "done}" n> " ''';"'';
+      gitpackage = ''
+        "{ lib" n ", stdenv" n ", fetchFromGitHub" n ", " (p "inputs") n ", " (p "inputs") n "}:" n n>
+        "stdenv.mkDerivation rec {" n> "pname = \"" (p "" pkgn nil) "\";" n> "version = \"" p "\";" n n>
+        "src = fetchFromGitHub {" n> "owner = \"" (p "" own) "\";" n> "repo = \"" (s pkgn) "\";" n>
+        "rev = \"" "v''${version}" "\";" n> "sha256 = \"" "''${lib.fakeSha256}" "\";" n> "};" n n>
+        "nativeBuildInputs = [ " (p "makeWrapper") " ];" n n> "BuildInputs = [ " (p) " ];" n n>
+        "meta = with lib; {" n>
+        "homepage = \"" "https://github.com/" (s own) "/" (s pkgn) "\";" n>
+        "description = \"" (p) "\";" n>
+        "license = licenses." (p (completing-read "License: " '("agpl3" "asl20" "bsd1" "bsd2" "bsd3" "free" "gpl2" "gpl2Only" "gpl2Plus" "gpl3" "gpl3Only" "gpl3Plus" "isc" "lgpl21Only" "lgpl21Plus" "lgpl2Only" "lgpl2Plus" "lgpl3" "lgpl3Only" "mit" "mpl20" "ofl" "unfree"))) ";" n>
+        "maintainers = with maintainers; [ " (s own) " ];" n>
+        "platforms = platforms."
+        (p (completing-read "Platform: " '("all" "allBut" "arm" "cygwin" "darwin" "freebsd" "gnu" "i686" "illumos" "linux" "mesaPlatforms" "mips" "netbsd" "none" "openbsd" "unix" "x86"))) ";" n> q "};" n> "}"'';
+    };
+  };
+}
+#+end_src
+
 *** Elisp
 #+begin_src nix-ts :tangle modules/development/elisp.nix
 {
@@ -1990,6 +2048,8 @@ I think most of it was from the github page for lsp mode, but it's been a while,
     completions.tempel.templates.emacs-lisp-mode = {
       wcd = ''"(with-current-buffer " "q)"'';
       gbc = ''"(get-buffer-create " "q)"'';
+      # Yoinked from heks-emacs
+      lambda = ''"(lambda (" p ")" n> r> ")"'';
     };
     ide.languages.emacs-lisp = {
       enable = true;
@@ -2005,24 +2065,42 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 *** Java
 #+begin_src nix-ts :tangle modules/development/java.nix :noweb yes
 {
-  flake.homeModules.java.programs.emacs.init = {
-    ide.languages = {
-      java = {
-        enable = true;
-        moreEglot = true;
+  flake.homeModules.java = { lib, ... }: {
+    programs.emacs.init = {
+      ide.languages = {
+        kotlin.enable = false;
+        java = {
+          enable = true;
+          moreEglot = true;
+        };
+        gradle.enable = true;
       };
-      gradle.enable = true;
-    };
-    usePackage = {
-      java-ts-mode = {
-        preface = ''
-          <<Java Preface>>
-        '';
-        generalTwoConfig.":n".java-ts-mode-map = {
-          "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "block_comment"))'';
-          "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "block_comment"))'';
-          "o" = "'evil-previous-visual-line";
-          "O" = "'evil-scroll-up";
+      usePackage = {
+        kotlin-ts-mode = {
+          extraPackages = lib.mkForce [ ];
+          eglot = lib.mkForce ''("intellij-server" "--stdio")'';
+          config = ''
+            <<Kotlin Config>>
+          '';
+        };
+        java-ts-mode = {
+          preface = ''
+            <<Java Preface>>
+          '';
+          generalTwoConfig.":n".java-ts-mode-map = {
+            "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "block_comment"))'';
+            "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "block_comment"))'';
+            "o" = "'evil-previous-visual-line";
+            "O" = "'evil-scroll-up";
+          };
+        };
+        jarchive = {
+          enable = true;
+          after = [
+            "java-ts-mode"
+            "kotlin-ts-mode"
+          ];
+          config = "(jarchive-mode)";
         };
       };
     };
@@ -2060,6 +2138,94 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
                      decompiled-file)))
       (message
        "Error: This command can only be run on .class files"))))
+#+end_src
+
+https://jointhefreeworld.org/blog/articles/emacs/emacs-eglot-scala-kotlin/index.html
+#+NAME: Kotlin Config
+#+begin_src emacs-lisp
+(defun heks/eglot-uri-to-path-kotlin (orig-fn uri &rest args)
+  (if (and (stringp uri) (string-prefix-p "jar:///" uri))
+      (apply orig-fn
+             (replace-regexp-in-string "^jar:///" "jar:file:///" uri)
+             args)
+    (apply orig-fn uri args)))
+
+(defun heks/eglot-path-to-uri-kotlin (orig-fn path &rest args)
+  (if (and (stringp path) (string-prefix-p "jar:file:///" path))
+      (replace-regexp-in-string "^jar:file:///" "jar:///" path)
+    (apply orig-fn path args)))
+
+(if (fboundp 'eglot-uri-to-path)
+    (progn
+      (advice-add
+       'eglot-uri-to-path
+       :around #'heks/eglot-uri-to-path-kotlin)
+      (advice-add
+       'eglot-path-to-uri
+       :around #'heks/eglot-path-to-uri-kotlin))
+  (progn
+    (advice-add
+     'eglot--uri-to-path
+     :around #'heks/eglot-uri-to-path-kotlin)
+    (advice-add
+     'eglot--path-to-uri
+     :around #'heks/eglot-path-to-uri-kotlin)))
+
+
+(defun my-jsonrpc-request-kotlin-fix
+    (orig-fn connection method params &rest args)
+  "Fix kotlin-lsp empty newText bug by removing textEdit to trigger Eglot fallback."
+  (let ((result (apply orig-fn connection method params args)))
+    (when (and (eq method :textDocument/completion)
+               (derived-mode-p 'kotlin-mode 'kotlin-ts-mode)
+               result)
+      (let ((items
+             (if (vectorp result)
+                 result
+               (plist-get result :items))))
+        (seq-do
+         (lambda (item)
+           (let ((text-edit (plist-get item :textEdit)))
+             ;; If the server sent an empty newText, strip textEdit completely
+             ;; so Eglot falls back to replacing the actual prefix.
+             (when (and text-edit
+                        (equal (plist-get text-edit :newText) ""))
+               (plist-put item :textEdit nil))))
+         items)))
+    result))
+
+(defun my-jsonrpc-async-request-kotlin-fix
+    (orig-fn connection method params &rest args)
+  "Fix kotlin-lsp empty newText bug in asynchronous Eglot requests."
+  (if (and (eq method :textDocument/completion)
+           (derived-mode-p 'kotlin-mode 'kotlin-ts-mode))
+      (let* ((orig-success (plist-get args :success-fn))
+             (new-success
+              (lambda (result)
+                (let ((items
+                       (if (vectorp result)
+                           result
+                         (plist-get result :items))))
+                  (seq-do
+                   (lambda (item)
+                     (let ((text-edit (plist-get item :textEdit)))
+                       (when (and text-edit
+                                  (equal
+                                   (plist-get text-edit :newText) ""))
+                         (plist-put item :textEdit nil))))
+                   items))
+                (funcall orig-success result)))
+             (new-args
+              (plist-put
+               (copy-sequence args)
+               :success-fn new-success)))
+        (apply orig-fn connection method params new-args))
+    (apply orig-fn connection method params args)))
+
+(advice-add 'jsonrpc-request :around #'my-jsonrpc-request-kotlin-fix)
+(advice-add
+ 'jsonrpc-async-request
+ :around #'my-jsonrpc-async-request-kotlin-fix)
 #+end_src
 
 *** C
@@ -2220,7 +2386,7 @@ I'm running dired with a couple of small packages that improve on it
         };
 
         dirvish = {
-          gfhookf = ["('dirvish-directory-view-mode 'diredfl-mode)"];
+          gfhookf = [ "('dirvish-directory-view-mode 'diredfl-mode)" ];
           setopt.dirvish-use-mode-line = false;
           # Borrowed from doom
           generalTwoConfig.":n".dirvish-mode-map = {
@@ -3687,6 +3853,11 @@ Helpful gives more information, & which-key tells what keybinds you have availab
 
         emacs.generalOne.help-map."A" =
           ''`("Arch Wiki" . ,(cmd! (async-shell-command "${lib.getExe pkgs.wiki}")))'';
+
+        popper.setopt.popper-reference-buffers = [
+          "'help-mode"
+          "'helpful-mode"
+        ];
       };
     };
   };
@@ -4028,6 +4199,26 @@ No idea what the rest of this is for.
 {
   flake.homeModules.writing.programs.emacs.init = {
     ide.languages.markdown.enable = true;
+    # Yoinked from heks-emacs
+    completions.tempel.templates.markdown-mode = {
+      gitcollapse = ''
+        & "## " (p "Heading") n n "<details>" n n
+        "<summary>" (p "Sub Heading")  "</summary>" n n
+        (r "Insert Link or comments") n n "</details>"'';
+      bolditalics = ''"***" p "***"'';
+      srcblock = "(call-interactively #'markdown-insert-gfm-code-block)";
+      src = ''"'" p "'"'';
+      unorderlist = ''& "- " (p "First") n> "- " (p "Second") n> "- " (p "Third")'';
+      orderlist = ''& "1. " (p "First") n> "2. " (p "Second") n> "3. " (p "Third")'';
+      insertimage = "(call-interactively #'markdown-insert-image)";
+      insertlink = "(call-interactively #'markdown-insert-link)";
+      hugotitle = ''& "+++" n "title = " (p "title") n "date = " (format-time-string "%Y-%m-%d") n "tags = [ " (p "tag1, tag2 ") "]" n "draft = false" n "+++"'';
+      h1 = ''& "# " p " #"'';
+      h2 = ''& "## " p " ##"'';
+      h3 = ''& "### " p " ###"'';
+      h4 = ''& "#### " p " ####"'';
+      inserttable = "(call-interactively #'markdown-insert-table)";
+    };
     usePackage.markdown = {
       generalOneConfig.markdown-mode-map."C-c C-e" = "'markdown-do";
       gfhookf = [ "('markdown-mode 'efs/markdown-font-setup)" ];
@@ -4303,7 +4494,9 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
       pertab-monocle = pertabExtension;
       pertab-follow = pertabExtension;
       pertab-master-stack = pertabExtension;
-      pertab-scroll = pertabExtension;
+      pertab-scroll = {
+	gfhookf = ["('pertab-follow-enter 'balance-windows)"];
+      } // pertabExtension;
     };
 }
 #+end_src
@@ -4813,22 +5006,15 @@ NEG subtracts if it is true."
       popper-window-height = 30;
       popper-group-function = "'popper-group-by-project";
       popper-reference-buffers = [
-        "'help-mode"
-        "'helpful-mode"
         "'compilation-mode"
         "'inferior-python-mode"
         "'occur-mode"
         "'grep-mode"
-        ''"^\\*.*eshell\\*"''
-        ''"^\\*eat\\*"''
-        ''"^\\*Sage\\*"''
         ''"^\\*prolog\\*"''
         "'xref--xref-buffer-mode"
         "'flymake-diagnostics-buffer-mode"
         "'rustic-cargo-test-mode"
         "'rustic-cargo-run-mode"
-        "'geiser-repl-mode"
-        "'dape-repl-mode"
         "'racket-repl-mode"
         "'inferior-ess-r-mode"
         "'cider-repl-mode"
@@ -4986,7 +5172,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
         emacs.init = {
           ai = {
             copilot = {
-              enable = true;
+              enable = false;
               keepOutOf = [
                 "c-ts-mode"
                 "json5-ts-mode"
@@ -5001,6 +5187,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
                 enable = true;
                 model = "qwen3:8b";
               };
+	      agent.enable = true;
             };
           };
           usePackage =
@@ -5088,7 +5275,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
               };
 
               aidermacs = {
-                enable = true;
+                enable = false;
                 extraPackages = [ pkgs.aider-chat ];
                 generalOne.global-leader."gA" = "'aidermacs-transient-menu";
                 config = "(start-ollama)";
@@ -5098,7 +5285,11 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
                 };
               };
 
-              popper.setopt.popper-reference-buffers = [ "'aidermacs-comint-mode" ];
+              popper.setopt.popper-reference-buffers = [
+                "'aidermacs-comint-mode"
+                ''"^\\*Ollama\\*"''
+                ''"^\\*copilot\\*"''
+              ];
             };
         };
       };
@@ -5134,6 +5325,25 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
  'newline
  "RET"
  'newline)
+
+(gptel-make-preset
+ 'translate
+ :system "Translate to english."
+ :model 'llama3.2:1b)
+
+(defun efs/translate (foreign-text)
+  "Translates FOREIGN-TEXT to English & outputs it in an org buffer called Translation."
+  (with-current-buffer (get-buffer-create "Translation")
+    (switch-to-buffer (current-buffer))
+    (org-mode)
+    (let ((gptel-model 'llama3.2:1b))
+      (gptel-request
+       (concat
+        foreign-text " Translate the following text to English.")))))
+
+(with-eval-after-load 'evil
+  (evil-ex-define-cmd
+   "translateb" (cmd! (efs/translate (buffer-string)))))
 #+end_src
 
 #+NAME: Emacs MCP Config
@@ -5185,23 +5395,34 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 
 {
   perSystem =
-    { pkgs, ... }:
+    {
+      lib,
+      pkgs,
+      self',
+      ...
+    }:
     let
       epkgs = pkgs.emacs.pkgs;
     in
     {
-      packages.mpc-wrapper = (
-        epkgs.callPackage epkgs.trivialBuild rec {
-          pname = "mpc-wrapper";
-          version = "current";
-          src = inputs.mpc-wrapper;
-        }
-      );
+      packages = {
+        mpc-wrapper = (
+          epkgs.callPackage epkgs.trivialBuild rec {
+            pname = "mpc-wrapper";
+            version = "current";
+            src = inputs.mpc-wrapper;
+          }
+        );
+        playAlbum = pkgs.writeShellScriptBin "play-album" ''
+          <<Play Album>>
+        '';
+      };
     };
 
   flake.homeModules.media =
     { pkgs, config, ... }:
     {
+      home.packages = [ pkgs.playAlbum ];
       services.mpd = {
         enable = true;
         musicDirectory = "${config.home.homeDirectory}/mus/mpd";
@@ -5224,6 +5445,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
           "mp" = '''("replay file" . mpc-play)'';
           "mm" = '''("menu" . music-menu)'';
           "ms" = '''("stop" . mpc-stop)'';
+          "ma" = ''(cmd! (start-process-shell-command "play-album" nil "play-album"))'';
           "m+" = "'mpc-inc-by-five";
           "m-" = "'mpc-dec-by-five";
         };
@@ -5234,6 +5456,23 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
       };
     };
 }
+#+end_src
+
+#+NAME: Play Album
+#+begin_src bash-ts
+set -o nounset -o errexit -o pipefail
+
+mpc clear
+
+album="$(mpc ls -f %album% | uniq | ${lib.getExe self'.packages.ezf})"
+
+readarray -t files < <(${lib.getExe pkgs.mpc} search "(album == \"$album\")")
+
+# Loop through each file, play it with mpc
+for file in "''${files[@]}"; do
+  ${lib.getExe pkgs.mpc} add "$file"
+done
+${lib.getExe pkgs.mpc} play
 #+end_src
 
 #+NAME: Emacs Mpc Wrapper Config
@@ -5561,6 +5800,8 @@ Putting =:session= in an org block is necessary for evaluation
             "ob"
           ];
         };
+
+        popper.setopt.popper-reference-buffers = [ ''"^\\*Sage\\*"'' ];
       };
     };
 }

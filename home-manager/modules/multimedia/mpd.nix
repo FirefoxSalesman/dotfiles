@@ -2,23 +2,46 @@
 
 {
   perSystem =
-    { pkgs, ... }:
+    {
+      lib,
+      pkgs,
+      self',
+      ...
+    }:
     let
       epkgs = pkgs.emacs.pkgs;
     in
     {
-      packages.mpc-wrapper = (
-        epkgs.callPackage epkgs.trivialBuild rec {
-          pname = "mpc-wrapper";
-          version = "current";
-          src = inputs.mpc-wrapper;
-        }
-      );
+      packages = {
+        mpc-wrapper = (
+          epkgs.callPackage epkgs.trivialBuild rec {
+            pname = "mpc-wrapper";
+            version = "current";
+            src = inputs.mpc-wrapper;
+          }
+        );
+        playAlbum = pkgs.writeShellScriptBin "play-album" ''
+          set -o nounset -o errexit -o pipefail
+          
+          mpc clear
+          
+          album="$(mpc ls -f %album% | uniq | ${lib.getExe self'.packages.ezf})"
+          
+          readarray -t files < <(${lib.getExe pkgs.mpc} search "(album == \"$album\")")
+          
+          # Loop through each file, play it with mpc
+          for file in "''${files[@]}"; do
+            ${lib.getExe pkgs.mpc} add "$file"
+          done
+          ${lib.getExe pkgs.mpc} play
+        '';
+      };
     };
 
   flake.homeModules.media =
     { pkgs, config, ... }:
     {
+      home.packages = [ pkgs.playAlbum ];
       services.mpd = {
         enable = true;
         musicDirectory = "${config.home.homeDirectory}/mus/mpd";
@@ -41,6 +64,7 @@
           "mp" = '''("replay file" . mpc-play)'';
           "mm" = '''("menu" . music-menu)'';
           "ms" = '''("stop" . mpc-stop)'';
+          "ma" = ''(cmd! (start-process-shell-command "play-album" nil "play-album"))'';
           "m+" = "'mpc-inc-by-five";
           "m-" = "'mpc-dec-by-five";
         };

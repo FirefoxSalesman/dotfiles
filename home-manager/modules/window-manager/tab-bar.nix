@@ -110,6 +110,8 @@
       pertab-monocle = pertabExtension;
       pertab-follow = pertabExtension;
       pertab-master-stack = pertabExtension;
-      pertab-scroll = pertabExtension;
+      pertab-scroll = {
+	gfhookf = ["('pertab-follow-enter 'balance-windows)"];
+      } // pertabExtension;
     };
 }

@@ -71,6 +71,11 @@
 
         emacs.generalOne.help-map."A" =
           ''`("Arch Wiki" . ,(cmd! (async-shell-command "${lib.getExe pkgs.wiki}")))'';
+
+        popper.setopt.popper-reference-buffers = [
+          "'help-mode"
+          "'helpful-mode"
+        ];
       };
     };
   };

@@ -63,6 +63,8 @@
             "ob"
           ];
         };
+
+        popper.setopt.popper-reference-buffers = [ ''"^\\*Sage\\*"'' ];
       };
     };
 }

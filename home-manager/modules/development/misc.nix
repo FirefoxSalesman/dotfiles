@@ -11,16 +11,16 @@
           treesit-fold.enable = true;
           languages = {
             bash.enable = true;
-            clojure.enable = true;
-            kotlin.enable = true;
             json.enable = true;
-            nix.enable = true;
             toml.enable = true;
             xml.enable = true;
             zenscript.enable = true;
             yaml.enable = true;
           };
         };
+
+        # Yoinked from heks-emacs
+        completions.tempel.templates.lisp-mode.lambda = ''"(lambda (" p ")" n> r> ")"'';
 
         tools.apheleia = {
           enable = true;
@@ -39,6 +39,8 @@
             extraPackages = [ pkgs.tombi ];
             eglot = ''("tombi" "lsp")'';
           };
+
+          popper.setopt.popper-reference-buffers = [ "'dape-repl-mode" ];
         };
       };
     };

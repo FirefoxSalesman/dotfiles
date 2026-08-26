@@ -16,7 +16,17 @@
         usePackage = {
           eshell = {
             ghookf = [ "('eshell-first-time-mode 'efs/configure-eshell)" ];
+            gfhookf = [
+              ''
+                ('eshell-post-command (lambda () (eshell-write-history eshell-history-file-name t)
+                		                (eshell-read-history eshell-history-file-name t)))
+              ''
+            ];
             general."s-<enter>" = "'efs/make-eshell";
+            setopt = {
+              eshell-history-append = true;
+              eshell-save-history-on-exit = false;
+            };
             init = ''
               	    (defun efs/make-eshell ()
               	      (interactive)
@@ -92,6 +102,11 @@
             gfhookf = [ "('eshell-mode 'eldoc-box-hover-at-point-mode)" ];
             config = "(setup-esh-help-eldoc)";
           };
+
+          popper.setopt.popper-reference-buffers = [
+            ''"^\\*.*eshell\\*"''
+            ''"^\\*eat\\*"''
+          ];
         };
       };
     };

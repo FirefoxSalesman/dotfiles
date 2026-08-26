@@ -48,7 +48,7 @@
         emacs.init = {
           ai = {
             copilot = {
-              enable = true;
+              enable = false;
               keepOutOf = [
                 "c-ts-mode"
                 "json5-ts-mode"
@@ -63,6 +63,7 @@
                 enable = true;
                 model = "qwen3:8b";
               };
+	      agent.enable = true;
             };
           };
           usePackage =
@@ -122,6 +123,25 @@
                    'newline
                    "RET"
                    'newline)
+                  
+                  (gptel-make-preset
+                   'translate
+                   :system "Translate to english."
+                   :model 'llama3.2:1b)
+                  
+                  (defun efs/translate (foreign-text)
+                    "Translates FOREIGN-TEXT to English & outputs it in an org buffer called Translation."
+                    (with-current-buffer (get-buffer-create "Translation")
+                      (switch-to-buffer (current-buffer))
+                      (org-mode)
+                      (let ((gptel-model 'llama3.2:1b))
+                        (gptel-request
+                         (concat
+                          foreign-text " Translate the following text to English.")))))
+                  
+                  (with-eval-after-load 'evil
+                    (evil-ex-define-cmd
+                     "translateb" (cmd! (efs/translate (buffer-string)))))
                 '';
               };
 
@@ -183,7 +203,7 @@
               };
 
               aidermacs = {
-                enable = true;
+                enable = false;
                 extraPackages = [ pkgs.aider-chat ];
                 generalOne.global-leader."gA" = "'aidermacs-transient-menu";
                 config = "(start-ollama)";
@@ -193,7 +213,11 @@
                 };
               };
 
-              popper.setopt.popper-reference-buffers = [ "'aidermacs-comint-mode" ];
+              popper.setopt.popper-reference-buffers = [
+                "'aidermacs-comint-mode"
+                ''"^\\*Ollama\\*"''
+                ''"^\\*copilot\\*"''
+              ];
             };
         };
       };
