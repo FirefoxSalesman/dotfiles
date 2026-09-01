@@ -33,6 +33,19 @@
                                                                      #'cape-dabbrev)))))
               ''
             ];
+            # https://www.jamescherti.com/emacs-eglot-performance/
+            setopt = {
+              eglot-sync-connect = lib.mkForce 0;
+              eglot-events-buffer-config = [
+                "':size"
+                0
+                "':format"
+                "'full"
+              ];
+	      eglot-max-file-watches = 3000;
+	      eglot-report-progress = false;
+	      eglot-code-action-indications = false;
+            };
             config = ''
               (efs/evil-collection-remap
                'evil-collection-eglot-setup
@@ -40,6 +53,8 @@
                eglot-mode-map
                "K"
                'evil-substitute)
+              
+              (add-to-list 'eglot-ignored-server-capabilities :foldingRangeProvider)
             '';
           };
 

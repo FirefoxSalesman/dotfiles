@@ -3,7 +3,6 @@
     enable = true;
     defer = true;
     setopt.elfeed-feeds = [
-      ''"https://lukesmith.xyz/index.xml"''
       ''"https://youtube.com/feeds/videos.xml?channel_id=UCSJPFQdZwrOutnmSFYtbstA"''
       ''"https://planet.emacslife.com/atom.xml"''
       ''"https://rss2.flightcast.com/pmgqiszts7kfhopzaq8el6yw.xml"''

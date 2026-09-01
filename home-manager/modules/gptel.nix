@@ -14,6 +14,21 @@
                   ${lib.getExe pkgs.ollama} serve
                 fi
         '';
+        gptel-agent-harness = (
+          epkgs.callPackage epkgs.trivialBuild rec {
+            pname = "gptel-agent-harness";
+            version = "current";
+            src = inputs.gptel-agent-harness;
+
+            propagatedUserEnvPkgs = with epkgs; [
+              gptel-agent
+              compat
+              gptel
+            ];
+
+            buildInputs = propagatedUserEnvPkgs;
+          }
+        );
         gptel-got = (
           epkgs.callPackage epkgs.trivialBuild rec {
             pname = "gptel-got";
@@ -63,7 +78,7 @@
                 enable = true;
                 model = "qwen3:8b";
               };
-	      agent.enable = true;
+              agent.enable = true;
             };
           };
           usePackage =
@@ -147,6 +162,11 @@
 
               gptel-quick.setopt = mkOllama [ "llama3.2:1b" ] "-quick";
 
+              gptel-inline = {
+		enable = true;
+		after = ["gptel"];
+              };
+
               # gptel-got = {
               #   enable = true;
               #   after = ["gptel"];
@@ -200,6 +220,11 @@
                       ""
                   ) config.programs.mcp.servers
                 );
+              };
+
+              gptel-agent-harness = {
+                enable = true;
+                after = [ "gptel-agent" ];
               };
 
               aidermacs = {

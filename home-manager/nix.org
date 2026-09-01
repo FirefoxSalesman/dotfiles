@@ -77,6 +77,11 @@
       url = "https://git.bajsicki.com/phil/gptel-got";
       flake = false;
     };
+
+    gptel-agent-harness = {
+      url = "https://github.com/beacoder/gptel-agent-harness";
+      flake = false;
+    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
@@ -151,6 +156,7 @@ in
             pertab = packages.pertab;
             embark = packages.embark;
             gptel-got = packages.gptel-got;
+            gptel-agent-harness = packages.gptel-agent-harness;
           }
         ));
     };
@@ -328,7 +334,7 @@ in
           self.homeModules.media
           self.homeModules.notifications
           self.homeModules.passwordManagement
-          self.homeModules.sage
+          # self.homeModules.sage
           self.homeModules.shellConfig
           self.homeModules.startx
           self.homeModules.web
@@ -1776,10 +1782,12 @@ I think most of it was from the github page for lsp mode, but it's been a while,
           languages = {
             bash.enable = true;
             json.enable = true;
+            lua.enable = true;
             toml.enable = true;
+            rust.enable = true;
+            yaml.enable = true;
             xml.enable = true;
             zenscript.enable = true;
-            yaml.enable = true;
           };
         };
 
@@ -2302,6 +2310,19 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
                                                                      #'cape-dabbrev)))))
               ''
             ];
+            # https://www.jamescherti.com/emacs-eglot-performance/
+            setopt = {
+              eglot-sync-connect = lib.mkForce 0;
+              eglot-events-buffer-config = [
+                "':size"
+                0
+                "':format"
+                "'full"
+              ];
+	      eglot-max-file-watches = 3000;
+	      eglot-report-progress = false;
+	      eglot-code-action-indications = false;
+            };
             config = ''
               <<Development Eglot Config>>
             '';
@@ -2331,6 +2352,8 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
  eglot-mode-map
  "K"
  'evil-substitute)
+
+(add-to-list 'eglot-ignored-server-capabilities :foldingRangeProvider)
 #+end_src
 
 *** Ledger
@@ -2487,7 +2510,7 @@ I'm running dired with a couple of small packages that improve on it
       ];
       programs.emacs = {
         enable = true;
-        package = pkgs.emacs30-gtk3;
+        package = pkgs.emacs-gtk;
         init = {
           enable = true;
           packageQuickstart = false;
@@ -4075,40 +4098,45 @@ How to add a latex package
             ghookf = [ "('org-mode 'org-auto-tangle-mode)" ];
           };
 
-          denote.setopt.denote-known-keywords = [
-            ''"quotes"''
-            ''"chem"''
-            ''"emacs"''
-            ''"java"''
-            ''"physics"''
-            ''"calculus"''
-            ''"minecraft"''
-            ''"de"''
-            ''"proofs"''
-            ''"csse230"''
-            ''"os"''
-            ''"databases"''
-            ''"scifi"''
-            ''"softwarerequirements"''
-            ''"anthropology"''
-            ''"theoryofcomputation"''
-            ''"parallelcomp"''
-            ''"cybersecurity"''
-            ''"probstats"''
-            ''"scheme"''
-            ''"dreams"''
-            ''"softwaredevelopment"''
-            ''"ethics"''
-            ''"plp"''
-            ''"malwareanalysis"''
-            ''"bio"''
-            ''"ai"''
-            ''"resolve"''
-            ''"psychology"''
-            ''"algorithmanalysis"''
-            ''"music"''
-            ''"people"''
-          ];
+          denote = {
+	    generalOne.global-leader.oc = "'denote-create-note";
+            setopt.denote-known-keywords = [
+              ''"quotes"''
+              ''"chem"''
+              ''"emacs"''
+              ''"java"''
+              ''"physics"''
+              ''"calculus"''
+              ''"minecraft"''
+              ''"de"''
+              ''"proofs"''
+              ''"csse230"''
+              ''"os"''
+              ''"databases"''
+              ''"scifi"''
+              ''"softwarerequirements"''
+              ''"anthropology"''
+              ''"theoryofcomputation"''
+              ''"parallelcomp"''
+              ''"cybersecurity"''
+              ''"probstats"''
+              ''"scheme"''
+              ''"dreams"''
+              ''"softwaredevelopment"''
+              ''"ethics"''
+              ''"plp"''
+              ''"malwareanalysis"''
+              ''"bio"''
+              ''"ai"''
+              ''"resolve"''
+              ''"psychology"''
+              ''"algorithmanalysis"''
+              ''"music"''
+              ''"people"''
+              ''"interview"''
+              ''"rust"''
+            ];
+          };
 
           biblio = {
             enable = true;
@@ -5138,6 +5166,21 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
                   ${lib.getExe pkgs.ollama} serve
                 fi
         '';
+        gptel-agent-harness = (
+          epkgs.callPackage epkgs.trivialBuild rec {
+            pname = "gptel-agent-harness";
+            version = "current";
+            src = inputs.gptel-agent-harness;
+
+            propagatedUserEnvPkgs = with epkgs; [
+              gptel-agent
+              compat
+              gptel
+            ];
+
+            buildInputs = propagatedUserEnvPkgs;
+          }
+        );
         gptel-got = (
           epkgs.callPackage epkgs.trivialBuild rec {
             pname = "gptel-got";
@@ -5187,7 +5230,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
                 enable = true;
                 model = "qwen3:8b";
               };
-	      agent.enable = true;
+              agent.enable = true;
             };
           };
           usePackage =
@@ -5232,6 +5275,11 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 
               gptel-quick.setopt = mkOllama [ "llama3.2:1b" ] "-quick";
 
+              gptel-inline = {
+		enable = true;
+		after = ["gptel"];
+              };
+
               # gptel-got = {
               #   enable = true;
               #   after = ["gptel"];
@@ -5272,6 +5320,11 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
                       ""
                   ) config.programs.mcp.servers
                 );
+              };
+
+              gptel-agent-harness = {
+                enable = true;
+                after = [ "gptel-agent" ];
               };
 
               aidermacs = {
@@ -5990,7 +6043,7 @@ This lets us decide how emacs will handle certain urls
 You need regexes to do this, & you can build them easily using =rx=
 #+begin_src nix-ts :tangle modules/web/browseurl.nix
 {
-  flake.homeModules.web.programs.emacs.init.usePackage.browse-url = {
+  flake.homeModules.webbad.programs.emacs.init.usePackage.browse-url = {
     enable = true;
     config = "(defun qutebrowser-browse-url (url &rest args) (qutebrowser-open-url url 'tab))";
     custom.browse-url-handlers = [
@@ -6009,10 +6062,9 @@ You need regexes to do this, & you can build them easily using =rx=
 It's a simple text based web browser. I use it for short web searches
 #+begin_src nix-ts :tangle modules/web/eww.nix :noweb yes
 {
-  flake.homeModules.web.programs.emacs.init.usePackage.eww = {
+  flake.homeModules.webbad.programs.emacs.init.usePackage.eww = {
     enable = true;
     setopt = {
-      eww-search-prefix = ''"https://search.inetol.net/?q="'';
       eww-header-line-format = false;
       eww-desktop-remove-duplicates = true;
       eww-download-directory = ''(expand-file-name "~/dwn")'';
@@ -6133,7 +6185,6 @@ NAME is the term to search for."
     enable = true;
     defer = true;
     setopt.elfeed-feeds = [
-      ''"https://lukesmith.xyz/index.xml"''
       ''"https://youtube.com/feeds/videos.xml?channel_id=UCSJPFQdZwrOutnmSFYtbstA"''
       ''"https://planet.emacslife.com/atom.xml"''
       ''"https://rss2.flightcast.com/pmgqiszts7kfhopzaq8el6yw.xml"''
@@ -6276,45 +6327,43 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
 **** Some privacy Settings
 #+begin_src nix-ts :tangle modules/web/qutebrowser/privacy.nix
 {
-  flake.homeModules.web = {
-    programs.qutebrowser.settings = {
-      content = {
-        blocking = {
-          enabled = true;
-          method = "both";
-          adblock.lists = [
-            "https://easylist.to/easylist/easylist.txt"
-            "https://easylist.to/easylist/easyprivacy.txt"
-            "https://easylist.to/easylist/fanboy-social.txt"
-            "https://secure.fanboy.co.nz/fanboy-annoyance.txt"
-            "https://easylist-downloads.adblockplus.org/abp-filters-anti-cv.txt"
-            #"https://gitlab.com/curben/urlhaus-filter/-/raw/master/urlhaus-filter.txt"
-            "https://pgl.yoyo.org/adservers/serverlist.php?showintro=0;hostformat=hosts"
-            "https://raw.githubusercontent.com/DandelionSprout/adfilt/master/NorwegianExperimentalList%20alternate%20versions/NordicFiltersABP-Inclusion.txt"
-            "https://github.com/uBlockOrigin/uAssets/raw/master/filters/legacy.txt"
-            "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters.txt"
-            "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters-2020.txt"
-            "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters-2021.txt"
-            "https://github.com/uBlockOrigin/uAssets/raw/master/filters/badware.txt"
-            "https://github.com/uBlockOrigin/uAssets/raw/master/filters/privacy.txt"
-            "https://github.com/uBlockOrigin/uAssets/raw/master/filters/badlists.txt"
-            "https://github.com/uBlockOrigin/uAssets/raw/master/filters/annoyances.txt"
-            "https://github.com/uBlockOrigin/uAssets/raw/master/filters/resource-abuse.txt"
-            "https://www.i-dont-care-about-cookies.eu/abp/"
-            "https://secure.fanboy.co.nz/fanboy-cookiemonster.txt"
-            "https://github.com/uBlockOrigin/uAssets/raw/master/filters/unbreak.txt"
-            "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/quick-fixes.txt"
-          ];
-        };
-        autoplay = false;
-        cookies.store = false;
-        geolocation = false;
-        private_browsing = true;
+  flake.homeModules.web.programs.qutebrowser.settings = {
+    content = {
+      blocking = {
+        enabled = true;
+        method = "both";
+        adblock.lists = [
+          "https://easylist.to/easylist/easylist.txt"
+          "https://easylist.to/easylist/easyprivacy.txt"
+          "https://easylist.to/easylist/fanboy-social.txt"
+          "https://secure.fanboy.co.nz/fanboy-annoyance.txt"
+          "https://easylist-downloads.adblockplus.org/abp-filters-anti-cv.txt"
+          #"https://gitlab.com/curben/urlhaus-filter/-/raw/master/urlhaus-filter.txt"
+          "https://pgl.yoyo.org/adservers/serverlist.php?showintro=0;hostformat=hosts"
+          "https://raw.githubusercontent.com/DandelionSprout/adfilt/master/NorwegianExperimentalList%20alternate%20versions/NordicFiltersABP-Inclusion.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/legacy.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters-2020.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters-2021.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/badware.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/privacy.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/badlists.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/annoyances.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/resource-abuse.txt"
+          "https://www.i-dont-care-about-cookies.eu/abp/"
+          "https://secure.fanboy.co.nz/fanboy-cookiemonster.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/unbreak.txt"
+          "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/quick-fixes.txt"
+        ];
       };
-      completion = {
-        cmd_history_max_items = 0;
-        web_history.max_items = 0;
-      };
+      autoplay = false;
+      cookies.store = false;
+      geolocation = false;
+      private_browsing = true;
+    };
+    completion = {
+      cmd_history_max_items = 0;
+      web_history.max_items = 0;
     };
   };
 }

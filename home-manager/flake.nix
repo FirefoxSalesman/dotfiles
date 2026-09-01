@@ -72,6 +72,11 @@
       url = "https://git.bajsicki.com/phil/gptel-got";
       flake = false;
     };
+
+    gptel-agent-harness = {
+      url = "https://github.com/beacoder/gptel-agent-harness";
+      flake = false;
+    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);

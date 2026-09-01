@@ -12,10 +12,12 @@
           languages = {
             bash.enable = true;
             json.enable = true;
+            lua.enable = true;
             toml.enable = true;
+            rust.enable = true;
+            yaml.enable = true;
             xml.enable = true;
             zenscript.enable = true;
-            yaml.enable = true;
           };
         };
 

@@ -63,6 +63,7 @@ in
             pertab = packages.pertab;
             embark = packages.embark;
             gptel-got = packages.gptel-got;
+            gptel-agent-harness = packages.gptel-agent-harness;
           }
         ));
     };

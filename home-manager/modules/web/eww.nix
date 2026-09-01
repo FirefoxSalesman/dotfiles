@@ -1,8 +1,7 @@
 {
-  flake.homeModules.web.programs.emacs.init.usePackage.eww = {
+  flake.homeModules.webbad.programs.emacs.init.usePackage.eww = {
     enable = true;
     setopt = {
-      eww-search-prefix = ''"https://search.inetol.net/?q="'';
       eww-header-line-format = false;
       eww-desktop-remove-duplicates = true;
       eww-download-directory = ''(expand-file-name "~/dwn")'';

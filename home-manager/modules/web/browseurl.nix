@@ -1,5 +1,5 @@
 {
-  flake.homeModules.web.programs.emacs.init.usePackage.browse-url = {
+  flake.homeModules.webbad.programs.emacs.init.usePackage.browse-url = {
     enable = true;
     config = "(defun qutebrowser-browse-url (url &rest args) (qutebrowser-open-url url 'tab))";
     custom.browse-url-handlers = [
