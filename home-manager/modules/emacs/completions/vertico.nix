@@ -77,7 +77,7 @@
         setopt.vertico-multiform-commands = [
           "'(music-menu grid)"
           "'(man grid)"
-          "'(t posframe)"
+          # "'(t posframe)"
         ];
         ghookf = [ "('vertico-mode 'vertico-multiform-mode)" ];
       };
