@@ -33,7 +33,7 @@
       };
     };
 
-  flake.homeModules.exwm.programs.emacs.init.usePackage =
+  flake.homeModules.wm.programs.emacs.init.usePackage =
     let
       pertabExtension = {
         enable = true;
@@ -53,7 +53,11 @@
             (setq tab-bar-tab-hints nil))
         '';
         ghookf = [ "('exwm-init 'tab-bar-mode)" ];
-        general."s-u" = "'tab-bar-hydra/body";
+        # ghookf = [ "('ewm-mode 'tab-bar-mode)" ];
+        general = {
+          "s-u" = "'tab-bar-hydra/body";
+          "s->" = "'tab-bar-move-tab-to-frame";
+        };
         setopt.tab-bar-select-restore-windows = false;
         extraConfig = ''
           :pretty-hydra
@@ -95,6 +99,21 @@
       pertab = {
         enable = true;
         ghookf = [ "('tab-bar-mode 'pertab-mode)" ];
+        generalOneConfig.pertab-mode-map = {
+          "s-e" = "'pertab-focus-down";
+          "s-o" = "'pertab-focus-up";
+          "s-i" = "'pertab-focus-right";
+          "s-n" = "'pertab-focus-left";
+          "s-E" = "'pertab-move-down";
+          "s-O" = "'pertab-move-up";
+          "s-I" = "'pertab-move-right";
+          "s-N" = "'pertab-move-left";
+          "s-c" = "'pertab-horizontal-split";
+          "s-C" = "'pertab-vertical-split";
+          "s-x" = "'pertab-layout-menu";
+          "s-k" = "'pertab-close-window";
+          "s-K" = "'pertab-kill-buffer-close-window";
+        };
         setopt = {
           pertab-default-layout = "'master-stack";
           pertab-next-buffer-function = "'bufler-cycle-buffers-forward";
@@ -105,13 +124,22 @@
           "('(pertab-follow-enter pertab-scroll-enter) (lambda () (golden-ratio-mode -1)))"
           "('(pertab-follow-exit pertab-scroll-exit) (lambda () (golden-ratio-mode +1)))"
         ];
+	config = ''
+	  (repeaters-define-maps
+	   '(("delete-windows"
+	      pertab-kill-buffer-close-window
+	      "K"
+	      pertab-close-window
+	      "k")))
+	'';
       };
 
       pertab-monocle = pertabExtension;
       pertab-follow = pertabExtension;
       pertab-master-stack = pertabExtension;
       pertab-scroll = {
-	gfhookf = ["('pertab-follow-enter 'balance-windows)"];
-      } // pertabExtension;
+        gfhookf = [ "('pertab-follow-enter 'balance-windows)" ];
+      }
+      // pertabExtension;
     };
 }

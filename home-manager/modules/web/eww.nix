@@ -1,5 +1,5 @@
 {
-  flake.homeModules.webbad.programs.emacs.init.usePackage.eww = {
+  flake.homeModules.web.programs.emacs.init.usePackage.eww = {
     enable = true;
     setopt = {
       eww-header-line-format = false;

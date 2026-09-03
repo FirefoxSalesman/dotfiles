@@ -16,7 +16,7 @@
       );
     };
 
-  flake.homeModules.emacs.programs.emacs.init.usePackage.app-launcher = {
+  flake.homeModules.exwm.programs.emacs.init.usePackage.app-launcher = {
     enable = true;
     defer = true;
     command = [ "app-launcher-run-app" ];

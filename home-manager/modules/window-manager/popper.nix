@@ -1,5 +1,5 @@
 {
-  flake.homeModules.exwm.programs.emacs.init.usePackage.popper = {
+  flake.homeModules.wm.programs.emacs.init.usePackage.popper = {
     enable = true;
     ghookf = [ "('on-first-buffer 'popper-mode)" ];
     general = {

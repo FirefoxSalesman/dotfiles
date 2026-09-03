@@ -1,5 +1,5 @@
 {
-  flake.homeModules.exwm.programs.emacs.init.usePackage = {
+  flake.homeModules.wm.programs.emacs.init.usePackage = {
     bufler = {
       enable = true;
       ghookf = [ "('tab-bar-mode 'bufler-mode)" ];

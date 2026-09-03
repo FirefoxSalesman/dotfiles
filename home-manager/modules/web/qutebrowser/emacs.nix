@@ -30,6 +30,11 @@
 
   flake.homeModules.web.programs = {
     emacs.init.usePackage = {
+      qutebrowser = {
+	enable = true;
+        setopt.qutebrowser-history-database = ''"~/.local/qutebrowser/history.sqlite"'';
+      };
+
       qutebrowser-exwm = {
         enable = true;
         package = epkgs: epkgs.qutebrowser;
@@ -39,7 +44,7 @@
         gfhookf = [
           "('qutebrowser-exwm-mode 'evil-normal-state)"
         ];
-        setopt.qutebrowser-history-database = ''"~/.local/qutebrowser/history.sqlite"'';
+        # setopt.qutebrowser-history-database = ''"~/.local/qutebrowser/history.sqlite"'';
         # It gets grumpy if I don't redefine the function for some reason.
         config = ''
           (defun qutebrowser-exwm--update-window-info (window-info)

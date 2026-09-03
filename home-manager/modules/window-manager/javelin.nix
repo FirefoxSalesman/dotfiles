@@ -1,5 +1,5 @@
 {
-  flake.homeModules.exwm =
+  flake.homeModules.wm =
     { lib, ... }:
     {
       programs.emacs.init.usePackage = {

@@ -31,17 +31,13 @@ in
       i3status-rs = packages.i3status-rs;
       playAlbum = packages.playAlbum;
       pkg = packages.pkg;
+      startEwm = packages.startEwm;
       startOllama = packages.startOllama;
       udisksmenu = packages.udisksmenu;
       wiki = packages.wiki;
 
       # overrides
-      # mpd = prev.mpd.override {
-      #   features = [
-      #     "vorbis"
-      #     "vorbisenc"
-      #   ];
-      # };
+      libdisplay-info = prev.libdisplay-info_0_3;
       mpv = packages.mpv;
       rassumfrassum = pkgs-stable.rassumfrassum;
       kmonad = inputs.kmonad.packages.${pkgs.system}.default;

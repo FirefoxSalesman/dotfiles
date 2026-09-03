@@ -63,54 +63,32 @@
           enable = true;
           demand = true;
           config = ''
+            	  (setcdr
+            	   (assoc 'gnus-group-news-low-empty doom-themes-base-faces)
+            	   '(:inherit 'gnus-group-mail-1-empty :weight 'normal))
             	  (load-theme 'ewal-doom-one t)
             	  ;; Stolen from Noctuid
             	  (let (custom--inhibit-theme-enable)
-            	    (custom-theme-set-faces 'ewal-doom-one
-            	                            `(font-lock-number-face
-            	                              ((t
-            	                                (:foreground ,(ewal-get-color 'blue)))))
-            	                            `(markdown-header-face
-            	                              ((t
-            	                                (:foreground ,(ewal-get-color 'blue)))))
-            	                            `(markdown-header-delimiter-face
-            	                              ((t
-            	                                (:foreground ,(ewal-get-color 'blue)))))
-            	                            `(markdown-bold-face
-            	                              ((t
-            	                                (:foreground
-            	                                 ,(ewal-get-color 'green)))))
-            	                            `(markdown-list-face
-            	                              ((t
-            	                                (:foreground
-            	                                 ,(ewal-get-color 'green)))))
-            	                            `(org-code
-            	                              ((t
-            	                                (:foreground
-            	                                 ,(ewal-get-color 'green)))))
-            	                            `(line-number
-            	                              ((t
-            	                                (:foreground ,(ewal-get-color 'blue)))))
-            	                            `(eshell-git-prompt-powerline-dir-face
-            	                              ((t
-            	                                (:background ,(ewal-get-color 'blue)))))
-            	                            `(hl-line-face
-            	                              ((t
-            	                                (:background
-            	                                 ,(ewal-get-color 'green)))))
-            	                            `(solaire-hl-line-face
-            	                              ((t
-            	                                (:background
-            	                                 ,(ewal-get-color 'green)))))
-            	                            `(tab-bar ((t :inherit mode-line)))
-            	                            `(eshell-git-prompt-powerline-clean-face
-            	                              ((t
-            	                                (:background
-            	                                 ,(ewal-get-color 'green)))))
-            	                            `(eshell-git-prompt-powerline-not-clean-face
-            	                              ((t
-            	                                (:background
-            	                                 ,(ewal-get-color 'red)))))))
+            	    (let* ((blue (ewal-get-color 'blue))
+            	           (green (ewal-get-color 'green))
+            	           (red (ewal-get-color 'red)))
+            	      (custom-theme-set-faces
+            	       'ewal-doom-one
+            	       `(font-lock-number-face ((t (:foreground ,blue))))
+            	       `(markdown-header-face ((t (:foreground ,blue))))
+            	       `(markdown-header-delimiter-face ((t (:foreground ,blue))))
+            	       `(markdown-bold-face ((t (:foreground ,green))))
+            	       `(markdown-list-face ((t (:foreground ,green))))
+            	       `(org-code ((t (:foreground ,green))))
+            	       `(line-number ((t (:foreground ,blue))))
+            	       `(eshell-git-prompt-powerline-dir-face ((t (:background ,blue))))
+            	       `(hl-line-face ((t (:background ,green))))
+            	       `(solaire-hl-line-face ((t (:background ,green))))
+            	       `(tab-bar ((t :inherit mode-line)))
+            	       `(eshell-git-prompt-powerline-clean-face
+            	         ((t (:background ,green))))
+            	       `(eshell-git-prompt-powerline-not-clean-face
+            	         ((t (:background ,red)))))))
             	  (doom-themes-visual-bell-config)
             	  (doom-themes-org-config)
             	'';

@@ -9,52 +9,50 @@
 
     {
       programs.emacs.init = {
-        tools = {
-          goldenRatio = true;
-          exwm = {
-            enable = true;
-            wantMouseWarping = true;
-            useGaps = true;
-            bindings = {
-              "?\\s-r" = "exwm-reset";
-              "?\\s-a" = "evil-ex";
-              "?\\s-d" = "app-launcher-run-app";
-              "?\\s-t" = "proced";
+        tools.exwm = {
+          enable = true;
+          wantMouseWarping = true;
+          useGaps = true;
+          bindings = {
+            "?\\s-r" = "exwm-reset";
+            "?\\s-a" = "evil-ex";
+            "?\\s-d" = "app-launcher-run-app";
+            "?\\s-t" = "proced";
 
-              # Movement
-              "?\\s-e" = "pertab-focus-down";
-              "?\\s-o" = "pertab-focus-up";
-              "?\\s-i" = "pertab-focus-right";
-              "?\\s-n" = "pertab-focus-left";
-              "?\\s-." = "other-frame";
-              "?\\s->" = "tab-bar-move-tab-to-frame";
+            # Movement
+            # "?\\s-e" = "pertab-focus-down";
+            # "?\\s-o" = "pertab-focus-up";
+            # "?\\s-i" = "pertab-focus-right";
+            # "?\\s-n" = "pertab-focus-left";
+            "?\\s-." = "other-frame";
+            "?\\s->" = "tab-bar-move-tab-to-frame";
 
-              # Arrangement
-              "?\\s-E" = "pertab-move-down";
-              "?\\s-O" = "pertab-move-up";
-              "?\\s-I" = "pertab-move-right";
-              "?\\s-N" = "pertab-move-left";
-              "?\\s-c" = "pertab-horizontal-split";
-              "?\\s-C" = "pertab-vertical-split";
-              "?\\s-j" = "winner-undo";
-              "?\\s-J" = "winner-redo";
-              "?\\s-x" = "pertab-layout-menu";
-              "?\\s-k" = "pertab-close-window";
-              "?\\s-K" = "pertab-kill-buffer-close-window";
+            # Arrangement
+            # "?\\s-E" = "pertab-move-down";
+            # "?\\s-O" = "pertab-move-up";
+            # "?\\s-I" = "pertab-move-right";
+            # "?\\s-N" = "pertab-move-left";
+            # "?\\s-c" = "pertab-horizontal-split";
+            # "?\\s-C" = "pertab-vertical-split";
+            "?\\s-j" = "winner-undo";
+            "?\\s-J" = "winner-redo";
+            # "?\\s-x" = "pertab-layout-menu";
+            # "?\\s-k" = "pertab-close-window";
+            # "?\\s-K" = "pertab-kill-buffer-close-window";
 
-              #Shell bindings
-              "?\\s-s" = '',(cmd! (shell-command "slock"))'';
-              "?\\s-y" =
-                '',(cmd! (start-process-shell-command "maim" nil  "${lib.getExe pkgs.maim} ~/pic/screenshot.png"))'';
-              "XF86MonBrightnessDown" = ",(cmd! (efs/alter-monitor-brightness 5 t))";
-              "XF86MonBrightnessUp" = ",(cmd! (efs/alter-monitor-brightness 5))";
-            };
-            titleAlterations = {
-              qutebrowser = ''(exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title))'';
-              mpv = ''(exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title))'';
-            };
+            #Shell bindings
+            "?\\s-s" = '',(cmd! (shell-command "slock"))'';
+            "?\\s-y" =
+              '',(cmd! (start-process-shell-command "maim" nil  "${lib.getExe pkgs.maim} ~/pic/screenshot.png"))'';
+            "XF86MonBrightnessDown" = ",(cmd! (efs/alter-monitor-brightness 5 t))";
+            "XF86MonBrightnessUp" = ",(cmd! (efs/alter-monitor-brightness 5))";
+          };
+          titleAlterations = {
+            qutebrowser = ''(exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title))'';
+            mpv = ''(exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title))'';
           };
         };
+
         usePackage.exwm = {
           gfhookf = [
             # When window "class" updates, use it to set the buffer name
@@ -109,6 +107,19 @@
               "'XF86AudioLowerVolume"
               "'XF86AudioMute"
               '''?\M-\ ''
+              '''?\s-x''
+              '''?\s-k''
+              '''?\s-K''
+              '''?\s-E''
+              '''?\s-O''
+              '''?\s-I''
+              '''?\s-N''
+              '''?\s-c''
+              '''?\s-C''
+              '''?\s-e''
+              '''?\s-o''
+              '''?\s-i''
+              '''?\s-n''
             ];
           };
           init = ''
@@ -133,12 +144,6 @@
           config = ''
             (winner-mode)
             
-            (repeaters-define-maps
-             '(("delete-windows"
-                pertab-kill-buffer-close-window
-                "K"
-                pertab-close-window
-                "k")))
             (repeaters-define-maps '(("input-keys" exwm-input-send-next-key "q")))
             (exwm-input-set-key (kbd "s-<return>") 'efs/make-eshell)
           '';

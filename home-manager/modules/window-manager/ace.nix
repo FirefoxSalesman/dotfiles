@@ -1,5 +1,5 @@
 {
-  flake.homeModules.exwm.programs.emacs.init.usePackage.ace-window = {
+  flake.homeModules.wm.programs.emacs.init.usePackage.ace-window = {
     enable = true;
     setopt = {
       aw-scope = "'frame";

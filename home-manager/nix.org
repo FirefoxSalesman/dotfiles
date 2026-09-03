@@ -22,6 +22,8 @@
 
     emacs-init.url = "github:firefoxsalesman/NixEmacs";
 
+    ewm.url = "https://codeberg.org/ezemtsov/ewm/archive/master.tar.gz";
+
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -124,17 +126,13 @@ in
       i3status-rs = packages.i3status-rs;
       playAlbum = packages.playAlbum;
       pkg = packages.pkg;
+      startEwm = packages.startEwm;
       startOllama = packages.startOllama;
       udisksmenu = packages.udisksmenu;
       wiki = packages.wiki;
 
       # overrides
-      # mpd = prev.mpd.override {
-      #   features = [
-      #     "vorbis"
-      #     "vorbisenc"
-      #   ];
-      # };
+      libdisplay-info = prev.libdisplay-info_0_3;
       mpv = packages.mpv;
       rassumfrassum = pkgs-stable.rassumfrassum;
       kmonad = inputs.kmonad.packages.${pkgs.system}.default;
@@ -288,6 +286,7 @@ let
       ];
     };
     overlays = [
+      inputs.ewm.overlays.default
       (final: prev: self.overlay final prev pkgs inputs)
       inputs.emacs-init.overlay
       inputs.emacs-overlay.overlay
@@ -327,6 +326,8 @@ in
           self.homeModules.elisp
           self.homeModules.extraPackages
           self.homeModules.exwm
+          # self.homeModules.ewm
+          self.homeModules.wm
           self.homeModules.fileManager
           self.homeModules.gaming
           self.homeModules.java
@@ -336,7 +337,6 @@ in
           self.homeModules.passwordManagement
           # self.homeModules.sage
           self.homeModules.shellConfig
-          self.homeModules.startx
           self.homeModules.web
           self.homeModules.webdev
           self.homeModules.writing
@@ -1010,54 +1010,32 @@ Pywal integration: https://github.com/danth/stylix/issues/99
 
 #+NAME: Emacs Colors
 #+begin_src emacs-lisp
+(setcdr
+ (assoc 'gnus-group-news-low-empty doom-themes-base-faces)
+ '(:inherit 'gnus-group-mail-1-empty :weight 'normal))
 (load-theme 'ewal-doom-one t)
 ;; Stolen from Noctuid
 (let (custom--inhibit-theme-enable)
-  (custom-theme-set-faces 'ewal-doom-one
-                          `(font-lock-number-face
-                            ((t
-                              (:foreground ,(ewal-get-color 'blue)))))
-                          `(markdown-header-face
-                            ((t
-                              (:foreground ,(ewal-get-color 'blue)))))
-                          `(markdown-header-delimiter-face
-                            ((t
-                              (:foreground ,(ewal-get-color 'blue)))))
-                          `(markdown-bold-face
-                            ((t
-                              (:foreground
-                               ,(ewal-get-color 'green)))))
-                          `(markdown-list-face
-                            ((t
-                              (:foreground
-                               ,(ewal-get-color 'green)))))
-                          `(org-code
-                            ((t
-                              (:foreground
-                               ,(ewal-get-color 'green)))))
-                          `(line-number
-                            ((t
-                              (:foreground ,(ewal-get-color 'blue)))))
-                          `(eshell-git-prompt-powerline-dir-face
-                            ((t
-                              (:background ,(ewal-get-color 'blue)))))
-                          `(hl-line-face
-                            ((t
-                              (:background
-                               ,(ewal-get-color 'green)))))
-                          `(solaire-hl-line-face
-                            ((t
-                              (:background
-                               ,(ewal-get-color 'green)))))
-                          `(tab-bar ((t :inherit mode-line)))
-                          `(eshell-git-prompt-powerline-clean-face
-                            ((t
-                              (:background
-                               ,(ewal-get-color 'green)))))
-                          `(eshell-git-prompt-powerline-not-clean-face
-                            ((t
-                              (:background
-                               ,(ewal-get-color 'red)))))))
+  (let* ((blue (ewal-get-color 'blue))
+         (green (ewal-get-color 'green))
+         (red (ewal-get-color 'red)))
+    (custom-theme-set-faces
+     'ewal-doom-one
+     `(font-lock-number-face ((t (:foreground ,blue))))
+     `(markdown-header-face ((t (:foreground ,blue))))
+     `(markdown-header-delimiter-face ((t (:foreground ,blue))))
+     `(markdown-bold-face ((t (:foreground ,green))))
+     `(markdown-list-face ((t (:foreground ,green))))
+     `(org-code ((t (:foreground ,green))))
+     `(line-number ((t (:foreground ,blue))))
+     `(eshell-git-prompt-powerline-dir-face ((t (:background ,blue))))
+     `(hl-line-face ((t (:background ,green))))
+     `(solaire-hl-line-face ((t (:background ,green))))
+     `(tab-bar ((t :inherit mode-line)))
+     `(eshell-git-prompt-powerline-clean-face
+       ((t (:background ,green))))
+     `(eshell-git-prompt-powerline-not-clean-face
+       ((t (:background ,red)))))))
 (doom-themes-visual-bell-config)
 (doom-themes-org-config)
 #+end_src
@@ -1729,7 +1707,7 @@ I couldn't get olivetti to work.
 ** startx
 #+begin_src nix-ts :tangle modules/gui.nix :noweb yes
 {
-  flake.homeModules.startx =
+  flake.homeModules.exwm =
     { config, pkgs, ... }:
 
     {
@@ -3706,7 +3684,7 @@ Borrowed from Karthinks
       );
     };
 
-  flake.homeModules.emacs.programs.emacs.init.usePackage.app-launcher = {
+  flake.homeModules.exwm.programs.emacs.init.usePackage.app-launcher = {
     enable = true;
     defer = true;
     command = [ "app-launcher-run-app" ];
@@ -4309,7 +4287,8 @@ No idea what the rest of this is for.
         usePackage = {
           jinx = {
             enable = true;
-            ghookf = [ "('on-init-ui 'global-jinx-mode)" ];
+            # ghookf = [ "('on-init-ui 'global-jinx-mode)" ];
+            ghookf = [ "('after-init 'global-jinx-mode)" ];
             generalOneConfig.":n" = {
               "C-M-i" = "'jinx-correct";
               "]s" = "'jinx-next";
@@ -4453,7 +4432,7 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
       };
     };
 
-  flake.homeModules.exwm.programs.emacs.init.usePackage =
+  flake.homeModules.wm.programs.emacs.init.usePackage =
     let
       pertabExtension = {
         enable = true;
@@ -4468,7 +4447,11 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
           <<Tab Bar Config>>
         '';
         ghookf = [ "('exwm-init 'tab-bar-mode)" ];
-        general."s-u" = "'tab-bar-hydra/body";
+        # ghookf = [ "('ewm-mode 'tab-bar-mode)" ];
+        general = {
+          "s-u" = "'tab-bar-hydra/body";
+          "s->" = "'tab-bar-move-tab-to-frame";
+        };
         setopt.tab-bar-select-restore-windows = false;
         extraConfig = ''
           :pretty-hydra
@@ -4510,6 +4493,21 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
       pertab = {
         enable = true;
         ghookf = [ "('tab-bar-mode 'pertab-mode)" ];
+        generalOneConfig.pertab-mode-map = {
+          "s-e" = "'pertab-focus-down";
+          "s-o" = "'pertab-focus-up";
+          "s-i" = "'pertab-focus-right";
+          "s-n" = "'pertab-focus-left";
+          "s-E" = "'pertab-move-down";
+          "s-O" = "'pertab-move-up";
+          "s-I" = "'pertab-move-right";
+          "s-N" = "'pertab-move-left";
+          "s-c" = "'pertab-horizontal-split";
+          "s-C" = "'pertab-vertical-split";
+          "s-x" = "'pertab-layout-menu";
+          "s-k" = "'pertab-close-window";
+          "s-K" = "'pertab-kill-buffer-close-window";
+        };
         setopt = {
           pertab-default-layout = "'master-stack";
           pertab-next-buffer-function = "'bufler-cycle-buffers-forward";
@@ -4520,14 +4518,18 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
           "('(pertab-follow-enter pertab-scroll-enter) (lambda () (golden-ratio-mode -1)))"
           "('(pertab-follow-exit pertab-scroll-exit) (lambda () (golden-ratio-mode +1)))"
         ];
+	config = ''
+	  <<Pertab Config>>
+	'';
       };
 
       pertab-monocle = pertabExtension;
       pertab-follow = pertabExtension;
       pertab-master-stack = pertabExtension;
       pertab-scroll = {
-	gfhookf = ["('pertab-follow-enter 'balance-windows)"];
-      } // pertabExtension;
+        gfhookf = [ "('pertab-follow-enter 'balance-windows)" ];
+      }
+      // pertabExtension;
     };
 }
 #+end_src
@@ -4542,10 +4544,20 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
   (setq tab-bar-tab-hints nil))
 #+end_src
 
+#+NAME: Pertab Config
+#+begin_src emacs-lisp
+(repeaters-define-maps
+ '(("delete-windows"
+    pertab-kill-buffer-close-window
+    "K"
+    pertab-close-window
+    "k")))
+#+end_src
+
 *** Javelin
 #+begin_src nix-ts :tangle modules/window-manager/javelin.nix
 {
-  flake.homeModules.exwm =
+  flake.homeModules.wm =
     { lib, ... }:
     {
       programs.emacs.init.usePackage = {
@@ -4591,7 +4603,7 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
 Bufler is the other half of tab bar. It lets us automatically narrow buffers down to a given workspace
 #+begin_src nix-ts :tangle modules/window-manager/bufler.nix :noweb yes
 {
-  flake.homeModules.exwm.programs.emacs.init.usePackage = {
+  flake.homeModules.wm.programs.emacs.init.usePackage = {
     bufler = {
       enable = true;
       ghookf = [ "('tab-bar-mode 'bufler-mode)" ];
@@ -4780,22 +4792,26 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 *** ELWM
 #+begin_src nix-ts :tangle modules/window-manager/elwm.nix :noweb yes
 {
-  flake.homeModules.exwm.programs.emacs.init.usePackage.elwm = {
-    enable = true;
-    defer = true;
-    command = [
-      "elwm-next"
-      "elwm-prev"
-      "elwm-rotate-window"
-      "elwm-derotate-window"
-      "elwm-split-window"
-    ];
-    config = ''
-      <<Emacs Elwm Config>>
-    '';
-    preface = ''
-      <<Emacs Elwm Preface>>
-    '';
+  flake.homeModules.wm.programs.emacs.init = {
+    tools.goldenRatio = true;
+
+    usePackage.elwm = {
+      enable = true;
+      defer = true;
+      command = [
+        "elwm-next"
+        "elwm-prev"
+        "elwm-rotate-window"
+        "elwm-derotate-window"
+        "elwm-split-window"
+      ];
+      config = ''
+        <<Emacs Elwm Config>>
+      '';
+      preface = ''
+        <<Emacs Elwm Preface>>
+      '';
+    };
   };
 }
 #+end_src
@@ -4872,52 +4888,50 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 
     {
       programs.emacs.init = {
-        tools = {
-          goldenRatio = true;
-          exwm = {
-            enable = true;
-            wantMouseWarping = true;
-            useGaps = true;
-            bindings = {
-              "?\\s-r" = "exwm-reset";
-              "?\\s-a" = "evil-ex";
-              "?\\s-d" = "app-launcher-run-app";
-              "?\\s-t" = "proced";
+        tools.exwm = {
+          enable = true;
+          wantMouseWarping = true;
+          useGaps = true;
+          bindings = {
+            "?\\s-r" = "exwm-reset";
+            "?\\s-a" = "evil-ex";
+            "?\\s-d" = "app-launcher-run-app";
+            "?\\s-t" = "proced";
 
-              # Movement
-              "?\\s-e" = "pertab-focus-down";
-              "?\\s-o" = "pertab-focus-up";
-              "?\\s-i" = "pertab-focus-right";
-              "?\\s-n" = "pertab-focus-left";
-              "?\\s-." = "other-frame";
-              "?\\s->" = "tab-bar-move-tab-to-frame";
+            # Movement
+            # "?\\s-e" = "pertab-focus-down";
+            # "?\\s-o" = "pertab-focus-up";
+            # "?\\s-i" = "pertab-focus-right";
+            # "?\\s-n" = "pertab-focus-left";
+            "?\\s-." = "other-frame";
+            "?\\s->" = "tab-bar-move-tab-to-frame";
 
-              # Arrangement
-              "?\\s-E" = "pertab-move-down";
-              "?\\s-O" = "pertab-move-up";
-              "?\\s-I" = "pertab-move-right";
-              "?\\s-N" = "pertab-move-left";
-              "?\\s-c" = "pertab-horizontal-split";
-              "?\\s-C" = "pertab-vertical-split";
-              "?\\s-j" = "winner-undo";
-              "?\\s-J" = "winner-redo";
-              "?\\s-x" = "pertab-layout-menu";
-              "?\\s-k" = "pertab-close-window";
-              "?\\s-K" = "pertab-kill-buffer-close-window";
+            # Arrangement
+            # "?\\s-E" = "pertab-move-down";
+            # "?\\s-O" = "pertab-move-up";
+            # "?\\s-I" = "pertab-move-right";
+            # "?\\s-N" = "pertab-move-left";
+            # "?\\s-c" = "pertab-horizontal-split";
+            # "?\\s-C" = "pertab-vertical-split";
+            "?\\s-j" = "winner-undo";
+            "?\\s-J" = "winner-redo";
+            # "?\\s-x" = "pertab-layout-menu";
+            # "?\\s-k" = "pertab-close-window";
+            # "?\\s-K" = "pertab-kill-buffer-close-window";
 
-              #Shell bindings
-              "?\\s-s" = '',(cmd! (shell-command "slock"))'';
-              "?\\s-y" =
-                '',(cmd! (start-process-shell-command "maim" nil  "${lib.getExe pkgs.maim} ~/pic/screenshot.png"))'';
-              "XF86MonBrightnessDown" = ",(cmd! (efs/alter-monitor-brightness 5 t))";
-              "XF86MonBrightnessUp" = ",(cmd! (efs/alter-monitor-brightness 5))";
-            };
-            titleAlterations = {
-              qutebrowser = ''(exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title))'';
-              mpv = ''(exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title))'';
-            };
+            #Shell bindings
+            "?\\s-s" = '',(cmd! (shell-command "slock"))'';
+            "?\\s-y" =
+              '',(cmd! (start-process-shell-command "maim" nil  "${lib.getExe pkgs.maim} ~/pic/screenshot.png"))'';
+            "XF86MonBrightnessDown" = ",(cmd! (efs/alter-monitor-brightness 5 t))";
+            "XF86MonBrightnessUp" = ",(cmd! (efs/alter-monitor-brightness 5))";
+          };
+          titleAlterations = {
+            qutebrowser = ''(exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title))'';
+            mpv = ''(exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title))'';
           };
         };
+
         usePackage.exwm = {
           gfhookf = [
             # When window "class" updates, use it to set the buffer name
@@ -4972,6 +4986,19 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
               "'XF86AudioLowerVolume"
               "'XF86AudioMute"
               '''?\M-\ ''
+              '''?\s-x''
+              '''?\s-k''
+              '''?\s-K''
+              '''?\s-E''
+              '''?\s-O''
+              '''?\s-I''
+              '''?\s-N''
+              '''?\s-c''
+              '''?\s-C''
+              '''?\s-e''
+              '''?\s-o''
+              '''?\s-i''
+              '''?\s-n''
             ];
           };
           init = ''
@@ -5012,20 +5039,99 @@ NEG subtracts if it is true."
 #+begin_src emacs-lisp
 (winner-mode)
 
-(repeaters-define-maps
- '(("delete-windows"
-    pertab-kill-buffer-close-window
-    "K"
-    pertab-close-window
-    "k")))
 (repeaters-define-maps '(("input-keys" exwm-input-send-next-key "q")))
 (exwm-input-set-key (kbd "s-<return>") 'efs/make-eshell)
+#+end_src
+
+*** EWM
+#+begin_src nix-ts :tangle modules/window-manager/ewm.nix
+{
+  perSystem = { lib, pkgs, ... }: {
+    packages.startEwm = pkgs.writeShellScriptBin "startewm" ''
+      emacs --fg-daemon --eval "(require 'ewm)" --eval "(ewm-start-module)" --eval "(efs/run-in-background \"${lib.getExe pkgs.wbg} ~/.config/home-manager/wallpaper.png\")"
+    '';
+  };
+  flake.homeModules.ewm = { lib, pkgs, ... }: {
+    programs.emacs.init.usePackage = {
+      dashboard.ghookf = [ "('after-init '(dashboard-insert-startupify-lists dashboard-initialize))" ];
+      evil.gfhookf = [ "('after-init 'evil-mode)" ];
+      ewm = {
+        enable = true;
+        defer = true;
+        custom.ewm-output-config = [
+          [
+            ''"DP-1"''
+            "':width"
+            1920
+            "':height"
+            1080
+          ]
+          [
+            ''"DVI-I-1"''
+            "':width"
+            1920
+            "':height"
+            1200
+          ]
+        ];
+        generalOneConfig.ewm-mode-map = {
+          "s-<return>" = "'efs/make-eshell";
+          "s-a" = "'evil-ex";
+          "s-f" = "'bufler-workspace-focus-buffer";
+          "s-." = "'other-frame";
+          "s-j" = "'winner-undo";
+          "s-J" = "'winner-undo";
+        };
+        config = ''
+          (winner-mode)
+          (defun efs/run-in-background (command)
+               (let ((command-parts (split-string command "[ ]+")))
+                    (apply #'call-process `(,(car command-parts) nil 0 nil ,@(cdr command-parts)))))
+        '';
+        setopt.ewm-intercept-prefixes = [
+          ''"s-<return>"''
+          ''"s-a"''
+          ''"s-b"''
+          ''"s-d"''
+          ''"s-u"''
+          ''"C-^"''
+          ''"M-&"''
+          ''"s-M-'"''
+          ''"s-J"''
+          ''"s-j"''
+          ''"s-f"''
+          ''"s-e"''
+          ''"s-o"''
+          ''"s-i"''
+          ''"s-n"''
+          ''"s-."''
+          ''"s->"''
+          ''"s-E"''
+          ''"s-O"''
+          ''"s-I"''
+          ''"s-N"''
+          ''"s-c"''
+          ''"s-C"''
+          ''"s-x"''
+          ''"s-k"''
+          ''"s-K"''
+        ];
+        package = epkgs: pkgs.ewm;
+        extraPackages = with pkgs; [
+          startEwm
+          xwayland-satellite
+          wl-clipboard
+        ];
+      };
+    };
+  };
+}
 #+end_src
 
 *** Popper
 #+begin_src nix-ts :tangle modules/window-manager/popper.nix
 {
-  flake.homeModules.exwm.programs.emacs.init.usePackage.popper = {
+  flake.homeModules.wm.programs.emacs.init.usePackage.popper = {
     enable = true;
     ghookf = [ "('on-first-buffer 'popper-mode)" ];
     general = {
@@ -5058,7 +5164,7 @@ NEG subtracts if it is true."
 *** Ace Window
 #+begin_src nix-ts :tangle modules/window-manager/ace.nix :noweb yes
 {
-  flake.homeModules.exwm.programs.emacs.init.usePackage.ace-window = {
+  flake.homeModules.wm.programs.emacs.init.usePackage.ace-window = {
     enable = true;
     setopt = {
       aw-scope = "'frame";
@@ -6046,7 +6152,7 @@ This lets us decide how emacs will handle certain urls
 You need regexes to do this, & you can build them easily using =rx=
 #+begin_src nix-ts :tangle modules/web/browseurl.nix
 {
-  flake.homeModules.webbad.programs.emacs.init.usePackage.browse-url = {
+  flake.homeModules.web.programs.emacs.init.usePackage.browse-url = {
     enable = true;
     config = "(defun qutebrowser-browse-url (url &rest args) (qutebrowser-open-url url 'tab))";
     custom.browse-url-handlers = [
@@ -6056,7 +6162,7 @@ You need regexes to do this, & you can build them easily using =rx=
       '''("melpa\.org\.*" . qutebrowser-browse-url)''
       '''("." . (lambda (url &rest args) (eww url (prefix-numeric-value 4))))''
     ];
-    setopt.browse-url-secondary-browser-function = "'browse-url-default-browser";
+    setopt.browse-url-secondary-browser-function = "'qutebrowser-open-url";
   };
 }
 #+end_src
@@ -6065,7 +6171,7 @@ You need regexes to do this, & you can build them easily using =rx=
 It's a simple text based web browser. I use it for short web searches
 #+begin_src nix-ts :tangle modules/web/eww.nix :noweb yes
 {
-  flake.homeModules.webbad.programs.emacs.init.usePackage.eww = {
+  flake.homeModules.web.programs.emacs.init.usePackage.eww = {
     enable = true;
     setopt = {
       eww-header-line-format = false;
@@ -6406,6 +6512,11 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
 
   flake.homeModules.web.programs = {
     emacs.init.usePackage = {
+      qutebrowser = {
+	enable = true;
+        setopt.qutebrowser-history-database = ''"~/.local/qutebrowser/history.sqlite"'';
+      };
+
       qutebrowser-exwm = {
         enable = true;
         package = epkgs: epkgs.qutebrowser;
@@ -6415,7 +6526,7 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
         gfhookf = [
           "('qutebrowser-exwm-mode 'evil-normal-state)"
         ];
-        setopt.qutebrowser-history-database = ''"~/.local/qutebrowser/history.sqlite"'';
+        # setopt.qutebrowser-history-database = ''"~/.local/qutebrowser/history.sqlite"'';
         # It gets grumpy if I don't redefine the function for some reason.
         config = ''
           (defun qutebrowser-exwm--update-window-info (window-info)
