@@ -54,6 +54,7 @@
         };
 
         usePackage.exwm = {
+          extraPackages = [ pkgs.xwininfo ];
           gfhookf = [
             # When window "class" updates, use it to set the buffer name
             "('exwm-update-class (lambda () (exwm-workspace-rename-buffer exwm-class-name)))"

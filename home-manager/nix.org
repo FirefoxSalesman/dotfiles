@@ -1411,10 +1411,10 @@ Vertico Posframe puts vertico in a separate frame, causing it to actually look l
 {
   flake.homeModules.aesthetics.programs.emacs.init = {
     keybinds.whichKey.posframe = {
-      enable = false;
+      enable = true;
       unparent = true;
     };
-    completions.vertico.posframe = false;
+    completions.vertico.posframe = true;
     usePackage.vertico-posframe.config = "(set-face-attribute 'vertico-posframe-face nil :family 'variable-pitch)";
   };
 }
@@ -4022,15 +4022,15 @@ All of this config was origally stolen from Karthinks. I don't think any of the 
 (use-package
  pretty-hydra
  :demand t
- ;; :custom (hydra-hint-display-type 'posframe)
- ;; :config
- ;; (gsetq
- ;;  hydra-posframe-show-params
- ;;  '(:internal-border-width
- ;;    1
- ;;    :internal-border-color "003f28"
- ;;    :poshandler posframe-poshandler-frame-bottom-center
- ;;    :refposhandler vertico-posframe-refposhandler-default))
+ :custom (hydra-hint-display-type 'posframe)
+ :config
+ (gsetq
+  hydra-posframe-show-params
+  '(:internal-border-width
+    1
+    :internal-border-color "003f28"
+    :poshandler posframe-poshandler-frame-bottom-center
+    :refposhandler vertico-posframe-refposhandler-default))
  :gfhookf ('doom-escape 'hydra-keyboard-quit))
 #+end_src
 
@@ -4994,6 +4994,7 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
         };
 
         usePackage.exwm = {
+          extraPackages = [ pkgs.xwininfo ];
           gfhookf = [
             # When window "class" updates, use it to set the buffer name
             "('exwm-update-class (lambda () (exwm-workspace-rename-buffer exwm-class-name)))"
