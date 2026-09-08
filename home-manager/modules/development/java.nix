@@ -173,40 +173,59 @@
             
             (defun efs/get-mixin-methods ()
               "Return a list of the names of the methods in the class you're mixing into."
-              (let* ((buffer (efs/get-mixin-buffer))
-                     (methods
-                      (with-current-buffer buffer
-                        (if-let* ((class-declaration
-                                   (treesit-search-subtree
-                                    (treesit-buffer-root-node)
-                                    "class_declaration"))
-                                  (class-body
-                                   (treesit-search-subtree
-                                    (treesit-buffer-root-node) "class_body"))
-                                  (methods
-                                   (seq-filter
-                                    (lambda (node)
-                                      (equal
-                                       (treesit-node-type node)
-                                       "method_declaration"))
-                                    (treesit-node-children class-body))))
-                            (mapcar
-                             (lambda (node)
-                               (treesit-node-text
-                                (treesit-search-subtree node "identifier") t))
-                             methods)))))
+              (when-let* ((buffer (efs/get-mixin-buffer))
+                          (methods
+                           (with-current-buffer buffer
+                             (if-let* ((class-declaration
+                                        (treesit-search-subtree
+                                         (treesit-buffer-root-node)
+                                         "class_declaration"))
+                                       (class-body
+                                        (treesit-search-subtree
+                                         (treesit-buffer-root-node) "class_body"))
+                                       (methods
+                                        (seq-filter
+                                         (lambda (node)
+                                           (equal
+                                            (treesit-node-type node)
+                                            "method_declaration"))
+                                         (treesit-node-children class-body))))
+                                 (mapcar
+                                  (lambda (node)
+                                    (treesit-node-text
+                                     (treesit-search-subtree node "identifier")
+                                     t))
+                                  methods)))))
                 (kill-buffer buffer)
                 methods))
             
-            (defun efs/insert-mixin-method ()
-              "Insert a method name from the class you're mixing into."
-              (interactive)
-              (insert
-               (concat
-                "\""
-                (completing-read
-                 "Select a method: " (efs/get-mixin-methods))
-                "\"")))
+            ;https://emacs.stackexchange.com/questions/15276/how-do-i-write-a-simple-completion-at-point-functions-function
+            (defun efs/mixin-completion-at-point ()
+              "A capf the contains the names of methods you might mix into."
+              (when-let* ((bounds (bounds-of-thing-at-point 'word))
+                          (node-at-point
+                           (treesit-node-at
+                            (marker-last-position (point-marker))))
+                          (parent (treesit-node-parent node-at-point))
+                          (node (treesit-node-parent parent))
+                          (is-method
+                           (and (equal
+                                 (treesit-node-type node) "element_value_pair")
+                                (or (equal
+                                     "method"
+                                     (treesit-node-text
+                                      (treesit-search-subtree node "identifier")
+                                      t))
+            			(equal
+                                     "method"
+                                     (treesit-node-text
+                                      (treesit-search-subtree parent "identifier")
+                                      t))))))
+                (list
+                 (car bounds)
+                 (cdr bounds)
+                 (efs/get-mixin-methods)
+                 :exclusive 'no)))
           '';
           generalTwoConfig.":n".java-ts-mode-map = {
             "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "block_comment"))'';
