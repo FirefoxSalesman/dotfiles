@@ -52,8 +52,10 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] https://github.com/Thysrael/markdown-ts-appear
 + [ ] https://github.com/florommel/poimap (i am being greedy)
 + [ ] https://github.com/MArpogaus/modern-tab
-+ [ ] Port mcdev
++ [ ] Pull mcp stuff into the framework
++ [-] Port mcdev
   - [ ] Mixin method selector (partially done, but it may be nice if we could have method signatures)
-  - [ ] Mixin generator function
+  - [ ] Mixins.json addition function
+  - [X] Mixin generator function
     1. Put a new mixin in the mixins folder
     2. Add that mixin to the mixin config

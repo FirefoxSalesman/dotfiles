@@ -216,7 +216,7 @@
                                      (treesit-node-text
                                       (treesit-search-subtree node "identifier")
                                       t))
-            			(equal
+                                    (equal
                                      "method"
                                      (treesit-node-text
                                       (treesit-search-subtree parent "identifier")
@@ -226,6 +226,50 @@
                  (cdr bounds)
                  (efs/get-mixin-methods)
                  :exclusive 'no)))
+            
+            (defun efs/gen-mixin ()
+              "Create a mixin for a Minecraft mod."
+              (interactive)
+              (let* ((java-root
+                      (string-replace
+                       "." "/"
+                       (with-temp-buffer
+                         (insert-file-contents
+                          (nix-emacs-project-file "gradle.properties"))
+                         (let ((group-id
+                                (substring (buffer-string)
+                                           (string-match
+                                            "mod_group_id" (buffer-string)))))
+                           (substring group-id
+                                      13
+                                      (string-match "\n" group-id))))))
+                     (mixin-name (read-string "Mixin name: "))
+                     (resource-dir
+                      (nix-emacs-project-file (concat "src/main/resources/")))
+                     (for-client
+                      (if (equal
+                           (completing-read "Client only? " '("yes" "no")) "yes")
+                          "client"
+                        "mixins"))
+                     (mixins-file
+                      (concat
+                       resource-dir
+                       (car
+                        (seq-filter
+                         (lambda (x) (string-match "mixins\.*.json" x))
+                         (directory-files resource-dir)))))
+                     (hash
+                      (json-parse-string
+                       (with-temp-buffer
+                         (insert-file-contents mixins-file)
+                         (buffer-string)))))
+                (puthash
+                 for-client
+                 (append (gethash for-client hash) (list mixin-name))
+                 hash)
+                (with-temp-buffer (insert (json-encode hash)) (write-file mixins-file))
+                (find-file (nix-emacs-project-file
+            		(concat "src/main/java/" java-root "/mixin/" mixin-name ".java")))))
           '';
           generalTwoConfig.":n".java-ts-mode-map = {
             "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "block_comment"))'';
