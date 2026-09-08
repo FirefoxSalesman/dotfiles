@@ -44,10 +44,12 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 
 ** Emacs
 + [ ] The python files from emacs-qutebrowser should be part of the emacs package & be provided by nix
-+ [ ] See if there's anything to glean from here: https://www.reddit.com/r/emacs/comments/1nwgygm/building_workflows_with_gptel/
 + [ ] dash template gets cleaned up & goes to live in its own repo
 + [ ] diff-hl
-+ [ ] switch to ewm https://idlip.in/posts/may-i-recommend/
 + [ ] https://ianyepan.github.io/posts/git-blame-emacs/
-+ [ ] https://blog.sidhartharya.com/posts/integrating-org-protocol-with-qutebrowser/
 + [ ] doxygen
++ [ ] Switch to markdown-ts
++ [ ] https://github.com/Thysrael/markdown-ts-appear
++ [ ] https://github.com/florommel/poimap (i am being greedy)
++ [ ] https://github.com/MArpogaus/modern-tab
++ [ ] Port mcdev

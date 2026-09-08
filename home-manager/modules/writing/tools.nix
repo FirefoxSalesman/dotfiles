@@ -17,8 +17,7 @@
         usePackage = {
           jinx = {
             enable = true;
-            # ghookf = [ "('on-init-ui 'global-jinx-mode)" ];
-            ghookf = [ "('after-init 'global-jinx-mode)" ];
+            ghookf = [ "('on-init-ui 'global-jinx-mode)" ];
             generalOneConfig.":n" = {
               "C-M-i" = "'jinx-correct";
               "]s" = "'jinx-next";

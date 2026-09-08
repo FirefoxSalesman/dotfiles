@@ -105,8 +105,9 @@
               "Run the FernFlower decompiler on the current .class file using
              fernflower, and opens the decompiled Java file."
               (interactive)
-              (let* ((current-file (buffer-file-name)) (output-dir
-            					    (concat (file-name-directory current-file) "decompiled/"))
+              (let* ((current-file (buffer-file-name))
+                     (output-dir
+                      (concat (file-name-directory current-file) "decompiled/"))
                      (decompiled-file
                       (concat output-dir (file-name-base current-file) ".java"))
                      (command
@@ -127,6 +128,85 @@
                                  decompiled-file)))
                   (message
                    "Error: This command can only be run on .class files"))))
+            
+            (defun efs/find-mixin-class ()
+              "Find the the starting location of the current buffer's mixin class name."
+              (if-let* ((class-declaration
+                         (or (treesit-search-subtree
+                              (treesit-buffer-root-node) "class_declaration")
+                             (treesit-search-subtree
+                              (treesit-buffer-root-node)
+                              "interface_declaration")))
+                        (modifiers
+                         (treesit-search-subtree class-declaration "modifiers"))
+                        (annotation
+                         (treesit-search-subtree modifiers "annotation"))
+                        (identifier
+                         (treesit-search-subtree modifiers "identifier"))
+                        (is-mixin
+                         (equal (treesit-node-text identifier t) "Mixin"))
+                        (annotation-argument-list
+                         (treesit-search-subtree
+                          annotation "annotation_argument_list"))
+                        (class-literal
+                         (treesit-search-subtree
+                          annotation-argument-list "class_literal"))
+                        (type-identifier
+                         (treesit-search-subtree
+                          class-literal "type_identifier")))
+                  (treesit-node-start type-identifier)))
+            
+            (defun efs/get-mixin-buffer ()
+              "Return a buffer for the class you're mixing into."
+              (let ((class-location (efs/find-mixin-class))
+                    (point (point)))
+                (when class-location
+                  (goto-char class-location)
+                  (let ((location-marker
+                         (xref-location-marker
+                          (xref-item-location
+                           (car
+                            (eglot--lsp-xrefs-for-method
+                             :textDocument/typeDefinition))))))
+                    (goto-char point)
+                    (marker-buffer location-marker)))))
+            
+            (defun efs/get-mixin-methods ()
+              "Return a list of the names of the methods in the class you're mixing into."
+              (let* ((buffer (efs/get-mixin-buffer))
+                     (methods
+                      (with-current-buffer buffer
+                        (if-let* ((class-declaration
+                                   (treesit-search-subtree
+                                    (treesit-buffer-root-node)
+                                    "class_declaration"))
+                                  (class-body
+                                   (treesit-search-subtree
+                                    (treesit-buffer-root-node) "class_body"))
+                                  (methods
+                                   (seq-filter
+                                    (lambda (node)
+                                      (equal
+                                       (treesit-node-type node)
+                                       "method_declaration"))
+                                    (treesit-node-children class-body))))
+                            (mapcar
+                             (lambda (node)
+                               (treesit-node-text
+                                (treesit-search-subtree node "identifier") t))
+                             methods)))))
+                (kill-buffer buffer)
+                methods))
+            
+            (defun efs/insert-mixin-method ()
+              "Insert a method name from the class you're mixing into."
+              (interactive)
+              (insert
+               (concat
+                "\""
+                (completing-read
+                 "Select a method: " (efs/get-mixin-methods))
+                "\"")))
           '';
           generalTwoConfig.":n".java-ts-mode-map = {
             "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "block_comment"))'';
