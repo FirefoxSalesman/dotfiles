@@ -227,24 +227,9 @@
                  (efs/get-mixin-methods)
                  :exclusive 'no)))
             
-            (defun efs/gen-mixin ()
-              "Create a mixin for a Minecraft mod."
-              (interactive)
-              (let* ((java-root
-                      (string-replace
-                       "." "/"
-                       (with-temp-buffer
-                         (insert-file-contents
-                          (nix-emacs-project-file "gradle.properties"))
-                         (let ((group-id
-                                (substring (buffer-string)
-                                           (string-match
-                                            "mod_group_id" (buffer-string)))))
-                           (substring group-id
-                                      13
-                                      (string-match "\n" group-id))))))
-                     (mixin-name (read-string "Mixin name: "))
-                     (resource-dir
+            (defun efs/register-mixin-to-json (mixin-name)
+              "Add MIXIN-NAME to mixins.modid.json."
+              (let* ((resource-dir
                       (nix-emacs-project-file (concat "src/main/resources/")))
                      (for-client
                       (if (equal
@@ -267,9 +252,37 @@
                  for-client
                  (append (gethash for-client hash) (list mixin-name))
                  hash)
-                (with-temp-buffer (insert (json-encode hash)) (write-file mixins-file))
-                (find-file (nix-emacs-project-file
-            		(concat "src/main/java/" java-root "/mixin/" mixin-name ".java")))))
+                (with-temp-buffer
+                  (insert (json-encode hash))
+                  (write-file mixins-file))))
+            
+            (defun efs/gen-mixin ()
+              "Create a mixin for a Minecraft mod."
+              (interactive)
+              (let ((java-root
+                     (string-replace
+                      "." "/"
+                      (with-temp-buffer
+                        (insert-file-contents
+                         (nix-emacs-project-file "gradle.properties"))
+                        (let ((group-id
+                               (substring (buffer-string)
+                                          (string-match
+                                           "mod_group_id" (buffer-string)))))
+                          (substring group-id 13 (string-match "\n" group-id))))))
+                    (mixin-name (read-string "Mixin name: ")))
+                (efs/register-mixin-to-json mixin-name)
+                (find-file
+                 (nix-emacs-project-file
+                  (concat
+                   "src/main/java/" java-root "/mixin/" mixin-name ".java")))))
+            
+            (defun efs/register-mixin ()
+              "Register the current file to mixins.modid.json."
+              (interactive)
+              (let ((name (buffer-name)))
+                (efs/register-mixin-to-json
+                 (substring name 0 (- (length name) 5)))))
           '';
           generalTwoConfig.":n".java-ts-mode-map = {
             "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "block_comment"))'';
