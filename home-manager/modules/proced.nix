@@ -1,6 +1,5 @@
 {
-  flake.homeModules.emacs = { ... }: {
-    programs.emacs.init.usePackage.proced = {
+  flake.homeModules.emacs.programs.emacs.init.usePackage.proced = {
       enable = true;
       command = [ "proced" ];
       generalTwoConfig.":n".proced-mode-map = {
@@ -8,5 +7,4 @@
         "k" = "'proced-send-signal";
       };
     };
-  };
 }

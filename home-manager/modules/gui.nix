@@ -1,5 +1,5 @@
 {
-  flake.homeModules.startx =
+  flake.homeModules.exwm =
     { config, pkgs, ... }:
 
     {

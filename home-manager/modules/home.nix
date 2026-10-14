@@ -11,9 +11,10 @@ let
       ];
     };
     overlays = [
-      (final: prev: self.overlay final prev pkgs inputs)
-      inputs.emacs-init.overlay
       inputs.emacs-overlay.overlay
+      inputs.emacs-init.overlay
+      (final: prev: self.overlay final prev pkgs inputs)
+      inputs.ewm.overlays.default
     ];
   };
 in
@@ -50,6 +51,8 @@ in
           self.homeModules.elisp
           self.homeModules.extraPackages
           self.homeModules.exwm
+          # self.homeModules.ewm
+          self.homeModules.wm
           self.homeModules.fileManager
           self.homeModules.gaming
           self.homeModules.java
@@ -57,9 +60,8 @@ in
           self.homeModules.media
           self.homeModules.notifications
           self.homeModules.passwordManagement
-          self.homeModules.sage
+          # self.homeModules.sage
           self.homeModules.shellConfig
-          self.homeModules.startx
           self.homeModules.web
           self.homeModules.webdev
           self.homeModules.writing

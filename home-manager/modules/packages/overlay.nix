@@ -29,13 +29,17 @@ in
       mpvmacs = packages.mpvmacs;
       hdmihelper = packages.hdmihelper;
       i3status-rs = packages.i3status-rs;
+      playAlbum = packages.playAlbum;
       pkg = packages.pkg;
+      startEwm = packages.startEwm;
       startOllama = packages.startOllama;
       udisksmenu = packages.udisksmenu;
       wiki = packages.wiki;
 
       # overrides
+      libdisplay-info = prev.libdisplay-info_0_3;
       mpv = packages.mpv;
+      typescript-language-server = pkgs-stable.typescript-language-server;
       rassumfrassum = pkgs-stable.rassumfrassum;
       kmonad = inputs.kmonad.packages.${pkgs.system}.default;
       lutris = pkgs-stable.lutris;
@@ -48,6 +52,7 @@ in
           nfinal: nprev: {
             qutebrowser = packages.qutebrowser-emacs;
             doom-nano-modeline = packages.doom-nano-modeline;
+            markdown-ts-mode = null;
             repeaters = packages.repeaters;
             app-launcher = packages.app-launcher;
             ezf = packages.emacs-ezf;

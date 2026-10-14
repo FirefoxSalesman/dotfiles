@@ -23,6 +23,7 @@
 
         usePackage = {
           org = {
+            extraPackages = [ pkgs.xdo ];
             gfhookf = [
               ''
                 ('org-mode (list 'ispell-minor-mode
@@ -40,6 +41,15 @@
             setopt = {
               org-export-with-section-numbers = false;
               org-export-with-toc = false;
+              org-capture-templates = [
+                '''("P" "Protocol")''
+                ''
+                  '("Pn" "Notes" entry (file org-default-notes-file)
+                                     "* %:annotation %(org-insert-time-stamp (org-read-date nil t \"\"))\n:%i\n  %a")''
+                ''
+                  '("Pd" "Denote" entry (file efs/get-denote-file)
+                                         "* %:annotation \n%i\n  %a")''
+              ];
             };
             generalTwoConfig.local-leader.org-mode-map = {
               "a" = '''("avy" . avy-org-goto-heading-timer)'';
@@ -67,6 +77,7 @@
                 (dolist (file (mapcar (lambda (x) (concat (car x) "todo.org")) project--list))
                   (add-to-list 'org-agenda-files file))
                 (dashboard-open))
+              (require 'org-protocol)
             '';
           };
 
@@ -75,40 +86,49 @@
             ghookf = [ "('org-mode 'org-auto-tangle-mode)" ];
           };
 
-          denote.setopt.denote-known-keywords = [
-            ''"quotes"''
-            ''"chem"''
-            ''"emacs"''
-            ''"java"''
-            ''"physics"''
-            ''"calculus"''
-            ''"minecraft"''
-            ''"de"''
-            ''"proofs"''
-            ''"csse230"''
-            ''"os"''
-            ''"databases"''
-            ''"scifi"''
-            ''"softwarerequirements"''
-            ''"anthropology"''
-            ''"theoryofcomputation"''
-            ''"parallelcomp"''
-            ''"cybersecurity"''
-            ''"probstats"''
-            ''"scheme"''
-            ''"dreams"''
-            ''"softwaredevelopment"''
-            ''"ethics"''
-            ''"plp"''
-            ''"malwareanalysis"''
-            ''"bio"''
-            ''"ai"''
-            ''"resolve"''
-            ''"psychology"''
-            ''"algorithmanalysis"''
-            ''"music"''
-            ''"people"''
-          ];
+          denote = {
+            preface = ''
+              (defun efs/get-denote-file ()
+              	      (denote-file-prompt nil "Select file"))'';
+            generalOne.global-leader.oc = "'denote-create-note";
+            setopt.denote-known-keywords = [
+              ''"quotes"''
+              ''"chem"''
+              ''"emacs"''
+              ''"java"''
+              ''"physics"''
+              ''"calculus"''
+              ''"minecraft"''
+              ''"de"''
+              ''"proofs"''
+              ''"csse230"''
+              ''"os"''
+              ''"databases"''
+              ''"scifi"''
+              ''"softwarerequirements"''
+              ''"anthropology"''
+              ''"theoryofcomputation"''
+              ''"parallelcomp"''
+              ''"cybersecurity"''
+              ''"probstats"''
+              ''"scheme"''
+              ''"dreams"''
+              ''"softwaredevelopment"''
+              ''"ethics"''
+              ''"plp"''
+              ''"malwareanalysis"''
+              ''"bio"''
+              ''"ai"''
+              ''"resolve"''
+              ''"psychology"''
+              ''"algorithmanalysis"''
+              ''"music"''
+              ''"people"''
+              ''"interview"''
+              ''"rust"''
+	      ''"tetramem"''
+            ];
+          };
 
           biblio = {
             enable = true;

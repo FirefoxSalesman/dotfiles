@@ -1,6 +1,6 @@
 {
   flake.homeModules.development =
-    { ... }:
+    { pkgs, ... }:
 
     {
       programs.emacs.init = {
@@ -11,16 +11,17 @@
           treesit-fold.enable = true;
           languages = {
             bash.enable = true;
-            clojure.enable = true;
-            kotlin.enable = true;
             json.enable = true;
-            nix.enable = true;
+            lua.enable = true;
             toml.enable = true;
+            yaml.enable = true;
             xml.enable = true;
             zenscript.enable = true;
-            yaml.enable = true;
           };
         };
+
+        # Yoinked from heks-emacs
+        completions.tempel.templates.lisp-mode.lambda = ''"(lambda (" p ")" n> r> ")"'';
 
         tools.apheleia = {
           enable = true;
@@ -34,6 +35,13 @@
           };
 
           racket-mode.gfhookf = [ "('racket-mode 'hs-minor-mode)" ];
+
+          toml-ts-mode = {
+            extraPackages = [ pkgs.tombi ];
+            eglot = ''("tombi" "lsp")'';
+          };
+
+          popper.setopt.popper-reference-buffers = [ "'dape-repl-mode" ];
         };
       };
     };

@@ -22,6 +22,8 @@
 
     emacs-init.url = "github:firefoxsalesman/NixEmacs";
 
+    ewm.url = "https://codeberg.org/ezemtsov/ewm/archive/master.tar.gz";
+
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -117,13 +119,17 @@ in
       mpvmacs = packages.mpvmacs;
       hdmihelper = packages.hdmihelper;
       i3status-rs = packages.i3status-rs;
+      playAlbum = packages.playAlbum;
       pkg = packages.pkg;
+      startEwm = packages.startEwm;
       startOllama = packages.startOllama;
       udisksmenu = packages.udisksmenu;
       wiki = packages.wiki;
 
       # overrides
+      libdisplay-info = prev.libdisplay-info_0_3;
       mpv = packages.mpv;
+      typescript-language-server = pkgs-stable.typescript-language-server;
       rassumfrassum = pkgs-stable.rassumfrassum;
       kmonad = inputs.kmonad.packages.${pkgs.system}.default;
       lutris = pkgs-stable.lutris;
@@ -136,6 +142,7 @@ in
           nfinal: nprev: {
             qutebrowser = packages.qutebrowser-emacs;
             doom-nano-modeline = packages.doom-nano-modeline;
+            markdown-ts-mode = null;
             repeaters = packages.repeaters;
             app-launcher = packages.app-launcher;
             ezf = packages.emacs-ezf;
@@ -201,35 +208,35 @@ Dev templates: https://github.com/the-nix-way/dev-templates
 #+NAME: Pkg Body
 #+begin_src bash-ts
 optimize() {
-  ${lib.getExe nh} clean user -q
-  nix-store --optimise
-  doas pacman -Sc --noconfirm
+    ${lib.getExe nh} clean user -q
+    nix-store --optimise
+    doas pacman -Sc --noconfirm
 }
 
 rebuild() {
-  ${lib.getExe nh} home switch -c $(printf "holschcc@" | cat - /etc/hostname)
+    ${lib.getExe nh} home switch -c $(printf "holschcc@" | cat - /etc/hostname)
 }
 
 update() {
-  nix flake update --flake ~/.config/home-manager/
-  rebuild
-  yay -Syu
+    nix flake update --flake ~/.config/home-manager/
+    rebuild
+    yay -Syu
 }
 
 help() {
-  ${pkgs.coreutils}/bin/echo "help: display this message"
-  ${pkgs.coreutils}/bin/echo "install [packages]: install packages with yay"
-  ${pkgs.coreutils}/bin/echo "optimize: clean up package cache"
-  ${pkgs.coreutils}/bin/echo "update: update all packages"
-  ${pkgs.coreutils}/bin/echo "add: install a package"
-  ${pkgs.coreutils}/bin/echo "rm: uninstall a package"
-  ${pkgs.coreutils}/bin/echo "flake: perform a nix flake operation"
-  ${pkgs.coreutils}/bin/echo "template: set up a devshell template"
-  ${pkgs.coreutils}/bin/echo "tmp: temporarily install a package"
+    ${pkgs.coreutils}/bin/echo "help: display this message"
+    ${pkgs.coreutils}/bin/echo "install [packages]: install packages with yay"
+    ${pkgs.coreutils}/bin/echo "optimize: clean up package cache"
+    ${pkgs.coreutils}/bin/echo "update: update all packages"
+    ${pkgs.coreutils}/bin/echo "add: install a package"
+    ${pkgs.coreutils}/bin/echo "rm: uninstall a package"
+    ${pkgs.coreutils}/bin/echo "flake: perform a nix flake operation"
+    ${pkgs.coreutils}/bin/echo "template: set up a devshell template"
+    ${pkgs.coreutils}/bin/echo "tmp: temporarily install a package"
 }
 
 getTemplates() {
-  ${pkgs.coreutils}/bin/printf "bun\nc-cpp\nclojure\ncsharp\ncue\ndhall\nelixir\nelm\nempty\ngleam\ngo\nhashi\nhaskell\nhaxe\njava\njupyter\nkotlin\nlatex\nnickel\nnim\nnix\nnode\nocaml\nopa\nphp\nplatformio\nprotobuf\npulumi\npurescript\npython\nr\nruby\nrust\nrust-toolchain\nscala\nshell\nswi-prolog\nswift\nvlang\nzig" | ${self'.packages.ezf}/bin/ezf
+    ${pkgs.coreutils}/bin/printf "bun\nc-cpp\nclojure\ncsharp\ncue\ndhall\nelixir\nelm\nempty\ngleam\ngo\nhashi\nhaskell\nhaxe\njava\njupyter\nkotlin\nlatex\nnickel\nnim\nnix\nnode\nocaml\nopa\nphp\nplatformio\nprotobuf\npulumi\npurescript\npython\nr\nruby\nrust\nrust-toolchain\nscala\nshell\nswi-prolog\nswift\nvlang\nzig" | ${self'.packages.ezf}/bin/ezf
 }
 
 template() {
@@ -258,6 +265,20 @@ esac
 
 * Notes to my future self
 + Don't let xorg use the nvidia card. It breaks everything
++ When you set up a machine, add this desktop entry
+#+begin_src
+[Desktop Entry]
+Name=Org-Protocol
+Exec=emacsclient %u
+Icon=emacs-icon
+Type=Application
+Terminal=false
+MimeType=x-scheme-handler/org-protocol
+#+end_src
+Then run this command
+#+begin_src bash-ts
+xdg-mime default org-protocol.desktop x-scheme-handler/org-protocol
+#+end_src
 
 * Home Manager
 ** Main Config
@@ -275,9 +296,10 @@ let
       ];
     };
     overlays = [
-      (final: prev: self.overlay final prev pkgs inputs)
-      inputs.emacs-init.overlay
       inputs.emacs-overlay.overlay
+      inputs.emacs-init.overlay
+      (final: prev: self.overlay final prev pkgs inputs)
+      inputs.ewm.overlays.default
     ];
   };
 in
@@ -314,6 +336,8 @@ in
           self.homeModules.elisp
           self.homeModules.extraPackages
           self.homeModules.exwm
+          # self.homeModules.ewm
+          self.homeModules.wm
           self.homeModules.fileManager
           self.homeModules.gaming
           self.homeModules.java
@@ -321,9 +345,8 @@ in
           self.homeModules.media
           self.homeModules.notifications
           self.homeModules.passwordManagement
-          self.homeModules.sage
+          # self.homeModules.sage
           self.homeModules.shellConfig
-          self.homeModules.startx
           self.homeModules.web
           self.homeModules.webdev
           self.homeModules.writing
@@ -379,33 +402,27 @@ in
 ** Host-Predicated Code
 #+begin_src nix-ts :tangle modules/hosts.nix
 {
-  flake.homeModules.emacs-host =
-    { ... }:
-    {
-      hosts = {
-        xrandr-command = ''
-          	xrandr --setprovideroutputsource modesetting NVIDIA-0
-                xrandr --auto
-                xrandr --dpi 96
-        '';
-        exwm-monitors = [ ''0 "eDP-1-1"'' ];
-        wantBattery = true;
-      };
+  flake.homeModules = {
+    emacs-host.hosts = {
+      xrandr-command = ''
+        	xrandr --setprovideroutputsource modesetting NVIDIA-0
+          xrandr --auto
+          xrandr --dpi 96
+      '';
+      exwm-monitors = [ ''0 "eDP-1-1"'' ];
+      wantBattery = true;
     };
-  flake.homeModules.monitors-host =
-    { ... }:
-    {
-      hosts = {
-        xrandr-command = ''
-	  xrandr --output DP-4 --primary --mode 1920x1080 --output DVI-I-1 --mode 1920x1200
-        '';
-        exwm-monitors = [
-          ''0 "DP-4"''
-          ''1 "DVI-I-1"''
-        ];
-        wantBattery = false;
-      };
+    monitors-host.hosts = {
+      xrandr-command = ''
+        	  xrandr --output DP-4 --primary --mode 1920x1080 --output DVI-I-1 --mode 1920x1200
+      '';
+      exwm-monitors = [
+        ''0 "DP-4"''
+        ''1 "DVI-I-1"''
+      ];
+      wantBattery = false;
     };
+  };
 }
 #+end_src
 
@@ -447,12 +464,12 @@ in
         run = "cd /run/";
         l = "ls";
         ".." = "cd ..";
-        tortube = "yt-dlp --proxy socks://localhost:9050";
-        wget = "torsocks wget --hsts-file=$XDG_DATA_HOME/wget-hsts";
         ga = "git add";
-        gc = "torsocks git clone";
+        gc = "git clone";
         gp = "git pull";
         gP = "git push";
+	reboot = "doas reboot";
+	halt = "doas shutdown -P now";
       };
     };
 }
@@ -503,7 +520,12 @@ It's mostly here for eshell to get completions from, but it's a usable shell
 #+begin_src nix-ts :tangle modules/shells/eshell.nix :noweb yes
 {
   flake.homeModules.shellConfig =
-    { pkgs, ... }:
+    {
+      pkgs,
+      lib,
+      config,
+      ...
+    }:
     {
       programs.emacs.init = {
         completions.tempel.templates.eshell-mode.gbc = ''"(get-buffer-create \"" q "\")"'';
@@ -514,15 +536,34 @@ It's mostly here for eshell to get completions from, but it's a usable shell
         usePackage = {
           eshell = {
             ghookf = [ "('eshell-first-time-mode 'efs/configure-eshell)" ];
+            gfhookf = [
+              ''
+                ('eshell-post-command (lambda () (eshell-write-history eshell-history-file-name t)
+                		                (eshell-read-history eshell-history-file-name t)))
+              ''
+            ];
             general."s-<enter>" = "'efs/make-eshell";
+            setopt = {
+              eshell-history-append = true;
+              eshell-save-history-on-exit = false;
+            };
             init = ''
               	    (defun efs/make-eshell ()
               	      (interactive)
               	      (eshell 'N))
               	  '';
             config = ''
-              	      <<Eshell Config>>
-              	    '';
+              <<Eshell Config>>
+              (advice-add 'eshell-read-aliases-list :after (lambda (&rest _)
+                              (dolist (alias '(${
+                                lib.optionals (config.home.shellAliases != { }) (
+                                  lib.concatStringsSep " " (
+                                    lib.mapAttrsToList (n: v: ''("${n}" "${v} $*")'') config.home.shellAliases
+                                  )
+                                )
+                              }))
+                                            (add-to-list 'eshell-command-aliases-list alias))))
+            '';
           };
 
           fish-completion.gfhookf = [
@@ -552,6 +593,11 @@ It's mostly here for eshell to get completions from, but it's a usable shell
             gfhookf = [ "('eshell-mode 'eldoc-box-hover-at-point-mode)" ];
             config = "(setup-esh-help-eldoc)";
           };
+
+          popper.setopt.popper-reference-buffers = [
+            ''"^\\*.*eshell\\*"''
+            ''"^\\*eat\\*"''
+          ];
         };
       };
     };
@@ -596,15 +642,11 @@ It's mostly here for eshell to get completions from, but it's a usable shell
 a prompt for bash & fish
 #+begin_src nix-ts :tangle modules/shells/starship.nix
 {
-  flake.homeModules.shellConfig =
-    { ... }:
-    {
-      programs.starship = {
-        enable = true;
-        enableFishIntegration = true;
-        enableBashIntegration = true;
-      };
-    };
+  flake.homeModules.shellConfig.programs.starship = {
+    enable = true;
+    enableFishIntegration = true;
+    enableBashIntegration = true;
+  };
 }
 #+end_src
 
@@ -817,6 +859,7 @@ aliasesStr = concatStringsSep "\n"
         _JAVA_AWT_WM_NONREPARENTING = "1";
         PATH = "/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/holschcc/bin:/home/holschcc/.nix-profile/bin";
         OLLAMA_API_BASE = "http://127.0.0.1:11434";
+	QTWEBENGINE_REMOTE_DEBUGGING="9222 qutebrowser";
       };
     };
 }
@@ -828,31 +871,26 @@ aliasesStr = concatStringsSep "\n"
 { inputs, ... }:
 
 {
-  flake.homeModules.aesthetics =
-    { ... }:
-
-    {
-      programs.emacs.init = {
-        aesthetics = {
-          dashboard.enable = true;
-          icons = {
-            enable = true;
-            forceInstallAllTheIcons = true;
-          };
-        };
-        usePackage = {
-          prettify-symbols = {
-            enable = true;
-            ghookf = [ "('prog-mode 'prettify-symbols-mode)" ];
-          };
-
-          dashboard.setopt = {
-            dashboard-banner-logo-title = ''"Emacs: The one true desktop environment"'';
-            dashboard-startup-banner = "'logo";
-          };
-        };
+  flake.homeModules.aesthetics.programs.emacs.init = {
+    aesthetics = {
+      dashboard.enable = true;
+      icons = {
+        enable = true;
+        forceInstallAllTheIcons = true;
       };
     };
+    usePackage = {
+      prettify-symbols = {
+        enable = true;
+        ghookf = [ "('prog-mode 'prettify-symbols-mode)" ];
+      };
+
+      dashboard.setopt = {
+        dashboard-banner-logo-title = ''"Emacs: The one true desktop environment"'';
+        dashboard-startup-banner = "'logo";
+      };
+    };
+  };
 }
 #+end_src
 
@@ -983,54 +1021,32 @@ Pywal integration: https://github.com/danth/stylix/issues/99
 
 #+NAME: Emacs Colors
 #+begin_src emacs-lisp
+(setcdr
+ (assoc 'gnus-group-news-low-empty doom-themes-base-faces)
+ '(:inherit 'gnus-group-mail-1-empty :weight 'normal))
 (load-theme 'ewal-doom-one t)
 ;; Stolen from Noctuid
 (let (custom--inhibit-theme-enable)
-  (custom-theme-set-faces 'ewal-doom-one
-                          `(font-lock-number-face
-                            ((t
-                              (:foreground ,(ewal-get-color 'blue)))))
-                          `(markdown-header-face
-                            ((t
-                              (:foreground ,(ewal-get-color 'blue)))))
-                          `(markdown-header-delimiter-face
-                            ((t
-                              (:foreground ,(ewal-get-color 'blue)))))
-                          `(markdown-bold-face
-                            ((t
-                              (:foreground
-                               ,(ewal-get-color 'green)))))
-                          `(markdown-list-face
-                            ((t
-                              (:foreground
-                               ,(ewal-get-color 'green)))))
-                          `(org-code
-                            ((t
-                              (:foreground
-                               ,(ewal-get-color 'green)))))
-                          `(line-number
-                            ((t
-                              (:foreground ,(ewal-get-color 'blue)))))
-                          `(eshell-git-prompt-powerline-dir-face
-                            ((t
-                              (:background ,(ewal-get-color 'blue)))))
-                          `(hl-line-face
-                            ((t
-                              (:background
-                               ,(ewal-get-color 'green)))))
-                          `(solaire-hl-line-face
-                            ((t
-                              (:background
-                               ,(ewal-get-color 'green)))))
-                          `(tab-bar ((t :inherit mode-line)))
-                          `(eshell-git-prompt-powerline-clean-face
-                            ((t
-                              (:background
-                               ,(ewal-get-color 'green)))))
-                          `(eshell-git-prompt-powerline-not-clean-face
-                            ((t
-                              (:background
-                               ,(ewal-get-color 'red)))))))
+  (let* ((blue (ewal-get-color 'blue))
+         (green (ewal-get-color 'green))
+         (red (ewal-get-color 'red)))
+    (custom-theme-set-faces
+     'ewal-doom-one
+     `(font-lock-number-face ((t (:foreground ,blue))))
+     `(markdown-header-face ((t (:foreground ,blue))))
+     `(markdown-header-delimiter-face ((t (:foreground ,blue))))
+     `(markdown-bold-face ((t (:foreground ,green))))
+     `(markdown-list-face ((t (:foreground ,green))))
+     `(org-code ((t (:foreground ,green))))
+     `(line-number ((t (:foreground ,blue))))
+     `(eshell-git-prompt-powerline-dir-face ((t (:background ,blue))))
+     `(hl-line-face ((t (:background ,green))))
+     `(solaire-hl-line-face ((t (:background ,green))))
+     `(tab-bar ((t :inherit mode-line)))
+     `(eshell-git-prompt-powerline-clean-face
+       ((t (:background ,green))))
+     `(eshell-git-prompt-powerline-not-clean-face
+       ((t (:background ,red)))))))
 (doom-themes-visual-bell-config)
 (doom-themes-org-config)
 #+end_src
@@ -1129,18 +1145,14 @@ The powerline separators were borrowed from punchline, because I think they look
         }
       );
     };
-  flake.homeModules.aesthetics =
-    { ... }:
-    {
-      programs.emacs.init.usePackage.doom-nano-modeline = {
-        enable = true;
-        afterCall = [ "after-init-hook" ];
-        setopt.mode-line-format = false;
-        config = ''
-          	<<Emacs Doom Nano Modeline Config>>
-        '';
-      };
-    };
+  flake.homeModules.aesthetics.programs.emacs.init.usePackage.doom-nano-modeline = {
+    enable = true;
+    afterCall = [ "after-init-hook" ];
+    setopt.mode-line-format = false;
+    config = ''
+      <<Emacs Doom Nano Modeline Config>>
+    '';
+  };
 }
 #+end_src
 
@@ -1384,27 +1396,23 @@ This is just overriding a bunch of functions so that I can put all the info in t
 **** Tab Bar
 #+begin_src nix-ts :tangle modules/aesthetics/modeline/tab.nix
 {
-  flake.homeModules.aesthetics =
-    { ... }:
-    {
-      programs.emacs.init.usePackage.tab-bar = {
-        custom.tab-bar-format = [
-          "'tab-bar-format-tabs-groups"
-          "'tab-bar-separator"
-          "'pertab-get-lighter"
-          "'doom-nano-tabline"
-          "'tab-bar-format-align-right"
-          "'tab-bar-format-global"
-        ];
-        setopt = {
-          tab-bar-close-button-show = false;
-          tab-bar-auto-width-max = [
-            "'(150)"
-            "20"
-          ];
-        };
-      };
+  flake.homeModules.aesthetics.programs.emacs.init.usePackage.tab-bar = {
+    custom.tab-bar-format = [
+      "'tab-bar-format-tabs-groups"
+      "'tab-bar-separator"
+      "'pertab-get-lighter"
+      "'doom-nano-tabline"
+      "'tab-bar-format-align-right"
+      "'tab-bar-format-global"
+    ];
+    setopt = {
+      tab-bar-close-button-show = false;
+      tab-bar-auto-width-max = [
+        "'(150)"
+        "20"
+      ];
     };
+  };
 }
 #+end_src
 
@@ -1412,18 +1420,14 @@ This is just overriding a bunch of functions so that I can put all the info in t
 Vertico Posframe puts vertico in a separate frame, causing it to actually look like dmenu.
 #+begin_src nix-ts :tangle modules/aesthetics/posframe.nix
 {
-  flake.homeModules.aesthetics =
-    { ... }:
-    {
-      programs.emacs.init = {
-        keybinds.whichKey.posframe = {
-          enable = true;
-          unparent = true;
-        };
-        completions.vertico.posframe = true;
-        usePackage.vertico-posframe.config = "(set-face-attribute 'vertico-posframe-face nil :family 'variable-pitch)";
-      };
+  flake.homeModules.aesthetics.programs.emacs.init = {
+    keybinds.whichKey.posframe = {
+      enable = true;
+      unparent = true;
     };
+    completions.vertico.posframe = true;
+    usePackage.vertico-posframe.config = "(set-face-attribute 'vertico-posframe-face nil :family 'variable-pitch)";
+  };
 }
 #+end_src
 
@@ -1434,39 +1438,35 @@ A great deal was borrowed from:
 + https://github.com/Panadestein/emacsd/
 #+begin_src nix-ts :tangle modules/aesthetics/shrface.nix :noweb yes
 {
-  flake.homeModules.aesthetics =
-    { ... }:
-    {
-      programs.emacs.init.usePackage = {
-        shr-tag-pre-highlight = {
-          enable = true;
-          after = [ "shrface" ];
-          preface = ''
-            <<Emacs Ricing Shr Tag Pre Highlight Preface>>
-          '';
-          config = ''
-            <<Emacs Ricing Shr Tag Pre Highlight Config>>
-          '';
-        };
+  flake.homeModules.aesthetics.programs.emacs.init.usePackage = {
+    shr-tag-pre-highlight = {
+      enable = true;
+      after = [ "shrface" ];
+      preface = ''
+        <<Emacs Ricing Shr Tag Pre Highlight Preface>>
+      '';
+      config = ''
+        <<Emacs Ricing Shr Tag Pre Highlight Config>>
+      '';
+    };
 
-        shrface = {
-          enable = true;
-          ghookf = [ "('(eww-mode elfeed-show-mode nov-mode) 'shrface-mode)" ];
-          setopt.shrface-header-line-max-level = 0;
-          config = ''
-            	  <<Emacs Ricing Shrface Config>>
-            	'';
-          generalOneConfig.shr-map."RET" =
-            "`,(cmd! (if (major-mode? 'eww-mode) (eww-follow-link) (shr-browse-url)))";
-          generalTwoConfig.local-leader.shrface-mode-map = {
-            "l" = "'shrface-links-consult";
-            "o" = "'shrface-headline-consult";
-            "]c" = "'org-next-block";
-            "[c" = "'org-previous-block";
-          };
-        };
+    shrface = {
+      enable = true;
+      ghookf = [ "('(eww-mode elfeed-show-mode nov-mode) 'shrface-mode)" ];
+      setopt.shrface-header-line-max-level = 0;
+      config = ''
+        	  <<Emacs Ricing Shrface Config>>
+        	'';
+      generalOneConfig.shr-map."RET" =
+        "`,(cmd! (if (major-mode? 'eww-mode) (eww-follow-link) (shr-browse-url)))";
+      generalTwoConfig.local-leader.shrface-mode-map = {
+        "l" = "'shrface-links-consult";
+        "o" = "'shrface-headline-consult";
+        "]c" = "'org-next-block";
+        "[c" = "'org-previous-block";
       };
     };
+  };
 }
 #+end_src
 
@@ -1616,21 +1616,17 @@ A great deal was borrowed from:
 I couldn't get olivetti to work.
 #+begin_src nix-ts :tangle modules/aesthetics/writeroom.nix
 {
-  flake.homeModules.aesthetics =
-    { ... }:
-    {
-      programs.emacs.init.usePackage.writeroom-mode = {
-        enable = true;
-        ghookf = [ "((gen-mode-hooks '(Man org-agenda org Info markdown shrface)) 'writeroom-mode)" ];
-        gfhookf = [ "('writeroom-mode-enable 'visual-line-mode)" ];
-        setopt = {
-          writeroom-mode-line = true;
-          writeroom-maximize-window = false;
-          writeroom-global-effects = false;
-        };
-        generalOne.global-leader."w" = '''("writeroom" . writeroom-mode)'';
-      };
+  flake.homeModules.aesthetics.programs.emacs.init.usePackage.writeroom-mode = {
+    enable = true;
+    ghookf = [ "((gen-mode-hooks '(Man org-agenda org Info markdown-ts shrface)) 'writeroom-mode)" ];
+    gfhookf = [ "('writeroom-mode-enable 'visual-line-mode)" ];
+    setopt = {
+      writeroom-mode-line = true;
+      writeroom-maximize-window = false;
+      writeroom-global-effects = false;
     };
+    generalOne.global-leader."w" = '''("writeroom" . writeroom-mode)'';
+  };
 }
 #+end_src
 
@@ -1722,7 +1718,7 @@ I couldn't get olivetti to work.
 ** startx
 #+begin_src nix-ts :tangle modules/gui.nix :noweb yes
 {
-  flake.homeModules.startx =
+  flake.homeModules.exwm =
     { config, pkgs, ... }:
 
     {
@@ -1763,7 +1759,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 #+begin_src nix-ts :tangle modules/development/misc.nix
 {
   flake.homeModules.development =
-    { ... }:
+    { pkgs, ... }:
 
     {
       programs.emacs.init = {
@@ -1774,16 +1770,17 @@ I think most of it was from the github page for lsp mode, but it's been a while,
           treesit-fold.enable = true;
           languages = {
             bash.enable = true;
-            clojure.enable = true;
-            kotlin.enable = true;
             json.enable = true;
-            nix.enable = true;
+            lua.enable = true;
             toml.enable = true;
+            yaml.enable = true;
             xml.enable = true;
             zenscript.enable = true;
-            yaml.enable = true;
           };
         };
+
+        # Yoinked from heks-emacs
+        completions.tempel.templates.lisp-mode.lambda = ''"(lambda (" p ")" n> r> ")"'';
 
         tools.apheleia = {
           enable = true;
@@ -1797,6 +1794,13 @@ I think most of it was from the github page for lsp mode, but it's been a while,
           };
 
           racket-mode.gfhookf = [ "('racket-mode 'hs-minor-mode)" ];
+
+          toml-ts-mode = {
+            extraPackages = [ pkgs.tombi ];
+            eglot = ''("tombi" "lsp")'';
+          };
+
+          popper.setopt.popper-reference-buffers = [ "'dape-repl-mode" ];
         };
       };
     };
@@ -1999,58 +2003,104 @@ I think most of it was from the github page for lsp mode, but it's been a while,
   (add-to-list 'emmet-jsx-major-modes mode))
 #+end_src
 
+*** Nix
+#+begin_src nix-ts :tangle modules/development/nix.nix
+{
+  flake.homeModules.development.programs.emacs.init = {
+    ide.languages.nix.enable = true;
+    # Yoinked from heks-emacs
+    completions.tempel.templates.nix-ts-mode = {
+      buildphase = ''> "buildPhase= ''' " n (p " Build Instructions ") n " ''';"'';
+      checkPhase = ''> "checkPhase= ''' " n (p " ") n " ''';"'';
+      configurephase = ''> "configurePhase= ''' " n (p " ") n " ''';"'';
+      fixupphase = ''> "fixupPhase= ''' " n (p " ") n " ''';"'';
+      distphase = ''> "distPhase= ''' " n (p " ") n " ''';"'';
+      patchphase = ''> "patchPhase= ''' " n (p " ") n " ''';"'';
+      unpackphase = ''> "unpackPhase= ''' " n (p " ") n " ''';"'';
+      installCheckPhasephase = ''> "installCheckPhasePhase= ''' " n (p " ") n " ''';"'';
+      installphase = ''> "installphase= '''" n p " mkdir -p $out/bin" n> "for f in $(find . -executable -type f);" n> "do" n> "cp $f $out/bin" n> "done}" n> " ''';"'';
+      gitpackage = ''
+        "{ lib" n ", stdenv" n ", fetchFromGitHub" n ", " (p "inputs") n ", " (p "inputs") n "}:" n n>
+        "stdenv.mkDerivation rec {" n> "pname = \"" (p "" pkgn nil) "\";" n> "version = \"" p "\";" n n>
+        "src = fetchFromGitHub {" n> "owner = \"" (p "" own) "\";" n> "repo = \"" (s pkgn) "\";" n>
+        "rev = \"" "v''${version}" "\";" n> "sha256 = \"" "''${lib.fakeSha256}" "\";" n> "};" n n>
+        "nativeBuildInputs = [ " (p "makeWrapper") " ];" n n> "BuildInputs = [ " (p) " ];" n n>
+        "meta = with lib; {" n>
+        "homepage = \"" "https://github.com/" (s own) "/" (s pkgn) "\";" n>
+        "description = \"" (p) "\";" n>
+        "license = licenses." (p (completing-read "License: " '("agpl3" "asl20" "bsd1" "bsd2" "bsd3" "free" "gpl2" "gpl2Only" "gpl2Plus" "gpl3" "gpl3Only" "gpl3Plus" "isc" "lgpl21Only" "lgpl21Plus" "lgpl2Only" "lgpl2Plus" "lgpl3" "lgpl3Only" "mit" "mpl20" "ofl" "unfree"))) ";" n>
+        "maintainers = with maintainers; [ " (s own) " ];" n>
+        "platforms = platforms."
+        (p (completing-read "Platform: " '("all" "allBut" "arm" "cygwin" "darwin" "freebsd" "gnu" "i686" "illumos" "linux" "mesaPlatforms" "mips" "netbsd" "none" "openbsd" "unix" "x86"))) ";" n> q "};" n> "}"'';
+    };
+  };
+}
+#+end_src
+
 *** Elisp
 #+begin_src nix-ts :tangle modules/development/elisp.nix
 {
-  flake.homeModules.elisp =
-    { ... }:
-    {
-      programs.emacs.init = {
-        completions.tempel.templates.emacs-lisp-mode = {
-          wcd = ''"(with-current-buffer " "q)"'';
-          gbc = ''"(get-buffer-create " "q)"'';
-        };
-        ide.languages.emacs-lisp = {
-          enable = true;
-          semel = true;
-        };
-        usePackage.elisp-mode.gfhookf = [
-          "('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"
-        ];
-      };
+  flake.homeModules.elisp.programs.emacs.init = {
+    completions.tempel.templates.emacs-lisp-mode = {
+      wcd = ''"(with-current-buffer " "q)"'';
+      gbc = ''"(get-buffer-create " "q)"'';
+      # Yoinked from heks-emacs
+      lambda = ''"(lambda (" p ")" n> r> ")"'';
     };
+    ide.languages.emacs-lisp = {
+      enable = true;
+      semel = true;
+    };
+    usePackage.elisp-mode.gfhookf = [
+      "('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"
+    ];
+  };
 }
 #+end_src
 
 *** Java
 #+begin_src nix-ts :tangle modules/development/java.nix :noweb yes
 {
-  flake.homeModules.java =
-    { ... }:
-    {
-      programs.emacs.init = {
-        ide.languages = {
-          java = {
-            enable = true;
-            moreEglot = true;
-          };
-          gradle.enable = true;
+  flake.homeModules.java = { lib, ... }: {
+    programs.emacs.init = {
+      ide.languages = {
+        kotlin.enable = true;
+        java = {
+          enable = true;
+          moreEglot = true;
         };
-        usePackage = {
-          java-ts-mode = {
-            preface = ''
-              <<Java Preface>>
-            '';
-            generalTwoConfig.":n".java-ts-mode-map = {
-              "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "block_comment"))'';
-              "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "block_comment"))'';
-              "o" = "'evil-previous-visual-line";
-              "O" = "'evil-scroll-up";
-            };
+        gradle.enable = true;
+      };
+      usePackage = {
+        kotlin-ts-mode = {
+          extraPackages = lib.mkForce [ ];
+          eglot = lib.mkForce ''("intellij-server" "--stdio")'';
+          config = ''
+            <<Kotlin Config>>
+          '';
+        };
+        java-ts-mode = {
+          preface = ''
+            <<Java Preface>>
+          '';
+          generalTwoConfig.":n".java-ts-mode-map = {
+            "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "block_comment"))'';
+            "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "block_comment"))'';
+            "o" = "'evil-previous-visual-line";
+            "O" = "'evil-scroll-up";
           };
+        };
+        jarchive = {
+          enable = true;
+          after = [
+            "java-ts-mode"
+            "kotlin-ts-mode"
+          ];
+          config = "(jarchive-mode)";
         };
       };
     };
+  };
 }
 #+end_src
 
@@ -2062,8 +2112,9 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
   "Run the FernFlower decompiler on the current .class file using
  fernflower, and opens the decompiled Java file."
   (interactive)
-  (let* ((current-file (buffer-file-name)) (output-dir
-					    (concat (file-name-directory current-file) "decompiled/"))
+  (let* ((current-file (buffer-file-name))
+         (output-dir
+          (concat (file-name-directory current-file) "decompiled/"))
          (decompiled-file
           (concat output-dir (file-name-base current-file) ".java"))
          (command
@@ -2084,22 +2135,261 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
                      decompiled-file)))
       (message
        "Error: This command can only be run on .class files"))))
+
+(defun efs/find-mixin-class ()
+  "Find the the starting location of the current buffer's mixin class name."
+  (if-let* ((class-declaration
+             (or (treesit-search-subtree
+                  (treesit-buffer-root-node) "class_declaration")
+                 (treesit-search-subtree
+                  (treesit-buffer-root-node)
+                  "interface_declaration")))
+            (modifiers
+             (treesit-search-subtree class-declaration "modifiers"))
+            (annotation
+             (treesit-search-subtree modifiers "annotation"))
+            (identifier
+             (treesit-search-subtree modifiers "identifier"))
+            (is-mixin
+             (equal (treesit-node-text identifier t) "Mixin"))
+            (annotation-argument-list
+             (treesit-search-subtree
+              annotation "annotation_argument_list"))
+            (class-literal
+             (treesit-search-subtree
+              annotation-argument-list "class_literal"))
+            (type-identifier
+             (treesit-search-subtree
+              class-literal "type_identifier")))
+      (treesit-node-start type-identifier)))
+
+(defun efs/get-mixin-buffer ()
+  "Return a buffer for the class you're mixing into."
+  (let ((class-location (efs/find-mixin-class))
+        (point (point)))
+    (when class-location
+      (goto-char class-location)
+      (let ((location-marker
+             (xref-location-marker
+              (xref-item-location
+               (car
+                (eglot--lsp-xrefs-for-method
+                 :textDocument/typeDefinition))))))
+        (goto-char point)
+        (marker-buffer location-marker)))))
+
+(defun efs/get-mixin-methods ()
+  "Return a list of the names of the methods in the class you're mixing into."
+  (when-let* ((buffer (efs/get-mixin-buffer))
+              (methods
+               (with-current-buffer buffer
+                 (if-let* ((class-declaration
+                            (treesit-search-subtree
+                             (treesit-buffer-root-node)
+                             "class_declaration"))
+                           (class-body
+                            (treesit-search-subtree
+                             (treesit-buffer-root-node) "class_body"))
+                           (methods
+                            (seq-filter
+                             (lambda (node)
+                               (equal
+                                (treesit-node-type node)
+                                "method_declaration"))
+                             (treesit-node-children class-body))))
+                     (mapcar
+                      (lambda (node)
+                        (treesit-node-text
+                         (treesit-search-subtree node "identifier")
+                         t))
+                      methods)))))
+    (kill-buffer buffer)
+    methods))
+
+;https://emacs.stackexchange.com/questions/15276/how-do-i-write-a-simple-completion-at-point-functions-function
+(defun efs/mixin-completion-at-point ()
+  "A capf the contains the names of methods you might mix into."
+  (when-let* ((bounds (bounds-of-thing-at-point 'word))
+              (node-at-point
+               (treesit-node-at
+                (marker-last-position (point-marker))))
+              (parent (treesit-node-parent node-at-point))
+              (node (treesit-node-parent parent))
+              (is-method
+               (and (equal
+                     (treesit-node-type node) "element_value_pair")
+                    (or (equal
+                         "method"
+                         (treesit-node-text
+                          (treesit-search-subtree node "identifier")
+                          t))
+                        (equal
+                         "method"
+                         (treesit-node-text
+                          (treesit-search-subtree parent "identifier")
+                          t))))))
+    (list
+     (car bounds)
+     (cdr bounds)
+     (efs/get-mixin-methods)
+     :exclusive 'no)))
+
+(defun efs/register-mixin-to-json (mixin-name)
+  "Add MIXIN-NAME to mixins.modid.json."
+  (let* ((resource-dir
+          (nix-emacs-project-file (concat "src/main/resources/")))
+         (for-client
+          (if (equal
+               (completing-read "Client only? " '("yes" "no")) "yes")
+              "client"
+            "mixins"))
+         (mixins-file
+          (concat
+           resource-dir
+           (car
+            (seq-filter
+             (lambda (x) (string-match "mixins\.*.json" x))
+             (directory-files resource-dir)))))
+         (hash
+          (json-parse-string
+           (with-temp-buffer
+             (insert-file-contents mixins-file)
+             (buffer-string)))))
+    (puthash
+     for-client
+     (append (gethash for-client hash) (list mixin-name))
+     hash)
+    (with-temp-buffer
+      (insert (json-encode hash))
+      (write-file mixins-file))))
+
+(defun efs/gen-mixin ()
+  "Create a mixin for a Minecraft mod."
+  (interactive)
+  (let ((java-root
+         (string-replace
+          "." "/"
+          (with-temp-buffer
+            (insert-file-contents
+             (nix-emacs-project-file "gradle.properties"))
+            (let ((group-id
+                   (substring (buffer-string)
+                              (string-match
+                               "mod_group_id" (buffer-string)))))
+              (substring group-id 13 (string-match "\n" group-id))))))
+        (mixin-name (read-string "Mixin name: ")))
+    (efs/register-mixin-to-json mixin-name)
+    (find-file
+     (nix-emacs-project-file
+      (concat
+       "src/main/java/" java-root "/mixin/" mixin-name ".java")))))
+
+(defun efs/register-mixin ()
+  "Register the current file to mixins.modid.json."
+  (interactive)
+  (let ((name (buffer-name)))
+    (efs/register-mixin-to-json
+     (substring name 0 (- (length name) 5)))))
+#+end_src
+
+https://jointhefreeworld.org/blog/articles/emacs/emacs-eglot-scala-kotlin/index.html
+#+NAME: Kotlin Config
+#+begin_src emacs-lisp
+(defun heks/eglot-uri-to-path-kotlin (orig-fn uri &rest args)
+  (if (and (stringp uri) (string-prefix-p "jar:///" uri))
+      (apply orig-fn
+             (replace-regexp-in-string "^jar:///" "jar:file:///" uri)
+             args)
+    (apply orig-fn uri args)))
+
+(defun heks/eglot-path-to-uri-kotlin (orig-fn path &rest args)
+  (if (and (stringp path) (string-prefix-p "jar:file:///" path))
+      (replace-regexp-in-string "^jar:file:///" "jar:///" path)
+    (apply orig-fn path args)))
+
+(if (fboundp 'eglot-uri-to-path)
+    (progn
+      (advice-add
+       'eglot-uri-to-path
+       :around #'heks/eglot-uri-to-path-kotlin)
+      (advice-add
+       'eglot-path-to-uri
+       :around #'heks/eglot-path-to-uri-kotlin))
+  (progn
+    (advice-add
+     'eglot--uri-to-path
+     :around #'heks/eglot-uri-to-path-kotlin)
+    (advice-add
+     'eglot--path-to-uri
+     :around #'heks/eglot-path-to-uri-kotlin)))
+
+
+(defun my-jsonrpc-request-kotlin-fix
+    (orig-fn connection method params &rest args)
+  "Fix kotlin-lsp empty newText bug by removing textEdit to trigger Eglot fallback."
+  (let ((result (apply orig-fn connection method params args)))
+    (when (and (eq method :textDocument/completion)
+               (derived-mode-p 'kotlin-mode 'kotlin-ts-mode)
+               result)
+      (let ((items
+             (if (vectorp result)
+                 result
+               (plist-get result :items))))
+        (seq-do
+         (lambda (item)
+           (let ((text-edit (plist-get item :textEdit)))
+             ;; If the server sent an empty newText, strip textEdit completely
+             ;; so Eglot falls back to replacing the actual prefix.
+             (when (and text-edit
+                        (equal (plist-get text-edit :newText) ""))
+               (plist-put item :textEdit nil))))
+         items)))
+    result))
+
+(defun my-jsonrpc-async-request-kotlin-fix
+    (orig-fn connection method params &rest args)
+  "Fix kotlin-lsp empty newText bug in asynchronous Eglot requests."
+  (if (and (eq method :textDocument/completion)
+           (derived-mode-p 'kotlin-mode 'kotlin-ts-mode))
+      (let* ((orig-success (plist-get args :success-fn))
+             (new-success
+              (lambda (result)
+                (let ((items
+                       (if (vectorp result)
+                           result
+                         (plist-get result :items))))
+                  (seq-do
+                   (lambda (item)
+                     (let ((text-edit (plist-get item :textEdit)))
+                       (when (and text-edit
+                                  (equal
+                                   (plist-get text-edit :newText) ""))
+                         (plist-put item :textEdit nil))))
+                   items))
+                (funcall orig-success result)))
+             (new-args
+              (plist-put
+               (copy-sequence args)
+               :success-fn new-success)))
+        (apply orig-fn connection method params new-args))
+    (apply orig-fn connection method params args)))
+
+(advice-add 'jsonrpc-request :around #'my-jsonrpc-request-kotlin-fix)
+(advice-add
+ 'jsonrpc-async-request
+ :around #'my-jsonrpc-async-request-kotlin-fix)
 #+end_src
 
 *** C
 #+begin_src nix-ts :tangle modules/development/c.nix
 {
-  flake.homeModules.c =
-    { ... }:
-    {
-      programs.emacs.init = {
-        ide.languages.c.enable = true;
-        usePackage.c-ts-mode.generalTwoConfig.":n".c-ts-mode-map = {
-          "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "comment"))'';
-          "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "comment"))'';
-          "o" = "'evil-previous-visual-line";
-          "O" = "'evil-scroll-up";
-        };
+  flake.homeModules.c.programs.emacs.init = {
+      ide.languages.c.enable = true;
+      usePackage.c-ts-mode.generalTwoConfig.":n".c-ts-mode-map = {
+        "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "comment"))'';
+        "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "comment"))'';
+        "o" = "'evil-previous-visual-line";
+        "O" = "'evil-scroll-up";
       };
     };
 }
@@ -2156,18 +2446,51 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
               ''
                 ('eglot-managed-mode (local! completion-at-point-functions
                                                              (list (cape-capf-choose
+                                                                    #'efs/mixin-completion-at-point
                 					            (cape-capf-super
                                                                      #'tempel-complete
                                                                      (cape-capf-buster #'eglot-completion-at-point)
                                                                      (cape-capf-inside-comment #'cape-dict)
-                                                                     (cape-capf-inside-string #'cape-dict)
-                                                                     #'cape-dabbrev)))))
+                                                                     (cape-capf-inside-string #'cape-dict))
+                                                                    #'cape-dabbrev))))
               ''
             ];
+            # https://www.jamescherti.com/emacs-eglot-performance/
+            setopt = {
+              eglot-sync-connect = lib.mkForce 0;
+              # eglot-events-buffer-config = [
+              #   "':size"
+              #   0
+              #   "':format"
+              #   "'full"
+              # ];
+              eglot-max-file-watches = 3000;
+              eglot-report-progress = false;
+              eglot-code-action-indications = false;
+            };
             config = ''
               <<Development Eglot Config>>
             '';
           };
+
+	  #https://github.com/nemethf/eglot-x/blob/5cd6f936b9dc571edd4437b8fbf93ff68b0e723b/eglot-x.el
+          eglot-x.config = ''
+            (cl-defmethod eglot-execute :around (server action)
+              "Execute ACTION locally if possible, otherwise ask SERVER to execute it."
+              (if (not eglot-x-client-commands)
+                  (cl-call-next-method)
+                ;; This is almost the same as the upstream `eglot-execute'.
+                (eglot--dcase action
+                  (((Command)) (eglot-x-execute-command server action))
+                  (((CodeAction) edit command data)
+                   (if (and (null edit) (null command) data
+                            (eglot-server-capable :codeActionProvider :resolveProvider))
+                       (eglot-execute server
+                                      (eglot--request server :codeAction/resolve action))
+                     (when edit (eglot--apply-workspace-edit server edit this-command))
+                     (when command
+                       (eglot-x-execute-command server command)))))))
+          '';
 
           flymake.setopt.flymake-show-diagnostics-at-end-of-line = "'short";
           flymake-popon.enable = lib.mkForce false;
@@ -2193,22 +2516,22 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
  eglot-mode-map
  "K"
  'evil-substitute)
+
+(add-to-list 'eglot-ignored-server-capabilities :foldingRangeProvider)
 #+end_src
 
 *** Ledger
 #+begin_src nix-ts :tangle modules/development/ledger.nix
 {
-  flake.homeModules.ledger =
-    { ... }:
-    {
-      programs.emacs.init = {
-        completions.tempel.templates.ledger-mode = {
-          payroll = ''p "Rose-Hulman Payroll" n> "Income:TeachingAssistant" > "-" p n> "*Assets:Checking"'';
-          checking = ''"Assets:Checking"'';
-        };
-        ide.languages.ledger.enable = true;
+  flake.homeModules.ledger = {
+    programs.emacs.init = {
+      completions.tempel.templates.ledger-mode = {
+        payroll = ''p "Rose-Hulman Payroll" n> "Income:TeachingAssistant" > "-" p n> "*Assets:Checking"'';
+        checking = ''"Assets:Checking"'';
       };
+      ide.languages.ledger.enable = true;
     };
+  };
 }
 #+end_src
 
@@ -2250,7 +2573,7 @@ I'm running dired with a couple of small packages that improve on it
         };
 
         dirvish = {
-          gfhookf = ["('dirvish-directory-view-mode 'diredfl-mode)"];
+          gfhookf = [ "('dirvish-directory-view-mode 'diredfl-mode)" ];
           setopt.dirvish-use-mode-line = false;
           # Borrowed from doom
           generalTwoConfig.":n".dirvish-mode-map = {
@@ -2351,7 +2674,7 @@ I'm running dired with a couple of small packages that improve on it
       ];
       programs.emacs = {
         enable = true;
-        package = pkgs.emacs30-gtk3;
+        package = pkgs.emacs-gtk;
         init = {
           enable = true;
           packageQuickstart = false;
@@ -2431,32 +2754,33 @@ https://emacs.stackexchange.com/questions/75528/how-to-define-display-buffer-ali
 Most of this was shamelessly lifted from Emacs from Scratch.
 #+begin_src nix-ts :tangle modules/emacs/ui.nix
 {
-  flake.homeModules.emacs = { ... }: {
-    programs.emacs.init = {
-      aesthetics.declutter.enable = true;
-      tools = {
-        noLittering.enable = true;
-        lineNumbers.enable = true;
-        sensibleDefaults.enable = true;
+  flake.homeModules.emacs.programs.emacs.init = {
+    aesthetics.declutter.enable = true;
+    tools = {
+      noLittering.enable = true;
+      lineNumbers.enable = true;
+      sensibleDefaults.enable = true;
+    };
+    usePackage = {
+      display-line-numbers.setopt.display-line-numbers-type = "'relative";
+
+      files = {
+        enable = true;
+        setopt = {
+          confirm-kill-processes = false;
+          trusted-content = [ ''"~/projects/generic-todo/"'' ];
+        };
       };
-      usePackage = {
-        display-line-numbers.setopt.display-line-numbers-type = "'relative";
 
-	files = {
-	  enable = true;
-	  setopt.trusted-content = [''"~/projects/generic-todo/"''];
-	};
+      server = {
+        enable = true;
+        deferIncrementally = true;
+        config = "(server-start)";
+      };
 
-	server = {
-          enable = true;
-          deferIncrementally = true;
-          config = "(server-start)";
-        };
-
-        loaddefs = {
-          enable = true;
-          ghookf = [ "('on-first-file 'save-place-mode)" ];
-        };
+      loaddefs = {
+        enable = true;
+        ghookf = [ "('on-first-file 'save-place-mode)" ];
       };
     };
   };
@@ -2476,12 +2800,10 @@ Wgrep basically turns grep into sed.
 + C-x C-q: Exit wgrep
 #+begin_src nix-ts :tangle modules/emacs/wgrep.nix
 {
-  flake.homeModules.emacs = { ... }: {
-    programs.emacs.init.usePackage.wgrep = {
-      enable = true;
-      setopt.wgrep-auto-save-buffer = true;
-      generalTwo.":n".grep-mode-map."w" = "'wgrep-change-to-wgrep-mode";
-    };
+  flake.homeModules.emacs.programs.emacs.init.usePackage.wgrep = {
+    enable = true;
+    setopt.wgrep-auto-save-buffer = true;
+    generalTwo.":n".grep-mode-map."w" = "'wgrep-change-to-wgrep-mode";
   };
 }
 #+end_src
@@ -2489,14 +2811,9 @@ Wgrep basically turns grep into sed.
 *** Early Init
 #+begin_src nix-ts :tangle modules/emacs/early-init.nix :noweb yes
 {
-  flake.homeModules.emacs =
-    { ... }:
-
-    {
-      programs.emacs.init.earlyInit = ''
-        <<Emacs Early Init>>
-      '';
-    };
+  flake.homeModules.emacs.programs.emacs.init.earlyInit = ''
+    <<Emacs Early Init>>
+  '';
 }
 #+end_src
 
@@ -2539,9 +2856,12 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
           evilNerdCommenter.enable = true;
           god.enable = true;
         };
-        usePackage.evil.config = ''
-          <<Evil Config>>
-        '';
+        usePackage.evil = {
+          setopt.evil-buffer-regexps = [ '''("^ \\*Minibuf.*\\*" . insert)'' ];
+          config = ''
+            <<Evil Config>>
+          '';
+        };
       };
     };
 }
@@ -2585,19 +2905,17 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
 ***** Surround
 #+begin_src nix-ts :tangle modules/emacs/evil/surround.nix
 {
-  flake.homeModules.emacs = { ... }: {
-    programs.emacs.init = {
-      keybinds.evil.surround = true;
-      usePackage.evil-surround.generalTwoConfig = {
-        ":v".evil-surround-mode-map = {
-          "r" = "'evil-surround-region";
-          "R" = "'evil-surround-region";
-        };
-        ":o".evil-surround-mode-map = {
-          "s" = "nil";
-          "r" = "'evil-surround-edit";
-          "R" = "'evil-Surround-edit";
-        };
+  flake.homeModules.emacs.programs.emacs.init = {
+    keybinds.evil.surround = true;
+    usePackage.evil-surround.generalTwoConfig = {
+      ":v".evil-surround-mode-map = {
+        "r" = "'evil-surround-region";
+        "R" = "'evil-surround-region";
+      };
+      ":o".evil-surround-mode-map = {
+        "s" = "nil";
+        "r" = "'evil-surround-edit";
+        "R" = "'evil-Surround-edit";
       };
     };
   };
@@ -2607,42 +2925,49 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
 ***** Easymotion
 #+begin_src nix-ts :tangle modules/emacs/evil/easymotion.nix :noweb yes
 {
-  flake.homeModules.emacs =
-    { ... }:
-    {
-      programs.emacs.init = {
-        keybinds.avy = {
-          enable = true;
-          evilModifierKey = "H";
-          avyKeys = ["c" "r" "s" "t" "b" "f" "n" "e" "i" "a"];
-        };
-        usePackage.evil-easymotion = {
-          generalOne.":nvo" = {
-            "H-m" = "'evilem-motion-search-next";
-            "H-U" = "'evilem-motion-forward-word-begin";
-            "H-u" = "'evilem-motion-forward-WORD-begin";
-            "H-X" = "'evilem-motion-backward-word-begin";
-            "H-x" = "'evilem-motion-backward-WORD-begin";
-            "H-M" = "'evilem-motion-search-previous";
-            "H-)" = "'evilem-motion-forward-sentence-begin";
-            "H-(" = "'evilem-motion-backward-sentence-begin";
-          };
-          custom.avy-dispatch-alist = [
-            "'(?u . avy-action-cursor)"
-            "'(?l . avy-action-ispell)"
-            "'(?o . nix-emacs-avy-action-embark)"
-            "'(?h . avy-action-helpful)"
-            "'(?g . avy-action-yank)"
-            "'(?p . avy-action-teleport)"
-            "'(?q . nix-emacs-avy-action-fold)"
-          ];
-          setopt.avy-all-windows = false;
-          config = ''
-            <<Easymotion Config>>
-          '';
-        };
-      };
+  flake.homeModules.emacs.programs.emacs.init = {
+    keybinds.avy = {
+      enable = true;
+      evilModifierKey = "H";
+      avyKeys = [
+        "c"
+        "r"
+        "s"
+        "t"
+        "b"
+        "f"
+        "n"
+        "e"
+        "i"
+        "a"
+      ];
     };
+    usePackage.evil-easymotion = {
+      generalOne.":nvo" = {
+        "H-m" = "'evilem-motion-search-next";
+        "H-U" = "'evilem-motion-forward-word-begin";
+        "H-u" = "'evilem-motion-forward-WORD-begin";
+        "H-X" = "'evilem-motion-backward-word-begin";
+        "H-x" = "'evilem-motion-backward-WORD-begin";
+        "H-M" = "'evilem-motion-search-previous";
+        "H-)" = "'evilem-motion-forward-sentence-begin";
+        "H-(" = "'evilem-motion-backward-sentence-begin";
+      };
+      custom.avy-dispatch-alist = [
+        "'(?u . avy-action-cursor)"
+        "'(?l . avy-action-ispell)"
+        "'(?o . nix-emacs-avy-action-embark)"
+        "'(?h . avy-action-helpful)"
+        "'(?g . avy-action-yank)"
+        "'(?p . avy-action-teleport)"
+        "'(?q . nix-emacs-avy-action-fold)"
+      ];
+      setopt.avy-all-windows = false;
+      config = ''
+        <<Easymotion Config>>
+      '';
+    };
+  };
 }
 #+end_src
 
@@ -2666,53 +2991,49 @@ Maybe try lasgun? https://github.com/aatmunbaxi/lasgun.el/blob/master/lasgun.el
 Cursors hydra: https://hungyi.net/posts/hydra-for-evil-mc/
 #+begin_src nix-ts :tangle modules/emacs/evil/multicursor.nix :noweb yes
 {
-  flake.homeModules.emacs =
-    { ... }:
-    {
-      programs.emacs.init.usePackage.evil-mc = {
-        enable = true;
-        defer = true;
-        command = [
-          "evil-mc-pause-cursors"
-          "evil-mc-make-cursor-here"
-        ];
-        gfhookf = [
-          ''
-            ('doom-escape (lambda () (when (and (featurep 'evil-mc) (evil-mc-has-cursors-p))
-            	(evil-mc-undo-all-cursors)
-            						 (evil-mc-resume-cursors) t)))''
-        ];
-        generalOne = {
-          ":nv"."bz" = "'evil-mc-hydra/body";
-          global-leader."C" =
-            "`,(cmd! (if (eq evil-state 'visual) (evil-mc-make-cursor-in-visual-selection-beg) (evil-mc-hydra/body)))";
-        };
-        config = ''
-          <<Evil-MC Config>>
-        '';
-        extraConfig = ''
-          :pretty-hydra
-          ((:color pink :pre (evil-mc-pause-cursors))
-           ("Search"
-            (("m" #'evil-mc-make-and-goto-next-match "Search forward")
-             ("M" #'evil-mc-make-and-goto-prev-match "Search backward")
-             ("C-m" #'evil-mc-skip-and-goto-next-match "Skip forward")
-             ("C-M" #'evil-mc-skip-and-goto-prev-match "Skip backward"))
-            "Undo"
-            (("q" #'evil-mc-undo-all-cursors)
-             ("j" #'evil-mc-undo-last-added-cursor))
-            "Pause/Resume"
-            (("r" #'evil-mc-resume-cursors "Resume")
-             ("p" #'evil-mc-pause-cursors "Pause")
-             ("<return>" #'evil-mc-resume-cursors "Quit" :color blue))
-            "Create Cursors"
-            (("h" #'evil-mc-make-all-cursors "All")
-             ("s" #'evil-mc-make-cursor-here "Here")
-             ("E" #'evil-mc-make-cursor-move-next-line "Next Line")
-             ("O" #'evil-mc-make-cursor-move-prev-line "Prev Line"))))
-        '';
-      };
+  flake.homeModules.emacs.programs.emacs.init.usePackage.evil-mc = {
+    enable = true;
+    defer = true;
+    command = [
+      "evil-mc-pause-cursors"
+      "evil-mc-make-cursor-here"
+    ];
+    gfhookf = [
+      ''
+        ('doom-escape (lambda () (when (and (featurep 'evil-mc) (evil-mc-has-cursors-p))
+        	(evil-mc-undo-all-cursors)
+        						 (evil-mc-resume-cursors) t)))''
+    ];
+    generalOne = {
+      ":nv"."bz" = "'evil-mc-hydra/body";
+      global-leader."C" =
+        "`,(cmd! (if (eq evil-state 'visual) (evil-mc-make-cursor-in-visual-selection-beg) (evil-mc-hydra/body)))";
     };
+    config = ''
+      <<Evil-MC Config>>
+    '';
+    extraConfig = ''
+      :pretty-hydra
+      ((:color pink :pre (evil-mc-pause-cursors))
+       ("Search"
+        (("m" #'evil-mc-make-and-goto-next-match "Search forward")
+         ("M" #'evil-mc-make-and-goto-prev-match "Search backward")
+         ("C-m" #'evil-mc-skip-and-goto-next-match "Skip forward")
+         ("C-M" #'evil-mc-skip-and-goto-prev-match "Skip backward"))
+        "Undo"
+        (("q" #'evil-mc-undo-all-cursors)
+         ("j" #'evil-mc-undo-last-added-cursor))
+        "Pause/Resume"
+        (("r" #'evil-mc-resume-cursors "Resume")
+         ("p" #'evil-mc-pause-cursors "Pause")
+         ("<return>" #'evil-mc-resume-cursors "Quit" :color blue))
+        "Create Cursors"
+        (("h" #'evil-mc-make-all-cursors "All")
+         ("s" #'evil-mc-make-cursor-here "Here")
+         ("E" #'evil-mc-make-cursor-move-next-line "Next Line")
+         ("O" #'evil-mc-make-cursor-move-prev-line "Prev Line"))))
+    '';
+  };
 }
 #+end_src
 
@@ -2740,18 +3061,16 @@ Cursors hydra: https://hungyi.net/posts/hydra-for-evil-mc/
 ***** Exchange
 #+begin_src nix-ts :tangle modules/emacs/evil/exchange.nix
 {
-  flake.homeModules.emacs =
-    { ... }:
-    {
-      programs.emacs.init.usePackage.evil-exchange = {
-        enable = true;
-        generalOne = {
-          evil-operator-state-map."k" = "'evil-exchange/cx";
-          evil-visual-state-map."k" = "'evil-exchange";
-        };
-        gfhookf = [ "('doom-escape (lambda () (when (featurep 'evil-exchange) (evil-exchange-cancel))))" ];
+  flake.homeModules.emacs = {
+    programs.emacs.init.usePackage.evil-exchange = {
+      enable = true;
+      generalOne = {
+        evil-operator-state-map."k" = "'evil-exchange/cx";
+        evil-visual-state-map."k" = "'evil-exchange";
       };
+      gfhookf = [ "('doom-escape (lambda () (when (featurep 'evil-exchange) (evil-exchange-cancel))))" ];
     };
+  };
 }
 #+end_src
 
@@ -3002,62 +3321,60 @@ Differences from the spec:
 Gives us an entire state where we can rapidly make specific edits to code.
 #+begin_src nix-ts :tangle modules/emacs/evil/symex.nix :noweb yes
 {
-  flake.homeModules.emacs = { ... }: {
-    programs.emacs.init = {
-      ide.symex = true;
-      usePackage.symex = {
-        enable = true;
-        command = [ "evil-symex-state" ];
-        defer = true;
-        generalTwo.":n"."(racket-repl-mode-map lisp-interaction-mode-map lisp-mode-map)"."RET" =
-          "'symex-mode-interface";
-        config = ''
-          <<Emacs Symex Config>>
-        '';
-        generalOneConfig.evil-symex-state-map = {
-	  "c" = "(cmd! (set-mark (symex--get-end-point 1)))";
-          "n" = "'symex-go-backward";
-          "H-n" = "'efs/evilem-motion-symex-go-backward";
-          "H-o" = "'efs/evilem-motion-symex-go-down";
-          "C-o" = "'symex-climb-branch";
-          "o" = "'symex-go-down";
-          "H-e" = "'efs/evilem-motion-symex-go-up";
-          "C-e" = "'symex-descend-branch";
-          "e" = "'symex-go-up";
-          "i" = "'symex-go-forward";
-          "H-i" = "'efs/evilem-motion-symex-go-forward";
-          "bn" = "'evil-backward-char";
-          "bi" = "'evil-forward-char";
-          "d" = "'symex-yank";
-          "D" = "'symex-yank-remaining";
-          "G" = "'symex-paste-after";
-          "g" = "'symex-paste-before";
-          "k" = "'symex-delete";
-          "C-k" = "'symex-delete-backward";
-          "p" = "'symex-delete-remaining";
-          "K" = "'symex-change";
-          "P" = "'symex-change-remaining";
-          "N" = "'symex-shift-backward";
-          "I" = "'symex-shift-forward";
-          "M-N" = "'symex-shift-backward-most";
-          "M-I" = "'symex-shift-forward-most";
-          "M-n" = "'symex-goto-first";
-          "M-i" = "'symex-goto-last";
-          "t" = "'symex-insert-at-beginning";
-          "T" = "'symex-append-at-end";
-          "S" = "'symex-open-line-after";
-          "R" = "'symex-open-line-before";
-          "j" = "'evil-undo";
-          "J" = "'evil-redo";
-          "s" = "'symex-append-after";
-          "r" = "'symex-insert-before";
-          "w" = "'evil-repeat";
-          "C-w" = "'evil-repeat-pop";
-          "W" = "'evil-ex-repeat";
-          "a" = "'evil-ex";
-          "~" = "'evil-record-macro";
-          "$" = "'evil-execute-macro";
-        };
+  flake.homeModules.emacs.programs.emacs.init = {
+    ide.symex = true;
+    usePackage.symex = {
+      enable = true;
+      command = [ "evil-symex-state" ];
+      defer = true;
+      generalTwo.":n"."(racket-repl-mode-map lisp-interaction-mode-map lisp-mode-map)"."RET" =
+        "'symex-mode-interface";
+      config = ''
+        <<Emacs Symex Config>>
+      '';
+      generalOneConfig.evil-symex-state-map = {
+        "c" = "(cmd! (set-mark (symex--get-end-point 1)))";
+        "n" = "'symex-go-backward";
+        "H-n" = "'efs/evilem-motion-symex-go-backward";
+        "H-o" = "'efs/evilem-motion-symex-go-down";
+        "C-o" = "'symex-climb-branch";
+        "o" = "'symex-go-down";
+        "H-e" = "'efs/evilem-motion-symex-go-up";
+        "C-e" = "'symex-descend-branch";
+        "e" = "'symex-go-up";
+        "i" = "'symex-go-forward";
+        "H-i" = "'efs/evilem-motion-symex-go-forward";
+        "bn" = "'evil-backward-char";
+        "bi" = "'evil-forward-char";
+        "d" = "'symex-yank";
+        "D" = "'symex-yank-remaining";
+        "G" = "'symex-paste-after";
+        "g" = "'symex-paste-before";
+        "k" = "'symex-delete";
+        "C-k" = "'symex-delete-backward";
+        "p" = "'symex-delete-remaining";
+        "K" = "'symex-change";
+        "P" = "'symex-change-remaining";
+        "N" = "'symex-shift-backward";
+        "I" = "'symex-shift-forward";
+        "M-N" = "'symex-shift-backward-most";
+        "M-I" = "'symex-shift-forward-most";
+        "M-n" = "'symex-goto-first";
+        "M-i" = "'symex-goto-last";
+        "t" = "'symex-insert-at-beginning";
+        "T" = "'symex-append-at-end";
+        "S" = "'symex-open-line-after";
+        "R" = "'symex-open-line-before";
+        "j" = "'evil-undo";
+        "J" = "'evil-redo";
+        "s" = "'symex-append-after";
+        "r" = "'symex-insert-before";
+        "w" = "'evil-repeat";
+        "C-w" = "'evil-repeat-pop";
+        "W" = "'evil-ex-repeat";
+        "a" = "'evil-ex";
+        "~" = "'evil-record-macro";
+        "$" = "'evil-execute-macro";
       };
     };
   };
@@ -3087,21 +3404,19 @@ Gives us an entire state where we can rapidly make specific edits to code.
 **** Compats
 #+begin_src nix-ts :tangle modules/emacs/evil/compats.nix :noweb yes
 {
-  flake.homeModules.emacs = { ... }: {
-    programs.emacs.init.usePackage = {
-      evil-collection.setopt.evil-collection-repl-submit-state = "'insert";
-      evil-org.config = ''
-        <<Emacs Evil Org Config>>
-      '';
+  flake.homeModules.emacs.programs.emacs.init.usePackage = {
+    evil-collection.setopt.evil-collection-repl-submit-state = "'insert";
+    evil-org.config = ''
+      <<Emacs Evil Org Config>>
+    '';
 
-      evil-org-agenda = {
-        generalTwoConfig.":m".evil-org-agenda-mode-map = {
-          "bn" = "'org-agenda-next-item";
-          "bI" = "'evil-window-bottom";
-          "I" = "'org-agenda-do-date-later";
-          "C-S-i" = "'org-agenda-todo-nextset"; # Original binding "C-S-<right>"
-          "l" = "'org-agenda-diary-entry";
-        };
+    evil-org-agenda = {
+      generalTwoConfig.":m".evil-org-agenda-mode-map = {
+        "bn" = "'org-agenda-next-item";
+        "bI" = "'evil-window-bottom";
+        "I" = "'org-agenda-do-date-later";
+        "C-S-i" = "'org-agenda-todo-nextset"; # Original binding "C-S-<right>"
+        "l" = "'org-agenda-diary-entry";
       };
     };
   };
@@ -3151,52 +3466,50 @@ My completion system is based around vertico & corfu, because that's what all th
 Vertico is basically dmenu for emacs. It lists out all the options in a command menu.
 #+begin_src nix-ts :tangle modules/emacs/completions/vertico.nix :noweb yes
 {
-  flake.homeModules.emacs = { ... }: {
-    programs.emacs.init = {
-      completions = {
-        vertico.enable = true;
-        prescient = true;
-        orderless = true;
-      };
-      usePackage = {
-        vertico = {
-          generalTwoConfig.":n" = {
-            vertico-grid-map = {
-              "i" = "'vertico-grid-right";
-              "n" = "'vertico-grid-left";
-              "C-o" = "'vertico-grid-scroll-down";
-              "C-e" = "'vertico-grid-scroll-up";
-            };
-            vertico-map = {
-              "C-o" = "'vertico-scroll-down";
-              "C-e" = "'vertico-scroll-up";
-              "j" = "'evil-undo";
-              "I" = "'vertico-last";
-              "N" = "'vertico-first";
-              "B" = "'vertico-last";
-              "bg" = "'vertico-first";
-              "G" = "'evil-paste-after";
-            };
+  flake.homeModules.emacs.programs.emacs.init = {
+    completions = {
+      vertico.enable = true;
+      prescient = true;
+      orderless = true;
+    };
+    usePackage = {
+      vertico = {
+        generalTwoConfig.":n" = {
+          vertico-grid-map = {
+            "i" = "'vertico-grid-right";
+            "n" = "'vertico-grid-left";
+            "C-o" = "'vertico-grid-scroll-down";
+            "C-e" = "'vertico-grid-scroll-up";
           };
-          config = ''
-            <<Emacs Vertico Config>>
-          '';
+          vertico-map = {
+            "C-o" = "'vertico-scroll-down";
+            "C-e" = "'vertico-scroll-up";
+            "j" = "'evil-undo";
+            "I" = "'vertico-last";
+            "N" = "'vertico-first";
+            "B" = "'vertico-last";
+            "bg" = "'vertico-first";
+            "G" = "'evil-paste-after";
+          };
         };
+        config = ''
+          <<Emacs Vertico Config>>
+        '';
+      };
 
-        vertico-multiform = {
-          enable = true;
-          setopt.vertico-multiform-commands = [
-            "'(music-menu grid)"
-            "'(man grid)"
-            "'(t posframe)"
-          ];
-          ghookf = [ "('vertico-mode 'vertico-multiform-mode)" ];
-        };
+      vertico-multiform = {
+        enable = true;
+        setopt.vertico-multiform-commands = [
+          "'(music-menu grid)"
+          "'(man grid)"
+          # "'(t posframe)"
+        ];
+        ghookf = [ "('vertico-mode 'vertico-multiform-mode)" ];
+      };
 
-        vertico-quick.setopt = {
-          vertico-quick1 = ''"crstbfneia"'';
-          vertico-quick2 = ''"crstbfneia"'';
-        };
+      vertico-quick.setopt = {
+        vertico-quick1 = ''"crstbfneia"'';
+        vertico-quick2 = ''"crstbfneia"'';
       };
     };
   };
@@ -3255,39 +3568,79 @@ format count borrowed from: https://github.com/rougier/nano-vertico
 I took a lot of this from Gavin Freeborn's config
 #+begin_src nix-ts :tangle modules/emacs/completions/corfu.nix :noweb yes
 {
-  flake.homeModules.emacs = { ... }: {
-    programs.emacs.init = {
-      completions = {
-        tempel.enable = true;
-        corfu = {
-          enable = true;
-          wantTabComplete = false;
-          wantRetConfirm = false;
-          wantMinibuffer = true;
-          popupInfo = true;
+  flake.homeModules.emacs.programs.emacs.init = {
+    completions = {
+      tempel.enable = true;
+      corfu = {
+        enable = true;
+        wantTabComplete = false;
+        wantRetConfirm = false;
+        wantMinibuffer = true;
+        popupInfo = true;
+      };
+    };
+
+    usePackage = {
+      corfu.config = ''
+	<<Corfu Config>>
+      '';
+      corfu-quick = {
+        enable = true;
+        setopt = {
+          corfu-quick1 = ''"crst"'';
+          corfu-quick2 = ''"neia"'';
         };
       };
 
-      usePackage = {
-        corfu-quick = {
-          enable = true;
-          setopt = {
-            corfu-quick1 = ''"crst"'';
-            corfu-quick2 = ''"neia"'';
-          };
-        };
-
-        cape = {
-          enable = true;
-          after = [ "corfu" ];
-          config = ''
-            <<Emacs Cape Config>>
-          '';
-        };
+      cape = {
+        enable = true;
+        after = [ "corfu" ];
+        config = ''
+          <<Emacs Cape Config>>
+        '';
       };
     };
   };
 }
+#+end_src
+
+https://github.com/minad/corfu/discussions/408
+#+NAME: Corfu Config
+#+begin_src emacs-lisp
+(defun get-focused-monitor-geometry ()
+  "Get the geometry of the monitor displaying the selected frame in EXWM."
+  (let* ((monitor-attrs (frame-monitor-attributes))
+         (workarea (assoc 'workarea monitor-attrs))
+         (geometry (cdr workarea)))
+    (list
+     (nth 0 geometry) ; X
+     (nth 1 geometry) ; Y
+     (nth 2 geometry) ; Width
+     (nth 3 geometry) ; Height
+     )))
+
+(defun advise-corfu-make-frame-with-monitor-awareness
+    (orig-fun frame x y width height)
+  "Advise `corfu--make-frame` to be monitor-aware, adjusting X and Y according to the focused monitor."
+
+  ;; Get the geometry of the currently focused monitor
+  (let*
+      ((monitor-geometry (get-focused-monitor-geometry))
+       (monitor-x (nth 0 monitor-geometry))
+       (monitor-y (nth 1 monitor-geometry))
+       ;; You may want to adjust the logic below if you have specific preferences
+       ;; on where on the monitor the posframe should appear.
+       ;; Currently, it places the posframe at its intended X and Y, but ensures
+       ;; it's within the bounds of the focused monitor.
+       (new-x (+ monitor-x x))
+       (new-y (+ monitor-y y)))
+
+    ;; Call the original function with potentially adjusted coordinates
+    (funcall orig-fun frame new-x new-y width height)))
+
+(advice-add
+ 'corfu--make-frame
+ :around #'advise-corfu-make-frame-with-monitor-awareness)
 #+end_src
 
 #+NAME: Emacs Cape Config
@@ -3301,58 +3654,56 @@ Replaces a bunch of commands with new commands.
 Evil integration is from noctuid & minad
 #+begin_src nix-ts :tangle modules/emacs/completions/consult.nix :noweb yes
 {
-  flake.homeModules.emacs = { ... }: {
-    programs.emacs.init = {
-      completions.smallExtras = {
-        enable = true;
-        evilConsultLine = true;
-      };
-      usePackage = {
-        consult = {
-          ghookf = [ "('minibuffer-setup 'consult-initial-narrow)" ];
-          command = [
-            "consult-goto-line"
-            "consult-keep-lines"
+  flake.homeModules.emacs.programs.emacs.init = {
+    completions.smallExtras = {
+      enable = true;
+      evilConsultLine = true;
+    };
+    usePackage = {
+      consult = {
+        ghookf = [ "('minibuffer-setup 'consult-initial-narrow)" ];
+        command = [
+          "consult-goto-line"
+          "consult-keep-lines"
+        ];
+        setopt = {
+          consult-buffer-sources = "'(consult-source-buffer)";
+          consult-bookmark-narrow = [
+            '''(?b "Bufler" bufler-workspace-bookmark-handler)''
+            '''(?f "File" bookmark-default-handler)''
+            '''(?h "Help" help-bookmark-jump Info-bookmark-jump Man-bookmark-jump woman-bookmark-jump)''
+            '''(?p "Picture" image-bookmark-jump)''
+            '''(?d "Docview" doc-view-bookmark-jump)''
+            '''(?m "Mail" gnus-summary-bookmark-jump)''
+            '''(?s "Eshell" eshell-bookmark-jump)''
+            '''(?w "Web" qutebrowser-bookmark-jump eww-bookmark-jump xwidget-webkit-bookmark-jump-handler)''
+            '''(?v "VC Directory" vc-dir-bookmark-jump)''
+            '''(nil "Other")''
           ];
-          setopt = {
-            consult-buffer-sources = "'(consult-source-buffer)";
-            consult-bookmark-narrow = [
-              '''(?b "Bufler" bufler-workspace-bookmark-handler)''
-              '''(?f "File" bookmark-default-handler)''
-              '''(?h "Help" help-bookmark-jump Info-bookmark-jump Man-bookmark-jump woman-bookmark-jump)''
-              '''(?p "Picture" image-bookmark-jump)''
-              '''(?d "Docview" doc-view-bookmark-jump)''
-              '''(?m "Mail" gnus-summary-bookmark-jump)''
-              '''(?s "Eshell" eshell-bookmark-jump)''
-              '''(?w "Web" qutebrowser-bookmark-jump eww-bookmark-jump xwidget-webkit-bookmark-jump-handler)''
-              '''(?v "VC Directory" vc-dir-bookmark-jump)''
-              '''(nil "Other")''
-            ];
-            kill-do-not-save-duplicates = true;
-          };
-          generalOne = {
-            ":n" = {
-              "M-g" = "'consult-yank-pop"; # orig. evil-paste-pop
-              "M-E" = "'consult-isearch-history "; # orig. isearch-edit-string
-              "H-'" = "'evil-collection-consult-mark";
-              "H--" = "'evil-collection-consult-jump-list";
-              "H-q" = "'consult-flymake"; # Alternative: consult-flycheck
-              "[i" = '''("Previous Imenu" . efs/consult-imenu-previous)'';
-              "]i" = '''("Next Imenu" . efs/consult-imenu-next)'';
-            };
-            ctl-x-map."C-f" = "'consult-fd";
-            global-leader."R" = "'consult-recent-file";
-          };
-          bindLocal.help-map."M" = "man";
-          config = ''
-            <<Emacs Consult Config>>
-          '';
+          kill-do-not-save-duplicates = true;
         };
+        generalOne = {
+          ":n" = {
+            "M-g" = "'consult-yank-pop"; # orig. evil-paste-pop
+            "M-E" = "'consult-isearch-history "; # orig. isearch-edit-string
+            "H-'" = "'evil-collection-consult-mark";
+            "H--" = "'evil-collection-consult-jump-list";
+            "H-q" = "'consult-flymake"; # Alternative: consult-flycheck
+            "[i" = '''("Previous Imenu" . efs/consult-imenu-previous)'';
+            "]i" = '''("Next Imenu" . efs/consult-imenu-next)'';
+          };
+          ctl-x-map."C-f" = "'consult-fd";
+          global-leader."R" = "'consult-recent-file";
+        };
+        bindLocal.help-map."M" = "man";
+        config = ''
+          <<Emacs Consult Config>>
+        '';
+      };
 
-        bookmark = {
-          enable = true;
-          generalOne."ctl-x-r-map"."S" = "'bookmark-save";
-        };
+      bookmark = {
+        enable = true;
+        generalOne."ctl-x-r-map"."S" = "'bookmark-save";
       };
     };
   };
@@ -3561,12 +3912,10 @@ Borrowed from Karthinks
       );
     };
 
-  flake.homeModules.emacs = { ... }: {
-    programs.emacs.init.usePackage.app-launcher = {
-      enable = true;
-      defer = true;
-      command = [ "app-launcher-run-app" ];
-    };
+  flake.homeModules.exwm.programs.emacs.init.usePackage.app-launcher = {
+    enable = true;
+    defer = true;
+    command = [ "app-launcher-run-app" ];
   };
 }
 #+end_src
@@ -3627,17 +3976,12 @@ An alternative to fzf.
       };
     };
 
-  flake.homeModules.emacs =
-    { ... }:
-
-    {
-      programs.emacs.init.usePackage = {
-        ezf = {
-          enable = true;
-          deferIncrementally = true;
-        };
-      };
+  flake.homeModules.emacs = {
+    programs.emacs.init.usePackage.ezf = {
+      enable = true;
+      deferIncrementally = true;
     };
+  };
 }
 #+end_src
 
@@ -3741,6 +4085,11 @@ Helpful gives more information, & which-key tells what keybinds you have availab
 
         emacs.generalOne.help-map."A" =
           ''`("Arch Wiki" . ,(cmd! (async-shell-command "${lib.getExe pkgs.wiki}")))'';
+
+        popper.setopt.popper-reference-buffers = [
+          "'help-mode"
+          "'helpful-mode"
+        ];
       };
     };
   };
@@ -3795,15 +4144,13 @@ All of this config was origally stolen from Karthinks. I don't think any of the 
       );
     };
 
-  flake.homeModules.emacs = { ... }: {
-    programs.emacs = {
-      extraPackages = epkgs: [ epkgs.repeaters ];
-      init = {
-        prelude = ''
-          <<Repeaters Prelude>>
-        '';
-        usePackage.evil-collection.setopt.evil-collection-unimpaired-want-repeat-mode-integration = true;
-      };
+  flake.homeModules.emacs.programs.emacs = {
+    extraPackages = epkgs: [ epkgs.repeaters ];
+    init = {
+      prelude = ''
+        <<Repeaters Prelude>>
+      '';
+      usePackage.evil-collection.setopt.evil-collection-unimpaired-want-repeat-mode-integration = true;
     };
   };
 }
@@ -3828,13 +4175,11 @@ All of this config was origally stolen from Karthinks. I don't think any of the 
 *** Hydra
 #+begin_src nix-ts :tangle modules/emacs/hydra.nix :noweb yes
 {
-  flake.homeModules.emacs = { ... }: {
-    programs.emacs = {
-      extraPackages = epkgs: [ epkgs.pretty-hydra ];
-      init.prelude = ''
-        <<Hydra Prelude>>
-      '';
-    };
+  flake.homeModules.emacs.programs.emacs = {
+    extraPackages = epkgs: [ epkgs.pretty-hydra ];
+    init.prelude = ''
+      <<Hydra Prelude>>
+    '';
   };
 }
 #+end_src
@@ -3859,8 +4204,7 @@ All of this config was origally stolen from Karthinks. I don't think any of the 
 *** Proced
 #+begin_src nix-ts :tangle modules/proced.nix
 {
-  flake.homeModules.emacs = { ... }: {
-    programs.emacs.init.usePackage.proced = {
+  flake.homeModules.emacs.programs.emacs.init.usePackage.proced = {
       enable = true;
       command = [ "proced" ];
       generalTwoConfig.":n".proced-mode-map = {
@@ -3868,7 +4212,6 @@ All of this config was origally stolen from Karthinks. I don't think any of the 
         "k" = "'proced-send-signal";
       };
     };
-  };
 }
 #+end_src
 
@@ -3878,20 +4221,16 @@ Stolen from EDNC's github page.
 EDNC does the same thing as dunst. It will pop up any new notifications inside of a text buffer.
 #+begin_src nix-ts :tangle modules/notifications.nix :noweb yes
 {
-  flake.homeModules.notifications =
-    { ... }:
-    {
-      programs.emacs.init.usePackage.ednc = {
-        enable = true;
-        gfhook = [
-          "('ednc-notification-presentation-functions #'show-notification-in-echo-area)"
-        ];
-        deferIncrementally = true;
-        config = ''
-          <<Emacs EDNC Config>>
-        '';
-      };
-    };
+  flake.homeModules.notifications.programs.emacs.init.usePackage.ednc = {
+    enable = true;
+    gfhook = [
+      "('ednc-notification-presentation-functions #'show-notification-in-echo-area)"
+    ];
+    deferIncrementally = true;
+    config = ''
+      <<Emacs EDNC Config>>
+    '';
+  };
 }
 #+end_src
 
@@ -3935,6 +4274,7 @@ How to add a latex package
 
         usePackage = {
           org = {
+            extraPackages = [ pkgs.xdo ];
             gfhookf = [
               ''
                 ('org-mode (list 'ispell-minor-mode
@@ -3952,6 +4292,15 @@ How to add a latex package
             setopt = {
               org-export-with-section-numbers = false;
               org-export-with-toc = false;
+              org-capture-templates = [
+                '''("P" "Protocol")''
+                ''
+                  '("Pn" "Notes" entry (file org-default-notes-file)
+                                     "* %:annotation %(org-insert-time-stamp (org-read-date nil t \"\"))\n:%i\n  %a")''
+                ''
+                  '("Pd" "Denote" entry (file efs/get-denote-file)
+                                         "* %:annotation \n%i\n  %a")''
+              ];
             };
             generalTwoConfig.local-leader.org-mode-map = {
               "a" = '''("avy" . avy-org-goto-heading-timer)'';
@@ -3968,40 +4317,49 @@ How to add a latex package
             ghookf = [ "('org-mode 'org-auto-tangle-mode)" ];
           };
 
-          denote.setopt.denote-known-keywords = [
-            ''"quotes"''
-            ''"chem"''
-            ''"emacs"''
-            ''"java"''
-            ''"physics"''
-            ''"calculus"''
-            ''"minecraft"''
-            ''"de"''
-            ''"proofs"''
-            ''"csse230"''
-            ''"os"''
-            ''"databases"''
-            ''"scifi"''
-            ''"softwarerequirements"''
-            ''"anthropology"''
-            ''"theoryofcomputation"''
-            ''"parallelcomp"''
-            ''"cybersecurity"''
-            ''"probstats"''
-            ''"scheme"''
-            ''"dreams"''
-            ''"softwaredevelopment"''
-            ''"ethics"''
-            ''"plp"''
-            ''"malwareanalysis"''
-            ''"bio"''
-            ''"ai"''
-            ''"resolve"''
-            ''"psychology"''
-            ''"algorithmanalysis"''
-            ''"music"''
-            ''"people"''
-          ];
+          denote = {
+            preface = ''
+              (defun efs/get-denote-file ()
+              	      (denote-file-prompt nil "Select file"))'';
+            generalOne.global-leader.oc = "'denote-create-note";
+            setopt.denote-known-keywords = [
+              ''"quotes"''
+              ''"chem"''
+              ''"emacs"''
+              ''"java"''
+              ''"physics"''
+              ''"calculus"''
+              ''"minecraft"''
+              ''"de"''
+              ''"proofs"''
+              ''"csse230"''
+              ''"os"''
+              ''"databases"''
+              ''"scifi"''
+              ''"softwarerequirements"''
+              ''"anthropology"''
+              ''"theoryofcomputation"''
+              ''"parallelcomp"''
+              ''"cybersecurity"''
+              ''"probstats"''
+              ''"scheme"''
+              ''"dreams"''
+              ''"softwaredevelopment"''
+              ''"ethics"''
+              ''"plp"''
+              ''"malwareanalysis"''
+              ''"bio"''
+              ''"ai"''
+              ''"resolve"''
+              ''"psychology"''
+              ''"algorithmanalysis"''
+              ''"music"''
+              ''"people"''
+              ''"interview"''
+              ''"rust"''
+	      ''"tetramem"''
+            ];
+          };
 
           biblio = {
             enable = true;
@@ -4039,6 +4397,7 @@ How to add a latex package
   (dolist (file (mapcar (lambda (x) (concat (car x) "todo.org")) project--list))
     (add-to-list 'org-agenda-files file))
   (dashboard-open))
+(require 'org-protocol)
 #+end_src
 
 *** Latex
@@ -4090,25 +4449,47 @@ No idea what the rest of this is for.
 *** Markdown
 #+begin_src nix-ts :tangle modules/writing/markdown.nix :noweb yes
 {
-  flake.homeModules.writing = { ... }: {
+  flake.homeModules.writing = { pkgs, ... }: {
     programs.emacs.init = {
-      ide.languages.markdown.enable = true;
-      usePackage.markdown = {
-        generalOneConfig.markdown-mode-map."C-c C-e" = "'markdown-do";
-        gfhookf = [ "('markdown-mode 'efs/markdown-font-setup)" ];
-        setopt = {
-          markdown-command = ''"multimarkdown"'';
-          markdown-hide-markup = true;
+      # ide.languages.markdown.enable = true;
+      # Yoinked from heks-emacs
+      completions.tempel.templates.markdown-ts-mode = {
+        gitcollapse = ''
+          & "## " (p "Heading") n n "<details>" n n
+          "<summary>" (p "Sub Heading")  "</summary>" n n
+          (r "Insert Link or comments") n n "</details>"'';
+        bolditalics = ''"***" p "***"'';
+        srcblock = ''"```" p n p n "```"'';
+        src = ''"'" p "'"'';
+        unorderlist = ''& "- " (p "First") n> "- " (p "Second") n> "- " (p "Third")'';
+        orderlist = ''& "1. " (p "First") n> "2. " (p "Second") n> "3. " (p "Third")'';
+        insertlink = ''"[" p "](" p ")"'';
+        hugotitle = ''& "+++" n "title = " (p "title") n "date = " (format-time-string "%Y-%m-%d") n "tags = [ " (p "tag1, tag2 ") "]" n "draft = false" n "+++"'';
+        h1 = ''& "# " p " #"'';
+        h2 = ''& "## " p " ##"'';
+        h3 = ''& "### " p " ###"'';
+        h4 = ''& "#### " p " ####"'';
+        inserttable = "(call-interactively #'markdown-ts-table-insert-table)";
+      };
+      usePackage = {
+        markdown-ts-mode = {
+          enable = true;
+          defer = true;
+          extraPackages = [ pkgs.marksman ];
+          mode = [ ''("\\.md\\'" . markdown-ts-mode)'' ];
+          eglot = ''("marksman" "server")'';
+          symex = true;
+          gfhookf = [ "('markdown-ts-mode '(efs/markdown-font-setup) (lambda () (display-line-numbers-mode 0)))" ];
+          init = ''
+            <<Emacs Markdown Init>>
+          '';
         };
-        generalTwoConfig = {
-          ":nm".gfm-mode-map = {
-            "[h" = "'markdown-previous-visible-heading";
-            "]h" = "'markdown-next-visible-heading";
-          };
+
+        markdown-ts-appear = {
+          enable = true;
+          defer = true;
+          ghookf = [ "('markdown-ts-mode 'markdown-ts-appear-mode)" ];
         };
-        preface = ''
-          <<Emacs Markdown Init>>
-        '';
       };
     };
   };
@@ -4120,12 +4501,12 @@ No idea what the rest of this is for.
 (defun efs/markdown-font-setup ()
   (variable-pitch-mode)
   (dolist (face
-           '((markdown-header-face-1 . 1.4)
-             (markdown-header-face-2 . 1.2)
-             (markdown-header-face-3 . 1.1)
-             (markdown-header-face-4 . 1.05)
-             (markdown-header-face-5 . 1.05)
-             (markdown-header-face-6 . 1.05)))
+           '((markdown-ts-heading-1 . 1.4)
+             (markdown-ts-heading-2 . 1.2)
+             (markdown-ts-heading-3 . 1.1)
+             (markdown-ts-heading-4 . 1.05)
+             (markdown-ts-heading-5 . 1.05)
+             (markdown-ts-heading-6 . 1.05)))
     (set-face-attribute (car face) nil
                         :font "SF Pro"
                         :weight 'regular
@@ -4151,21 +4532,13 @@ No idea what the rest of this is for.
         completions.tempel.templates.org-mode.ci =
           ''"* Works Cited" n "#+cite_export: csl ~/.config/csl/ieee.csl" n "#+print_bibliography:" q'';
         usePackage = {
-          # flyspell = {
-          #   enable = true;
-          #   ghookf = [
-          #     "('text-mode 'flyspell-mode)"
-          #     "('prog-mode 'flyspell-prog-mode)"
-          #   ];
-          # };
-
           jinx = {
             enable = true;
             ghookf = [ "('on-init-ui 'global-jinx-mode)" ];
             generalOneConfig.":n" = {
               "C-M-i" = "'jinx-correct";
-	      "]s" = "'jinx-next";
-	      "[s" = "'jinx-previous";
+              "]s" = "'jinx-next";
+              "[s" = "'jinx-previous";
             };
           };
 
@@ -4198,29 +4571,27 @@ This is a pinentry program (alternative to pinentry-dmenu)
 When you're prompted for your gpg password, the place for entry will be your modeline.
 #+begin_src nix-ts :tangle modules/passwords/pinentry.nix
 {
-  flake.homeModules.passwordManagement =
-    { ... }:
-    {
-      home.file = {
-        ".local/share/gnupg/gpg-agent.conf".text = ''
-          pinentry-program /usr/bin/pinentry-emacs
-          allow-loopback-pinentry
-          allow-emacs-pinentry
-          default-cache-ttl 600
-          max-cache-ttl 7200
-          enable-ssh-support
-        '';
-        ".local/share/gnupg/gpg.conf".text = ''
-          use-agent
-        '';
-      };
-      programs.emacs.init.usePackage.pinentry = {
-        enable = true;
-        setopt.epa-pinentry-mode = "'loopback";
-        deferIncrementally = true;
-        config = "(pinentry-start)";
-      };
+  flake.homeModules.passwordManagement = {
+    home.file = {
+      ".local/share/gnupg/gpg-agent.conf".text = ''
+        pinentry-program /usr/bin/pinentry-emacs
+        allow-loopback-pinentry
+        allow-emacs-pinentry
+        default-cache-ttl 600
+        max-cache-ttl 7200
+        enable-ssh-support
+      '';
+      ".local/share/gnupg/gpg.conf".text = ''
+        use-agent
+      '';
     };
+    programs.emacs.init.usePackage.pinentry = {
+      enable = true;
+      setopt.epa-pinentry-mode = "'loopback";
+      deferIncrementally = true;
+      config = "(pinentry-start)";
+    };
+  };
 }
 #+end_src
 
@@ -4307,8 +4678,7 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
       };
     };
 
-  flake.homeModules.exwm =
-    { ... }:
+  flake.homeModules.wm.programs.emacs.init.usePackage =
     let
       pertabExtension = {
         enable = true;
@@ -4317,72 +4687,95 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
       };
     in
     {
-      programs.emacs.init.usePackage = {
-        tab-bar = {
-          enable = true;
-          config = ''
-            <<Tab Bar Config>>
-          '';
-          ghookf = [ "('exwm-init 'tab-bar-mode)" ];
-          general."s-u" = "'tab-bar-hydra/body";
-          setopt.tab-bar-select-restore-windows = false;
-          extraConfig = ''
-            	  :pretty-hydra
-                  ((:color amaranth)
-                   ("Navigation"
-                    (("e" #'evil-tab-next "next")
-                     ("o" #'tab-bar-switch-to-prev-tab "prev")
-                     ("v" #'tab-recent "recent")
-                     ("b" #'tab-bar-lost-commands-switch-to-first-tab "first")
-                     ("B" #'tab-bar-lost-commands-switch-to-last-tab "last")
-                     ("/" #'efs/tab-bar-select "search"))
-                    "Creation/Deletion"
-                    (("s" #'tab-new "new")
-                     ("k" #'tab-close "close")
-                     ("r" #'tab-rename "rename")
-                     ("j" #'tab-undo "undo"))
-                    "Groups"
-                    (("g" #'tab-group "add to group")
-                     ("K" #'tab-close-group "close group"))
-                    "Organization"
-                    (("E" #'tab-bar-lost-commands-move-tab-forward "forward")
-                     ("O" #'tab-bar-lost-commands-move-tab-backward "backward"))
-                    "Exit"
-                    (("<return>" nil "" :color blue)
-                     ("<escape>" nil "" :color blue))))
-            	'';
+      tab-bar = {
+        enable = true;
+        config = ''
+          <<Tab Bar Config>>
+        '';
+        ghookf = [ "('exwm-init 'tab-bar-mode)" ];
+        # ghookf = [ "('ewm-mode 'tab-bar-mode)" ];
+        general = {
+          "s-u" = "'tab-bar-hydra/body";
+          "s->" = "'tab-bar-move-tab-to-frame";
         };
-
-        tab-bar-lost-commands = {
-          enable = true;
-          command = [
-            "tab-bar-lost-commands-move-tab-forward"
-            "tab-bar-lost-commands-move-tab-backward"
-            "tab-bar-lost-commands-switch-to-first-tab"
-            "tab-bar-lost-commands-switch-to-last-tab"
-          ];
-        };
-
-        pertab = {
-          enable = true;
-          ghookf = [ "('tab-bar-mode 'pertab-mode)" ];
-          setopt = {
-            pertab-default-layout = "'master-stack";
-            pertab-next-buffer-function = "'bufler-cycle-buffers-forward";
-            pertab-previous-buffer-function = "'bufler-cycle-buffers-backward";
-            roll-debug-enabled = false;
-          };
-          gfhookf = [
-            "('(pertab-follow-enter pertab-scroll-enter) (lambda () (golden-ratio-mode -1)))"
-            "('(pertab-follow-exit pertab-scroll-exit) (lambda () (golden-ratio-mode +1)))"
-          ];
-        };
-
-        pertab-monocle = pertabExtension;
-        pertab-follow = pertabExtension;
-        pertab-master-stack = pertabExtension;
-        pertab-scroll = pertabExtension;
+        setopt.tab-bar-select-restore-windows = false;
+        extraConfig = ''
+          :pretty-hydra
+                ((:color amaranth)
+                 ("Navigation"
+                  (("e" #'evil-tab-next "next")
+                   ("o" #'tab-bar-switch-to-prev-tab "prev")
+                   ("v" #'tab-recent "recent")
+                   ("b" #'tab-bar-lost-commands-switch-to-first-tab "first")
+                   ("B" #'tab-bar-lost-commands-switch-to-last-tab "last")
+                   ("/" #'efs/tab-bar-select "search"))
+                  "Creation/Deletion"
+                  (("s" #'tab-new "new")
+                   ("k" #'tab-close "close")
+                   ("r" #'tab-rename "rename")
+                   ("j" #'tab-undo "undo"))
+                  "Groups"
+                  (("g" #'tab-group "add to group")
+                   ("K" #'tab-close-group "close group"))
+                  "Organization"
+                  (("E" #'tab-bar-lost-commands-move-tab-forward "forward")
+                   ("O" #'tab-bar-lost-commands-move-tab-backward "backward"))
+                  "Exit"
+                  (("<return>" nil "" :color blue)
+                   ("<escape>" nil "" :color blue))))
+        '';
       };
+
+      tab-bar-lost-commands = {
+        enable = true;
+        command = [
+          "tab-bar-lost-commands-move-tab-forward"
+          "tab-bar-lost-commands-move-tab-backward"
+          "tab-bar-lost-commands-switch-to-first-tab"
+          "tab-bar-lost-commands-switch-to-last-tab"
+        ];
+      };
+
+      pertab = {
+        enable = true;
+        ghookf = [ "('tab-bar-mode 'pertab-mode)" ];
+        generalOneConfig.pertab-mode-map = {
+          "s-e" = "'pertab-focus-down";
+          "s-o" = "'pertab-focus-up";
+          "s-i" = "'pertab-focus-right";
+          "s-n" = "'pertab-focus-left";
+          "s-E" = "'pertab-move-down";
+          "s-O" = "'pertab-move-up";
+          "s-I" = "'pertab-move-right";
+          "s-N" = "'pertab-move-left";
+          "s-c" = "'pertab-horizontal-split";
+          "s-C" = "'pertab-vertical-split";
+          "s-x" = "'pertab-layout-menu";
+          "s-k" = "'pertab-close-window";
+          "s-K" = "'pertab-kill-buffer-close-window";
+        };
+        setopt = {
+          pertab-default-layout = "'master-stack";
+          pertab-next-buffer-function = "'bufler-cycle-buffers-forward";
+          pertab-previous-buffer-function = "'bufler-cycle-buffers-backward";
+          roll-debug-enabled = false;
+        };
+        gfhookf = [
+          "('(pertab-follow-enter pertab-scroll-enter) (lambda () (golden-ratio-mode -1)))"
+          "('(pertab-follow-exit pertab-scroll-exit) (lambda () (golden-ratio-mode +1)))"
+        ];
+	config = ''
+	  <<Pertab Config>>
+	'';
+      };
+
+      pertab-monocle = pertabExtension;
+      pertab-follow = pertabExtension;
+      pertab-master-stack = pertabExtension;
+      pertab-scroll = {
+        gfhookf = [ "('pertab-follow-enter 'balance-windows)" ];
+      }
+      // pertabExtension;
     };
 }
 #+end_src
@@ -4397,10 +4790,20 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
   (setq tab-bar-tab-hints nil))
 #+end_src
 
+#+NAME: Pertab Config
+#+begin_src emacs-lisp
+(repeaters-define-maps
+ '(("delete-windows"
+    pertab-kill-buffer-close-window
+    "K"
+    pertab-close-window
+    "k")))
+#+end_src
+
 *** Javelin
 #+begin_src nix-ts :tangle modules/window-manager/javelin.nix
 {
-  flake.homeModules.exwm =
+  flake.homeModules.wm =
     { lib, ... }:
     {
       programs.emacs.init.usePackage = {
@@ -4446,55 +4849,50 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
 Bufler is the other half of tab bar. It lets us automatically narrow buffers down to a given workspace
 #+begin_src nix-ts :tangle modules/window-manager/bufler.nix :noweb yes
 {
-  flake.homeModules.exwm =
-    { ... }:
-
-    {
-      programs.emacs.init.usePackage = {
-        bufler = {
-          enable = true;
-          ghookf = [ "('tab-bar-mode 'bufler-mode)" ];
-          general = {
-            "s-b" = "'bufler-hydra/body";
-            "s-f" = "'bufler-workspace-focus-buffer";
-            "s-F" = "'bufler-workspace-set";
-          };
-          generalTwo."'normal".evil-collection-unimpaired-mode-map = {
-            "]b" = "'bufler-cycle-buffers-forward";
-            "[b" = "'bufler-cycle-buffers-backward";
-          };
-          custom.bufler-groups = ''
-            <<Emacs Bufler Defgroups>>
-          '';
-          init = ''
-            <<Emacs Bufler Init>>
-          '';
-          extraConfig = ''
-            	  :pretty-hydra
-                  ((:color amaranth)
-                    ("Move"
-                     (("o" bufler-cycle-buffers-backward "prev")
-                      ("e" bufler-cycle-buffers-forward "next"))
-                     "Tricks"
-                     (("/" consult-buffer "search" :color blue :exit t)
-                      ("i" ibuffer "list (ibuffer)" :color blue :exit t)
-                      ("k" kill-current-buffer "delete"))
-                     "Quit"
-                     (("<escape>" nil "quit" :color blue :exit t)
-                      ("<return>" nil "quit" :color blue :exit t))))
-            	'';
-          config = ''
-            <<Emacs Bufler Config>>
-          '';
-        };
-
-        bufler-workspace-tabs = {
-          enable = true;
-          ghookf = [ "('bufler-mode 'bufler-workspace-workspaces-as-tabs-mode)" ];
-          gfhookf = [ "('bufler-workspace-workspaces-as-tabs-mode '(global-tab-line-mode burly-tabs-mode))" ];
-        };
+  flake.homeModules.wm.programs.emacs.init.usePackage = {
+    bufler = {
+      enable = true;
+      ghookf = [ "('tab-bar-mode 'bufler-mode)" ];
+      general = {
+        "s-b" = "'bufler-hydra/body";
+        "s-f" = "'bufler-workspace-focus-buffer";
+        "s-F" = "'bufler-workspace-set";
       };
+      generalTwo."'normal".evil-collection-unimpaired-mode-map = {
+        "]b" = "'bufler-cycle-buffers-forward";
+        "[b" = "'bufler-cycle-buffers-backward";
+      };
+      custom.bufler-groups = ''
+        <<Emacs Bufler Defgroups>>
+      '';
+      init = ''
+        <<Emacs Bufler Init>>
+      '';
+      extraConfig = ''
+        	  :pretty-hydra
+              ((:color amaranth)
+                ("Move"
+                 (("o" bufler-cycle-buffers-backward "prev")
+                  ("e" bufler-cycle-buffers-forward "next"))
+                 "Tricks"
+                 (("/" consult-buffer "search" :color blue :exit t)
+                  ("i" ibuffer "list (ibuffer)" :color blue :exit t)
+                  ("k" kill-current-buffer "delete"))
+                 "Quit"
+                 (("<escape>" nil "quit" :color blue :exit t)
+                  ("<return>" nil "quit" :color blue :exit t))))
+        	'';
+      config = ''
+        <<Emacs Bufler Config>>
+      '';
     };
+
+    bufler-workspace-tabs = {
+      enable = true;
+      ghookf = [ "('bufler-mode 'bufler-workspace-workspaces-as-tabs-mode)" ];
+      gfhookf = [ "('bufler-workspace-workspaces-as-tabs-mode '(global-tab-line-mode burly-tabs-mode))" ];
+    };
+  };
 }
 #+end_src
 
@@ -4640,28 +5038,27 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 *** ELWM
 #+begin_src nix-ts :tangle modules/window-manager/elwm.nix :noweb yes
 {
-  flake.homeModules.exwm =
-    { ... }:
+  flake.homeModules.wm.programs.emacs.init = {
+    tools.goldenRatio = true;
 
-    {
-      programs.emacs.init.usePackage.elwm = {
-        enable = true;
-        defer = true;
-        command = [
-          "elwm-next"
-          "elwm-prev"
-          "elwm-rotate-window"
-          "elwm-derotate-window"
-          "elwm-split-window"
-        ];
-        config = ''
-          <<Emacs Elwm Config>>
-        '';
-        preface = ''
-          <<Emacs Elwm Preface>>
-        '';
-      };
+    usePackage.elwm = {
+      enable = true;
+      defer = true;
+      command = [
+        "elwm-next"
+        "elwm-prev"
+        "elwm-rotate-window"
+        "elwm-derotate-window"
+        "elwm-split-window"
+      ];
+      config = ''
+        <<Emacs Elwm Config>>
+      '';
+      preface = ''
+        <<Emacs Elwm Preface>>
+      '';
     };
+  };
 }
 #+end_src
 
@@ -4737,53 +5134,52 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 
     {
       programs.emacs.init = {
-        tools = {
-          goldenRatio = true;
-          exwm = {
-            enable = true;
-            wantMouseWarping = true;
-            useGaps = true;
-            bindings = {
-              "?\\s-r" = "exwm-reset";
-              "?\\s-a" = "evil-ex";
-              "?\\s-d" = "app-launcher-run-app";
-              "?\\s-t" = "proced";
+        tools.exwm = {
+          enable = true;
+          wantMouseWarping = true;
+          useGaps = true;
+          bindings = {
+            "?\\s-r" = "exwm-reset";
+            "?\\s-a" = "evil-ex";
+            "?\\s-d" = "app-launcher-run-app";
+            "?\\s-t" = "proced";
 
-              # Movement
-              "?\\s-e" = "pertab-focus-down";
-              "?\\s-o" = "pertab-focus-up";
-              "?\\s-i" = "pertab-focus-right";
-              "?\\s-n" = "pertab-focus-left";
-              "?\\s-." = "other-frame";
-              "?\\s->" = "tab-bar-move-tab-to-frame";
+            # Movement
+            # "?\\s-e" = "pertab-focus-down";
+            # "?\\s-o" = "pertab-focus-up";
+            # "?\\s-i" = "pertab-focus-right";
+            # "?\\s-n" = "pertab-focus-left";
+            "?\\s-." = "other-frame";
+            "?\\s->" = "tab-bar-move-tab-to-frame";
 
-              # Arrangement
-              "?\\s-E" = "pertab-move-down";
-              "?\\s-O" = "pertab-move-up";
-              "?\\s-I" = "pertab-move-right";
-              "?\\s-N" = "pertab-move-left";
-              "?\\s-c" = "pertab-horizontal-split";
-              "?\\s-C" = "pertab-vertical-split";
-              "?\\s-j" = "winner-undo";
-              "?\\s-J" = "winner-redo";
-              "?\\s-x" = "pertab-layout-menu";
-              "?\\s-k" = "pertab-close-window";
-              "?\\s-K" = "pertab-kill-buffer-close-window";
+            # Arrangement
+            # "?\\s-E" = "pertab-move-down";
+            # "?\\s-O" = "pertab-move-up";
+            # "?\\s-I" = "pertab-move-right";
+            # "?\\s-N" = "pertab-move-left";
+            # "?\\s-c" = "pertab-horizontal-split";
+            # "?\\s-C" = "pertab-vertical-split";
+            "?\\s-j" = "winner-undo";
+            "?\\s-J" = "winner-redo";
+            # "?\\s-x" = "pertab-layout-menu";
+            # "?\\s-k" = "pertab-close-window";
+            # "?\\s-K" = "pertab-kill-buffer-close-window";
 
-              #Shell bindings
-              "?\\s-s" = '',(cmd! (shell-command "slock"))'';
-              "?\\s-y" =
-                '',(cmd! (start-process-shell-command "maim" nil  "${lib.getExe pkgs.maim} ~/pic/screenshot.png"))'';
-              "XF86MonBrightnessDown" = ",(cmd! (efs/alter-monitor-brightness 5 t))";
-              "XF86MonBrightnessUp" = ",(cmd! (efs/alter-monitor-brightness 5))";
-            };
-            titleAlterations = {
-              qutebrowser = ''(exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title))'';
-              mpv = ''(exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title))'';
-            };
+            #Shell bindings
+            "?\\s-s" = '',(cmd! (shell-command "slock"))'';
+            "?\\s-y" =
+              '',(cmd! (start-process-shell-command "maim" nil  "${lib.getExe pkgs.maim} ~/pic/screenshot.png"))'';
+            "XF86MonBrightnessDown" = ",(cmd! (efs/alter-monitor-brightness 5 t))";
+            "XF86MonBrightnessUp" = ",(cmd! (efs/alter-monitor-brightness 5))";
+          };
+          titleAlterations = {
+            qutebrowser = ''(exwm-workspace-rename-buffer (format "Qutebrowser: %s" exwm-title))'';
+            mpv = ''(exwm-workspace-rename-buffer (format "Mpv: %s" exwm-title))'';
           };
         };
+
         usePackage.exwm = {
+          extraPackages = [ pkgs.xwininfo ];
           gfhookf = [
             # When window "class" updates, use it to set the buffer name
             "('exwm-update-class (lambda () (exwm-workspace-rename-buffer exwm-class-name)))"
@@ -4837,6 +5233,19 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
               "'XF86AudioLowerVolume"
               "'XF86AudioMute"
               '''?\M-\ ''
+              '''?\s-x''
+              '''?\s-k''
+              '''?\s-K''
+              '''?\s-E''
+              '''?\s-O''
+              '''?\s-I''
+              '''?\s-N''
+              '''?\s-c''
+              '''?\s-C''
+              '''?\s-e''
+              '''?\s-o''
+              '''?\s-i''
+              '''?\s-n''
             ];
           };
           init = ''
@@ -4877,100 +5286,164 @@ NEG subtracts if it is true."
 #+begin_src emacs-lisp
 (winner-mode)
 
-(repeaters-define-maps
- '(("delete-windows"
-    pertab-kill-buffer-close-window
-    "K"
-    pertab-close-window
-    "k")))
 (repeaters-define-maps '(("input-keys" exwm-input-send-next-key "q")))
 (exwm-input-set-key (kbd "s-<return>") 'efs/make-eshell)
+#+end_src
+
+*** EWM
+#+begin_src nix-ts :tangle modules/window-manager/ewm.nix
+{
+  perSystem = { lib, pkgs, ... }: {
+    packages.startEwm = pkgs.writeShellScriptBin "startewm" ''
+      emacs --fg-daemon --eval "(require 'ewm)" --eval "(ewm-start-module)" --eval "(efs/run-in-background \"${lib.getExe pkgs.wbg} ~/.config/home-manager/wallpaper.png\")"
+    '';
+  };
+  flake.homeModules.ewm = { lib, pkgs, ... }: {
+    programs.emacs.init.usePackage = {
+      dashboard.ghookf = [ "('after-init '(dashboard-insert-startupify-lists dashboard-initialize))" ];
+      evil.gfhookf = [ "('after-init 'evil-mode)" ];
+      ewm = {
+        enable = true;
+        defer = true;
+        custom.ewm-output-config = [
+          [
+            ''"DP-1"''
+            "':width"
+            1920
+            "':height"
+            1080
+          ]
+          [
+            ''"DVI-I-1"''
+            "':width"
+            1920
+            "':height"
+            1200
+          ]
+        ];
+        generalOneConfig.ewm-mode-map = {
+          "s-<return>" = "'efs/make-eshell";
+          "s-a" = "'evil-ex";
+          "s-f" = "'bufler-workspace-focus-buffer";
+          "s-." = "'other-frame";
+          "s-j" = "'winner-undo";
+          "s-J" = "'winner-undo";
+        };
+        config = ''
+          (winner-mode)
+          (defun efs/run-in-background (command)
+               (let ((command-parts (split-string command "[ ]+")))
+                    (apply #'call-process `(,(car command-parts) nil 0 nil ,@(cdr command-parts)))))
+        '';
+        setopt.ewm-intercept-prefixes = [
+          ''"s-<return>"''
+          ''"s-a"''
+          ''"s-b"''
+          ''"s-d"''
+          ''"s-u"''
+          ''"C-^"''
+          ''"M-&"''
+          ''"s-M-'"''
+          ''"s-J"''
+          ''"s-j"''
+          ''"s-f"''
+          ''"s-e"''
+          ''"s-o"''
+          ''"s-i"''
+          ''"s-n"''
+          ''"s-."''
+          ''"s->"''
+          ''"s-E"''
+          ''"s-O"''
+          ''"s-I"''
+          ''"s-N"''
+          ''"s-c"''
+          ''"s-C"''
+          ''"s-x"''
+          ''"s-k"''
+          ''"s-K"''
+        ];
+        package = epkgs: pkgs.ewm;
+        extraPackages = with pkgs; [
+          startEwm
+          xwayland-satellite
+          wl-clipboard
+        ];
+      };
+    };
+  };
+}
 #+end_src
 
 *** Popper
 #+begin_src nix-ts :tangle modules/window-manager/popper.nix
 {
-  flake.homeModules.exwm =
-    { ... }:
-    {
-      programs.emacs.init.usePackage.popper = {
-        enable = true;
-        ghookf = [ "('on-first-buffer 'popper-mode)" ];
-        general = {
-          "s-'" = "'popper-toggle";
-          "s-\\\"" = "'popper-cycle";
-          "C-s-'" = "'popper-toggle-type";
-        };
-        setopt = {
-          popper-window-height = 30;
-          popper-group-function = "'popper-group-by-project";
-          popper-reference-buffers = [
-            "'help-mode"
-            "'helpful-mode"
-            "'compilation-mode"
-            "'inferior-python-mode"
-            "'occur-mode"
-            "'grep-mode"
-            ''"^\\*.*eshell\\*"''
-            ''"^\\*eat\\*"''
-            ''"^\\*Sage\\*"''
-            ''"^\\*prolog\\*"''
-            "'xref--xref-buffer-mode"
-            "'flymake-diagnostics-buffer-mode"
-            "'rustic-cargo-test-mode"
-            "'rustic-cargo-run-mode"
-            "'geiser-repl-mode"
-            "'dape-repl-mode"
-            "'racket-repl-mode"
-            "'inferior-ess-r-mode"
-            "'cider-repl-mode"
-          ];
-        };
-      };
+  flake.homeModules.wm.programs.emacs.init.usePackage.popper = {
+    enable = true;
+    ghookf = [ "('on-first-buffer 'popper-mode)" ];
+    general = {
+      "s-'" = "'popper-toggle";
+      "s-\\\"" = "'popper-cycle";
+      "C-s-'" = "'popper-toggle-type";
     };
+    setopt = {
+      popper-window-height = 30;
+      popper-group-function = "'popper-group-by-project";
+      popper-reference-buffers = [
+        "'compilation-mode"
+        "'inferior-python-mode"
+        "'occur-mode"
+        "'grep-mode"
+        ''"^\\*prolog\\*"''
+        "'xref--xref-buffer-mode"
+        "'flymake-diagnostics-buffer-mode"
+        "'rustic-cargo-test-mode"
+        "'rustic-cargo-run-mode"
+        "'racket-repl-mode"
+        "'inferior-ess-r-mode"
+        "'cider-repl-mode"
+      ];
+    };
+  };
 }
 #+end_src
 
 *** Ace Window
 #+begin_src nix-ts :tangle modules/window-manager/ace.nix :noweb yes
 {
-  flake.homeModules.exwm =
-    { ... }:
-    {
-      programs.emacs.init.usePackage.ace-window = {
-        enable = true;
-        setopt = {
-          aw-scope = "'frame";
-          aw-keys = "'(?c ?r ?s ?t ?n ?e ?i ?a)";
-        };
-        preface = ''
-          <<Emacs Ace Window Preface>>
-        '';
-        init = ''
-          (setopt aw-dispatch-alist '((?k aw-delete-window "Delete Window")
-          	                      (?K efs-aw-kill-buffer-and-window "Delete Buffer and Window")
-                                      (?m aw-swap-window "Swap Windows")
-                                      (?M aw-move-window "Move Window")
-                                      (?d aw-copy-window "Copy Window")
-                                      (?b aw-switch-buffer-in-window "Select Buffer")
-                                      (?f aw-flip-window)
-                                      (?u aw-switch-buffer-other-window "Switch Buffer Other Window")
-                                      (?x aw-execute-command-other-window "Execute Command Other Window")
-                                      (?v efs-aw-split-window-elwm "Split Window")
-                                      (?o delete-other-windows "Delete Other Windows")
-                                      (?T aw-transpose-frame "Transpose Frame")
-                                      (?? aw-show-dispatch-help)))'';
-        general = {
-          "s-H-i" = "'ace-window";
-          "s-H-n" = "'ace-window";
-          "s-H-o" = "'ace-window";
-          "s-H-e" = "'ace-window";
-        };
-        config = ''
-          	<<Emacs Ace Window Config>>
-        '';
-      };
+  flake.homeModules.wm.programs.emacs.init.usePackage.ace-window = {
+    enable = true;
+    setopt = {
+      aw-scope = "'frame";
+      aw-keys = "'(?c ?r ?s ?t ?n ?e ?i ?a)";
     };
+    preface = ''
+      <<Emacs Ace Window Preface>>
+    '';
+    init = ''
+      (setopt aw-dispatch-alist '((?k aw-delete-window "Delete Window")
+      	                      (?K efs-aw-kill-buffer-and-window "Delete Buffer and Window")
+                                  (?m aw-swap-window "Swap Windows")
+                                  (?M aw-move-window "Move Window")
+                                  (?d aw-copy-window "Copy Window")
+                                  (?b aw-switch-buffer-in-window "Select Buffer")
+                                  (?f aw-flip-window)
+                                  (?u aw-switch-buffer-other-window "Switch Buffer Other Window")
+                                  (?x aw-execute-command-other-window "Execute Command Other Window")
+                                  (?v efs-aw-split-window-elwm "Split Window")
+                                  (?o delete-other-windows "Delete Other Windows")
+                                  (?T aw-transpose-frame "Transpose Frame")
+                                  (?? aw-show-dispatch-help)))'';
+    general = {
+      "s-H-i" = "'ace-window";
+      "s-H-n" = "'ace-window";
+      "s-H-o" = "'ace-window";
+      "s-H-e" = "'ace-window";
+    };
+    config = ''
+      <<Emacs Ace Window Config>>
+    '';
+  };
 }
 #+end_src
 
@@ -5083,7 +5556,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
         emacs.init = {
           ai = {
             copilot = {
-              enable = true;
+              enable = false;
               keepOutOf = [
                 "c-ts-mode"
                 "json5-ts-mode"
@@ -5098,6 +5571,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
                 enable = true;
                 model = "qwen3:8b";
               };
+              agent.enable = true;
             };
           };
           usePackage =
@@ -5142,6 +5616,11 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 
               gptel-quick.setopt = mkOllama [ "llama3.2:1b" ] "-quick";
 
+              gptel-inline = {
+                enable = true;
+                after = [ "gptel" ];
+              };
+
               # gptel-got = {
               #   enable = true;
               #   after = ["gptel"];
@@ -5156,32 +5635,36 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
                 setopt.mcp-hub-servers = lib.optionals (config.programs.mcp.servers != { }) (
                   lib.mapAttrsToList (
                     n: v:
-                    "${
-                      if v.enabled != false || v.disabled != true then
-                        '''("${n}" ${
-                          if v.command != null then
-                            '':command "${v.command}" ${
-                              if v.args != null then ":args (${lib.concatMapStrings (x: ''"${x}" '') v.args}) " else ""
-                            }''
-                          else
-                            "${if v.url != null then '':url "${v.url} "'' else ""}"
-                        } ${
+                    if v.enabled != false || v.disabled != true then
+                      let
+                        name = ''"${n}"'';
+                        test =
+                          attr: pass: fail:
+                          if v."${attr}" != null then pass else fail;
+                        commandOrUrl = test "command" ''':command "${v.command}" ${
+                          test "args" "':args '(${lib.concatMapStrings (x: ''"${x}" '') v.args}) " ""
+                        }'' (test "url " ''':url "${v.url} "'' "");
+                        env =
                           if v.env != { } then
-                            ":env (${
-                              lib.concatStringsSep " " (lib.flatten (lib.mapAttrsToList (x: y: '':${x} "${y}"'') v.env))
+                            "':env '(${
+                              lib.concatStringsSep " " (lib.flatten (lib.mapAttrsToList (x: y: ''':${x} "${y}"'') v.env))
                             })"
                           else
-                            ""
-                        })''
-                      else
-                        ""
-                    }"
+                            "";
+                      in
+                      [
+                        name
+                        commandOrUrl
+                        env
+                      ]
+                    else
+                      ""
                   ) config.programs.mcp.servers
                 );
               };
 
               aidermacs = {
-                enable = true;
+                enable = false;
                 extraPackages = [ pkgs.aider-chat ];
                 generalOne.global-leader."gA" = "'aidermacs-transient-menu";
                 config = "(start-ollama)";
@@ -5191,7 +5674,12 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
                 };
               };
 
-              popper.setopt.popper-reference-buffers = [ "'aidermacs-comint-mode" ];
+              popper.setopt.popper-reference-buffers = [
+                "'aidermacs-comint-mode"
+                ''"^\\*gptel-inline\\*"''
+                ''"^\\*Ollama\\*"''
+                ''"^\\*copilot\\*"''
+              ];
             };
         };
       };
@@ -5227,6 +5715,67 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
  'newline
  "RET"
  'newline)
+
+(gptel-make-preset
+ 'translate
+ :system "Translate to english."
+ :model 'llama3.2:1b)
+
+(defun efs/translate (foreign-text)
+  "Translates FOREIGN-TEXT to English & outputs it in an org buffer called Translation."
+  (with-current-buffer (get-buffer-create "Translation")
+    (switch-to-buffer (current-buffer))
+    (org-mode)
+    (let ((gptel-model 'llama3.2:1b))
+      (gptel-request
+       (concat
+        foreign-text " Translate the following text to English.")))))
+
+(with-eval-after-load 'evil
+  (evil-ex-define-cmd
+   "translateb" (cmd! (efs/translate (buffer-string)))))
+
+(gptel-make-preset
+ 'bug-fixer
+ :description "Fix lsp bugs"
+ :tools
+ '("Agent"
+   "TodoWrite"
+   "Glob"
+   "Grep"
+   "Read"
+   "Insert"
+   "Edit"
+   "Write"
+   "Mkdir"
+   "Eval"
+   "Bash"
+   "WebSearch"
+   "WebFetch"
+   "Skill")
+ :pre (lambda () (require 'flymake))
+ :system "<role_and_behavior>\nYou are an AI assistant that helps users accomplish their goals.\n\n<response_tone>\n- Keep responses concise to the point of being terse\n- Avoid flattery, superlatives, or unnecessary flourishes\n- Prioritize accuracy over agreement\n- Challenge the user constructively when you can think of a better approach\n- Never use bash echo or command-line tools for communication.  Instead, output text directly to the user.\n- Do not write documentation files unless asked for.  Provide responses directly to the user instead.\n</response_tone>\n\n<critical_thinking>\n- Before executing, consider if there's a better way to accomplish the task\n- Think about the larger problem - does the task need to be done this way at all?\n- Provide alternatives when you identify better approaches\n- Question assumptions constructively\n- Investigate to find truth before confirming beliefs\n</critical_thinking>\n</role_and_behavior>\n\n<task_execution_protocol>\nBefore starting ANY task, run this mental checklist:\n\n1. **Is this multi-step work?** If the task requires 3 or more distinct steps → CREATE A TODO LIST IMMEDIATELY using `TodoWrite`. This is not optional.\n\n   **What counts as a \"step\"?**\n   - Individual file edits/modifications (even if similar)\n   - Distinct phases of work (research → implement → test)\n   - Independent subtasks that could fail separately\n   - Actions that need to be tracked/verified\n\n   **Examples requiring todos:**\n   - \"Replace 5+ similar patterns across a file\" → YES (each replacement is a step)\n   - \"Refactor functions in 3 files\" → YES (each file is a step)\n   - \"Research X, then implement Y\" → YES (2+ distinct phases)\n\n   **Examples NOT requiring todos:**\n   - \"Read file X and tell me Y\" → NO (single action)\n   - \"Fix this one bug\" → NO (unless fix spans multiple files)\n\n2. **Does this task need delegation?**\n\n   **DELEGATE to `researcher` when:**\n   - Open-ended web research (multiple sources, uncertain approach)\n   - Searching codebase for understanding/information gathering (not just finding a specific known item)\n   - Task involves exploring unfamiliar code where you don't know exact locations\n   - Searching across 3+ files or when you expect many search results\n   - Building understanding of how something works by reading multiple files\n   - User asks \"how does X work\", \"where is X implemented\", \"find all places that do X\"\n\n   **DELEGATE to `introspector` when:**\n   - Understanding elisp package APIs or Emacs internals.\n   - Exploring Emacs state or package functionality.\n   - For elisp tasks, `introspector` is better than using `researcher` as the\n     results will be the \"source of truth\", from the live Emacs session.\n     Consider using both in sequence (`introspector` first) for complex tasks.\n\n   **DELEGATE to `executor` when:**\n   - Task involves modifying 3+ files (even simple changes across many files)\n   - Task involves 2+ files with complex/interdependent changes\n   - Systematic refactoring (renaming across files, updating patterns, migration tasks)\n   - Batch operations (applying same change to multiple locations)\n   - Multi-phase work (research → implement → test → fix → verify)\n   - Task has clear requirements but will take 5+ tool calls to complete\n   - You have multiple independent tasks in your todo list that can run in parallel\n   - The execution is well-defined but you need to plan/consult on other tasks\n   - Requires loading more than one skill to execute a task.\n\n   **Key signals for delegation:**\n   - User says: \"refactor X to Y\", \"migrate from A to B\", \"update all instances of Z\"\n   - You're thinking: \"I need to edit file1, then file2, then file3...\"\n   - You have a clear plan but executing it will consume significant context\n   - The task is repetitive/mechanical (perfect for autonomous execution)\n\n   **Handle inline when:**\n   - You know exact file paths to read (1-2 files)\n   - Searching for specific well-defined text in known locations\n   - Simple lookups or single-file operations\n   - User provides specific file paths to examine\n   - Quick edits to 1-2 files\n\n3. **Pattern matching for delegation:**\n   - \"how does...\", \"where is...\", \"find all...\", \"search for...\", \"explore...\" → Use `researcher`\n   - \"I need to understand...\" about codebase → Use `researcher`\n   - \"I need to understand...\" about elisp/Emacs → Use `introspector`\n   - \"create/modify these files...\", \"implement feature Z\" (with clear spec) → Use `executor`\n   - \"refactor X to Y\", \"migrate from A to B\", \"update all X\" → Use `executor`\n   - \"rename X to Y across the codebase\" → Use `executor`\n   - \"apply this change to all/multiple files\" → Use `executor`\n   - \"This task has multiple phases/stages\" → Use `TodoWrite` (or delegate to `executor` if it will bloat context)\n\n**Key principle for researcher**: If you're about to grep/glob and aren't sure what you'll find or will need to follow up with more searches, delegate to `researcher`. It's better to delegate early than fill context with irrelevant results.\n\n**Key principle for executor**: If you find yourself planning \"I'll edit file A, then B, then C...\", that's a signal to delegate to `executor`. Let it handle the mechanical execution while you stay available for higher-level decisions.\n\nOnce you delegate to a specialized agent, trust their results and integrate them into your response.\n</task_execution_protocol>\n\n<tool_usage_policy>\nWhen working on tasks, follow these guidelines for tool selection:\n\n**Specialized Tools vs. Shell Commands (CRITICAL):**\n- NEVER use `Bash` for file operations with grep, find, ls, cat, head, tail, sed or awk.\n- ALWAYS use: `Glob`, `Grep`, `Read`, `Edit`, `Write`\n- Reserve `Bash` EXCLUSIVELY for: git, npm, docker, cargo, make, system services and other non-file commands\n- Using bash for file operations violates the tool hierarchy and creates technical debt\n\n**Parallel Tool Execution:**\n- Call multiple tools in a single response when tasks are independent\n- Launch multiple executor agents in parallel for independent Todo tasks\n- Never use placeholders or guess missing parameters\n- Maximize parallel execution to improve efficiency\n\n**Tool Selection Hierarchy:**\n- File search by name → Use `Glob` (NOT find or ls)\n- Directory listing → Use `Glob` with glob pattern `\"*\"` (not ls)\n- Content search → Use `Grep` (NOT grep or rg)\n- Read files → Use `Read` (NOT cat/head/tail)\n- Edit files → Use `Edit` (NOT sed/awk)\n- Write files → Use `Write` (NOT echo >/cat <<EOF)\n- System operations → Use `Bash` (for git, npm, docker, etc.)\n\n<tool name=\"Agent\">\n**MANDATORY delegation scenarios (use Agent immediately):**\n- Open-ended web research with multiple sources → DELEGATE to `researcher`\n- **Searching codebase for code understanding or information gathering** → DELEGATE to `researcher`\n- Exploring unfamiliar code with uncertain search paths → DELEGATE to `researcher`\n- **Expected to search 3+ files or get many search results** → DELEGATE to `researcher`\n- Understanding elisp APIs or Emacs internals → DELEGATE to `introspector`\n- **Well-defined multi-step task that will bloat your context** → DELEGATE to `executor`\n- **Creating/modifying 3+ files with clear requirements** → DELEGATE to `executor`\n- Task explicitly requires specialized investigation → Use appropriate agent\n\n**When NOT to use `Agent`:**\n- You know exact file paths and just need to read 1-2 specific files → use `Read`\n- Searching for ONE specific, well-defined string in known location → use `Grep`\n- User provides specific file paths to examine → handle inline\n- Simple, focused task with all information available → handle inline\n- Quick edits to 1-2 files → handle inline\n\n**Critical distinctions:**\n- **Finding a specific item** (e.g., \"read the config in settings.py\") → Handle inline\n- **Understanding/exploring** (e.g., \"how does authentication work?\") → DELEGATE to `researcher`\n- **Executing well-defined work** (e.g., \"refactor all tests to use new API\") → DELEGATE to `executor`\n\n**How to use the `Agent` tool:**\n- Agents run autonomously and return results in one message\n- Provide detailed, comprehensive instructions in the prompt parameter\n- You can launch multiple agents in parallel for independent tasks\n- Agent results should generally be trusted\n- Integrate results into your response - don't pass responsibility back to the user\n\n**Available agent types:**\n`researcher`: Specialized agent for research and information gathering. Handles both online research (web searches, documentation) and codebase exploration. Read-only operations: searches, analyzes, and reports findings concisely.\n\n`introspector`: Specialized agent for exploring elisp and Emacs package APIs and the state of the Emacs instance in which you are running.  Has access to various elisp introspection tools.\n\n`executor`: Autonomous executor for well-defined, multi-step tasks. Can read, write, and modify files. Use when you know what needs to be done but want to keep the main context clean.\n\n\n</tool>\n\n<tool name=\"TodoWrite\">\n**MANDATORY: Use TodoWrite for any multi-step work (3+ steps)**\n\nYou MUST create a todo list immediately when:\n- Task has 3+ distinct steps or phases\n- Task will span multiple responses or tool calls\n- Task requires careful planning or coordination\n- You receive new instructions with multiple requirements\n- Work might benefit from tracking progress\n\n**When NOT to use `TodoWrite`:**\n- Single, straightforward tasks (one clear action)\n- Trivial tasks with no organizational benefit\n- Tasks completable in less than 3 steps\n- Purely conversational or informational requests\n- User provides a simple question requiring a simple answer\n\n**How to use `TodoWrite`:**\n- Always provide both `content` (imperative: \"Run tests\") and `activeForm` (present continuous: \"Running tests\")\n- Exactly ONE task must be in_progress at any time when you're executing tasks yourself\n- When delegating to executor agents in parallel, multiple tasks can be in_progress simultaneously\n- Mark tasks completed IMMEDIATELY after finishing (don't batch completions)\n- Complete current tasks before starting new ones\n- Send entire todo list with each call (not just changed items)\n- ONLY mark completed when FULLY accomplished - if errors occur, keep as in_progress\n\n**Pattern to recognize:** If you're planning 3+ steps before executing, CREATE A TODO LIST FIRST.\n- Send entire todo list with each call (not just changed items)\n- Remove tasks that are no longer relevant\n- ONLY mark completed when FULLY accomplished - if errors occur, keep as in_progress\n- Create new tasks for blockers/issues that arise\n\n**Task States:**\n- `pending`: Task not yet started\n- `in_progress`: Currently working on (exactly one at a time)\n- `completed`: Task finished successfully\n</tool>\n\n<tool name=\"Glob\">\n**When to use `Glob`:**\n- Searching for files by name patterns or extensions\n- You know the file pattern but not exact location\n- Finding all files of a certain type\n- Exploring project or directory structure\n\n**When NOT to use `Glob`:**\n- Searching file contents → use `Grep`\n- You know the exact file path → use `Read`\n- Doing open-ended multi-round searches → use `Agent` tool with general-purpose agent\n- Use shell commands like find → use `Glob` instead\n\n**How to use `Glob`:**\n- Supports standard glob patterns: `**/*.js`, `*.{ts,tsx}`, `src/**/*.py`\n- List all files with glob pattern `*`\n- Returns files sorted by modification time (most recent first)\n- Can specify a directory path to narrow search scope\n- Can perform multiple glob searches in parallel for different patterns\n</tool>\n\n<tool name=\"Grep\">\n**When to use `Grep`:**\n- Finding ONE specific, well-defined string/pattern in the codebase\n- You know what you're looking for and where it likely is\n- Verifying presence/absence of specific text\n- Quick, focused searches with expected results <20 matches\n\n**When NOT to use `Grep`:**\n- **Building code understanding or exploring unfamiliar code** → DELEGATE to `researcher`\n- **Expected to get many results (20+ matches)** → DELEGATE to `researcher`\n- **Will need follow-up searches based on results** → DELEGATE to `researcher`\n- Searching for files by name → use `Glob`\n- Reading known file contents → use `Read`\n\n**How to use `Grep`:**\n- Supports full regex syntax (ripgrep-based)\n- Can specify directory path and glob pattern to narrow scope\n- Use `context_lines` parameter to see surrounding lines\n- Can perform multiple focused grep searches in parallel\n- **If you find yourself doing a second grep based on first results, you should have used `researcher`**\n</tool>\n\n<tool name=\"Read\">\n**When to use `Read`:**\n- You need to examine file contents\n- Before editing any file (required)\n- You know the exact file path\n- Viewing images, PDFs, or Jupyter notebooks\n- Understanding code structure and implementation\n\n**When NOT to use `Read`:**\n- Searching for files by name → use `Glob`\n- Searching file contents across multiple files → use `Grep`\n- You want to use shell commands like cat → use `Read` instead\n\n**How to use `Read`:**\n- Default behavior reads up to 2000 lines from the beginning\n- For large files, use offset and limit parameters to read specific sections\n- Recommended to read the whole file by omitting offset/limit when possible\n- Always read before editing - the `Edit` tool will error otherwise\n- Can read multiple files in parallel by making multiple `Read` calls\n</tool>\n\n<tool name=\"Insert\">\n**When to use `Insert`:**\n- When you only need to add new content to a file.\n- When you know the exact line number for the insertion.\n- For purely additive actions that don't require changing surrounding context.\n\n**When NOT to use `Insert`:**\n- When you need to replace or modify existing text → use `Edit`.\n- When you need to create a new file entirely → use `Write`.\n\n**How to use `Insert`:**\n- The `line_number` parameter specifies the line *after* which to insert `new_str`.\n- Use `line_number: 0` to insert at the very beginning of the file.\n- Use `line_number: -1` to insert at the very end of the file.\n- This tool is preferred over `Edit` when only insertion is required.\n</tool>\n\n<tool name=\"Bash\">\n**When to use `Bash`:**\n- Terminal operations: git, npm, docker, cargo, etc.\n- Commands that truly require shell execution\n- Running builds, tests, or development servers\n- System administration tasks\n\n**When NOT to use `Bash`:**\n- File operations → use `Read`, `Write`, `Edit`, `Glob`, `Grep` instead\n- Finding files → use `Glob`, not find\n- Searching contents → use `Grep`, not grep/rg\n- Reading files → use `Read`, not cat/head/tail\n- Editing files → use `Edit`, not sed/awk\n- Writing files → use `Write`, not echo or heredocs\n- Communication with user → output text directly, not echo\n\n**How to use `Bash`:**\n- Quote file paths with spaces using double quotes\n- Chain dependent commands with && (or ; if failures are OK)\n- Use absolute paths instead of cd when possible\n- For parallel commands, make multiple `Bash` calls in one message\n</tool>\n\n<tool name=\"Eval\">\n**When to use `Eval`:**\n- Testing elisp code snippets or expressions\n- Verifying code changes work correctly\n- Checking variable values or function behavior\n- Demonstrating elisp functionality to users\n- Calculating results instead of saying \"I can't calculate that\"\n- Quickly changing user settings or checking configuration\n- Exploring Emacs state or testing hypotheses\n\n**When NOT to use `Eval`:**\n- Multi-expression evaluations → make one call per expression (no progn)\n- Complex code that requires multiple statements → break into individual expressions\n- When you need to modify files → use `Edit` instead\n- For bash/shell operations → use `Bash`\n\n**How to use `Eval`:**\n- Provide a single elisp expression as a string\n- Can be function calls, variables, quasi-quoted expressions, or any valid elisp\n- Only the first sexp will be read and evaluated\n- Return values are formatted using %S (strings appear escaped, literals are `read`-compatible)\n- Some objects without printed representation show as #<hash-notation>\n- Make one call per expression - don't combine with progn\n- Use for quick settings changes, variable checks, or demonstrations\n\n**Examples of good usage:**\n- `user-emacs-directory` → check variable value\n- `(setq my-var \"new-value\")` → change setting\n- `(length my-list)` → get list length\n- `(file-exists-p \"/path/to/file\")` → test file existence\n</tool>\n\n<tool name=\"Edit\">\n**When to use `Edit`:**\n- Modifying existing files with surgical precision\n- Making targeted changes to code or configuration\n- Replacing specific strings, functions, or sections\n- Any time you need to change part of an existing file\n\n**When NOT to use `Edit`:**\n- Creating brand new files → use `Write`\n- You haven't read the file yet → must `Read` first (tool will error)\n- The old_string is not unique and you want to replace all occurrences → use `replace_all: true`\n\n**How to use `Edit`:**\n- MUST `Read` the file first (required, tool will error otherwise)\n- Provide exact `old_string` to match (including proper indentation from file content, not line number prefixes)\n- Provide `new_string` as replacement (must be different from old_string)\n- The edit will FAIL if old_string is not unique\n- Preserve exact indentation from the file content (ignore line number prefixes from `Read` output)\n- Always prefer editing existing files over creating new ones\n</tool>\n\n<tool name=\"Write\">\n**When to use `Write`:**\n- Creating new files that don't exist yet\n- Completely replacing the contents of an existing file\n- Generating new code, configuration, or documentation files\n\n**When NOT to use `Write`:**\n- Modifying existing files → use `Edit` instead (more precise and safer)\n- The file already exists and you only need to change part of it → use `Edit`\n- You haven't read the file first (if it exists) → `Read` first, then use `Edit`\n\n**How to use `Write`:**\n- Will overwrite existing files completely - use with caution\n- MUST use `Read` tool first if the file already exists (tool will error otherwise)\n- Always prefer editing existing files rather than creating new ones\n- Provide complete file content as a string\n- File path must be absolute, not relative\n</tool>\n\n<tool name=\"WebSearch\">\n**When to use `WebSearch`:**\n- Searching the web for current information\n- Finding recent documentation or updates\n- Researching topics beyond your knowledge cutoff\n- User requests information about recent events or current data\n\n**When NOT to use `WebSearch`:**\n- Fetching a known URL → use `WebFetch` instead\n- Searching local codebase → use Grep, `Glob`\n- Information within your knowledge cutoff that doesn't require current data\n\n**How to use `WebSearch`:**\n- Provide clear, specific search query\n- Returns search result blocks with relevant information\n- Account for current date when searching (e.g., don't use \"2024\" if current year is 2025)\n</tool>\n\n<tool name=\"WebFetch\">\n**When to use `WebFetch`:**\n- Fetching and analyzing web content when you need full context for potential follow-up questions\n- Retrieving documentation from URLs that are likely small (<1000 lines)\n- The user explicitly wants detailed analysis of the entire page\n- YouTube URLs → always use `WebFetch` for these, it returns the video\n  description and transcript (timestamped paragraphs) instead of page text\n\n**When NOT to use `WebFetch`:**\n- Extracting specific information from large webpages → use `Agent` to avoid context bloat\n- Searching the web for multiple results → use `WebSearch` instead\n- You need to guess or generate URLs → only use URLs provided by user or found in files\n- Local file operations → use `Read`, `Glob`, `Grep`\n\n**How to use `WebFetch`:**\n- For focused information extraction, delegate to `Agent` with `WebFetch` to get only relevant results\n- Direct use is appropriate when full content may be needed for follow-up questions\n- Requires a valid, fully-formed URL (HTTP automatically upgraded to HTTPS)\n- Provide a prompt describing what information to extract\n- Has 15-minute cache for faster repeated access\n- If redirected to different host, make new `WebFetch` with redirect URL\n</tool>\n\n<tool name=\"Skill\">\nLoad a skill to get detailed instructions for a specific task.Skills provide specialized knowledge and step-by-step guidance.Use this when a task matches an available skill's description.\n<available_skills>\n\n</available_skills>\n</tool>\n\n</tool_usage_policy>\n"
+ :post
+ (lambda ()
+   (insert
+    (concat
+     "You are an expert programmer. Fix the bugs at the following locations."
+     (apply 'concat
+            (mapcar
+             (lambda (diagnostic)
+               (concat
+                (let ((buffer (flymake-diagnostic-buffer diagnostic)))
+                  (if (bufferp buffer)
+                      (buffer-file-name buffer)
+                    buffer))
+                " line "
+                (int-to-string
+                 (let ((beg (flymake-diagnostic-beg diagnostic)))
+                   (if (listp beg)
+                       (car beg)
+                     beg)))
+                ": " (flymake-diagnostic-text diagnostic) "\n"))
+             (flymake--project-diagnostics)))))))
 #+end_src
 
 #+NAME: Emacs MCP Config
@@ -5278,23 +5827,34 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 
 {
   perSystem =
-    { pkgs, ... }:
+    {
+      lib,
+      pkgs,
+      self',
+      ...
+    }:
     let
       epkgs = pkgs.emacs.pkgs;
     in
     {
-      packages.mpc-wrapper = (
-        epkgs.callPackage epkgs.trivialBuild rec {
-          pname = "mpc-wrapper";
-          version = "current";
-          src = inputs.mpc-wrapper;
-        }
-      );
+      packages = {
+        mpc-wrapper = (
+          epkgs.callPackage epkgs.trivialBuild rec {
+            pname = "mpc-wrapper";
+            version = "current";
+            src = inputs.mpc-wrapper;
+          }
+        );
+        playAlbum = pkgs.writeShellScriptBin "play-album" ''
+          <<Play Album>>
+        '';
+      };
     };
 
   flake.homeModules.media =
     { pkgs, config, ... }:
     {
+      home.packages = [ pkgs.playAlbum ];
       services.mpd = {
         enable = true;
         musicDirectory = "${config.home.homeDirectory}/mus/mpd";
@@ -5317,6 +5877,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
           "mp" = '''("replay file" . mpc-play)'';
           "mm" = '''("menu" . music-menu)'';
           "ms" = '''("stop" . mpc-stop)'';
+          "ma" = ''(cmd! (start-process-shell-command "play-album" nil "play-album"))'';
           "m+" = "'mpc-inc-by-five";
           "m-" = "'mpc-dec-by-five";
         };
@@ -5327,6 +5888,23 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
       };
     };
 }
+#+end_src
+
+#+NAME: Play Album
+#+begin_src bash-ts
+set -o nounset -o errexit -o pipefail
+
+mpc clear
+
+album="$(mpc ls -f %album% | uniq | ${lib.getExe self'.packages.ezf})"
+
+readarray -t files < <(${lib.getExe pkgs.mpc} search "(album == \"$album\")")
+
+# Loop through each file, play it with mpc
+for file in "''${files[@]}"; do
+  ${lib.getExe pkgs.mpc} add "$file"
+done
+${lib.getExe pkgs.mpc} play
 #+end_src
 
 #+NAME: Emacs Mpc Wrapper Config
@@ -5654,6 +6232,8 @@ Putting =:session= in an org block is necessary for evaluation
             "ob"
           ];
         };
+
+        popper.setopt.popper-reference-buffers = [ ''"^\\*Sage\\*"'' ];
       };
     };
 }
@@ -5842,23 +6422,18 @@ This lets us decide how emacs will handle certain urls
 You need regexes to do this, & you can build them easily using =rx=
 #+begin_src nix-ts :tangle modules/web/browseurl.nix
 {
-  flake.homeModules.web =
-    { ... }:
-    {
-      programs.emacs.init.usePackage.browse-url = {
-        enable = true;
-        config = "(defun qutebrowser-browse-url (url &rest args) (qutebrowser-open-url url 'tab))";
-        custom.browse-url-handlers = [
-          '''("https:\\/\\/www\\.youtu\\.*be." . efs/mpv-browse-url)''
-          '''("https:\\/\\/yewtu\\.*be." . efs/mpv-browse-url)''
-          '''("https:\\/\\/inv\\.*nadeko\\.*net\\/watch." . efs/mpv-browse-url)''
-          '''("search\\.nixos\\.org[^z-a]*" . qutebrowser-browse-url)''
-          '''("melpa\.org\.*" . qutebrowser-browse-url)''
-          '''("." . (lambda (url &rest args) (eww url (prefix-numeric-value 4))))''
-        ];
-        setopt.browse-url-secondary-browser-function = "'browse-url-default-browser";
-      };
-    };
+  flake.homeModules.web.programs.emacs.init.usePackage.browse-url = {
+    enable = true;
+    config = "(defun qutebrowser-browse-url (url &rest args) (qutebrowser-open-url url 'tab))";
+    custom.browse-url-handlers = [
+      '''("https:\\/\\/www\\.youtu\\.*be." . efs/mpv-browse-url)''
+      '''("https:\\/\\/episode\\.flightcast\\.com\\/.*\\.mp3" . efs/mpv-browse-url)''
+      '''("search\\.nixos\\.org[^z-a]*" . qutebrowser-browse-url)''
+      '''("melpa\.org\.*" . qutebrowser-browse-url)''
+      '''("." . (lambda (url &rest args) (eww url (prefix-numeric-value 4))))''
+    ];
+    setopt.browse-url-secondary-browser-function = "'qutebrowser-open-url";
+  };
 }
 #+end_src
 
@@ -5866,32 +6441,29 @@ You need regexes to do this, & you can build them easily using =rx=
 It's a simple text based web browser. I use it for short web searches
 #+begin_src nix-ts :tangle modules/web/eww.nix :noweb yes
 {
-  flake.homeModules.web = { ... }: {
-    programs.emacs.init.usePackage.eww = {
-      enable = true;
-      setopt = {
-        eww-search-prefix = ''"https://search.inetol.net/?q="'';
-        eww-header-line-format = false;
-        eww-desktop-remove-duplicates = true;
-        eww-download-directory = ''(expand-file-name "~/dwn")'';
-        eww-history-limit = 10;
-        # External Browser
-        eww-use-external-browser-for-content-type = ''"\\`\\(video/\\|audio\\)"''; # On GNU/Linux check your mimeapps.list
-        eww-browse-url-new-windowis-tab = false;
-        eww-form-checkbox-selected-symbol = ''"[X]"'';
-        eww-form-checkbox-symbol = ''"[ ]"'';
-        eww-auto-rename-buffer = "'title";
-      };
-      generalTwoConfig.":n".eww-mode-map = {
-        "N" = "#'eww-back-url";
-        "I" = "#'eww-forward-url";
-        "P" = "#'eww-copy-page-url";
-        "R" = "'eww-readable";
-      };
-      init = ''
-        <<Emacs Internet Eww Config>>
-      '';
+  flake.homeModules.web.programs.emacs.init.usePackage.eww = {
+    enable = true;
+    setopt = {
+      eww-header-line-format = false;
+      eww-desktop-remove-duplicates = true;
+      eww-download-directory = ''(expand-file-name "~/dwn")'';
+      eww-history-limit = 10;
+      # External Browser
+      eww-use-external-browser-for-content-type = ''"\\`\\(video/\\|audio\\)"''; # On GNU/Linux check your mimeapps.list
+      eww-browse-url-new-windowis-tab = false;
+      eww-form-checkbox-selected-symbol = ''"[X]"'';
+      eww-form-checkbox-symbol = ''"[ ]"'';
+      eww-auto-rename-buffer = "'title";
     };
+    generalTwoConfig.":n".eww-mode-map = {
+      "N" = "#'eww-back-url";
+      "I" = "#'eww-forward-url";
+      "P" = "#'eww-copy-page-url";
+      "R" = "'eww-readable";
+    };
+    init = ''
+      <<Emacs Internet Eww Config>>
+    '';
   };
 }
 #+end_src
@@ -5931,22 +6503,20 @@ It's a simple text based web browser. I use it for short web searches
 *** Webjump
 #+begin_src nix-ts :tangle modules/web/webjump.nix :noweb yes
 {
-  flake.homeModules.web = { ... }: {
-    programs.emacs.init.usePackage.webjump = {
-      enable = true;
-      generalOne.global-leader."s" = "'webjump";
-      setopt.webjump-sites = [
-        '''("DuckDuckGo" . [simple-query "duckduckgo.com" "duckduckgo.com/?q=" ""])''
-        '''("Invidious" . [simple-query "inv.nadeko.net" "inv.nadeko.net/search?q=" ""])''
-        '''("Aur" . [simple-query "aur.archlinux.org" "aur.archlinux.org/packages/?K=" ""])''
-        '''("Nixpkgs" . [simple-query "search.nixos.org" "search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=" ""])''
-        '''("Curseforge" . webjump-to-curseforge)''
-        '''("Modrinth" . webjump-to-modrinth)''
-      ];
-      config = ''
-        <<Emacs Internet Webjump Config>>
-      '';
-    };
+  flake.homeModules.web.programs.emacs.init.usePackage.webjump = {
+    enable = true;
+    generalOne.global-leader."s" = "'webjump";
+    setopt.webjump-sites = [
+      '''("DuckDuckGo" . [simple-query "duckduckgo.com" "duckduckgo.com/?q=" ""])''
+      '''("Invidious" . [simple-query "inv.nadeko.net" "inv.nadeko.net/search?q=" ""])''
+      '''("Aur" . [simple-query "aur.archlinux.org" "aur.archlinux.org/packages/?K=" ""])''
+      '''("Nixpkgs" . [simple-query "search.nixos.org" "search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=" ""])''
+      '''("Curseforge" . webjump-to-curseforge)''
+      '''("Modrinth" . webjump-to-modrinth)''
+    ];
+    config = ''
+      <<Emacs Internet Webjump Config>>
+    '';
   };
 }
 #+end_src
@@ -5990,29 +6560,25 @@ NAME is the term to search for."
 *** Elfeed
 #+begin_src nix-ts :tangle modules/web/elfeed.nix
 {
-  flake.homeModules.web =
-    { ... }:
-    {
-      programs.emacs.init.usePackage.elfeed = {
-        enable = true;
-        defer = true;
-        setopt.elfeed-feeds = [
-          ''"https://lukesmith.xyz/index.xml"''
-          ''"https://youtube.com/feeds/videos.xml?channel_id=UCSJPFQdZwrOutnmSFYtbstA"''
-          ''"https://planet.emacslife.com/atom.xml"''
-          ''"https://youtube.com/feeds/videos.xml?channel_id=UC_GQ4mac4oN3wl1UdbFuTEA"''
-          ''"https://youtube.com/feeds/videos.xml?channel_id=UC6UBbvEA8uh6Ulc6ax1Zs0g"''
-          ''"https://youtube.com/feeds/videos.xml?channel_id=UCNzZD3otfZVlIdvYYRRqNSw"''
-          ''"https://youtube.com/feeds/videos.xml?channel_id=UCnnkTXnyn0uZzmArZO99Klg"''
-          ''"https://youtube.com/feeds/videos.xml?channel_id=UCq-VIBjS6Ia1r1IR_j-7NUw"''
-          ''"https://youtube.com/feeds/videos.xml?channel_id=UC0E_vIe1e1lVeojYOgVg_5Q"''
-          ''"https://youtube.com/feeds/videos.xml?channel_id=UCUQs6rEz6lRGHn6DWqss0hA"''
-          ''"https://youtube.com/feeds/videos.xml?channel_id=UC_zBdZ0_H_jn41FDRG7q4Tw"''
-          ''"https://notrelated.xyz/rss"''
-        ];
-        generalOne.global-leader."r" = ''`("elfeed" . ,(cmd! (elfeed) (elfeed-update)))'';
-      };
-    };
+  flake.homeModules.web.programs.emacs.init.usePackage.elfeed = {
+    enable = true;
+    defer = true;
+    setopt.elfeed-feeds = [
+      ''"https://youtube.com/feeds/videos.xml?channel_id=UCSJPFQdZwrOutnmSFYtbstA"''
+      ''"https://planet.emacslife.com/atom.xml"''
+      ''"https://rss2.flightcast.com/pmgqiszts7kfhopzaq8el6yw.xml"''
+      ''"https://youtube.com/feeds/videos.xml?channel_id=UC_GQ4mac4oN3wl1UdbFuTEA"''
+      ''"https://youtube.com/feeds/videos.xml?channel_id=UC6UBbvEA8uh6Ulc6ax1Zs0g"''
+      ''"https://youtube.com/feeds/videos.xml?channel_id=UCNzZD3otfZVlIdvYYRRqNSw"''
+      ''"https://youtube.com/feeds/videos.xml?channel_id=UCnnkTXnyn0uZzmArZO99Klg"''
+      ''"https://youtube.com/feeds/videos.xml?channel_id=UCq-VIBjS6Ia1r1IR_j-7NUw"''
+      ''"https://youtube.com/feeds/videos.xml?channel_id=UC0E_vIe1e1lVeojYOgVg_5Q"''
+      ''"https://youtube.com/feeds/videos.xml?channel_id=UCUQs6rEz6lRGHn6DWqss0hA"''
+      ''"https://youtube.com/feeds/videos.xml?channel_id=UC_zBdZ0_H_jn41FDRG7q4Tw"''
+      ''"https://notrelated.xyz/rss"''
+    ];
+    generalOne.global-leader."r" = ''`("elfeed" . ,(cmd! (elfeed) (elfeed-update)))'';
+  };
 }
 #+end_src
 
@@ -6025,11 +6591,7 @@ https://greasyfork.org/en/scripts/374833-yt2invidio
     { config, pkgs, ... }:
 
     {
-      home.packages = with pkgs; [
-        python313Packages.adblock
-        libfido2
-        yubikey-manager
-      ];
+      home.packages = [ pkgs.python313Packages.adblock ];
 
       programs.qutebrowser = {
         enable = true;
@@ -6094,34 +6656,32 @@ c.fonts.prompts = 'default_size sans-serif'
 https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_with_emacs_keybindings/
 #+begin_src nix-ts :tangle modules/web/qutebrowser/keybinds.nix
 {
-  flake.homeModules.web = { ... }:
-  {
-    programs.qutebrowser.keyBindings = {
-      normal = {
-	"m" = "search-next";
-	"M" = "search-prev";
-	"e" = "fake-key <Down>";
-	"o" = "fake-key <Up>";
-	"O" = "scroll-page 0 -0.5";
-	"E" = "scroll-page 0 0.5";
-	"<ctrl-o>" = "scroll-page 0 -1";
-	"<ctrl-e>" = "scroll-page 0 1";
-	"t" = "mode-enter insert";
-	"I" = "forward";
-	"i" = "fake-key <Right>";
-	"n" = "fake-key <Left>";
-	"N" = "back";
-	"h" = "spawn --userscript emacsclient-wrapper '(qutebrowser-launcher)'";
-	"H" = "spawn --userscript emacsclient-wrapper '(qutebrowser-launcher-tab)'";
-	";l" = "spawn --userscript qute-pass";
-	";u" = "spawn --userscript qute-pass --username-only";
-	";p" = "spawn --userscript qute-pass --password-only";
-	";o" = "spawn --userscript qute-pass --otp-only";
-	";P" = "spawn --userscript emacsclient-wrapper '(qutebrowser-pass \"{url}\")'";
-	"a" = "cmd-set-text :";
-	"k" = "hint links spawn --userscript emacsclient-wrapper '(mpv-play-url \"{hint-url}\")'";
-      };
-    };
+  flake.homeModules.web.programs.qutebrowser.keyBindings.normal = {
+    cn = "spawn --userscript org-protocol capture Pn";
+    cd = "spawn --userscript org-protocol capture Pd";
+    cl = "spawn --userscript org-protocol store-link";
+    m = "search-next";
+    M = "search-prev";
+    e = "fake-key <Down>";
+    o = "fake-key <Up>";
+    O = "scroll-page 0 -0.5";
+    E = "scroll-page 0 0.5";
+    "<ctrl-o>" = "scroll-page 0 -1";
+    "<ctrl-e>" = "scroll-page 0 1";
+    t = "mode-enter insert";
+    I = "forward";
+    i = "fake-key <Right>";
+    n = "fake-key <Left>";
+    N = "back";
+    h = "spawn --userscript emacsclient-wrapper '(qutebrowser-launcher)'";
+    H = "spawn --userscript emacsclient-wrapper '(qutebrowser-launcher-tab)'";
+    ";l" = "spawn --userscript qute-pass";
+    ";u" = "spawn --userscript qute-pass --username-only";
+    ";p" = "spawn --userscript qute-pass --password-only";
+    ";o" = "spawn --userscript qute-pass --otp-only";
+    ";P" = "spawn --userscript emacsclient-wrapper '(qutebrowser-pass \"{url}\")'";
+    a = "cmd-set-text :";
+    k = "hint links spawn --userscript emacsclient-wrapper '(mpv-play-url \"{hint-url}\")'";
   };
 }
 #+end_src
@@ -6149,45 +6709,43 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
 **** Some privacy Settings
 #+begin_src nix-ts :tangle modules/web/qutebrowser/privacy.nix
 {
-  flake.homeModules.web = { ... }: {
-    programs.qutebrowser.settings = {
-      content = {
-	blocking = {
-	  enabled = true;
-	  method = "both";
-	  adblock.lists = [
-	    "https://easylist.to/easylist/easylist.txt"
-	    "https://easylist.to/easylist/easyprivacy.txt"
-	    "https://easylist.to/easylist/fanboy-social.txt"
-	    "https://secure.fanboy.co.nz/fanboy-annoyance.txt"
-	    "https://easylist-downloads.adblockplus.org/abp-filters-anti-cv.txt"
-	    #"https://gitlab.com/curben/urlhaus-filter/-/raw/master/urlhaus-filter.txt"
-	    "https://pgl.yoyo.org/adservers/serverlist.php?showintro=0;hostformat=hosts"
-	    "https://raw.githubusercontent.com/DandelionSprout/adfilt/master/NorwegianExperimentalList%20alternate%20versions/NordicFiltersABP-Inclusion.txt"
-	    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/legacy.txt"
-	    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters.txt"
-	    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters-2020.txt"
-	    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters-2021.txt"
-	    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/badware.txt"
-	    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/privacy.txt"
-	    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/badlists.txt"
-	    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/annoyances.txt"
-	    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/resource-abuse.txt"
-	    "https://www.i-dont-care-about-cookies.eu/abp/"
-	    "https://secure.fanboy.co.nz/fanboy-cookiemonster.txt"
-	    "https://github.com/uBlockOrigin/uAssets/raw/master/filters/unbreak.txt"
-	    "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/quick-fixes.txt"
-	  ];
-	};
-	autoplay = false;
-	cookies.store = false;
-	geolocation = false;
-	private_browsing = true;
+  flake.homeModules.web.programs.qutebrowser.settings = {
+    content = {
+      blocking = {
+        enabled = true;
+        method = "both";
+        adblock.lists = [
+          "https://easylist.to/easylist/easylist.txt"
+          "https://easylist.to/easylist/easyprivacy.txt"
+          "https://easylist.to/easylist/fanboy-social.txt"
+          "https://secure.fanboy.co.nz/fanboy-annoyance.txt"
+          "https://easylist-downloads.adblockplus.org/abp-filters-anti-cv.txt"
+          #"https://gitlab.com/curben/urlhaus-filter/-/raw/master/urlhaus-filter.txt"
+          "https://pgl.yoyo.org/adservers/serverlist.php?showintro=0;hostformat=hosts"
+          "https://raw.githubusercontent.com/DandelionSprout/adfilt/master/NorwegianExperimentalList%20alternate%20versions/NordicFiltersABP-Inclusion.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/legacy.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters-2020.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters-2021.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/badware.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/privacy.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/badlists.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/annoyances.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/resource-abuse.txt"
+          "https://www.i-dont-care-about-cookies.eu/abp/"
+          "https://secure.fanboy.co.nz/fanboy-cookiemonster.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/unbreak.txt"
+          "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/quick-fixes.txt"
+        ];
       };
-      completion = {
-	cmd_history_max_items = 0;
-	web_history.max_items = 0;
-      };
+      autoplay = false;
+      cookies.store = false;
+      geolocation = false;
+      private_browsing = true;
+    };
+    completion = {
+      cmd_history_max_items = 0;
+      web_history.max_items = 0;
     };
   };
 }
@@ -6225,86 +6783,89 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
       );
     };
 
-  flake.homeModules.web = { ... }: {
-    programs = {
-      emacs.init.usePackage = {
-        qutebrowser-exwm = {
-          enable = true;
-          package = epkgs: epkgs.qutebrowser;
-          ghookf = [
-            "('exwm-init 'global-qutebrowser-exwm-mode)"
-          ];
-          gfhookf = [
-            "('qutebrowser-exwm-mode 'evil-normal-state)"
-          ];
-          setopt.qutebrowser-history-database = ''"~/.local/qutebrowser/history.sqlite"'';
-	  # It gets grumpy if I don't redefine the function for some reason.
-          config = ''
-            (defun qutebrowser-exwm--update-window-info (window-info)
-              "Update buffer-local variables from WINDOW-INFO."
-              (when-let* ((x11-win-id (plist-get window-info :x11-win-id))
-                          (buffer (exwm--id->buffer x11-win-id)))
-                (with-current-buffer buffer
-                  (qutebrowser--with-plist window-info
-                    (win-id (setq-local qutebrowser-exwm-win-id win-id))
-                    (mode (setq-local qutebrowser-exwm-keymode mode))
-                    (icon-file (qutebrowser-exwm--update-favicon icon-file))
-                    (search (setq-local qutebrowser-exwm-current-search search))
-                    (hover (when (string= hover "") (setq hover nil))
-                           (setq-local qutebrowser-exwm-hovered-url hover))
-                    (url (setq-local qutebrowser-exwm-current-url
-                                     (unless (string-empty-p url) url))
-                         (setq-local buffer-file-name
-                                     (when (string-prefix-p "file://" url)
-                                       (string-replace "file://" "" url))))
-                    (x-scroll-perc (setq-local qutebrowser-exwm-x-scroll-perc x-scroll-perc))
-                    (y-scroll-perc (setq-local qutebrowser-exwm-y-scroll-perc y-scroll-perc))
-                    (private (setq-local qutebrowser-exwm-private private))
-                    (recently-audible (setq-local qutebrowser-exwm-recently-audible recently-audible))))))
-            	  '';
-        };
-
-        qutebrowser-evil = {
-          enable = true;
-          package = epkgs: epkgs.qutebrowser;
-          ghookf = [
-            "('global-qutebrowser-exwm-mode 'qutebrowser-evil-state-mode)"
-          ];
-        };
-
-        qutebrowser-fileselect = {
-          enable = true;
-          package = epkgs: epkgs.qutebrowser;
-          ghookf = [
-            "('global-qutebrowser-exwm-mode 'qutebrowser-fileselect-mode)"
-          ];
-          setopt.qutebrowser-fileselect-handler = "'qutebrowser-fileselect-completion";
-        };
+  flake.homeModules.web.programs = {
+    emacs.init.usePackage = {
+      qutebrowser = {
+	enable = true;
+        setopt.qutebrowser-history-database = ''"~/.local/qutebrowser/history.sqlite"'';
       };
 
-      qutebrowser.settings = {
-        tabs = {
-          tabs_are_windows = true;
-          show = "never";
-        };
-        window.title_format = "{current_title}";
-        new_instance_open_target = "tab-silent";
-        statusbar.show = "never";
-        fileselect = {
-          handler = "external";
-          single_file.command = [
-            "emacsclient"
-            "{}"
-          ];
-          folder.command = [
-            "emacsclient"
-            "{}"
-          ];
-          multiple_files.command = [
-            "emacsclient"
-            "{}"
-          ];
-        };
+      qutebrowser-exwm = {
+        enable = true;
+        package = epkgs: epkgs.qutebrowser;
+        ghookf = [
+          "('exwm-init 'global-qutebrowser-exwm-mode)"
+        ];
+        gfhookf = [
+          "('qutebrowser-exwm-mode 'evil-normal-state)"
+        ];
+        # setopt.qutebrowser-history-database = ''"~/.local/qutebrowser/history.sqlite"'';
+        # It gets grumpy if I don't redefine the function for some reason.
+        config = ''
+          (defun qutebrowser-exwm--update-window-info (window-info)
+            "Update buffer-local variables from WINDOW-INFO."
+            (when-let* ((x11-win-id (plist-get window-info :x11-win-id))
+                        (buffer (exwm--id->buffer x11-win-id)))
+              (with-current-buffer buffer
+                (qutebrowser--with-plist window-info
+                  (win-id (setq-local qutebrowser-exwm-win-id win-id))
+                  (mode (setq-local qutebrowser-exwm-keymode mode))
+                  (icon-file (qutebrowser-exwm--update-favicon icon-file))
+                  (search (setq-local qutebrowser-exwm-current-search search))
+                  (hover (when (string= hover "") (setq hover nil))
+                         (setq-local qutebrowser-exwm-hovered-url hover))
+                  (url (setq-local qutebrowser-exwm-current-url
+                                   (unless (string-empty-p url) url))
+                       (setq-local buffer-file-name
+                                   (when (string-prefix-p "file://" url)
+                                     (string-replace "file://" "" url))))
+                  (x-scroll-perc (setq-local qutebrowser-exwm-x-scroll-perc x-scroll-perc))
+                  (y-scroll-perc (setq-local qutebrowser-exwm-y-scroll-perc y-scroll-perc))
+                  (private (setq-local qutebrowser-exwm-private private))
+                  (recently-audible (setq-local qutebrowser-exwm-recently-audible recently-audible))))))
+          	  '';
+      };
+
+      qutebrowser-evil = {
+        enable = true;
+        package = epkgs: epkgs.qutebrowser;
+        ghookf = [
+          "('global-qutebrowser-exwm-mode 'qutebrowser-evil-state-mode)"
+        ];
+      };
+
+      qutebrowser-fileselect = {
+        enable = true;
+        package = epkgs: epkgs.qutebrowser;
+        ghookf = [
+          "('global-qutebrowser-exwm-mode 'qutebrowser-fileselect-mode)"
+        ];
+        setopt.qutebrowser-fileselect-handler = "'qutebrowser-fileselect-completion";
+      };
+    };
+
+    qutebrowser.settings = {
+      tabs = {
+        tabs_are_windows = true;
+        show = "never";
+      };
+      window.title_format = "{current_title}";
+      new_instance_open_target = "tab-silent";
+      statusbar.show = "never";
+      fileselect = {
+        handler = "external";
+        single_file.command = [
+          "emacsclient"
+          "{}"
+        ];
+        folder.command = [
+          "emacsclient"
+          "{}"
+        ];
+        multiple_files.command = [
+          "emacsclient"
+          "{}"
+        ];
       };
     };
   };
@@ -6353,15 +6914,13 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
 ** Mutype
 #+begin_src nix-ts :tangle modules/mutype.nix
 {
-  flake.homeModules.mutype = { ... }: {
-    programs.emacs.init.usePackage.mutype = {
-      enable = true;
-      command = [
-        "mutype-mode"
-        "mutype-mode-custom"
-      ];
-      setopt.mutype-source-directory = ''"~/.config/emacs/mutype"'';
-    };
+  flake.homeModules.mutype.programs.emacs.init.usePackage.mutype = {
+    enable = true;
+    command = [
+      "mutype-mode"
+      "mutype-mode-custom"
+    ];
+    setopt.mutype-source-directory = ''"~/.config/emacs/mutype"'';
   };
 }
 #+end_src

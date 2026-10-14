@@ -35,7 +35,7 @@
         };
 
         dirvish = {
-          gfhookf = ["('dirvish-directory-view-mode 'diredfl-mode)"];
+          gfhookf = [ "('dirvish-directory-view-mode 'diredfl-mode)" ];
           setopt.dirvish-use-mode-line = false;
           # Borrowed from doom
           generalTwoConfig.":n".dirvish-mode-map = {

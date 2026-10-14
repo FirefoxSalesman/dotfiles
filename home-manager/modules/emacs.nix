@@ -14,7 +14,7 @@
       ];
       programs.emacs = {
         enable = true;
-        package = pkgs.emacs30-gtk3;
+        package = pkgs.emacs-gtk;
         init = {
           enable = true;
           packageQuickstart = false;

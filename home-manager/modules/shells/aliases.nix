@@ -10,12 +10,12 @@
         run = "cd /run/";
         l = "ls";
         ".." = "cd ..";
-        tortube = "yt-dlp --proxy socks://localhost:9050";
-        wget = "torsocks wget --hsts-file=$XDG_DATA_HOME/wget-hsts";
         ga = "git add";
-        gc = "torsocks git clone";
+        gc = "git clone";
         gp = "git pull";
         gP = "git push";
+	reboot = "doas reboot";
+	halt = "doas shutdown -P now";
       };
     };
 }
