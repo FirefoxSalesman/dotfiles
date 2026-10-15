@@ -45,6 +45,20 @@
                                     :weight 'regular
                                     :height (cdr face))))
           '';
+	  config = ''
+            (evil-declare-motion 'markdown-ts-move-to-next-code-block)
+            (evil-declare-motion 'markdown-ts-move-to-previous-code-block)
+	  '';
+	  generalTwo.":m".markdown-ts-mode-map = {
+	    "]c" = "'markdown-ts-move-to-next-code-block";
+	    "[c" = "'markdown-ts-move-to-previous-code-block";
+	    "]h" = "'outline-next-heading";
+	    "[h" = "'outline-previous-heading";
+	    "M-o" = "'outline-move-subtree-up";
+	    "M-e" = "'outline-move-subtree-down";
+	    "M-n" = "'markdown-ts-promote";
+	    "M-i" = "'markdown-ts-demote";
+	  };
         };
 
         markdown-ts-appear = {

@@ -2063,6 +2063,12 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 {
   flake.homeModules.java = { lib, ... }: {
     programs.emacs.init = {
+      completions.tempel.templates.java-ts-mode = {
+	forge = ''"//? forge"'';
+	neoforge = ''"//? neoforge"'';
+	forgeblock = ''"//? forge {" n p n "//? }"'';
+	neoforgeblock = ''"//? neoforge {" n "/*" p n "*///? }"'';
+      };
       ide.languages = {
         kotlin.enable = true;
         java = {
@@ -4483,6 +4489,19 @@ No idea what the rest of this is for.
           init = ''
             <<Emacs Markdown Init>>
           '';
+	  config = ''
+            <<Emacs Markdown Config>>
+	  '';
+	  generalTwo.":m".markdown-ts-mode-map = {
+	    "]c" = "'markdown-ts-move-to-next-code-block";
+	    "[c" = "'markdown-ts-move-to-previous-code-block";
+	    "]h" = "'outline-next-heading";
+	    "[h" = "'outline-previous-heading";
+	    "M-o" = "'outline-move-subtree-up";
+	    "M-e" = "'outline-move-subtree-down";
+	    "M-n" = "'markdown-ts-promote";
+	    "M-i" = "'markdown-ts-demote";
+	  };
         };
 
         markdown-ts-appear = {
@@ -4494,6 +4513,12 @@ No idea what the rest of this is for.
     };
   };
 }
+#+end_src
+
+#+NAME: Emacs Markdown Config
+#+begin_src emacs-lisp
+(evil-declare-motion 'markdown-ts-move-to-next-code-block)
+(evil-declare-motion 'markdown-ts-move-to-previous-code-block)
 #+end_src
 
 #+NAME: Emacs Markdown Init
@@ -6940,7 +6965,6 @@ Setting up your alsoftrc correctly makes Minecraft happy
         # steam
         # gamemode
         prismlauncher
-        graalvmPackages.graalvm-oracle_17
       ];
     };
 
