@@ -57,6 +57,8 @@ in
           self.homeModules.gaming
           self.homeModules.java
           self.homeModules.ledger
+          self.homeModules.c
+          self.homeModules.python
           self.homeModules.media
           self.homeModules.notifications
           self.homeModules.passwordManagement

@@ -346,6 +346,8 @@ in
           self.homeModules.gaming
           self.homeModules.java
           self.homeModules.ledger
+          self.homeModules.c
+          self.homeModules.python
           self.homeModules.media
           self.homeModules.notifications
           self.homeModules.passwordManagement
@@ -461,6 +463,8 @@ in
     { pkgs, lib, ... }:
     {
       home.shellAliases = {
+        openocd = "/mnt/nfs/ssunil/toolchains/hermetic/openocd/bin/openocd";
+        gdbn = "/mnt/nfs/ssunil/toolchains/hermetic/toolchains/nds64le-elf-newlib-v5f/bin/riscv64-elf-gdb";
         ffrecord = "ffmpeg -f sndio -i snd/0.mon -f x11grab -r 30 -s 1920x1080 -i :0 -c:v libx164 -preset ultrafast -acodec copy ~/test.mkv";
         ffaud = "ffmpeg -f alsa -channels 1 -sample_rate 44100 -i default:CARD=Mic output.flac";
         sx = "startx";
@@ -472,8 +476,8 @@ in
         gc = "git clone";
         gp = "git pull";
         gP = "git push";
-	reboot = "doas reboot";
-	halt = "doas shutdown -P now";
+        reboot = "doas reboot";
+        halt = "doas shutdown -P now";
       };
     };
 }
@@ -693,7 +697,23 @@ export XINITRC="$XDG_CONFIG_HOME"/X11/xinitrc
 export HISTFILE="''${XDG_STATE_HOME}"/bash/history
 GRADLE_USER_HOME="$XDG_DATA_HOME"/gradle
 
-[ "$(tty)" = "/dev/tty1" ] && ! pidof -s Xorg >/dev/null 2>&1 && exec startx
+if ! pgrep -x -u "''${USER}" gpg-agent >/dev/null 2>&1; then
+  gpg-connect-agent /bye >/dev/null 2>&1
+fi
+
+# Set SSH to use gpg-agent
+unset SSH_AGENT_PID
+if [ "''${gnupg_SSH_AUTH_SOCK_by:-0}" -ne $$ ]; then
+  export SSH_AUTH_SOCK="/run/user/$UID/gnupg/S.gpg-agent.ssh"
+fi
+
+# Set GPG TTY
+export GPG_TTY=$(tty)
+
+# Refresh gpg-agent tty in case user switches into an X session
+gpg-connect-agent updatestartuptty /bye >/dev/null
+
+# [ "$(tty)" = "/dev/tty1" ] && ! pidof -s Xorg >/dev/null 2>&1 && exec startx
 #+end_src
 
 **** Configuration template
@@ -1714,7 +1734,25 @@ I couldn't get olivetti to work.
         # scripts
         hdmihelper
         pkg
+        rustc
+        cargo
+        uv
+        python3
+        cmake
+        firefox
       ];
+      programs.emacs.init.usePackage = {
+        agent-shell = {
+          enable = true;
+          extraPackages = [ pkgs.cursor-cli ];
+          custom.agent-shell-cursor-acp-command = [
+            ''"cursor-agent"''
+            ''"acp"''
+          ];
+        };
+
+        popper.setopt.popper-reference-buffers = [ "'agent-shell-mode" ];
+      };
     };
 }
 #+end_src
@@ -1793,6 +1831,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
         };
 
         usePackage = {
+	  eat.init = ''(defun efs/enter-docker () (interactive) (require 'eat) (eat "docker exec -it 'excelsior-sw-environ' bash"))'';
           rainbow-delimiters = {
             enable = true;
             ghookf = [ "('prog-mode 'rainbow-delimiters-mode)" ];
@@ -2389,14 +2428,17 @@ https://jointhefreeworld.org/blog/articles/emacs/emacs-eglot-scala-kotlin/index.
 #+begin_src nix-ts :tangle modules/development/c.nix
 {
   flake.homeModules.c.programs.emacs.init = {
-      ide.languages.c.enable = true;
-      usePackage.c-ts-mode.generalTwoConfig.":n".c-ts-mode-map = {
-        "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "comment"))'';
-        "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "comment"))'';
-        "o" = "'evil-previous-visual-line";
-        "O" = "'evil-scroll-up";
-      };
+    ide.languages.c = {
+      enable = true;
+      preferClangd = true;
     };
+    usePackage.c-ts-mode.generalTwoConfig.":n".c-ts-mode-map = {
+      "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "comment"))'';
+      "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "comment"))'';
+      "o" = "'evil-previous-visual-line";
+      "O" = "'evil-scroll-up";
+    };
+  };
 }
 #+end_src
 
@@ -2411,9 +2453,17 @@ https://jointhefreeworld.org/blog/articles/emacs/emacs-eglot-scala-kotlin/index.
           enable = true;
           wantRuff = true;
         };
-        usePackage.python-ts-mode.setopt = {
-          python-shell-interpreter = ''"ipython"'';
-          python-shell-interpreter-args = ''"-i --simple-prompt"'';
+        usePackage = {
+          python-ts-mode.setopt = {
+            python-shell-interpreter = ''"ipython"'';
+            python-shell-interpreter-args = ''"-i --simple-prompt"'';
+          };
+
+	  pyvenv = {
+	    enable = true;
+	    demand = true;
+	    config = "(pyvenv-mode)";
+	  };
         };
       };
     };

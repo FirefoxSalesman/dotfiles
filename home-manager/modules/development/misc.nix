@@ -30,6 +30,7 @@
         };
 
         usePackage = {
+	  eat.init = ''(defun efs/enter-docker () (interactive) (require 'eat) (eat "docker exec -it 'excelsior-sw-environ' bash"))'';
           rainbow-delimiters = {
             enable = true;
             ghookf = [ "('prog-mode 'rainbow-delimiters-mode)" ];
