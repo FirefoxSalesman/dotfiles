@@ -40,6 +40,8 @@ in
       libdisplay-info = prev.libdisplay-info_0_3;
       mpv = packages.mpv;
       typescript-language-server = pkgs-stable.typescript-language-server;
+      audacity = pkgs-stable.audacity;
+      pywal = pkgs-stable.pywal;
       rassumfrassum = pkgs-stable.rassumfrassum;
       kmonad = inputs.kmonad.packages.${pkgs.system}.default;
       lutris = pkgs-stable.lutris;
@@ -60,7 +62,6 @@ in
             roll = packages.roll;
             pertab = packages.pertab;
             embark = packages.embark;
-            gptel-got = packages.gptel-got;
           }
         ));
     };

@@ -69,11 +69,6 @@
       url = "github:finalclass/emacs-roll";
       flake = false;
     };
-
-    gptel-got = {
-      url = "https://git.bajsicki.com/phil/gptel-got";
-      flake = false;
-    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
