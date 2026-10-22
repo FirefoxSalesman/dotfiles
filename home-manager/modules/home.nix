@@ -11,10 +11,10 @@ let
       ];
     };
     overlays = [
-      inputs.ewm.overlays.default
-      (final: prev: self.overlay final prev pkgs inputs)
-      inputs.emacs-init.overlay
       inputs.emacs-overlay.overlay
+      inputs.emacs-init.overlay
+      (final: prev: self.overlay final prev pkgs inputs)
+      inputs.ewm.overlays.default
     ];
   };
 in

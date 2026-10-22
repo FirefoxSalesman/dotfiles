@@ -126,6 +126,7 @@
               ''"people"''
               ''"interview"''
               ''"rust"''
+	      ''"tetramem"''
             ];
           };
 

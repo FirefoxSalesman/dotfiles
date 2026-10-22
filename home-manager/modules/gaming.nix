@@ -10,7 +10,6 @@
         # steam
         # gamemode
         prismlauncher
-        graalvmPackages.graalvm-oracle_17
       ];
     };
 

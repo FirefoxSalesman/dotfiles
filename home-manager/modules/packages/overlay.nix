@@ -39,6 +39,9 @@ in
       # overrides
       libdisplay-info = prev.libdisplay-info_0_3;
       mpv = packages.mpv;
+      typescript-language-server = pkgs-stable.typescript-language-server;
+      audacity = pkgs-stable.audacity;
+      pywal = pkgs-stable.pywal;
       rassumfrassum = pkgs-stable.rassumfrassum;
       kmonad = inputs.kmonad.packages.${pkgs.system}.default;
       lutris = pkgs-stable.lutris;
@@ -51,6 +54,7 @@ in
           nfinal: nprev: {
             qutebrowser = packages.qutebrowser-emacs;
             doom-nano-modeline = packages.doom-nano-modeline;
+            markdown-ts-mode = null;
             repeaters = packages.repeaters;
             app-launcher = packages.app-launcher;
             ezf = packages.emacs-ezf;
@@ -58,8 +62,6 @@ in
             roll = packages.roll;
             pertab = packages.pertab;
             embark = packages.embark;
-            gptel-got = packages.gptel-got;
-            gptel-agent-harness = packages.gptel-agent-harness;
           }
         ));
     };
