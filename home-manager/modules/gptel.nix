@@ -167,13 +167,13 @@
                   
                   (gptel-make-preset
                       'denote
-                    :system "Search the user's notes to learn about the relevant topic, then respond."
-                    :tools '("Denote"))
+                    :system '(:append "Search the user's notes to learn about the relevant topic, then respond.")
+                    :tools '(:append ("Denote")))
                   
                   (gptel-make-preset
                       'web
-                    :system "Search the web to learn about the relevant topic, then respond."
-                    :tools '("WebSearch" "WebFetch"))
+                    :system '(:append "Search the web to learn about the relevant topic, then respond.")
+                    :tools '(:append ("WebSearch" "WebFetch")))
                 '';
               };
 
