@@ -29,7 +29,11 @@
         };
 
         usePackage = {
-	  eat.init = ''(defun efs/enter-docker () (interactive) (require 'eat) (eat "docker exec -it 'excelsior-sw-environ' bash"))'';
+	  eat.init = ''
+	    (defun efs/eat-docker-command (container) (require 'eat) (eat (concat "docker exec -it '" container "' bash")))
+	    (defun efs/enter-excelsior () (interactive) (efs/eat-docker-command "excelsior-sw-environ"))
+	    (defun efs/enter-sdk () (interactive) (efs/eat-docker-command "tetramem-sdk"))
+	  '';
           rainbow-delimiters = {
             enable = true;
             ghookf = [ "('prog-mode 'rainbow-delimiters-mode)" ];
