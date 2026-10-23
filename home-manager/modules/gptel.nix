@@ -14,6 +14,19 @@
                   ${lib.getExe pkgs.ollama} serve
                 fi
         '';
+        gptel-preset-collection = (
+          epkgs.callPackage epkgs.trivialBuild rec {
+            pname = "gptel-preset-collection";
+            version = "current";
+            src = inputs.gptel-preset-collection;
+
+            propagatedUserEnvPkgs = with epkgs; [
+              gptel
+            ];
+
+            buildInputs = propagatedUserEnvPkgs;
+          }
+        );
       };
   };
 
@@ -45,6 +58,7 @@
             };
             gptel = {
               enable = true;
+              enableMcpIntegration = true;
               introspection = {
                 enable = true;
                 model = "qwen3:8b";
@@ -81,7 +95,7 @@
                     '''(org-mode . "HK-47  ")''
                     '''(text-mode . "HK-47  ")''
                   ];
-		  gptel-use-tools = "'force";
+                  gptel-use-tools = "'force";
                 }
                 // mkOllama [ "llama3.2:3b" "qwen2.5-coder:7b" "qwen3:8b" "llama3.2:1b" ] "";
                 generalOne.global-leader."gi" = "'gptel-inline";
@@ -93,6 +107,7 @@
                 '';
                 config = ''
                   (start-ollama)
+                  (require 'gptel-agent)
                   (gptel-make-gh-copilot "copilot")
                   (efs/evil-collection-remap
                    'evil-collection-gptel-setup
@@ -152,8 +167,13 @@
                   
                   (gptel-make-preset
                       'denote
-                    :system "Search the user's notes to learn about whatever topic they ask for, then respond."
-                    :tools '("Denote"))
+                    :system '(:append "Search the user's notes to learn about the relevant topic, then respond.")
+                    :tools '(:append ("Denote")))
+                  
+                  (gptel-make-preset
+                      'web
+                    :system '(:append "Search the web to learn about the relevant topic, then respond.")
+                    :tools '(:append ("WebSearch" "WebFetch")))
                 '';
               };
 
@@ -164,70 +184,34 @@
                 after = [ "gptel" ];
               };
 
-              # gptel-got = {
-              #   enable = true;
-              #   after = ["gptel"];
-              # };
+              mcp.config = ''
+                ;; Borrowed from Karthinks
+                (gptel-make-preset
+                 'nixos
+                 :description "TOOLS: Add NixOS MCP"
+                 :pre (lambda () (gptel-mcp-connect '("nixos") 'sync))
+                 :system
+                 '(:append
+                   "\n\nUse the provided NixOS tools to look for up-to-date information and\
+                 examine the state of my system")
+                 :tools '(:append ("mcp-nixos"))
+                 :model 'qwen3:8b
+                 :backend "Ollama")
+              '';
 
-              mcp = {
+              gptel-preset-collection = {
                 enable = true;
                 after = [ "gptel" ];
-                config = ''
-                  (require 'mcp-hub)
-                  (require 'gptel-integrations)
-                  ;; Borrowed from Karthinks
-                  (gptel-make-preset
-                   'nixos
-                   :description "TOOLS: Add NixOS MCP"
-                   :pre (lambda () (gptel-mcp-connect '("nixos") 'sync))
-                   :system
-                   '(:append
-                     "\n\nUse the provided NixOS tools to look for up-to-date information and\
-                   examine the state of my system")
-                   :tools '(:append ("mcp-nixos"))
-                   :model 'qwen3:8b
-                   :backend "Ollama")
-                '';
-                setopt.mcp-hub-servers = lib.optionals (config.programs.mcp.servers != { }) (
-                  lib.mapAttrsToList (
-                    n: v:
-                    if v.enabled != false || v.disabled != true then
-                      let
-                        name = ''"${n}"'';
-                        test =
-                          attr: pass: fail:
-                          if v."${attr}" != null then pass else fail;
-                        commandOrUrl = test "command" ''':command "${v.command}" ${
-                          test "args" "':args '(${lib.concatMapStrings (x: ''"${x}" '') v.args}) " ""
-                        }'' (test "url " ''':url "${v.url} "'' "");
-                        env =
-                          if v.env != { } then
-                            "':env '(${
-                              lib.concatStringsSep " " (lib.flatten (lib.mapAttrsToList (x: y: ''':${x} "${y}"'') v.env))
-                            })"
-                          else
-                            "";
-                      in
-                      [
-                        name
-                        commandOrUrl
-                        env
-                      ]
-                    else
-                      ""
-                  ) config.programs.mcp.servers
-                );
               };
 
               org-semantic = {
                 enable = true;
                 setopt.org-semantic-vault-root = ''"~/doc/denote"'';
                 generalOne.global-leader = {
-                  gS = '''(:ignore t :which-key "semantic")'';
-                  gSf = "'org-semantic-find";
-                  gSd = "'org-semantic-find-in-directory";
-                  gSp = "'org-semantic-find-at-point";
-                  gSr = "'org-semantic-reindex";
+                  oS = '''(:ignore t :which-key "semantic")'';
+                  oSf = "'org-semantic-find";
+                  oSp = "'org-semantic-find-at-point";
+                  oSr = "'org-semantic-reindex";
                 };
                 config = "(org-semantic-auto-reindex-mode)";
               };

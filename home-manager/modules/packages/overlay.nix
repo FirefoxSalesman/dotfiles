@@ -54,7 +54,6 @@ in
           nfinal: nprev: {
             qutebrowser = packages.qutebrowser-emacs;
             doom-nano-modeline = packages.doom-nano-modeline;
-            markdown-ts-mode = null;
             repeaters = packages.repeaters;
             app-launcher = packages.app-launcher;
             ezf = packages.emacs-ezf;
@@ -62,6 +61,7 @@ in
             roll = packages.roll;
             pertab = packages.pertab;
             embark = packages.embark;
+            gptel-preset-collection = packages.gptel-preset-collection;
           }
         ));
     };

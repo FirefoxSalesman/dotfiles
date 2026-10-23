@@ -69,6 +69,11 @@
       url = "github:finalclass/emacs-roll";
       flake = false;
     };
+
+    gptel-preset-collection = {
+      url = "github:karthink/gptel-preset-collection";
+      flake = false;
+    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
