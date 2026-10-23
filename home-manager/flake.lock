@@ -449,6 +449,22 @@
         "type": "gitlab"
       }
     },
+    "gptel-preset-collection": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787459127,
+        "narHash": "sha256-bahyS3Hdh7+AETUJNLXKBJtzz92rLxpkWCjwnFWql5s=",
+        "owner": "karthink",
+        "repo": "gptel-preset-collection",
+        "rev": "38651c2baf849e930e4f75b121df513989443898",
+        "type": "github"
+      },
+      "original": {
+        "owner": "karthink",
+        "repo": "gptel-preset-collection",
+        "type": "github"
+      }
+    },
     "gptel-quick": {
       "flake": false,
       "locked": {
@@ -910,6 +926,7 @@
         "exwm-qutebrowser": "exwm-qutebrowser",
         "ezf": "ezf",
         "flake-parts": "flake-parts",
+        "gptel-preset-collection": "gptel-preset-collection",
         "home-manager": "home-manager",
         "import-tree": "import-tree",
         "kmonad": "kmonad",

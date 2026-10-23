@@ -74,6 +74,11 @@
       url = "github:finalclass/emacs-roll";
       flake = false;
     };
+
+    gptel-preset-collection = {
+      url = "github:karthink/gptel-preset-collection";
+      flake = false;
+    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
@@ -146,6 +151,7 @@ in
             roll = packages.roll;
             pertab = packages.pertab;
             embark = packages.embark;
+            gptel-preset-collection = packages.gptel-preset-collection;
           }
         ));
     };
@@ -5517,6 +5523,19 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
                   ${lib.getExe pkgs.ollama} serve
                 fi
         '';
+        gptel-preset-collection = (
+          epkgs.callPackage epkgs.trivialBuild rec {
+            pname = "gptel-preset-collection";
+            version = "current";
+            src = inputs.gptel-preset-collection;
+
+            propagatedUserEnvPkgs = with epkgs; [
+              gptel
+            ];
+
+            buildInputs = propagatedUserEnvPkgs;
+          }
+        );
       };
   };
 
@@ -5608,15 +5627,19 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
                 <<Emacs MCP Config>>
               '';
 
+              gptel-preset-collection = {
+                enable = true;
+                after = [ "gptel" ];
+              };
+
               org-semantic = {
                 enable = true;
                 setopt.org-semantic-vault-root = ''"~/doc/denote"'';
                 generalOne.global-leader = {
-                  gS = '''(:ignore t :which-key "semantic")'';
-                  gSf = "'org-semantic-find";
-                  gSd = "'org-semantic-find-in-directory";
-                  gSp = "'org-semantic-find-at-point";
-                  gSr = "'org-semantic-reindex";
+                  oS = '''(:ignore t :which-key "semantic")'';
+                  oSf = "'org-semantic-find";
+                  oSp = "'org-semantic-find-at-point";
+                  oSr = "'org-semantic-reindex";
                 };
                 config = "(org-semantic-auto-reindex-mode)";
               };
@@ -5656,6 +5679,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 #+NAME: Emacs Gptel Config
 #+begin_src emacs-lisp
 (start-ollama)
+(require 'gptel-agent)
 (gptel-make-gh-copilot "copilot")
 (efs/evil-collection-remap
  'evil-collection-gptel-setup
@@ -5715,8 +5739,13 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 
 (gptel-make-preset
     'denote
-  :system "Search the user's notes to learn about whatever topic they ask for, then respond."
+  :system "Search the user's notes to learn about the relevant topic, then respond."
   :tools '("Denote"))
+
+(gptel-make-preset
+    'web
+  :system "Search the web to learn about the relevant topic, then respond."
+  :tools '("WebSearch" "WebFetch"))
 #+end_src
 
 #+NAME: Emacs MCP Config

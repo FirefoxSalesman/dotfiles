@@ -61,6 +61,7 @@ in
             roll = packages.roll;
             pertab = packages.pertab;
             embark = packages.embark;
+            gptel-preset-collection = packages.gptel-preset-collection;
           }
         ));
     };

@@ -14,6 +14,19 @@
                   ${lib.getExe pkgs.ollama} serve
                 fi
         '';
+        gptel-preset-collection = (
+          epkgs.callPackage epkgs.trivialBuild rec {
+            pname = "gptel-preset-collection";
+            version = "current";
+            src = inputs.gptel-preset-collection;
+
+            propagatedUserEnvPkgs = with epkgs; [
+              gptel
+            ];
+
+            buildInputs = propagatedUserEnvPkgs;
+          }
+        );
       };
   };
 
@@ -94,6 +107,7 @@
                 '';
                 config = ''
                   (start-ollama)
+                  (require 'gptel-agent)
                   (gptel-make-gh-copilot "copilot")
                   (efs/evil-collection-remap
                    'evil-collection-gptel-setup
@@ -153,8 +167,13 @@
                   
                   (gptel-make-preset
                       'denote
-                    :system "Search the user's notes to learn about whatever topic they ask for, then respond."
+                    :system "Search the user's notes to learn about the relevant topic, then respond."
                     :tools '("Denote"))
+                  
+                  (gptel-make-preset
+                      'web
+                    :system "Search the web to learn about the relevant topic, then respond."
+                    :tools '("WebSearch" "WebFetch"))
                 '';
               };
 
@@ -180,15 +199,19 @@
                  :backend "Ollama")
               '';
 
+              gptel-preset-collection = {
+                enable = true;
+                after = [ "gptel" ];
+              };
+
               org-semantic = {
                 enable = true;
                 setopt.org-semantic-vault-root = ''"~/doc/denote"'';
                 generalOne.global-leader = {
-                  gS = '''(:ignore t :which-key "semantic")'';
-                  gSf = "'org-semantic-find";
-                  gSd = "'org-semantic-find-in-directory";
-                  gSp = "'org-semantic-find-at-point";
-                  gSr = "'org-semantic-reindex";
+                  oS = '''(:ignore t :which-key "semantic")'';
+                  oSf = "'org-semantic-find";
+                  oSp = "'org-semantic-find-at-point";
+                  oSr = "'org-semantic-reindex";
                 };
                 config = "(org-semantic-auto-reindex-mode)";
               };
