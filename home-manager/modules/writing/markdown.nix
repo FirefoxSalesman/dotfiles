@@ -1,7 +1,7 @@
 {
   flake.homeModules.writing = { pkgs, ... }: {
     programs.emacs.init = {
-      # ide.languages.markdown.enable = true;
+      ide.languages.markdown.enable = true;
       # Yoinked from heks-emacs
       completions.tempel.templates.markdown-ts-mode = {
         gitcollapse = ''
@@ -23,13 +23,7 @@
       };
       usePackage = {
         markdown-ts-mode = {
-          enable = true;
-          defer = true;
-          extraPackages = [ pkgs.marksman ];
-          mode = [ ''("\\.md\\'" . markdown-ts-mode)'' ];
-          eglot = ''("marksman" "server")'';
-          symex = true;
-          gfhookf = [ "('markdown-ts-mode '(efs/markdown-font-setup) (lambda () (display-line-numbers-mode 0)))" ];
+          gfhookf = [ "('markdown-ts-mode 'efs/markdown-font-setup)" ];
           init = ''
             (defun efs/markdown-font-setup ()
               (variable-pitch-mode)
@@ -45,20 +39,6 @@
                                     :weight 'regular
                                     :height (cdr face))))
           '';
-	  config = ''
-            (evil-declare-motion 'markdown-ts-move-to-next-code-block)
-            (evil-declare-motion 'markdown-ts-move-to-previous-code-block)
-	  '';
-	  generalTwo.":m".markdown-ts-mode-map = {
-	    "]c" = "'markdown-ts-move-to-next-code-block";
-	    "[c" = "'markdown-ts-move-to-previous-code-block";
-	    "]h" = "'outline-next-heading";
-	    "[h" = "'outline-previous-heading";
-	    "M-o" = "'outline-move-subtree-up";
-	    "M-e" = "'outline-move-subtree-down";
-	    "M-n" = "'markdown-ts-promote";
-	    "M-i" = "'markdown-ts-demote";
-	  };
         };
 
         markdown-ts-appear = {

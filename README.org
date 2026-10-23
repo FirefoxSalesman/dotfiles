@@ -48,8 +48,6 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] diff-hl
 + [ ] https://ianyepan.github.io/posts/git-blame-emacs/
 + [ ] doxygen
-+ [ ] Switch to markdown-ts
-+ [ ] https://github.com/Thysrael/markdown-ts-appear
 + [ ] https://github.com/florommel/poimap (i am being greedy)
 + [ ] https://github.com/MArpogaus/modern-tab
 + [ ] Pull mcp stuff into the framework
@@ -59,3 +57,6 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
   - [X] Mixin generator function
     1. Put a new mixin in the mixins folder
     2. Add that mixin to the mixin config
++ Pull markdown stuff into the framework
++ https://github.com/karthink/gptel-preset-collection
++ https://github.com/karthink/gptel-annotate
