@@ -45,6 +45,7 @@
             };
             gptel = {
               enable = true;
+              enableMcpIntegration = true;
               introspection = {
                 enable = true;
                 model = "qwen3:8b";
@@ -81,7 +82,7 @@
                     '''(org-mode . "HK-47  ")''
                     '''(text-mode . "HK-47  ")''
                   ];
-		  gptel-use-tools = "'force";
+                  gptel-use-tools = "'force";
                 }
                 // mkOllama [ "llama3.2:3b" "qwen2.5-coder:7b" "qwen3:8b" "llama3.2:1b" ] "";
                 generalOne.global-leader."gi" = "'gptel-inline";
@@ -164,60 +165,20 @@
                 after = [ "gptel" ];
               };
 
-              # gptel-got = {
-              #   enable = true;
-              #   after = ["gptel"];
-              # };
-
-              mcp = {
-                enable = true;
-                after = [ "gptel" ];
-                config = ''
-                  (require 'mcp-hub)
-                  (require 'gptel-integrations)
-                  ;; Borrowed from Karthinks
-                  (gptel-make-preset
-                   'nixos
-                   :description "TOOLS: Add NixOS MCP"
-                   :pre (lambda () (gptel-mcp-connect '("nixos") 'sync))
-                   :system
-                   '(:append
-                     "\n\nUse the provided NixOS tools to look for up-to-date information and\
-                   examine the state of my system")
-                   :tools '(:append ("mcp-nixos"))
-                   :model 'qwen3:8b
-                   :backend "Ollama")
-                '';
-                setopt.mcp-hub-servers = lib.optionals (config.programs.mcp.servers != { }) (
-                  lib.mapAttrsToList (
-                    n: v:
-                    if v.enabled != false || v.disabled != true then
-                      let
-                        name = ''"${n}"'';
-                        test =
-                          attr: pass: fail:
-                          if v."${attr}" != null then pass else fail;
-                        commandOrUrl = test "command" ''':command "${v.command}" ${
-                          test "args" "':args '(${lib.concatMapStrings (x: ''"${x}" '') v.args}) " ""
-                        }'' (test "url " ''':url "${v.url} "'' "");
-                        env =
-                          if v.env != { } then
-                            "':env '(${
-                              lib.concatStringsSep " " (lib.flatten (lib.mapAttrsToList (x: y: ''':${x} "${y}"'') v.env))
-                            })"
-                          else
-                            "";
-                      in
-                      [
-                        name
-                        commandOrUrl
-                        env
-                      ]
-                    else
-                      ""
-                  ) config.programs.mcp.servers
-                );
-              };
+              mcp.config = ''
+                ;; Borrowed from Karthinks
+                (gptel-make-preset
+                 'nixos
+                 :description "TOOLS: Add NixOS MCP"
+                 :pre (lambda () (gptel-mcp-connect '("nixos") 'sync))
+                 :system
+                 '(:append
+                   "\n\nUse the provided NixOS tools to look for up-to-date information and\
+                 examine the state of my system")
+                 :tools '(:append ("mcp-nixos"))
+                 :model 'qwen3:8b
+                 :backend "Ollama")
+              '';
 
               org-semantic = {
                 enable = true;
