@@ -38,16 +38,28 @@
       ...
     }:
     {
-      home.packages = [ pkgs.ollama ];
+      home.packages = [
+        pkgs.ollama
+        pkgs.jdt-language-server
+      ];
       programs = {
-        mcp.servers.nixos = {
-          command = "${pkgs.uv}/bin/uvx";
-          args = [ "mcp-nixos" ];
+        mcp.servers = {
+          nixos = {
+            command = "${pkgs.uv}/bin/uvx";
+            args = [ "mcp-nixos" ];
+          };
+          lsp = {
+            command = "npx";
+            args = [
+              "-y"
+              "@theupsider/lsp-mcp@latest"
+            ];
+          };
         };
         emacs.init = {
           ai = {
             copilot = {
-              enable = false;
+              enable = true;
               keepOutOf = [
                 "c-ts-mode"
                 "json5-ts-mode"
@@ -61,7 +73,7 @@
               enableMcpIntegration = true;
               introspection = {
                 enable = true;
-                model = "qwen3:8b";
+                model = "qwen2.5:3b";
               };
               agent.enable = true;
             };
@@ -97,7 +109,7 @@
                   ];
                   gptel-use-tools = "'force";
                 }
-                // mkOllama [ "llama3.2:3b" "qwen2.5-coder:7b" "qwen3:8b" "llama3.2:1b" ] "";
+                // mkOllama [ "qwen2.5:3b" "llama3.2:3b" ] "";
                 generalOne.global-leader."gi" = "'gptel-inline";
                 preface = ''
                   (defun start-ollama ()
@@ -109,6 +121,12 @@
                   (start-ollama)
                   (require 'gptel-agent)
                   (gptel-make-gh-copilot "copilot")
+                  (gptel-make-openai "OpenRouter"
+                    :host "openrouter.ai"
+                    :endpoint "/api/v1/chat/completions"
+                    :stream t
+                    :key (lambda () (auth-source-pass-get 'secret "openrouter-api-key"))                   ;can be a function that returns the key
+                    :models '(nvidia/nemotron-3.5-super-vl:free cohere/north-mini-code:free nvidia/nemotron-3-ultra-550b-a55b:free recursive/flint-v1.0:free xingchen-agi/xing4.0-29b-a4b:free liquid/lfm-2.5-2.6:free google/gemma-4-31b-it:free google/gemma-4-26b-a4b-it:free nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free))
                   (efs/evil-collection-remap
                    'evil-collection-gptel-setup
                    'normal
@@ -127,19 +145,19 @@
                    'newline)
                   
                   (gptel-make-preset
-                   'translate
-                   :system "Translate to english."
-                   :model 'llama3.2:1b)
+                      'translate
+                    :system "Translate to english."
+                    :model 'llama3.2:3b)
                   
                   (defun efs/translate (foreign-text)
                     "Translates FOREIGN-TEXT to English & outputs it in an org buffer called Translation."
                     (with-current-buffer (get-buffer-create "Translation")
                       (switch-to-buffer (current-buffer))
                       (org-mode)
-                      (let ((gptel-model 'llama3.2:1b))
+                      (let ((gptel-model 'llama3.2:3b))
                         (gptel-request
-                         (concat
-                          foreign-text " Translate the following text to English.")))))
+                  	  (concat
+                             foreign-text " Translate the following text to English.")))))
                   
                   (with-eval-after-load 'evil
                     (evil-ex-define-cmd
@@ -162,8 +180,8 @@
                    :name "Denote"
                    :function 'efs/semantic-search
                    :description "Search the user's notes for a word or phrase. This tool will return parts of the notes that are a close match."
-                   :args '((:name "term" :type "string" :description "The word or phrase to search for."))
-                   :include t)
+                   :args '((:name "term" :type "string" :description "The word or phrase to search for.")))
+                  
                   
                   (gptel-make-preset
                       'denote
@@ -172,16 +190,72 @@
                   
                   (gptel-make-preset
                       'web
-                    :system '(:append "Search the web to learn about the relevant topic, then respond.")
+                    :description "A preset for quick & cheap websearches."
+                    :model 'llama3.2:3b
+                    :system
+                    '(:append
+                      "Search the web to learn about the relevant topic, then respond.")
                     :tools '(:append ("WebSearch" "WebFetch")))
+                  
+                  (gptel-make-preset
+                      'jarvis
+                    :description "A preset for executing shell commands."
+                    :model 'qwen2.5:3b
+                    :system
+                    '(:append
+                      "You are a command runner. Your task is to execute shell commands to achieve the user's goal.
+                  Here are some tips:
+                  - When the user wants to regenerate their configs, run 'pkg rebuild'.
+                  - When the user wants to make a new VCs change, call 'jj new'. If the user says what the change is for, use 'jj new -m \"What the change is for\"'.
+                  - When the user wants to squash a VCs change, call 'jj squash'.
+                  - When the user wants to describe a VCs change, call 'jj describe'.")
+                    :tools '(:append ("Bash")))
                 '';
               };
 
-              gptel-quick.setopt = mkOllama [ "llama3.2:1b" ] "-quick";
+              gptel-agent-harness = {
+                enable = true;
+                after = [ "gptel-agent" ];
+                config = ''
+                  (gptel-agent-harness-mode)
+                  (gptel-agent-update)
+                '';
+                generalOneConfig.global-leader."gA" = "'gptel-opencode-agent";
+              };
+
+              gptel-quick.setopt = mkOllama [ "qwen2.5:3b" ] "-quick";
 
               gptel-inline = {
                 enable = true;
                 after = [ "gptel" ];
+                config = ''
+                  (defun gptel-inline--response-overlay-append-chunk (ov chunk)
+                    "Append text CHUNK to the buffer-based response overlay OV.
+                  Inserts into the source buffer and triggers font-lock."
+                    (let* ((src-buf (plist-get (overlay-get ov 'gptel-inline) :src)))
+                      (when (buffer-live-p src-buf)
+                        (with-current-buffer src-buf
+                          (let ((inhibit-read-only t))
+                            (goto-char (point-max))
+                            (insert chunk)
+                            (font-lock-ensure))))))
+                '';
+                generalTwoConfig.":nm" = {
+                  gptel-inline-map = {
+                    "RET" = "'gptel-inline-send";
+                    "H" = "'gptel-inline-help";
+                    "C-a" = "'gptel-inline-append";
+                    "C-b" = "'gptel-switch-buffer";
+                    "C-SPC" = "'gptel-inline-cycle-reference";
+                  };
+                  gptel-inline--response-overlay-mode-map = {
+                    "M-e" = "'gptel-inline--response-overlay-down";
+                    "M-o" = "'gptel-inline--response-overlay-up";
+                    "C-M-e" = "'gptel-inline--response-overlay-pagedown";
+                    "C-M-o" = "'gptel-inline--response-overlay-pageup";
+                    "C-d" = "'gptel-inline--response-overlay-dispatch";
+                  };
+                };
               };
 
               mcp.config = ''
@@ -194,9 +268,7 @@
                  '(:append
                    "\n\nUse the provided NixOS tools to look for up-to-date information and\
                  examine the state of my system")
-                 :tools '(:append ("mcp-nixos"))
-                 :model 'qwen3:8b
-                 :backend "Ollama")
+                 :tools '(:append ("mcp-nixos")))
               '';
 
               gptel-preset-collection = {
@@ -204,32 +276,9 @@
                 after = [ "gptel" ];
               };
 
-              org-semantic = {
-                enable = true;
-                setopt.org-semantic-vault-root = ''"~/doc/denote"'';
-                generalOne.global-leader = {
-                  oS = '''(:ignore t :which-key "semantic")'';
-                  oSf = "'org-semantic-find";
-                  oSp = "'org-semantic-find-at-point";
-                  oSr = "'org-semantic-reindex";
-                };
-                config = "(org-semantic-auto-reindex-mode)";
-              };
-
-              aidermacs = {
-                enable = false;
-                extraPackages = [ pkgs.aider-chat ];
-                generalOne.global-leader."gA" = "'aidermacs-transient-menu";
-                config = "(start-ollama)";
-                setopt = {
-                  aidermacs-default-model = ''"ollama/qwen3:8b"'';
-                  aidermacs-extra-args = [ ''"--no-git"'' ];
-                };
-              };
-
               popper.setopt.popper-reference-buffers = [
-                "'aidermacs-comint-mode"
-                ''"^\\*gptel-inline\\*"''
+                ''"^\\*gptel-opencode-agent:.*\\*"''
+                ''"^\\*gptel:.*\\*"''
                 ''"^\\*Ollama\\*"''
                 ''"^\\*copilot\\*"''
               ];

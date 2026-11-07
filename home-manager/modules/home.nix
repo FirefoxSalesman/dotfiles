@@ -5,6 +5,7 @@ let
     inherit system;
     config = {
       allowUnfree = true;
+      nvidia.acceptLicense = true;
       permittedInsecurePackages = [
         "pnpm-10.29.2"
         "electron-40.10.5"
@@ -107,7 +108,14 @@ in
           programs.home-manager.enable = true;
 
           nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
-          targets.genericLinux.gpu.enable = true;
+          targets.genericLinux.gpu = {
+            enable = true;
+            nvidia = {
+              enable = true;
+              sha256 = "sha256-CqsFGNtTz3PEEtx/MrvIUMqV6DnYkj0N5L/0LByRac4=";
+	      version = "580.196.07";
+            };
+          };
         };
       };
   };

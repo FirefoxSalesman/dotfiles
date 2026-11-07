@@ -36,6 +36,7 @@
                 						        #'cape-elisp-block
                 						        #'cape-dict
                                                                         #'cape-dabbrev))))''
+	      #''('after-save (lambda () (when (eq major-mode 'org-mode) (org-babel-tangle))))''
             ];
             custom.org-directory = ''"~/doc"'';
             setopt = {
@@ -81,11 +82,6 @@
             '';
           };
 
-          org-auto-tangle = {
-            enable = true;
-            ghookf = [ "('org-mode 'org-auto-tangle-mode)" ];
-          };
-
           denote = {
             preface = ''
               (defun efs/get-denote-file ()
@@ -126,7 +122,7 @@
               ''"people"''
               ''"interview"''
               ''"rust"''
-	      ''"tetramem"''
+              ''"tetramem"''
             ];
           };
 
@@ -137,6 +133,18 @@
               "obl" = "'biblio-lookup";
               "obi" = "'biblio-doi-insert-bibtex";
             };
+          };
+
+          org-semantic = {
+            enable = true;
+            setopt.org-semantic-vault-root = ''"~/doc/denote"'';
+            generalOne.global-leader = {
+              oS = '''(:ignore t :which-key "semantic")'';
+              oSf = "'org-semantic-find";
+              oSp = "'org-semantic-find-at-point";
+              oSr = "'org-semantic-reindex";
+            };
+            config = "(org-semantic-auto-reindex-mode)";
           };
         };
       };

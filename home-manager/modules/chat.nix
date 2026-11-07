@@ -6,10 +6,11 @@
     {
       home.packages = with pkgs; [
         thunderbird
+	discord
       ];
 
       programs.vesktop = {
-        enable = true;
+        enable = false;
         settings = {
           minimizeToTray = false;
           tray = false;

@@ -1,9 +1,15 @@
 {
+  perSystem = { lib, pkgs, ... }: {
+    packages.qutebrowser = pkgs.qutebrowser.overrideAttrs (oldAttrs: {
+      propagatedBuildInputs = oldAttrs.propagatedBuildInputs ++ [ pkgs.python314Packages.idna ];
+    });
+  };
+
   flake.homeModules.web =
     { config, pkgs, ... }:
 
     {
-      home.packages = [ pkgs.python313Packages.adblock ];
+      home.packages = with pkgs.python314Packages; [ adblock ];
 
       programs.qutebrowser = {
         enable = true;

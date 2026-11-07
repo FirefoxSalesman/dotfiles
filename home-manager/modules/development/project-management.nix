@@ -1,4 +1,31 @@
+{ inputs, ... }:
 {
+  perSystem =
+    { pkgs, ... }:
+    let
+      epkgs = pkgs.emacs.pkgs;
+    in
+    {
+      packages.code-review = epkgs.callPackage epkgs.trivialBuild rec {
+        pname = "code-review";
+        version = "pinned";
+        src = inputs.code-review;
+        propagatedUserEnvPkgs = with epkgs; [
+          closql
+          magit
+          transient
+          a
+          ghub
+          uuidgen
+          deferred
+          markdown-mode
+          forge
+          emojify
+        ];
+        buildInputs = propagatedUserEnvPkgs;
+      };
+    };
+
   flake.homeModules.development =
     { pkgs, lib, ... }:
     {
@@ -18,15 +45,15 @@
               ''("/\\.gitattributes\\'" . gitattributes-mode)''
               ''("/info/attributes\\'" . gitattributes-mode)''
               ''("/git/attributes\\'" . gitattributes-mode)''
-	      ''("/\\.gitconfig\\'" . gitconfig-mode)''
-	      ''("/\\.git/config\\'" . gitconfig-mode)''
-	      ''("/modules/.*/config\\'" . gitconfig-mode)''
-	      ''("/git/config\\'" . gitconfig-mode)''
-	      ''("/\\.gitmodules\\'" . gitconfig-mode)''
-	      ''("/etc/gitconfig\\'" . gitconfig-mode)''
-	      ''("/\\.gitignore\\'" . gitignore-mode)''
-	      ''("/info/exclude\\'" . gitignore-mode)''
-	      ''("/git/ignore\\'" . gitignore-mode)''
+              ''("/\\.gitconfig\\'" . gitconfig-mode)''
+              ''("/\\.git/config\\'" . gitconfig-mode)''
+              ''("/modules/.*/config\\'" . gitconfig-mode)''
+              ''("/git/config\\'" . gitconfig-mode)''
+              ''("/\\.gitmodules\\'" . gitconfig-mode)''
+              ''("/etc/gitconfig\\'" . gitconfig-mode)''
+              ''("/\\.gitignore\\'" . gitignore-mode)''
+              ''("/info/exclude\\'" . gitignore-mode)''
+              ''("/git/ignore\\'" . gitignore-mode)''
             ];
           };
 
@@ -45,7 +72,7 @@
                 "c" = mkMajutsuCmd "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-commit)";
                 "p" = mkMajutsuCmd "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)";
                 "P" = mkMajutsuCmd "(magit-push)" "(call-interactively 'majutsu-git-push)";
-                "b" = mkMajutsuCmd "(magit-bookmark)" "(majutsu-bookmark)";
+                "b" = mkMajutsuCmd "(magit-branch)" "(majutsu-bookmark)";
               };
             bindLocal.project-prefix-map = lib.mkForce { };
             generalOneConfig = {
@@ -55,18 +82,19 @@
               };
               magit-status-mode-map."j" = "'magit-unstage-files";
             };
-            # https://github.com/magit/magit/issues/5557
-            config = ''
-              (defalias 'magit--any
-                      (static-if (fboundp 'member-if) #'member-if #'cl-member-if))
-            '';
           };
+
+          code-review.enable = lib.mkForce false;
 
           majutsu = {
             enable = true;
             extraPackages = [ pkgs.jujutsu ];
             command = [ "majutsu-git-fetch" ];
             extraConfig = ":autoload majutsu-repository-config-id";
+            config = ''
+              	      (magit-add-section-hook 'majutsu-log-sections-hook #'magit-todos--insert-todos nil 'append)
+              	      (majutsu-forge-mode)
+              	    '';
           };
 
           projection-ibuffer = {

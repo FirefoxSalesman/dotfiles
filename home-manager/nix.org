@@ -79,6 +79,11 @@
       url = "github:karthink/gptel-preset-collection";
       flake = false;
     };
+
+    code-review = {
+      url = "github:doomelpa/code-review";
+      flake = false;
+    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
@@ -96,6 +101,7 @@ let
     inherit system;
     config = {
       allowUnfree = true;
+      nvidia.acceptLicense = true;
       permittedInsecurePackages = [
         "pnpm-10.29.2"
         "electron-40.10.5"
@@ -123,13 +129,13 @@ in
       pkg = packages.pkg;
       startEwm = packages.startEwm;
       startOllama = packages.startOllama;
+      qutebrowser = packages.qutebrowser;
       udisksmenu = packages.udisksmenu;
       wiki = packages.wiki;
 
       # overrides
       libdisplay-info = prev.libdisplay-info_0_3;
       mpv = packages.mpv;
-      typescript-language-server = pkgs-stable.typescript-language-server;
       audacity = pkgs-stable.audacity;
       pywal = pkgs-stable.pywal;
       rassumfrassum = pkgs-stable.rassumfrassum;
@@ -151,6 +157,7 @@ in
             roll = packages.roll;
             pertab = packages.pertab;
             embark = packages.embark;
+            code-review = packages.code-review;
             gptel-preset-collection = packages.gptel-preset-collection;
           }
         ));
@@ -291,6 +298,7 @@ let
     inherit system;
     config = {
       allowUnfree = true;
+      nvidia.acceptLicense = true;
       permittedInsecurePackages = [
         "pnpm-10.29.2"
         "electron-40.10.5"
@@ -393,7 +401,14 @@ in
           programs.home-manager.enable = true;
 
           nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
-          targets.genericLinux.gpu.enable = true;
+          targets.genericLinux.gpu = {
+            enable = true;
+            nvidia = {
+              enable = true;
+              sha256 = "sha256-CqsFGNtTz3PEEtx/MrvIUMqV6DnYkj0N5L/0LByRac4=";
+	      version = "580.196.07";
+            };
+          };
         };
       };
   };
@@ -860,6 +875,7 @@ aliasesStr = concatStringsSep "\n"
         _JAVA_AWT_WM_NONREPARENTING = "1";
         PATH = "/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/holschcc/bin:/home/holschcc/.nix-profile/bin";
         OLLAMA_API_BASE = "http://127.0.0.1:11434";
+        GEMINI_API_KEY = "TERM"; # This makes minuet happy
 	QTWEBENGINE_REMOTE_DEBUGGING="9222 qutebrowser";
       };
     };
@@ -1810,7 +1826,34 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 
 *** Project Management
 #+begin_src nix-ts :tangle modules/development/project-management.nix :noweb yes
+{ inputs, ... }:
 {
+  perSystem =
+    { pkgs, ... }:
+    let
+      epkgs = pkgs.emacs.pkgs;
+    in
+    {
+      packages.code-review = epkgs.callPackage epkgs.trivialBuild rec {
+        pname = "code-review";
+        version = "pinned";
+        src = inputs.code-review;
+        propagatedUserEnvPkgs = with epkgs; [
+          closql
+          magit
+          transient
+          a
+          ghub
+          uuidgen
+          deferred
+          markdown-mode
+          forge
+          emojify
+        ];
+        buildInputs = propagatedUserEnvPkgs;
+      };
+    };
+
   flake.homeModules.development =
     { pkgs, lib, ... }:
     {
@@ -1830,15 +1873,15 @@ I think most of it was from the github page for lsp mode, but it's been a while,
               ''("/\\.gitattributes\\'" . gitattributes-mode)''
               ''("/info/attributes\\'" . gitattributes-mode)''
               ''("/git/attributes\\'" . gitattributes-mode)''
-	      ''("/\\.gitconfig\\'" . gitconfig-mode)''
-	      ''("/\\.git/config\\'" . gitconfig-mode)''
-	      ''("/modules/.*/config\\'" . gitconfig-mode)''
-	      ''("/git/config\\'" . gitconfig-mode)''
-	      ''("/\\.gitmodules\\'" . gitconfig-mode)''
-	      ''("/etc/gitconfig\\'" . gitconfig-mode)''
-	      ''("/\\.gitignore\\'" . gitignore-mode)''
-	      ''("/info/exclude\\'" . gitignore-mode)''
-	      ''("/git/ignore\\'" . gitignore-mode)''
+              ''("/\\.gitconfig\\'" . gitconfig-mode)''
+              ''("/\\.git/config\\'" . gitconfig-mode)''
+              ''("/modules/.*/config\\'" . gitconfig-mode)''
+              ''("/git/config\\'" . gitconfig-mode)''
+              ''("/\\.gitmodules\\'" . gitconfig-mode)''
+              ''("/etc/gitconfig\\'" . gitconfig-mode)''
+              ''("/\\.gitignore\\'" . gitignore-mode)''
+              ''("/info/exclude\\'" . gitignore-mode)''
+              ''("/git/ignore\\'" . gitignore-mode)''
             ];
           };
 
@@ -1857,7 +1900,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
                 "c" = mkMajutsuCmd "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-commit)";
                 "p" = mkMajutsuCmd "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)";
                 "P" = mkMajutsuCmd "(magit-push)" "(call-interactively 'majutsu-git-push)";
-                "b" = mkMajutsuCmd "(magit-bookmark)" "(majutsu-bookmark)";
+                "b" = mkMajutsuCmd "(magit-branch)" "(majutsu-bookmark)";
               };
             bindLocal.project-prefix-map = lib.mkForce { };
             generalOneConfig = {
@@ -1867,18 +1910,19 @@ I think most of it was from the github page for lsp mode, but it's been a while,
               };
               magit-status-mode-map."j" = "'magit-unstage-files";
             };
-            # https://github.com/magit/magit/issues/5557
-            config = ''
-              (defalias 'magit--any
-                      (static-if (fboundp 'member-if) #'member-if #'cl-member-if))
-            '';
           };
+
+          code-review.enable = lib.mkForce false;
 
           majutsu = {
             enable = true;
             extraPackages = [ pkgs.jujutsu ];
             command = [ "majutsu-git-fetch" ];
             extraConfig = ":autoload majutsu-repository-config-id";
+            config = ''
+              	      (magit-add-section-hook 'majutsu-log-sections-hook #'magit-todos--insert-todos nil 'append)
+              	      (majutsu-forge-mode)
+              	    '';
           };
 
           projection-ibuffer = {
@@ -2461,16 +2505,34 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
                                                                      (cape-capf-inside-string #'cape-dict))
                                                                     #'cape-dabbrev))))
               ''
+	      # https://www.jamescherti.com/emacs-eglot-apply-code-actions-fixes-on-save/
+	      ''
+		('before-save
+                    (lambda ()
+		       (when (and (fboundp 'eglot-managed-p)
+                             (eglot-managed-p)
+                             (fboundp 'eglot-server-capable)
+                             (eglot-server-capable :codeActionProvider)
+                             (fboundp 'eglot-current-server)
+                             (fboundp 'eglot-code-actions)
+                             (fboundp 'eglot-execute))
+                    (when-let* ((server (eglot-current-server)))
+                      (save-restriction
+                        (widen)
+			(dolist (action (eglot-code-actions (point-min) (point-max)
+                                                              "source.fixAll" nil))
+                            (eglot-execute server action)))))))
+	      ''
             ];
             # https://www.jamescherti.com/emacs-eglot-performance/
             setopt = {
               eglot-sync-connect = lib.mkForce 0;
-              # eglot-events-buffer-config = [
-              #   "':size"
-              #   0
-              #   "':format"
-              #   "'full"
-              # ];
+              eglot-events-buffer-config = [
+                "':size"
+                0
+                "':format"
+                "'full"
+              ];
               eglot-max-file-watches = 3000;
               eglot-report-progress = false;
               eglot-code-action-indications = false;
@@ -4294,6 +4356,7 @@ How to add a latex package
                 						        #'cape-elisp-block
                 						        #'cape-dict
                                                                         #'cape-dabbrev))))''
+	      #''('after-save (lambda () (when (eq major-mode 'org-mode) (org-babel-tangle))))''
             ];
             custom.org-directory = ''"~/doc"'';
             setopt = {
@@ -4317,11 +4380,6 @@ How to add a latex package
             config = ''
               <<Emacs Org Config>>
             '';
-          };
-
-          org-auto-tangle = {
-            enable = true;
-            ghookf = [ "('org-mode 'org-auto-tangle-mode)" ];
           };
 
           denote = {
@@ -4364,7 +4422,7 @@ How to add a latex package
               ''"people"''
               ''"interview"''
               ''"rust"''
-	      ''"tetramem"''
+              ''"tetramem"''
             ];
           };
 
@@ -4375,6 +4433,18 @@ How to add a latex package
               "obl" = "'biblio-lookup";
               "obi" = "'biblio-doi-insert-bibtex";
             };
+          };
+
+          org-semantic = {
+            enable = true;
+            setopt.org-semantic-vault-root = ''"~/doc/denote"'';
+            generalOne.global-leader = {
+              oS = '''(:ignore t :which-key "semantic")'';
+              oSf = "'org-semantic-find";
+              oSp = "'org-semantic-find-at-point";
+              oSr = "'org-semantic-reindex";
+            };
+            config = "(org-semantic-auto-reindex-mode)";
           };
         };
       };
@@ -5547,16 +5617,28 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
       ...
     }:
     {
-      home.packages = [ pkgs.ollama ];
+      home.packages = [
+        pkgs.ollama
+        pkgs.jdt-language-server
+      ];
       programs = {
-        mcp.servers.nixos = {
-          command = "${pkgs.uv}/bin/uvx";
-          args = [ "mcp-nixos" ];
+        mcp.servers = {
+          nixos = {
+            command = "${pkgs.uv}/bin/uvx";
+            args = [ "mcp-nixos" ];
+          };
+          lsp = {
+            command = "npx";
+            args = [
+              "-y"
+              "@theupsider/lsp-mcp@latest"
+            ];
+          };
         };
         emacs.init = {
           ai = {
             copilot = {
-              enable = false;
+              enable = true;
               keepOutOf = [
                 "c-ts-mode"
                 "json5-ts-mode"
@@ -5570,7 +5652,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
               enableMcpIntegration = true;
               introspection = {
                 enable = true;
-                model = "qwen3:8b";
+                model = "qwen2.5:3b";
               };
               agent.enable = true;
             };
@@ -5606,7 +5688,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
                   ];
                   gptel-use-tools = "'force";
                 }
-                // mkOllama [ "llama3.2:3b" "qwen2.5-coder:7b" "qwen3:8b" "llama3.2:1b" ] "";
+                // mkOllama [ "qwen2.5:3b" "llama3.2:3b" ] "";
                 generalOne.global-leader."gi" = "'gptel-inline";
                 preface = ''
                   <<Emacs Gptel Preface>>
@@ -5616,11 +5698,40 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
                 '';
               };
 
-              gptel-quick.setopt = mkOllama [ "llama3.2:1b" ] "-quick";
+              gptel-agent-harness = {
+                enable = true;
+                after = [ "gptel-agent" ];
+                config = ''
+                  (gptel-agent-harness-mode)
+                  (gptel-agent-update)
+                '';
+                generalOneConfig.global-leader."gA" = "'gptel-opencode-agent";
+              };
+
+              gptel-quick.setopt = mkOllama [ "qwen2.5:3b" ] "-quick";
 
               gptel-inline = {
                 enable = true;
                 after = [ "gptel" ];
+                config = ''
+                  <<Emacs Gptel Inline Config>>
+                '';
+                generalTwoConfig.":nm" = {
+                  gptel-inline-map = {
+                    "RET" = "'gptel-inline-send";
+                    "H" = "'gptel-inline-help";
+                    "C-a" = "'gptel-inline-append";
+                    "C-b" = "'gptel-switch-buffer";
+                    "C-SPC" = "'gptel-inline-cycle-reference";
+                  };
+                  gptel-inline--response-overlay-mode-map = {
+                    "M-e" = "'gptel-inline--response-overlay-down";
+                    "M-o" = "'gptel-inline--response-overlay-up";
+                    "C-M-e" = "'gptel-inline--response-overlay-pagedown";
+                    "C-M-o" = "'gptel-inline--response-overlay-pageup";
+                    "C-d" = "'gptel-inline--response-overlay-dispatch";
+                  };
+                };
               };
 
               mcp.config = ''
@@ -5632,32 +5743,9 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
                 after = [ "gptel" ];
               };
 
-              org-semantic = {
-                enable = true;
-                setopt.org-semantic-vault-root = ''"~/doc/denote"'';
-                generalOne.global-leader = {
-                  oS = '''(:ignore t :which-key "semantic")'';
-                  oSf = "'org-semantic-find";
-                  oSp = "'org-semantic-find-at-point";
-                  oSr = "'org-semantic-reindex";
-                };
-                config = "(org-semantic-auto-reindex-mode)";
-              };
-
-              aidermacs = {
-                enable = false;
-                extraPackages = [ pkgs.aider-chat ];
-                generalOne.global-leader."gA" = "'aidermacs-transient-menu";
-                config = "(start-ollama)";
-                setopt = {
-                  aidermacs-default-model = ''"ollama/qwen3:8b"'';
-                  aidermacs-extra-args = [ ''"--no-git"'' ];
-                };
-              };
-
               popper.setopt.popper-reference-buffers = [
-                "'aidermacs-comint-mode"
-                ''"^\\*gptel-inline\\*"''
+                ''"^\\*gptel-opencode-agent:.*\\*"''
+                ''"^\\*gptel:.*\\*"''
                 ''"^\\*Ollama\\*"''
                 ''"^\\*copilot\\*"''
               ];
@@ -5681,6 +5769,12 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 (start-ollama)
 (require 'gptel-agent)
 (gptel-make-gh-copilot "copilot")
+(gptel-make-openai "OpenRouter"
+  :host "openrouter.ai"
+  :endpoint "/api/v1/chat/completions"
+  :stream t
+  :key (lambda () (auth-source-pass-get 'secret "openrouter-api-key"))                   ;can be a function that returns the key
+  :models '(nvidia/nemotron-3.5-super-vl:free cohere/north-mini-code:free nvidia/nemotron-3-ultra-550b-a55b:free recursive/flint-v1.0:free xingchen-agi/xing4.0-29b-a4b:free liquid/lfm-2.5-2.6:free google/gemma-4-31b-it:free google/gemma-4-26b-a4b-it:free nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free))
 (efs/evil-collection-remap
  'evil-collection-gptel-setup
  'normal
@@ -5699,19 +5793,19 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
  'newline)
 
 (gptel-make-preset
- 'translate
- :system "Translate to english."
- :model 'llama3.2:1b)
+    'translate
+  :system "Translate to english."
+  :model 'llama3.2:3b)
 
 (defun efs/translate (foreign-text)
   "Translates FOREIGN-TEXT to English & outputs it in an org buffer called Translation."
   (with-current-buffer (get-buffer-create "Translation")
     (switch-to-buffer (current-buffer))
     (org-mode)
-    (let ((gptel-model 'llama3.2:1b))
+    (let ((gptel-model 'llama3.2:3b))
       (gptel-request
-       (concat
-        foreign-text " Translate the following text to English.")))))
+	  (concat
+           foreign-text " Translate the following text to English.")))))
 
 (with-eval-after-load 'evil
   (evil-ex-define-cmd
@@ -5734,8 +5828,8 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
  :name "Denote"
  :function 'efs/semantic-search
  :description "Search the user's notes for a word or phrase. This tool will return parts of the notes that are a close match."
- :args '((:name "term" :type "string" :description "The word or phrase to search for."))
- :include t)
+ :args '((:name "term" :type "string" :description "The word or phrase to search for.")))
+
 
 (gptel-make-preset
     'denote
@@ -5744,8 +5838,26 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 
 (gptel-make-preset
     'web
-  :system '(:append "Search the web to learn about the relevant topic, then respond.")
+  :description "A preset for quick & cheap websearches."
+  :model 'llama3.2:3b
+  :system
+  '(:append
+    "Search the web to learn about the relevant topic, then respond.")
   :tools '(:append ("WebSearch" "WebFetch")))
+
+(gptel-make-preset
+    'jarvis
+  :description "A preset for executing shell commands."
+  :model 'qwen2.5:3b
+  :system
+  '(:append
+    "You are a command runner. Your task is to execute shell commands to achieve the user's goal.
+Here are some tips:
+- When the user wants to regenerate their configs, run 'pkg rebuild'.
+- When the user wants to make a new VCs change, call 'jj new'. If the user says what the change is for, use 'jj new -m \"What the change is for\"'.
+- When the user wants to squash a VCs change, call 'jj squash'.
+- When the user wants to describe a VCs change, call 'jj describe'.")
+  :tools '(:append ("Bash")))
 #+end_src
 
 #+NAME: Emacs MCP Config
@@ -5759,9 +5871,21 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
  '(:append
    "\n\nUse the provided NixOS tools to look for up-to-date information and\
  examine the state of my system")
- :tools '(:append ("mcp-nixos"))
- :model 'qwen3:8b
- :backend "Ollama")
+ :tools '(:append ("mcp-nixos")))
+#+end_src
+
+#+NAME: Emacs Gptel Inline Config
+#+begin_src emacs-lisp
+(defun gptel-inline--response-overlay-append-chunk (ov chunk)
+  "Append text CHUNK to the buffer-based response overlay OV.
+Inserts into the source buffer and triggers font-lock."
+  (let* ((src-buf (plist-get (overlay-get ov 'gptel-inline) :src)))
+    (when (buffer-live-p src-buf)
+      (with-current-buffer src-buf
+        (let ((inhibit-read-only t))
+          (goto-char (point-max))
+          (insert chunk)
+          (font-lock-ensure))))))
 #+end_src
 
 ** Multimedia
@@ -6551,15 +6675,23 @@ NAME is the term to search for."
 #+end_src
 
 *** Qutebrowser
+Fixing pass:
+https://github.com/NixOS/nixpkgs/issues/20472
 https://greasyfork.org/en/scripts/374833-yt2invidio
 #+NAME: Internet Qutebrowser
 #+begin_src nix-ts :tangle modules/web/qutebrowser/misc.nix :noweb yes
 {
+  perSystem = { lib, pkgs, ... }: {
+    packages.qutebrowser = pkgs.qutebrowser.overrideAttrs (oldAttrs: {
+      propagatedBuildInputs = oldAttrs.propagatedBuildInputs ++ [ pkgs.python314Packages.idna ];
+    });
+  };
+
   flake.homeModules.web =
     { config, pkgs, ... }:
 
     {
-      home.packages = [ pkgs.python313Packages.adblock ];
+      home.packages = with pkgs.python314Packages; [ adblock ];
 
       programs.qutebrowser = {
         enable = true;
@@ -6850,10 +6982,11 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
     {
       home.packages = with pkgs; [
         thunderbird
+	discord
       ];
 
       programs.vesktop = {
-        enable = true;
+        enable = false;
         settings = {
           minimizeToTray = false;
           tray = false;
