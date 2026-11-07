@@ -11,7 +11,7 @@
       semel = true;
     };
     usePackage.elisp-mode.gfhookf = [
-      "('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"
+      "('emacs-lisp-mode (list (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))) 'hs-minor-mode))"
     ];
   };
 }

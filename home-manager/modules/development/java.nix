@@ -107,6 +107,7 @@
         };
         java-ts-mode = {
           preface = ''
+            ;; Borrowed from here: https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
             (defun tkj/java-decompile-class ()
               "Run the FernFlower decompiler on the current .class file using
              fernflower, and opens the decompiled Java file."
@@ -205,33 +206,42 @@
                 (kill-buffer buffer)
                 methods))
             
+            (defun efs/mixin-at-identifier (kind input-node)
+              "Return true if the identifier of INPUT-NODE or its parent is KIND."
+              (let* ((parent (treesit-node-parent input-node))
+                     (grandparent (treesit-node-parent parent)))
+                (and (equal (treesit-node-type grandparent) "element_value_pair")
+                     (or (equal
+                          kind
+                          (treesit-node-text
+                           (treesit-search-subtree grandparent "identifier") t))
+                         (equal
+                          kind
+                          (treesit-node-text
+                           (treesit-search-subtree parent "identifier") t))))))
+            
+            (defun efs/assemble-mixin-completions (completions bounds)
+              "Assemble COMPLETIONS for the current mixin."
+              (list (car bounds) (cdr bounds) completions :exclusive 'no))
+            
             ;https://emacs.stackexchange.com/questions/15276/how-do-i-write-a-simple-completion-at-point-functions-function
             (defun efs/mixin-completion-at-point ()
               "A capf the contains the names of methods you might mix into."
               (when-let* ((bounds (bounds-of-thing-at-point 'word))
                           (node-at-point
                            (treesit-node-at
-                            (marker-last-position (point-marker))))
-                          (parent (treesit-node-parent node-at-point))
-                          (node (treesit-node-parent parent))
-                          (is-method
-                           (and (equal
-                                 (treesit-node-type node) "element_value_pair")
-                                (or (equal
-                                     "method"
-                                     (treesit-node-text
-                                      (treesit-search-subtree node "identifier")
-                                      t))
-                                    (equal
-                                     "method"
-                                     (treesit-node-text
-                                      (treesit-search-subtree parent "identifier")
-                                      t))))))
-                (list
-                 (car bounds)
-                 (cdr bounds)
-                 (efs/get-mixin-methods)
-                 :exclusive 'no)))
+                            (marker-last-position (point-marker)))))
+                (if (efs/mixin-at-identifier "method" node-at-point)
+                    (efs/assemble-mixin-completions
+                     (efs/get-mixin-methods) bounds)
+                  (when (efs/mixin-at-identifier "value" node-at-point)
+                    (efs/assemble-mixin-completions
+                     '("HEAD"
+                       "TAIL"
+                       "RETURN"
+                       "INVOKE"
+                       "INVOKE_ASSIGN")
+                     bounds)))))
             
             (defun efs/register-mixin-to-json (mixin-name)
               "Add MIXIN-NAME to mixins.modid.json."
