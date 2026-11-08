@@ -38,10 +38,17 @@
       ...
     }:
     {
-      home.packages = [
-        pkgs.ollama
-        pkgs.jdt-language-server
-      ];
+      home = {
+        packages = [
+          pkgs.ollama
+          pkgs.jdt-language-server
+        ];
+        # file = {
+        #   ".config/emacs/agents/bughunter.org" = ''
+        #     
+        #   '';
+        # };
+      };
       programs = {
         mcp.servers = {
           nixos = {
@@ -55,7 +62,14 @@
               "@theupsider/lsp-mcp@latest"
             ];
           };
-        };
+	  jj = {
+            command = "npx";
+            args = [
+              "-y"
+              "jj-mcp-server"
+            ];
+          };
+        } ;
         emacs.init = {
           ai = {
             copilot = {
@@ -188,40 +202,50 @@
                     :system '(:append "Search the user's notes to learn about the relevant topic, then respond.")
                     :tools '(:append ("Denote")))
                   
-                  (gptel-make-preset
-                      'web
-                    :description "A preset for quick & cheap websearches."
-                    :model 'llama3.2:3b
-                    :system
-                    '(:append
-                      "Search the web to learn about the relevant topic, then respond.")
-                    :tools '(:append ("WebSearch" "WebFetch")))
-                  
-                  (gptel-make-preset
-                      'jarvis
-                    :description "A preset for executing shell commands."
-                    :model 'qwen2.5:3b
-                    :system
-                    '(:append
-                      "You are a command runner. Your task is to execute shell commands to achieve the user's goal.
-                  Here are some tips:
-                  - When the user wants to regenerate their configs, run 'pkg rebuild'.
-                  - When the user wants to make a new VCs change, call 'jj new'. If the user says what the change is for, use 'jj new -m \"What the change is for\"'.
-                  - When the user wants to squash a VCs change, call 'jj squash'.
-                  - When the user wants to describe a VCs change, call 'jj describe'.")
-                    :tools '(:append ("Bash")))
                 '';
               };
 
-              gptel-agent-harness = {
-                enable = true;
-                after = [ "gptel-agent" ];
-                config = ''
-                  (gptel-agent-harness-mode)
-                  (gptel-agent-update)
-                '';
-                generalOneConfig.global-leader."gA" = "'gptel-opencode-agent";
-              };
+              gptel-agent.config = ''
+                (gptel-make-preset
+                    'web
+                  :description "A preset for quick & cheap websearches."
+                  :model 'llama3.2:3b
+                  :system
+                  '(:append
+                    "Search the web to learn about the relevant topic, then respond.")
+                  :tools '(:append ("WebSearch" "WebFetch")))
+                
+                (gptel-make-preset
+                    'jarvis
+                  :description "A preset for executing shell commands."
+                  :model 'qwen2.5:3b
+                  :system
+                  '(:append
+                    "You are a command runner. Your task is to execute shell commands to achieve the user's goal.
+                Here are some tips:
+                - When the user wants to regenerate their configs, run 'pkg rebuild'.
+                - When the user wants to make a new VCs change, call 'jj new'. If the user says what the change is for, use 'jj new -m \"What the change is for\"'.
+                - When the user wants to squash a VCs change, call 'jj squash'.
+                - When the user wants to describe a VCs change, call 'jj describe'.")
+                  :tools '(:append ("Bash")))
+                
+                (gptel-make-preset
+                    'efs-agent
+                  :description "An extended opencode agent with LSP support"
+                  :parents '(gptel-agent)
+                  :system '(:append "# Language Server Protocol
+                - If possible, always init the LSP server for the language you're working in before doing any work.
+                - If you must reformat a file & an lsp server is available, use the LSP server's formatting capabilities. Refrain from reformatting otherwise.
+                - If an LSP server is available, use its search capabilities librerally when trying to understand the codebase.
+                
+                # Version Control
+                - JJ is used as a version control system.
+                - Before doing any work, use the new tool to create a new change.
+                - After completing your work, use the describe tool to describe your change.
+                ")
+                  :pre (lambda () (gptel-mcp-connect '("lsp" "jj") 'sync))
+                  :tools '(:append ("mcp-lsp" "mcp-jj")))
+              '';
 
               gptel-quick.setopt = mkOllama [ "qwen2.5:3b" ] "-quick";
 
@@ -261,14 +285,14 @@
               mcp.config = ''
                 ;; Borrowed from Karthinks
                 (gptel-make-preset
-                 'nixos
-                 :description "TOOLS: Add NixOS MCP"
-                 :pre (lambda () (gptel-mcp-connect '("nixos") 'sync))
-                 :system
-                 '(:append
-                   "\n\nUse the provided NixOS tools to look for up-to-date information and\
+                    'nixos
+                  :description "TOOLS: Add NixOS MCP"
+                  :pre (lambda () (gptel-mcp-connect '("nixos") 'sync))
+                  :system
+                  '(:append
+                    "\n\nUse the provided NixOS tools to look for up-to-date information and\
                  examine the state of my system")
-                 :tools '(:append ("mcp-nixos")))
+                  :tools '(:append ("mcp-nixos")))
               '';
 
               gptel-preset-collection = {

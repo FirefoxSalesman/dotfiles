@@ -2845,7 +2845,8 @@ Most of this was shamelessly lifted from Emacs from Scratch.
         enable = true;
         setopt = {
           confirm-kill-processes = false;
-          trusted-content = [ ''"~/projects/generic-todo/"'' ];
+          trusted-content = [ ''"~/projects/generic-todo/"'' ''"~/projects/DungeonsLibs/"''] ;
+          safe-local-variable-directories = [ ''"~/projects/generic-todo/"'' ''"~/projects/DungeonsLibs/"''] ;
         };
       };
 
@@ -5625,10 +5626,17 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
       ...
     }:
     {
-      home.packages = [
-        pkgs.ollama
-        pkgs.jdt-language-server
-      ];
+      home = {
+        packages = [
+          pkgs.ollama
+          pkgs.jdt-language-server
+        ];
+        # file = {
+        #   ".config/emacs/agents/bughunter.org" = ''
+        #     <<Bughunter Subagent>>
+        #   '';
+        # };
+      };
       programs = {
         mcp.servers = {
           nixos = {
@@ -5642,7 +5650,14 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
               "@theupsider/lsp-mcp@latest"
             ];
           };
-        };
+	  jj = {
+            command = "npx";
+            args = [
+              "-y"
+              "jj-mcp-server"
+            ];
+          };
+        } ;
         emacs.init = {
           ai = {
             copilot = {
@@ -5706,15 +5721,9 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
                 '';
               };
 
-              gptel-agent-harness = {
-                enable = true;
-                after = [ "gptel-agent" ];
-                config = ''
-                  (gptel-agent-harness-mode)
-                  (gptel-agent-update)
-                '';
-                generalOneConfig.global-leader."gA" = "'gptel-opencode-agent";
-              };
+              gptel-agent.config = ''
+                <<Emacs Gptel Agent Config>>
+              '';
 
               gptel-quick.setopt = mkOllama [ "qwen2.5:3b" ] "-quick";
 
@@ -5844,6 +5853,10 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
   :system '(:append "Search the user's notes to learn about the relevant topic, then respond.")
   :tools '(:append ("Denote")))
 
+#+end_src
+
+#+NAME: Emacs Gptel Agent Config
+#+begin_src emacs-lisp
 (gptel-make-preset
     'web
   :description "A preset for quick & cheap websearches."
@@ -5866,20 +5879,37 @@ Here are some tips:
 - When the user wants to squash a VCs change, call 'jj squash'.
 - When the user wants to describe a VCs change, call 'jj describe'.")
   :tools '(:append ("Bash")))
+
+(gptel-make-preset
+    'efs-agent
+  :description "An extended opencode agent with LSP support"
+  :parents '(gptel-agent)
+  :system '(:append "# Language Server Protocol
+- If possible, always init the LSP server for the language you're working in before doing any work.
+- If you must reformat a file & an lsp server is available, use the LSP server's formatting capabilities. Refrain from reformatting otherwise.
+- If an LSP server is available, use its search capabilities librerally when trying to understand the codebase.
+
+# Version Control
+- JJ is used as a version control system.
+- Before doing any work, use the new tool to create a new change.
+- After completing your work, use the describe tool to describe your change.
+")
+  :pre (lambda () (gptel-mcp-connect '("lsp" "jj") 'sync))
+  :tools '(:append ("mcp-lsp" "mcp-jj")))
 #+end_src
 
 #+NAME: Emacs MCP Config
 #+begin_src emacs-lisp
 ;; Borrowed from Karthinks
 (gptel-make-preset
- 'nixos
- :description "TOOLS: Add NixOS MCP"
- :pre (lambda () (gptel-mcp-connect '("nixos") 'sync))
- :system
- '(:append
-   "\n\nUse the provided NixOS tools to look for up-to-date information and\
+    'nixos
+  :description "TOOLS: Add NixOS MCP"
+  :pre (lambda () (gptel-mcp-connect '("nixos") 'sync))
+  :system
+  '(:append
+    "\n\nUse the provided NixOS tools to look for up-to-date information and\
  examine the state of my system")
- :tools '(:append ("mcp-nixos")))
+  :tools '(:append ("mcp-nixos")))
 #+end_src
 
 #+NAME: Emacs Gptel Inline Config

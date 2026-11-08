@@ -13,7 +13,8 @@
         enable = true;
         setopt = {
           confirm-kill-processes = false;
-          trusted-content = [ ''"~/projects/generic-todo/"'' ];
+          trusted-content = [ ''"~/projects/generic-todo/"'' ''"~/projects/DungeonsLibs/"''] ;
+          safe-local-variable-directories = [ ''"~/projects/generic-todo/"'' ''"~/projects/DungeonsLibs/"''] ;
         };
       };
 

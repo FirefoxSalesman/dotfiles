@@ -57,6 +57,5 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
   - [X] Mixin generator function
     1. Put a new mixin in the mixins folder
     2. Add that mixin to the mixin config
-+ [ ] Make gptel-agent's introspector use the introspection tool suite
 + [ ] https://github.com/karthink/gptel-annotate
 + [ ] https://github.com/yibie/exc.el
