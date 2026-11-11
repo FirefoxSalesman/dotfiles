@@ -1885,32 +1885,49 @@ I think most of it was from the github page for lsp mode, but it's been a while,
             ];
           };
 
-          magit = {
-            setopt.magit-process-find-password-functions = [ "'magit-process-password-auth-source" ];
-            generalOne.project-prefix-map =
-              let
-                mkMajutsuCmd = magitCommand: majutsuCommand: ''
-                  `,(cmd! (if (file-exists-p (nix-emacs-project-file ".jj"))
-                          (progn ${majutsuCommand})
-                          ${magitCommand}))
-                '';
-              in
-              {
-                "v" = mkMajutsuCmd "(magit)" "(majutsu)";
-                "c" = mkMajutsuCmd "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-commit)";
-                "p" = mkMajutsuCmd "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)";
-                "P" = mkMajutsuCmd "(magit-push)" "(call-interactively 'majutsu-git-push)";
-                "b" = mkMajutsuCmd "(magit-branch)" "(majutsu-bookmark)";
+          magit =
+            let
+              mkMajutsuCmd = name: magitCommand: majutsuCommand: ''
+                (defun efs/vcs-${name} ()
+                       "Do a magit/jutsu ${name} depending on what kind of repo we have."
+                        (interactive)
+                        (require 'majutsu)
+                        (if (majutsu-toplevel)
+                            (progn ${majutsuCommand})
+                            ${magitCommand}))
+              '';
+            in
+            {
+              setopt.magit-process-find-password-functions = [ "'magit-process-password-auth-source" ];
+              preface = ''
+                (defun efs/vcs-status (&optional dir)
+                       "Do a magit/jutsu status depending on what kind of repo we have."
+                        (interactive)
+                        (require 'majutsu)
+                        (if (majutsu-toplevel)
+                            (progn (majutsu dir))
+                            (magit dir)))
+                ${mkMajutsuCmd "commit" "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-commit)"}
+                ${mkMajutsuCmd "pull" "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)"}
+                ${mkMajutsuCmd "push" "(magit-push)" "(call-interactively 'majutsu-git-push)"}
+                ${mkMajutsuCmd "branch" "(magit-branch)" "(majutsu-bookmark)"}
+              '';
+              generalOne.project-prefix-map = {
+                "v" = "'efs/vcs-status";
+                "c" = "'efs/vcs-commit";
+                "p" = "'efs/vcs-pull";
+                "P" = "'efs/vcs-push";
+                "b" = "'efs/vcs-branch";
               };
-            bindLocal.project-prefix-map = lib.mkForce { };
-            generalOneConfig = {
-              magit-mode-map = {
-                "e" = "'evil-next-visual-line";
-                "B" = "'evil-goto-line";
+              bindLocal.project-prefix-map = lib.mkForce { };
+              generalOneConfig = {
+                magit-mode-map = {
+                  "e" = "'evil-next-visual-line";
+                  "B" = "'evil-goto-line";
+                };
+                magit-status-mode-map."j" = "'magit-unstage-files";
               };
-              magit-status-mode-map."j" = "'magit-unstage-files";
             };
-          };
 
           code-review.enable = lib.mkForce false;
 
@@ -3927,16 +3944,27 @@ https://blog.fidelramos.net/software/embark-custom-actions
     programs.emacs.init = {
       completions.smallExtras.embark = true;
       usePackage.embark = {
-        general."M-a" = "'embark-dwim";
+        general = {
+          "M-a" = "'embark-dwim";
+          "M-A" = "'embark-act";
+        };
         generalTwo.":n".vertico-map."a" = "'embark-act";
         generalOneConfig = {
-          embark-file-map = {
+	  embark-region-map = {
+	    "r" = '''(gptel-rewrite :which-key "rewrite with gptel")'';
+	    "a" = '''(gptel-add :which-key "add to context")'';
+	    "s" = '''(gptel-send :which-key "send to gptel")'';
+	  };
+	  embark-file-map = {
+	    "a" = '''(gptel-add-file :which-key "add to context")'';
             "v" = "(my/embark-split-action find-file pertab-vertical-split)";
             "h" = "(my/embark-split-action find-file pertab-horizontal-split)";
             "t" = "(my/embark-split-action find-file tab-new)";
             "o" = "(my/embark-ace-action find-file)";
+            "g" = "'efs/vcs-status";
           };
           embark-buffer-map = {
+	    "a" = '''(gptel-add :which-key "add to context")'';
             "v" = "(my/embark-split-action switch-to-buffer pertab-vertical-split)";
             "h" = "(my/embark-split-action switch-to-buffer pertab-horizontal-split)";
             "t" = "(my/embark-split-action switch-to-buffer tab-new)";
@@ -3948,6 +3976,9 @@ https://blog.fidelramos.net/software/embark-custom-actions
             "t" = "(my/embark-split-action bookmark-jump tab-new)";
             "o" = "(my/embark-ace-action bookmark-jump)";
           };
+          embark-symbol-map."R" = "'elisp-refs-symbol";
+          embark-identifier-map."$" = "'jinx-correct";
+	  embark-flymake-map."a" = '''(efs/embark-gptel-explain-diagnostic :which-key "explain diagnostic with gptel")'';
         };
         preface = ''
           <<Emacs Embark Preface>>
@@ -3982,6 +4013,24 @@ Borrowed from Karthinks
          (let ((aw-dispatch-always t))
            (aw-switch-to-window (aw-select nil))
            (call-interactively (symbol-function ',fn)))))))
+
+(defun efs/embark-gptel-explain-diagnostic ()
+  "Ask gptel to explain the Flymake diagnostic at point."
+  (interactive)
+  (require 'gptel-quick)
+  (if-let* ((diag (car (flymake-diagnostics (point)))))
+      (let* ((text (format
+                    "Explain this diagnostic in %s and suggest a fix.\n\n\
+Diagnostic (%s): %s\n\nCode:\n%s"
+                    (buffer-name)
+                    (flymake-diagnostic-type diag)
+                    (flymake-diagnostic-text diag)
+                    (buffer-substring-no-properties
+                     (flymake-diagnostic-beg diag)
+                     (flymake-diagnostic-end diag))))
+             )
+        (gptel-quick text))
+    (user-error "No Flymake diagnostic at point")))
 #+end_src
 
 **** App Launcher
@@ -5683,10 +5732,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
             gptel = {
               enable = true;
               enableMcpIntegration = true;
-              introspection = {
-                enable = true;
-                model = "qwen2.5:3b";
-              };
+              introspection.enable = true;
               agent.enable = true;
             };
           };

@@ -57,32 +57,49 @@
             ];
           };
 
-          magit = {
-            setopt.magit-process-find-password-functions = [ "'magit-process-password-auth-source" ];
-            generalOne.project-prefix-map =
-              let
-                mkMajutsuCmd = magitCommand: majutsuCommand: ''
-                  `,(cmd! (if (file-exists-p (nix-emacs-project-file ".jj"))
-                          (progn ${majutsuCommand})
-                          ${magitCommand}))
-                '';
-              in
-              {
-                "v" = mkMajutsuCmd "(magit)" "(majutsu)";
-                "c" = mkMajutsuCmd "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-commit)";
-                "p" = mkMajutsuCmd "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)";
-                "P" = mkMajutsuCmd "(magit-push)" "(call-interactively 'majutsu-git-push)";
-                "b" = mkMajutsuCmd "(magit-branch)" "(majutsu-bookmark)";
+          magit =
+            let
+              mkMajutsuCmd = name: magitCommand: majutsuCommand: ''
+                (defun efs/vcs-${name} ()
+                       "Do a magit/jutsu ${name} depending on what kind of repo we have."
+                        (interactive)
+                        (require 'majutsu)
+                        (if (majutsu-toplevel)
+                            (progn ${majutsuCommand})
+                            ${magitCommand}))
+              '';
+            in
+            {
+              setopt.magit-process-find-password-functions = [ "'magit-process-password-auth-source" ];
+              preface = ''
+                (defun efs/vcs-status (&optional dir)
+                       "Do a magit/jutsu status depending on what kind of repo we have."
+                        (interactive)
+                        (require 'majutsu)
+                        (if (majutsu-toplevel)
+                            (progn (majutsu dir))
+                            (magit dir)))
+                ${mkMajutsuCmd "commit" "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-commit)"}
+                ${mkMajutsuCmd "pull" "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)"}
+                ${mkMajutsuCmd "push" "(magit-push)" "(call-interactively 'majutsu-git-push)"}
+                ${mkMajutsuCmd "branch" "(magit-branch)" "(majutsu-bookmark)"}
+              '';
+              generalOne.project-prefix-map = {
+                "v" = "'efs/vcs-status";
+                "c" = "'efs/vcs-commit";
+                "p" = "'efs/vcs-pull";
+                "P" = "'efs/vcs-push";
+                "b" = "'efs/vcs-branch";
               };
-            bindLocal.project-prefix-map = lib.mkForce { };
-            generalOneConfig = {
-              magit-mode-map = {
-                "e" = "'evil-next-visual-line";
-                "B" = "'evil-goto-line";
+              bindLocal.project-prefix-map = lib.mkForce { };
+              generalOneConfig = {
+                magit-mode-map = {
+                  "e" = "'evil-next-visual-line";
+                  "B" = "'evil-goto-line";
+                };
+                magit-status-mode-map."j" = "'magit-unstage-files";
               };
-              magit-status-mode-map."j" = "'magit-unstage-files";
             };
-          };
 
           code-review.enable = lib.mkForce false;
 

@@ -85,10 +85,7 @@
             gptel = {
               enable = true;
               enableMcpIntegration = true;
-              introspection = {
-                enable = true;
-                model = "qwen2.5:3b";
-              };
+              introspection.enable = true;
               agent.enable = true;
             };
           };
