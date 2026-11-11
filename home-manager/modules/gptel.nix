@@ -61,7 +61,7 @@
               enableMcpIntegration = true;
               introspection = {
                 enable = true;
-                model = "qwen3:8b";
+                model = "qwen2.5:3b";
               };
               agent.enable = true;
             };
@@ -97,7 +97,7 @@
                   ];
                   gptel-use-tools = "'force";
                 }
-                // mkOllama [ "llama3.2:3b" "qwen2.5-coder:7b" "qwen3:8b" "llama3.2:1b" ] "";
+                // mkOllama [ "phi4-mini" "llama3.2:3b" "qwen2.5:3b" ] "";
                 generalOne.global-leader."gi" = "'gptel-inline";
                 preface = ''
                   (defun start-ollama ()
@@ -129,14 +129,14 @@
                   (gptel-make-preset
                    'translate
                    :system "Translate to english."
-                   :model 'llama3.2:1b)
+                   :model 'llama3.2:3b)
                   
                   (defun efs/translate (foreign-text)
                     "Translates FOREIGN-TEXT to English & outputs it in an org buffer called Translation."
                     (with-current-buffer (get-buffer-create "Translation")
                       (switch-to-buffer (current-buffer))
                       (org-mode)
-                      (let ((gptel-model 'llama3.2:1b))
+                      (let ((gptel-model 'llama3.2:3b))
                         (gptel-request
                          (concat
                           foreign-text " Translate the following text to English.")))))
@@ -161,27 +161,69 @@
                   (gptel-make-tool
                    :name "Denote"
                    :function 'efs/semantic-search
-                   :description "Search the user's notes for a word or phrase. This tool will return parts of the notes that are a close match."
-                   :args '((:name "term" :type "string" :description "The word or phrase to search for."))
+                   :description "Vector searches the user's notes for a word or phrase. You can treat it in the same way you would a web search"
+                   :args
+                   '((:name
+                      "term"
+                      :type "string"
+                      :description "The word or phrase to search for."))
                    :include t)
                   
                   (gptel-make-preset
-                      'denote
-                    :system '(:append "Search the user's notes to learn about the relevant topic, then respond.")
-                    :tools '(:append ("Denote")))
+                   'denote
+                   :system
+                   '(:append
+                     "Search the user's notes to learn about the relevant topic, then respond.")
+                   :tools '(:append ("Denote")))
                   
                   (gptel-make-preset
-                      'web
-                    :system '(:append "Search the web to learn about the relevant topic, then respond.")
-                    :tools '(:append ("WebSearch" "WebFetch")))
+                   'web
+                   :system
+                   '(:append
+                     "Search the web to learn about the relevant topic, then respond.")
+                   :tools '(:append ("WebSearch" "WebFetch")))
+                  
+                  (gptel-make-preset
+                   'markdown
+                   :system
+                   "Transform the org-mode text you're given into markdown. Follow these styling rules:
+                  - All bullet points should use \"-\".
+                  - All code should be surrounded by `, not =
+                  - Tables should use |, not +, in their markup.
+                  - Do not put bullet points in tables
+                  "
+                   :model 'llama3.2:3b)
+                  
+                  (gptel-make-preset
+                   'jarvis
+                   :system
+                   "You are a command runner. You must run the command that achieves the user's (Mr. Stark's) goal.
+                  Here are some tips for non-standard commands:
+                  - If the user asks you to rebuild their config, call pkg rebuild
+                  - If the user asks you to start a new VC change, call jj new
+                  - If the user asks you to squash a VC change, call jj squash"
+                   :tools '(:append ("Bash"))
+                   :model 'qwen2.5:3b)
                 '';
               };
 
-              gptel-quick.setopt = mkOllama [ "llama3.2:1b" ] "-quick";
+              gptel-quick.setopt = mkOllama [ "qwen2.5:3b" ] "-quick";
 
               gptel-inline = {
                 enable = true;
                 after = [ "gptel" ];
+                config = ''
+                  (defun gptel-inline--response-overlay-append-chunk (ov chunk)
+                    "Append text CHUNK to the buffer-based response overlay OV.
+                  Inserts into the source buffer and triggers font-lock."
+                    (let* ((src-buf (plist-get (overlay-get ov 'gptel-inline) :src)))
+                      (when (buffer-live-p src-buf)
+                        (with-current-buffer src-buf
+                          (let ((inhibit-read-only t))
+                               (goto-char (point-max))
+                               (insert chunk)
+                               (font-lock-ensure))))))
+                '';
               };
 
               mcp.config = ''
@@ -195,7 +237,7 @@
                    "\n\nUse the provided NixOS tools to look for up-to-date information and\
                  examine the state of my system")
                  :tools '(:append ("mcp-nixos"))
-                 :model 'qwen3:8b
+                 :model 'qwen2.5:3b
                  :backend "Ollama")
               '';
 
@@ -222,7 +264,7 @@
                 generalOne.global-leader."gA" = "'aidermacs-transient-menu";
                 config = "(start-ollama)";
                 setopt = {
-                  aidermacs-default-model = ''"ollama/qwen3:8b"'';
+                  aidermacs-default-model = ''"ollama/qwen2.5:3b"'';
                   aidermacs-extra-args = [ ''"--no-git"'' ];
                 };
               };

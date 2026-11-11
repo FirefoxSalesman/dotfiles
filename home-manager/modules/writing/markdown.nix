@@ -44,6 +44,7 @@
         markdown-ts-appear = {
           enable = true;
           defer = true;
+          setopt.markdown-ts-appear-table-style = "'unicode";
           ghookf = [ "('markdown-ts-mode 'markdown-ts-appear-mode)" ];
         };
       };

@@ -84,6 +84,7 @@
             	       `(eshell-git-prompt-powerline-dir-face ((t (:background ,blue))))
             	       `(hl-line-face ((t (:background ,green))))
             	       `(solaire-hl-line-face ((t (:background ,green))))
+            	       `(markdown-ts-in-table ((t (:inherit fixed-pitch :font "Jet Brains Mono" :family "Monospace"))))
             	       `(tab-bar ((t :inherit mode-line)))
             	       `(eshell-git-prompt-powerline-clean-face
             	         ((t (:background ,green))))

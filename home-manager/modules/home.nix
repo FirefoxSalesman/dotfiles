@@ -4,6 +4,7 @@ let
   pkgs = import inputs.nixpkgs {
     inherit system;
     config = {
+      problems.handlers.posthog.broken = "warn"; # or "ignore"
       allowUnfree = true;
       permittedInsecurePackages = [
         "pnpm-10.29.2"

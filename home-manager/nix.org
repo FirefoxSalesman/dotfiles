@@ -95,6 +95,7 @@ let
   pkgs-stable = import inputs.nixpkgs-stable {
     inherit system;
     config = {
+      problems.handlers.posthog.broken = "warn"; # or "ignore"
       allowUnfree = true;
       permittedInsecurePackages = [
         "pnpm-10.29.2"
@@ -290,6 +291,7 @@ let
   pkgs = import inputs.nixpkgs {
     inherit system;
     config = {
+      problems.handlers.posthog.broken = "warn"; # or "ignore"
       allowUnfree = true;
       permittedInsecurePackages = [
         "pnpm-10.29.2"
@@ -641,6 +643,14 @@ It's mostly here for eshell to get completions from, but it's a usable shell
     (apply orig-fun args)))
 
 (advice-add #'eshell/cat :around #'adviced:eshell/cat)
+
+(defun eshell/v (&rest args)
+  "Vibe command for eshell. Ollama will execute the instruction in ARGS."
+  (let ((gptel-model 'qwen2.5:3b))
+    (gptel-request
+     (concat
+      "You are a command runner. You must run the command that achieves the user's goal."
+      (apply 'concat (mapcar (lambda (x) (concat x " ")) args))))))
 #+end_src
 
 *** starship
@@ -878,7 +888,7 @@ aliasesStr = concatStringsSep "\n"
         GTK2_RC_FILES = "/home/holschcc/.gtkrc-2.0";
         SSH_AUTH_SOCK = "$(gpgconf --list-dirs agent-ssh-socket)";
         _JAVA_AWT_WM_NONREPARENTING = "1";
-        PATH = "/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/holschcc/bin:/home/holschcc/.nix-profile/bin";
+        PATH = "/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/holschcc/bin:/home/holschcc//.local/bin:/home/holschcc/.nix-profile/bin";
         OLLAMA_API_BASE = "http://127.0.0.1:11434";
 	QTWEBENGINE_REMOTE_DEBUGGING="9222 qutebrowser";
       };
@@ -1063,6 +1073,7 @@ Pywal integration: https://github.com/danth/stylix/issues/99
      `(eshell-git-prompt-powerline-dir-face ((t (:background ,blue))))
      `(hl-line-face ((t (:background ,green))))
      `(solaire-hl-line-face ((t (:background ,green))))
+     `(markdown-ts-in-table ((t (:inherit fixed-pitch :font "Jet Brains Mono" :family "Monospace"))))
      `(tab-bar ((t :inherit mode-line)))
      `(eshell-git-prompt-powerline-clean-face
        ((t (:background ,green))))
@@ -1734,18 +1745,23 @@ I couldn't get olivetti to work.
         rustc
         cargo
         uv
-        python3
+        # python3
         cmake
         firefox
       ];
       programs.emacs.init.usePackage = {
         agent-shell = {
           enable = true;
-          extraPackages = [ pkgs.cursor-cli ];
           custom.agent-shell-cursor-acp-command = [
             ''"cursor-agent"''
             ''"acp"''
           ];
+	  generalOne.global-leader = {
+	    "a" = '''(:ignore t :which-key "agent-shell")'';
+	    "af" = "'agent-shell-send-file";
+	    "as" = "'agent-shell-cursor-start-agent";
+	    "ar" = "'agent-shell-send-region";
+	  };
         };
 
         popper.setopt.popper-reference-buffers = [ "'agent-shell-mode" ];
@@ -1828,9 +1844,12 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 
         usePackage = {
 	  eat.init = ''
-	    (defun efs/eat-docker-command (container) (require 'eat) (eat (concat "docker exec -it '" container "' bash")))
+	    (defun efs/eat-command (command) (require 'eat) (eat command 'N))
+	    (defun efs/eat-docker-command (container) (efs/eat-command (concat "docker exec -it '" container "' bash -c '. /opt/tetramem/python_env/bin/activate; bash -i'")))
 	    (defun efs/enter-excelsior () (interactive) (efs/eat-docker-command "excelsior-sw-environ"))
 	    (defun efs/enter-sdk () (interactive) (efs/eat-docker-command "tetramem-sdk"))
+	    (defun efs/openocd () (interactive) (efs/eat-command "/mnt/nfs/ssunil/toolchains/hermetic/openocd/bin/openocd -c \"bindto 0.0.0.0\" -c \"set JTAGSN MLX200EVK025C\" -f board/mlx200_rv64_ft4232ha_evk.cfg"))
+	    (defun efs/run-excelsior () (interactive) (shell-command "docker run -dit --name excelsior-sw-environ --replace --mount \"src=$HOME/.ssh,target=/root/.ssh,type=bind\" --mount \"src=$HOME/tetramem,target=/root/tetramem,type=bind\" --mount \"src=$HOME/kernelagent,target=/root/kernelagent,type=bind\" --mount \"src=/dev/ftdi-MLX200EVK025C-ch02,target=/dev/ftdi-MLX200EVK025C-ch02,type=bind\" --device \"/dev/ft4232ha_MLX200EVK025C_uart:/dev/ft4232ha_MLX200EVK025C_uart\" --network host 'excelsior-sw-environ'"))
 	  '';
           rainbow-delimiters = {
             enable = true;
@@ -1873,15 +1892,15 @@ I think most of it was from the github page for lsp mode, but it's been a while,
               ''("/\\.gitattributes\\'" . gitattributes-mode)''
               ''("/info/attributes\\'" . gitattributes-mode)''
               ''("/git/attributes\\'" . gitattributes-mode)''
-	      ''("/\\.gitconfig\\'" . gitconfig-mode)''
-	      ''("/\\.git/config\\'" . gitconfig-mode)''
-	      ''("/modules/.*/config\\'" . gitconfig-mode)''
-	      ''("/git/config\\'" . gitconfig-mode)''
-	      ''("/\\.gitmodules\\'" . gitconfig-mode)''
-	      ''("/etc/gitconfig\\'" . gitconfig-mode)''
-	      ''("/\\.gitignore\\'" . gitignore-mode)''
-	      ''("/info/exclude\\'" . gitignore-mode)''
-	      ''("/git/ignore\\'" . gitignore-mode)''
+              ''("/\\.gitconfig\\'" . gitconfig-mode)''
+              ''("/\\.git/config\\'" . gitconfig-mode)''
+              ''("/modules/.*/config\\'" . gitconfig-mode)''
+              ''("/git/config\\'" . gitconfig-mode)''
+              ''("/\\.gitmodules\\'" . gitconfig-mode)''
+              ''("/etc/gitconfig\\'" . gitconfig-mode)''
+              ''("/\\.gitignore\\'" . gitignore-mode)''
+              ''("/info/exclude\\'" . gitignore-mode)''
+              ''("/git/ignore\\'" . gitignore-mode)''
             ];
           };
 
@@ -1922,6 +1941,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
             extraPackages = [ pkgs.jujutsu ];
             command = [ "majutsu-git-fetch" ];
             extraConfig = ":autoload majutsu-repository-config-id";
+            config = "(magit-add-section-hook 'majutsu-log-sections-hook #'magit-todos--insert-todos nil 'append)";
           };
 
           projection-ibuffer = {
@@ -1931,6 +1951,10 @@ I think most of it was from the github page for lsp mode, but it's been a while,
               i = '''("info" . projection-show-project-info)'';
             };
           };
+
+          forge.config = ''
+            (add-to-list 'forge-alist '("gitlab.tetramem-eng.com" "gitlab.tetramem-eng.com/api/v4" "gitlab.tetramem-eng.com"
+              forge-gitlab-repository))'';
 
           projection-multi = {
             custom.projection-gradle-use-daemon = false;
@@ -4543,6 +4567,7 @@ No idea what the rest of this is for.
         markdown-ts-appear = {
           enable = true;
           defer = true;
+          setopt.markdown-ts-appear-table-style = "'unicode";
           ghookf = [ "('markdown-ts-mode 'markdown-ts-appear-mode)" ];
         };
       };
@@ -5624,7 +5649,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
               enableMcpIntegration = true;
               introspection = {
                 enable = true;
-                model = "qwen3:8b";
+                model = "qwen2.5:3b";
               };
               agent.enable = true;
             };
@@ -5660,7 +5685,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
                   ];
                   gptel-use-tools = "'force";
                 }
-                // mkOllama [ "llama3.2:3b" "qwen2.5-coder:7b" "qwen3:8b" "llama3.2:1b" ] "";
+                // mkOllama [ "phi4-mini" "llama3.2:3b" "qwen2.5:3b" ] "";
                 generalOne.global-leader."gi" = "'gptel-inline";
                 preface = ''
                   <<Emacs Gptel Preface>>
@@ -5670,11 +5695,23 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
                 '';
               };
 
-              gptel-quick.setopt = mkOllama [ "llama3.2:1b" ] "-quick";
+              gptel-quick.setopt = mkOllama [ "qwen2.5:3b" ] "-quick";
 
               gptel-inline = {
                 enable = true;
                 after = [ "gptel" ];
+                config = ''
+                  (defun gptel-inline--response-overlay-append-chunk (ov chunk)
+                    "Append text CHUNK to the buffer-based response overlay OV.
+                  Inserts into the source buffer and triggers font-lock."
+                    (let* ((src-buf (plist-get (overlay-get ov 'gptel-inline) :src)))
+                      (when (buffer-live-p src-buf)
+                        (with-current-buffer src-buf
+                          (let ((inhibit-read-only t))
+                               (goto-char (point-max))
+                               (insert chunk)
+                               (font-lock-ensure))))))
+                '';
               };
 
               mcp.config = ''
@@ -5704,7 +5741,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
                 generalOne.global-leader."gA" = "'aidermacs-transient-menu";
                 config = "(start-ollama)";
                 setopt = {
-                  aidermacs-default-model = ''"ollama/qwen3:8b"'';
+                  aidermacs-default-model = ''"ollama/qwen2.5:3b"'';
                   aidermacs-extra-args = [ ''"--no-git"'' ];
                 };
               };
@@ -5755,14 +5792,14 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 (gptel-make-preset
  'translate
  :system "Translate to english."
- :model 'llama3.2:1b)
+ :model 'llama3.2:3b)
 
 (defun efs/translate (foreign-text)
   "Translates FOREIGN-TEXT to English & outputs it in an org buffer called Translation."
   (with-current-buffer (get-buffer-create "Translation")
     (switch-to-buffer (current-buffer))
     (org-mode)
-    (let ((gptel-model 'llama3.2:1b))
+    (let ((gptel-model 'llama3.2:3b))
       (gptel-request
        (concat
         foreign-text " Translate the following text to English.")))))
@@ -5787,19 +5824,49 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 (gptel-make-tool
  :name "Denote"
  :function 'efs/semantic-search
- :description "Search the user's notes for a word or phrase. This tool will return parts of the notes that are a close match."
- :args '((:name "term" :type "string" :description "The word or phrase to search for."))
+ :description "Vector searches the user's notes for a word or phrase. You can treat it in the same way you would a web search"
+ :args
+ '((:name
+    "term"
+    :type "string"
+    :description "The word or phrase to search for."))
  :include t)
 
 (gptel-make-preset
-    'denote
-  :system '(:append "Search the user's notes to learn about the relevant topic, then respond.")
-  :tools '(:append ("Denote")))
+ 'denote
+ :system
+ '(:append
+   "Search the user's notes to learn about the relevant topic, then respond.")
+ :tools '(:append ("Denote")))
 
 (gptel-make-preset
-    'web
-  :system '(:append "Search the web to learn about the relevant topic, then respond.")
-  :tools '(:append ("WebSearch" "WebFetch")))
+ 'web
+ :system
+ '(:append
+   "Search the web to learn about the relevant topic, then respond.")
+ :tools '(:append ("WebSearch" "WebFetch")))
+
+(gptel-make-preset
+ 'markdown
+ :system
+ "Transform the org-mode text you're given into markdown. Follow these styling rules:
+- All bullet points should use \"-\".
+- All code should be surrounded by `, not =
+- Tables should use |, not +, in their markup.
+- Do not put bullet points in tables
+"
+ :model 'llama3.2:3b)
+
+(gptel-make-preset
+ 'jarvis
+ :system
+ "You are a command runner. You must run the command that achieves the user's (Mr. Stark's) goal.
+Here are some tips for non-standard commands:
+- If the user asks you to rebuild their config, call pkg rebuild
+- If the user asks you to start a new VC change, call jj new
+- If the user asks you to squash a VC change, call jj squash"
+ :tools '(:append ("Bash"))
+ :model 'qwen2.5:3b)
 #+end_src
 
 #+NAME: Emacs MCP Config
@@ -5814,7 +5881,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
    "\n\nUse the provided NixOS tools to look for up-to-date information and\
  examine the state of my system")
  :tools '(:append ("mcp-nixos"))
- :model 'qwen3:8b
+ :model 'qwen2.5:3b
  :backend "Ollama")
 #+end_src
 

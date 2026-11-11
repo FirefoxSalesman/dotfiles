@@ -63,6 +63,14 @@
                   (apply orig-fun args)))
               
               (advice-add #'eshell/cat :around #'adviced:eshell/cat)
+              
+              (defun eshell/v (&rest args)
+                "Vibe command for eshell. Ollama will execute the instruction in ARGS."
+                (let ((gptel-model 'qwen2.5:3b))
+                  (gptel-request
+                   (concat
+                    "You are a command runner. You must run the command that achieves the user's goal."
+                    (apply 'concat (mapcar (lambda (x) (concat x " ")) args))))))
               (advice-add 'eshell-read-aliases-list :after (lambda (&rest _)
                               (dolist (alias '(${
                                 lib.optionals (config.home.shellAliases != { }) (

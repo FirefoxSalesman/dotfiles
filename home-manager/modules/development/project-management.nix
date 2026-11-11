@@ -18,15 +18,15 @@
               ''("/\\.gitattributes\\'" . gitattributes-mode)''
               ''("/info/attributes\\'" . gitattributes-mode)''
               ''("/git/attributes\\'" . gitattributes-mode)''
-	      ''("/\\.gitconfig\\'" . gitconfig-mode)''
-	      ''("/\\.git/config\\'" . gitconfig-mode)''
-	      ''("/modules/.*/config\\'" . gitconfig-mode)''
-	      ''("/git/config\\'" . gitconfig-mode)''
-	      ''("/\\.gitmodules\\'" . gitconfig-mode)''
-	      ''("/etc/gitconfig\\'" . gitconfig-mode)''
-	      ''("/\\.gitignore\\'" . gitignore-mode)''
-	      ''("/info/exclude\\'" . gitignore-mode)''
-	      ''("/git/ignore\\'" . gitignore-mode)''
+              ''("/\\.gitconfig\\'" . gitconfig-mode)''
+              ''("/\\.git/config\\'" . gitconfig-mode)''
+              ''("/modules/.*/config\\'" . gitconfig-mode)''
+              ''("/git/config\\'" . gitconfig-mode)''
+              ''("/\\.gitmodules\\'" . gitconfig-mode)''
+              ''("/etc/gitconfig\\'" . gitconfig-mode)''
+              ''("/\\.gitignore\\'" . gitignore-mode)''
+              ''("/info/exclude\\'" . gitignore-mode)''
+              ''("/git/ignore\\'" . gitignore-mode)''
             ];
           };
 
@@ -67,6 +67,7 @@
             extraPackages = [ pkgs.jujutsu ];
             command = [ "majutsu-git-fetch" ];
             extraConfig = ":autoload majutsu-repository-config-id";
+            config = "(magit-add-section-hook 'majutsu-log-sections-hook #'magit-todos--insert-todos nil 'append)";
           };
 
           projection-ibuffer = {
@@ -76,6 +77,10 @@
               i = '''("info" . projection-show-project-info)'';
             };
           };
+
+          forge.config = ''
+            (add-to-list 'forge-alist '("gitlab.tetramem-eng.com" "gitlab.tetramem-eng.com/api/v4" "gitlab.tetramem-eng.com"
+              forge-gitlab-repository))'';
 
           projection-multi = {
             custom.projection-gradle-use-daemon = false;
