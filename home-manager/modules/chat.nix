@@ -4,13 +4,10 @@
   flake.homeModules.chat =
     { config, pkgs, ... }:
     {
-      home.packages = with pkgs; [
-        thunderbird
-	discord
-      ];
+      home.packages = with pkgs; [ thunderbird ];
 
       programs.vesktop = {
-        enable = false;
+        enable = true;
         settings = {
           minimizeToTray = false;
           tray = false;
