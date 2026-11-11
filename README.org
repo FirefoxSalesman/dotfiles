@@ -59,3 +59,4 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
     2. Add that mixin to the mixin config
 + [ ] https://github.com/karthink/gptel-annotate
 + [ ] https://github.com/yibie/exc.el
++ [ ] burnish

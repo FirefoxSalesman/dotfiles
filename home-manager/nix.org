@@ -2934,11 +2934,24 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
           evilNerdCommenter.enable = true;
           god.enable = true;
         };
-        usePackage.evil = {
-          setopt.evil-buffer-regexps = [ '''("^ \\*Minibuf.*\\*" . insert)'' ];
-          config = ''
-            <<Evil Config>>
-          '';
+        usePackage = {
+          evil = {
+            setopt.evil-buffer-regexps = [ '''("^ \\*Minibuf.*\\*" . insert)'' ];
+            config = ''
+              <<Evil Config>>
+            '';
+          };
+          simple = {
+            generalOne.":nm" = {
+              "M-m" = "'next-error";
+              "M-M" = "'previous-error";
+            };
+            config = ''
+              (repeaters-define-maps
+                '(("next-error" ;; borrowed from the hydra wiki
+                   next-error "m" previous-error "M")))
+            '';
+          };
         };
       };
     };
@@ -3867,6 +3880,7 @@ The version of embark in nixpkgs doesn't work right with org mode because it's m
 Credits:
 Which-key indicator from the embark wiki
 avy actions from karthink
+https://blog.fidelramos.net/software/embark-custom-actions
 #+begin_src nix-ts :tangle modules/emacs/completions/embark.nix :noweb yes
 { inputs, ... }:
 
@@ -4238,11 +4252,7 @@ All of this config was origally stolen from Karthinks. I don't think any of the 
 #+begin_src emacs-lisp
 (use-package
  repeaters
- :demand t
- :config
- (repeaters-define-maps
-  '(("next-error" ;; borrowed from the hydra wiki
-     next-error "`" next-error "n" previous-error "e"))))
+ :demand t)
 
 (use-package
  repeat
