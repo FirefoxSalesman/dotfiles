@@ -74,6 +74,11 @@
       url = "github:karthink/gptel-preset-collection";
       flake = false;
     };
+
+    code-review = {
+      url = "github:doomelpa/code-review";
+      flake = false;
+    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);

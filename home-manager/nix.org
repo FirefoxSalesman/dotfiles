@@ -79,6 +79,11 @@
       url = "github:karthink/gptel-preset-collection";
       flake = false;
     };
+
+    code-review = {
+      url = "github:doomelpa/code-review";
+      flake = false;
+    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
@@ -97,6 +102,7 @@ let
     config = {
       problems.handlers.posthog.broken = "warn"; # or "ignore"
       allowUnfree = true;
+      nvidia.acceptLicense = true;
       permittedInsecurePackages = [
         "pnpm-10.29.2"
         "electron-40.10.5"
@@ -124,13 +130,13 @@ in
       pkg = packages.pkg;
       startEwm = packages.startEwm;
       startOllama = packages.startOllama;
+      qutebrowser = packages.qutebrowser;
       udisksmenu = packages.udisksmenu;
       wiki = packages.wiki;
 
       # overrides
       libdisplay-info = prev.libdisplay-info_0_3;
       mpv = packages.mpv;
-      typescript-language-server = pkgs-stable.typescript-language-server;
       audacity = pkgs-stable.audacity;
       pywal = pkgs-stable.pywal;
       rassumfrassum = pkgs-stable.rassumfrassum;
@@ -152,6 +158,7 @@ in
             roll = packages.roll;
             pertab = packages.pertab;
             embark = packages.embark;
+            code-review = packages.code-review;
             gptel-preset-collection = packages.gptel-preset-collection;
           }
         ));
@@ -293,6 +300,7 @@ let
     config = {
       problems.handlers.posthog.broken = "warn"; # or "ignore"
       allowUnfree = true;
+      nvidia.acceptLicense = true;
       permittedInsecurePackages = [
         "pnpm-10.29.2"
         "electron-40.10.5"
@@ -397,7 +405,14 @@ in
           programs.home-manager.enable = true;
 
           nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
-          targets.genericLinux.gpu.enable = true;
+          targets.genericLinux.gpu = {
+            enable = true;
+            nvidia = {
+              enable = true;
+              sha256 = "sha256-CqsFGNtTz3PEEtx/MrvIUMqV6DnYkj0N5L/0LByRac4=";
+	      version = "580.196.07";
+            };
+          };
         };
       };
   };
@@ -890,6 +905,7 @@ aliasesStr = concatStringsSep "\n"
         _JAVA_AWT_WM_NONREPARENTING = "1";
         PATH = "/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/holschcc/bin:/home/holschcc//.local/bin:/home/holschcc/.nix-profile/bin";
         OLLAMA_API_BASE = "http://127.0.0.1:11434";
+        GEMINI_API_KEY = "TERM"; # This makes minuet happy
 	QTWEBENGINE_REMOTE_DEBUGGING="9222 qutebrowser";
       };
     };
@@ -1872,7 +1888,34 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 
 *** Project Management
 #+begin_src nix-ts :tangle modules/development/project-management.nix :noweb yes
+{ inputs, ... }:
 {
+  perSystem =
+    { pkgs, ... }:
+    let
+      epkgs = pkgs.emacs.pkgs;
+    in
+    {
+      packages.code-review = epkgs.callPackage epkgs.trivialBuild rec {
+        pname = "code-review";
+        version = "pinned";
+        src = inputs.code-review;
+        propagatedUserEnvPkgs = with epkgs; [
+          closql
+          magit
+          transient
+          a
+          ghub
+          uuidgen
+          deferred
+          markdown-mode
+          forge
+          emojify
+        ];
+        buildInputs = propagatedUserEnvPkgs;
+      };
+    };
+
   flake.homeModules.development =
     { pkgs, lib, ... }:
     {
@@ -1904,44 +1947,61 @@ I think most of it was from the github page for lsp mode, but it's been a while,
             ];
           };
 
-          magit = {
-            setopt.magit-process-find-password-functions = [ "'magit-process-password-auth-source" ];
-            generalOne.project-prefix-map =
-              let
-                mkMajutsuCmd = magitCommand: majutsuCommand: ''
-                  `,(cmd! (if (file-exists-p (nix-emacs-project-file ".jj"))
-                          (progn ${majutsuCommand})
-                          ${magitCommand}))
-                '';
-              in
-              {
-                "v" = mkMajutsuCmd "(magit)" "(majutsu)";
-                "c" = mkMajutsuCmd "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-commit)";
-                "p" = mkMajutsuCmd "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)";
-                "P" = mkMajutsuCmd "(magit-push)" "(call-interactively 'majutsu-git-push)";
-                "b" = mkMajutsuCmd "(magit-bookmark)" "(majutsu-bookmark)";
+          magit =
+            let
+              mkMajutsuCmd = name: magitCommand: majutsuCommand: ''
+                (defun efs/vcs-${name} ()
+                       "Do a magit/jutsu ${name} depending on what kind of repo we have."
+                        (interactive)
+                        (require 'majutsu)
+                        (if (majutsu-toplevel)
+                            (progn ${majutsuCommand})
+                            ${magitCommand}))
+              '';
+            in
+            {
+              setopt.magit-process-find-password-functions = [ "'magit-process-password-auth-source" ];
+              preface = ''
+                (defun efs/vcs-status (&optional dir)
+                       "Do a magit/jutsu status depending on what kind of repo we have."
+                        (interactive)
+                        (require 'majutsu)
+                        (if (majutsu-toplevel)
+                            (progn (majutsu dir))
+                            (magit dir)))
+                ${mkMajutsuCmd "commit" "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-commit)"}
+                ${mkMajutsuCmd "pull" "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)"}
+                ${mkMajutsuCmd "push" "(magit-push)" "(call-interactively 'majutsu-git-push)"}
+                ${mkMajutsuCmd "branch" "(magit-branch)" "(majutsu-bookmark)"}
+              '';
+              generalOne.project-prefix-map = {
+                "v" = "'efs/vcs-status";
+                "c" = "'efs/vcs-commit";
+                "p" = "'efs/vcs-pull";
+                "P" = "'efs/vcs-push";
+                "b" = "'efs/vcs-branch";
               };
-            bindLocal.project-prefix-map = lib.mkForce { };
-            generalOneConfig = {
-              magit-mode-map = {
-                "e" = "'evil-next-visual-line";
-                "B" = "'evil-goto-line";
+              bindLocal.project-prefix-map = lib.mkForce { };
+              generalOneConfig = {
+                magit-mode-map = {
+                  "e" = "'evil-next-visual-line";
+                  "B" = "'evil-goto-line";
+                };
+                magit-status-mode-map."j" = "'magit-unstage-files";
               };
-              magit-status-mode-map."j" = "'magit-unstage-files";
             };
-            # https://github.com/magit/magit/issues/5557
-            config = ''
-              (defalias 'magit--any
-                      (static-if (fboundp 'member-if) #'member-if #'cl-member-if))
-            '';
-          };
+
+          code-review.enable = lib.mkForce false;
 
           majutsu = {
             enable = true;
             extraPackages = [ pkgs.jujutsu ];
             command = [ "majutsu-git-fetch" ];
             extraConfig = ":autoload majutsu-repository-config-id";
-            config = "(magit-add-section-hook 'majutsu-log-sections-hook #'magit-todos--insert-todos nil 'append)";
+            config = ''
+              	      (magit-add-section-hook 'majutsu-log-sections-hook #'magit-todos--insert-todos nil 'append)
+              	      (majutsu-forge-mode)
+              	    '';
           };
 
           projection-ibuffer = {
@@ -2120,7 +2180,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
       semel = true;
     };
     usePackage.elisp-mode.gfhookf = [
-      "('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"
+      "('emacs-lisp-mode (list (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))) 'hs-minor-mode))"
     ];
   };
 }
@@ -2178,10 +2238,9 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 }
 #+end_src
 
-Borrowed from here:
-https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 #+NAME: Java Preface
 #+begin_src emacs-lisp
+;; Borrowed from here: https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 (defun tkj/java-decompile-class ()
   "Run the FernFlower decompiler on the current .class file using
  fernflower, and opens the decompiled Java file."
@@ -2280,33 +2339,42 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
     (kill-buffer buffer)
     methods))
 
+(defun efs/mixin-at-identifier (kind input-node)
+  "Return true if the identifier of INPUT-NODE or its parent is KIND."
+  (let* ((parent (treesit-node-parent input-node))
+         (grandparent (treesit-node-parent parent)))
+    (and (equal (treesit-node-type grandparent) "element_value_pair")
+         (or (equal
+              kind
+              (treesit-node-text
+               (treesit-search-subtree grandparent "identifier") t))
+             (equal
+              kind
+              (treesit-node-text
+               (treesit-search-subtree parent "identifier") t))))))
+
+(defun efs/assemble-mixin-completions (completions bounds)
+  "Assemble COMPLETIONS for the current mixin."
+  (list (car bounds) (cdr bounds) completions :exclusive 'no))
+
 ;https://emacs.stackexchange.com/questions/15276/how-do-i-write-a-simple-completion-at-point-functions-function
 (defun efs/mixin-completion-at-point ()
   "A capf the contains the names of methods you might mix into."
   (when-let* ((bounds (bounds-of-thing-at-point 'word))
               (node-at-point
                (treesit-node-at
-                (marker-last-position (point-marker))))
-              (parent (treesit-node-parent node-at-point))
-              (node (treesit-node-parent parent))
-              (is-method
-               (and (equal
-                     (treesit-node-type node) "element_value_pair")
-                    (or (equal
-                         "method"
-                         (treesit-node-text
-                          (treesit-search-subtree node "identifier")
-                          t))
-                        (equal
-                         "method"
-                         (treesit-node-text
-                          (treesit-search-subtree parent "identifier")
-                          t))))))
-    (list
-     (car bounds)
-     (cdr bounds)
-     (efs/get-mixin-methods)
-     :exclusive 'no)))
+                (marker-last-position (point-marker)))))
+    (if (efs/mixin-at-identifier "method" node-at-point)
+        (efs/assemble-mixin-completions
+         (efs/get-mixin-methods) bounds)
+      (when (efs/mixin-at-identifier "value" node-at-point)
+        (efs/assemble-mixin-completions
+         '("HEAD"
+           "TAIL"
+           "RETURN"
+           "INVOKE"
+           "INVOKE_ASSIGN")
+         bounds)))))
 
 (defun efs/register-mixin-to-json (mixin-name)
   "Add MIXIN-NAME to mixins.modid.json."
@@ -2539,16 +2607,34 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
                                                                      (cape-capf-inside-string #'cape-dict))
                                                                     #'cape-dabbrev))))
               ''
+	      # https://www.jamescherti.com/emacs-eglot-apply-code-actions-fixes-on-save/
+	      ''
+		('before-save
+                    (lambda ()
+		       (when (and (fboundp 'eglot-managed-p)
+                             (eglot-managed-p)
+                             (fboundp 'eglot-server-capable)
+                             (eglot-server-capable :codeActionProvider)
+                             (fboundp 'eglot-current-server)
+                             (fboundp 'eglot-code-actions)
+                             (fboundp 'eglot-execute))
+                    (when-let* ((server (eglot-current-server)))
+                      (save-restriction
+                        (widen)
+			(dolist (action (eglot-code-actions (point-min) (point-max)
+                                                              "source.fixAll" nil))
+                            (eglot-execute server action)))))))
+	      ''
             ];
             # https://www.jamescherti.com/emacs-eglot-performance/
             setopt = {
               eglot-sync-connect = lib.mkForce 0;
-              # eglot-events-buffer-config = [
-              #   "':size"
-              #   0
-              #   "':format"
-              #   "'full"
-              # ];
+              eglot-events-buffer-config = [
+                "':size"
+                0
+                "':format"
+                "'full"
+              ];
               eglot-max-file-watches = 3000;
               eglot-report-progress = false;
               eglot-code-action-indications = false;
@@ -2853,7 +2939,8 @@ Most of this was shamelessly lifted from Emacs from Scratch.
         enable = true;
         setopt = {
           confirm-kill-processes = false;
-          trusted-content = [ ''"~/projects/generic-todo/"'' ];
+          trusted-content = [ ''"~/projects/generic-todo/"'' ''"~/projects/DungeonsLibs/"''] ;
+          safe-local-variable-directories = [ ''"~/projects/generic-todo/"'' ''"~/projects/DungeonsLibs/"''] ;
         };
       };
 
@@ -2941,11 +3028,24 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
           evilNerdCommenter.enable = true;
           god.enable = true;
         };
-        usePackage.evil = {
-          setopt.evil-buffer-regexps = [ '''("^ \\*Minibuf.*\\*" . insert)'' ];
-          config = ''
-            <<Evil Config>>
-          '';
+        usePackage = {
+          evil = {
+            setopt.evil-buffer-regexps = [ '''("^ \\*Minibuf.*\\*" . insert)'' ];
+            config = ''
+              <<Evil Config>>
+            '';
+          };
+          simple = {
+            generalOne.":nm" = {
+              "M-m" = "'next-error";
+              "M-M" = "'previous-error";
+            };
+            config = ''
+              (repeaters-define-maps
+                '(("next-error" ;; borrowed from the hydra wiki
+                   next-error "m" previous-error "M")))
+            '';
+          };
         };
       };
     };
@@ -3874,6 +3974,7 @@ The version of embark in nixpkgs doesn't work right with org mode because it's m
 Credits:
 Which-key indicator from the embark wiki
 avy actions from karthink
+https://blog.fidelramos.net/software/embark-custom-actions
 #+begin_src nix-ts :tangle modules/emacs/completions/embark.nix :noweb yes
 { inputs, ... }:
 
@@ -3920,16 +4021,27 @@ avy actions from karthink
     programs.emacs.init = {
       completions.smallExtras.embark = true;
       usePackage.embark = {
-        general."M-a" = "'embark-dwim";
+        general = {
+          "M-a" = "'embark-dwim";
+          "M-A" = "'embark-act";
+        };
         generalTwo.":n".vertico-map."a" = "'embark-act";
         generalOneConfig = {
-          embark-file-map = {
+	  embark-region-map = {
+	    "r" = '''(gptel-rewrite :which-key "rewrite with gptel")'';
+	    "a" = '''(gptel-add :which-key "add to context")'';
+	    "s" = '''(gptel-send :which-key "send to gptel")'';
+	  };
+	  embark-file-map = {
+	    "a" = '''(gptel-add-file :which-key "add to context")'';
             "v" = "(my/embark-split-action find-file pertab-vertical-split)";
             "h" = "(my/embark-split-action find-file pertab-horizontal-split)";
             "t" = "(my/embark-split-action find-file tab-new)";
             "o" = "(my/embark-ace-action find-file)";
+            "g" = "'efs/vcs-status";
           };
           embark-buffer-map = {
+	    "a" = '''(gptel-add :which-key "add to context")'';
             "v" = "(my/embark-split-action switch-to-buffer pertab-vertical-split)";
             "h" = "(my/embark-split-action switch-to-buffer pertab-horizontal-split)";
             "t" = "(my/embark-split-action switch-to-buffer tab-new)";
@@ -3941,6 +4053,9 @@ avy actions from karthink
             "t" = "(my/embark-split-action bookmark-jump tab-new)";
             "o" = "(my/embark-ace-action bookmark-jump)";
           };
+          embark-symbol-map."R" = "'elisp-refs-symbol";
+          embark-identifier-map."$" = "'jinx-correct";
+	  embark-flymake-map."a" = '''(efs/embark-gptel-explain-diagnostic :which-key "explain diagnostic with gptel")'';
         };
         preface = ''
           <<Emacs Embark Preface>>
@@ -3975,6 +4090,24 @@ Borrowed from Karthinks
          (let ((aw-dispatch-always t))
            (aw-switch-to-window (aw-select nil))
            (call-interactively (symbol-function ',fn)))))))
+
+(defun efs/embark-gptel-explain-diagnostic ()
+  "Ask gptel to explain the Flymake diagnostic at point."
+  (interactive)
+  (require 'gptel-quick)
+  (if-let* ((diag (car (flymake-diagnostics (point)))))
+      (let* ((text (format
+                    "Explain this diagnostic in %s and suggest a fix.\n\n\
+Diagnostic (%s): %s\n\nCode:\n%s"
+                    (buffer-name)
+                    (flymake-diagnostic-type diag)
+                    (flymake-diagnostic-text diag)
+                    (buffer-substring-no-properties
+                     (flymake-diagnostic-beg diag)
+                     (flymake-diagnostic-end diag))))
+             )
+        (gptel-quick text))
+    (user-error "No Flymake diagnostic at point")))
 #+end_src
 
 **** App Launcher
@@ -4245,11 +4378,7 @@ All of this config was origally stolen from Karthinks. I don't think any of the 
 #+begin_src emacs-lisp
 (use-package
  repeaters
- :demand t
- :config
- (repeaters-define-maps
-  '(("next-error" ;; borrowed from the hydra wiki
-     next-error "`" next-error "n" previous-error "e"))))
+ :demand t)
 
 (use-package
  repeat
@@ -4372,6 +4501,7 @@ How to add a latex package
                 						        #'cape-elisp-block
                 						        #'cape-dict
                                                                         #'cape-dabbrev))))''
+	      #''('after-save (lambda () (when (eq major-mode 'org-mode) (org-babel-tangle))))''
             ];
             custom.org-directory = ''"~/doc"'';
             setopt = {
@@ -4395,11 +4525,6 @@ How to add a latex package
             config = ''
               <<Emacs Org Config>>
             '';
-          };
-
-          org-auto-tangle = {
-            enable = true;
-            ghookf = [ "('org-mode 'org-auto-tangle-mode)" ];
           };
 
           denote = {
@@ -4442,7 +4567,7 @@ How to add a latex package
               ''"people"''
               ''"interview"''
               ''"rust"''
-	      ''"tetramem"''
+              ''"tetramem"''
             ];
           };
 
@@ -4453,6 +4578,18 @@ How to add a latex package
               "obl" = "'biblio-lookup";
               "obi" = "'biblio-doi-insert-bibtex";
             };
+          };
+
+          org-semantic = {
+            enable = true;
+            setopt.org-semantic-vault-root = ''"~/doc/denote"'';
+            generalOne.global-leader = {
+              oS = '''(:ignore t :which-key "semantic")'';
+              oSf = "'org-semantic-find";
+              oSp = "'org-semantic-find-at-point";
+              oSr = "'org-semantic-reindex";
+            };
+            config = "(org-semantic-auto-reindex-mode)";
           };
         };
       };
@@ -5626,16 +5763,42 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
       ...
     }:
     {
-      home.packages = [ pkgs.ollama ];
+      home = {
+        packages = [
+          pkgs.ollama
+          pkgs.jdt-language-server
+        ];
+        # file = {
+        #   ".config/emacs/agents/bughunter.org" = ''
+        #     <<Bughunter Subagent>>
+        #   '';
+        # };
+      };
       programs = {
-        mcp.servers.nixos = {
-          command = "${pkgs.uv}/bin/uvx";
-          args = [ "mcp-nixos" ];
-        };
+        mcp.servers = {
+          nixos = {
+            command = "${pkgs.uv}/bin/uvx";
+            args = [ "mcp-nixos" ];
+          };
+          lsp = {
+            command = "npx";
+            args = [
+              "-y"
+              "@theupsider/lsp-mcp@latest"
+            ];
+          };
+	  jj = {
+            command = "npx";
+            args = [
+              "-y"
+              "jj-mcp-server"
+            ];
+          };
+        } ;
         emacs.init = {
           ai = {
             copilot = {
-              enable = false;
+              enable = true;
               keepOutOf = [
                 "c-ts-mode"
                 "json5-ts-mode"
@@ -5647,10 +5810,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
             gptel = {
               enable = true;
               enableMcpIntegration = true;
-              introspection = {
-                enable = true;
-                model = "qwen2.5:3b";
-              };
+              introspection.enable = true;
               agent.enable = true;
             };
           };
@@ -5695,23 +5855,34 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
                 '';
               };
 
+              gptel-agent.config = ''
+                <<Emacs Gptel Agent Config>>
+              '';
+
               gptel-quick.setopt = mkOllama [ "qwen2.5:3b" ] "-quick";
 
               gptel-inline = {
                 enable = true;
                 after = [ "gptel" ];
                 config = ''
-                  (defun gptel-inline--response-overlay-append-chunk (ov chunk)
-                    "Append text CHUNK to the buffer-based response overlay OV.
-                  Inserts into the source buffer and triggers font-lock."
-                    (let* ((src-buf (plist-get (overlay-get ov 'gptel-inline) :src)))
-                      (when (buffer-live-p src-buf)
-                        (with-current-buffer src-buf
-                          (let ((inhibit-read-only t))
-                               (goto-char (point-max))
-                               (insert chunk)
-                               (font-lock-ensure))))))
+                  <<Emacs Gptel Inline Config>>
                 '';
+                generalTwoConfig.":nm" = {
+                  gptel-inline-map = {
+                    "RET" = "'gptel-inline-send";
+                    "H" = "'gptel-inline-help";
+                    "C-a" = "'gptel-inline-append";
+                    "C-b" = "'gptel-switch-buffer";
+                    "C-SPC" = "'gptel-inline-cycle-reference";
+                  };
+                  gptel-inline--response-overlay-mode-map = {
+                    "M-e" = "'gptel-inline--response-overlay-down";
+                    "M-o" = "'gptel-inline--response-overlay-up";
+                    "C-M-e" = "'gptel-inline--response-overlay-pagedown";
+                    "C-M-o" = "'gptel-inline--response-overlay-pageup";
+                    "C-d" = "'gptel-inline--response-overlay-dispatch";
+                  };
+                };
               };
 
               mcp.config = ''
@@ -5723,32 +5894,9 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
                 after = [ "gptel" ];
               };
 
-              org-semantic = {
-                enable = true;
-                setopt.org-semantic-vault-root = ''"~/doc/denote"'';
-                generalOne.global-leader = {
-                  oS = '''(:ignore t :which-key "semantic")'';
-                  oSf = "'org-semantic-find";
-                  oSp = "'org-semantic-find-at-point";
-                  oSr = "'org-semantic-reindex";
-                };
-                config = "(org-semantic-auto-reindex-mode)";
-              };
-
-              aidermacs = {
-                enable = false;
-                extraPackages = [ pkgs.aider-chat ];
-                generalOne.global-leader."gA" = "'aidermacs-transient-menu";
-                config = "(start-ollama)";
-                setopt = {
-                  aidermacs-default-model = ''"ollama/qwen2.5:3b"'';
-                  aidermacs-extra-args = [ ''"--no-git"'' ];
-                };
-              };
-
               popper.setopt.popper-reference-buffers = [
-                "'aidermacs-comint-mode"
-                ''"^\\*gptel-inline\\*"''
+                ''"^\\*gptel-opencode-agent:.*\\*"''
+                ''"^\\*gptel:.*\\*"''
                 ''"^\\*Ollama\\*"''
                 ''"^\\*copilot\\*"''
               ];
@@ -5772,6 +5920,12 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 (start-ollama)
 (require 'gptel-agent)
 (gptel-make-gh-copilot "copilot")
+(gptel-make-openai "OpenRouter"
+  :host "openrouter.ai"
+  :endpoint "/api/v1/chat/completions"
+  :stream t
+  :key (lambda () (auth-source-pass-get 'secret "openrouter-api-key"))                   ;can be a function that returns the key
+  :models '(nvidia/nemotron-3.5-super-vl:free cohere/north-mini-code:free nvidia/nemotron-3-ultra-550b-a55b:free recursive/flint-v1.0:free xingchen-agi/xing4.0-29b-a4b:free liquid/lfm-2.5-2.6:free google/gemma-4-31b-it:free google/gemma-4-26b-a4b-it:free nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free))
 (efs/evil-collection-remap
  'evil-collection-gptel-setup
  'normal
@@ -5790,9 +5944,9 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
  'newline)
 
 (gptel-make-preset
- 'translate
- :system "Translate to english."
- :model 'llama3.2:3b)
+    'translate
+  :system "Translate to english."
+  :model 'llama3.2:3b)
 
 (defun efs/translate (foreign-text)
   "Translates FOREIGN-TEXT to English & outputs it in an org buffer called Translation."
@@ -5801,8 +5955,8 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
     (org-mode)
     (let ((gptel-model 'llama3.2:3b))
       (gptel-request
-       (concat
-        foreign-text " Translate the following text to English.")))))
+	  (concat
+           foreign-text " Translate the following text to English.")))))
 
 (with-eval-after-load 'evil
   (evil-ex-define-cmd
@@ -5824,13 +5978,9 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 (gptel-make-tool
  :name "Denote"
  :function 'efs/semantic-search
- :description "Vector searches the user's notes for a word or phrase. You can treat it in the same way you would a web search"
- :args
- '((:name
-    "term"
-    :type "string"
-    :description "The word or phrase to search for."))
- :include t)
+ :description "Search the user's notes for a word or phrase. This tool will return parts of the notes that are a close match."
+ :args '((:name "term" :type "string" :description "The word or phrase to search for.")))
+
 
 (gptel-make-preset
  'denote
@@ -5839,50 +5989,77 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
    "Search the user's notes to learn about the relevant topic, then respond.")
  :tools '(:append ("Denote")))
 
+#+end_src
+
+#+NAME: Emacs Gptel Agent Config
+#+begin_src emacs-lisp
 (gptel-make-preset
- 'web
- :system
- '(:append
-   "Search the web to learn about the relevant topic, then respond.")
- :tools '(:append ("WebSearch" "WebFetch")))
+    'web
+  :description "A preset for quick & cheap websearches."
+  :model 'llama3.2:3b
+  :system
+  '(:append
+    "Search the web to learn about the relevant topic, then respond.")
+  :tools '(:append ("WebSearch" "WebFetch")))
 
 (gptel-make-preset
- 'markdown
- :system
- "Transform the org-mode text you're given into markdown. Follow these styling rules:
-- All bullet points should use \"-\".
-- All code should be surrounded by `, not =
-- Tables should use |, not +, in their markup.
-- Do not put bullet points in tables
-"
- :model 'llama3.2:3b)
+    'jarvis
+  :description "A preset for executing shell commands."
+  :model 'qwen2.5:3b
+  :system
+  '(:append
+    "You are a command runner. Your task is to execute shell commands to achieve the user's goal.
+Here are some tips:
+- When the user wants to regenerate their configs, run 'pkg rebuild'.
+- When the user wants to make a new VCs change, call 'jj new'. If the user says what the change is for, use 'jj new -m \"What the change is for\"'.
+- When the user wants to squash a VCs change, call 'jj squash'.
+- When the user wants to describe a VCs change, call 'jj describe'.")
+  :tools '(:append ("Bash")))
 
 (gptel-make-preset
- 'jarvis
- :system
- "You are a command runner. You must run the command that achieves the user's (Mr. Stark's) goal.
-Here are some tips for non-standard commands:
-- If the user asks you to rebuild their config, call pkg rebuild
-- If the user asks you to start a new VC change, call jj new
-- If the user asks you to squash a VC change, call jj squash"
- :tools '(:append ("Bash"))
- :model 'qwen2.5:3b)
+    'efs-agent
+  :description "An extended opencode agent with LSP support"
+  :parents '(gptel-agent)
+  :system '(:append "# Language Server Protocol
+- If possible, always init the LSP server for the language you're working in before doing any work.
+- If you must reformat a file & an lsp server is available, use the LSP server's formatting capabilities. Refrain from reformatting otherwise.
+- If an LSP server is available, use its search capabilities librerally when trying to understand the codebase.
+
+# Version Control
+- JJ is used as a version control system.
+- Before doing any work, use the new tool to create a new change.
+- After completing your work, use the describe tool to describe your change.
+")
+  :pre (lambda () (gptel-mcp-connect '("lsp" "jj") 'sync))
+  :tools '(:append ("mcp-lsp" "mcp-jj")))
 #+end_src
 
 #+NAME: Emacs MCP Config
 #+begin_src emacs-lisp
 ;; Borrowed from Karthinks
 (gptel-make-preset
- 'nixos
- :description "TOOLS: Add NixOS MCP"
- :pre (lambda () (gptel-mcp-connect '("nixos") 'sync))
- :system
- '(:append
-   "\n\nUse the provided NixOS tools to look for up-to-date information and\
+    'nixos
+  :description "TOOLS: Add NixOS MCP"
+  :pre (lambda () (gptel-mcp-connect '("nixos") 'sync))
+  :system
+  '(:append
+    "\n\nUse the provided NixOS tools to look for up-to-date information and\
  examine the state of my system")
- :tools '(:append ("mcp-nixos"))
- :model 'qwen2.5:3b
- :backend "Ollama")
+  :tools '(:append ("mcp-nixos")))
+#+end_src
+
+#+NAME: Emacs Gptel Inline Config
+#+begin_src emacs-lisp
+(defun gptel-inline--response-overlay-append-chunk (ov chunk)
+  "Append text CHUNK to the buffer-based response overlay OV.
+Inserts into the source buffer and triggers font-lock."
+  (let* ((src-buf (plist-get (overlay-get ov 'gptel-inline) :src)))
+    (when (buffer-live-p src-buf)
+      (with-current-buffer src-buf
+        (let ((inhibit-read-only t))
+          (goto-char (point-max))
+          (insert chunk)
+          (font-lock-ensure))))))
 #+end_src
 
 ** Multimedia
@@ -6672,15 +6849,23 @@ NAME is the term to search for."
 #+end_src
 
 *** Qutebrowser
+Fixing pass:
+https://github.com/NixOS/nixpkgs/issues/20472
 https://greasyfork.org/en/scripts/374833-yt2invidio
 #+NAME: Internet Qutebrowser
 #+begin_src nix-ts :tangle modules/web/qutebrowser/misc.nix :noweb yes
 {
+  perSystem = { lib, pkgs, ... }: {
+    packages.qutebrowser = pkgs.qutebrowser.overrideAttrs (oldAttrs: {
+      propagatedBuildInputs = oldAttrs.propagatedBuildInputs ++ [ pkgs.python314Packages.idna ];
+    });
+  };
+
   flake.homeModules.web =
     { config, pkgs, ... }:
 
     {
-      home.packages = [ pkgs.python313Packages.adblock ];
+      home.packages = with pkgs.python314Packages; [ adblock ];
 
       programs.qutebrowser = {
         enable = true;
@@ -6969,9 +7154,7 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
   flake.homeModules.chat =
     { config, pkgs, ... }:
     {
-      home.packages = with pkgs; [
-        thunderbird
-      ];
+      home.packages = with pkgs; [ thunderbird ];
 
       programs.vesktop = {
         enable = true;

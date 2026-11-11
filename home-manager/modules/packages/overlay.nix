@@ -7,6 +7,7 @@ let
     config = {
       problems.handlers.posthog.broken = "warn"; # or "ignore"
       allowUnfree = true;
+      nvidia.acceptLicense = true;
       permittedInsecurePackages = [
         "pnpm-10.29.2"
         "electron-40.10.5"
@@ -34,13 +35,13 @@ in
       pkg = packages.pkg;
       startEwm = packages.startEwm;
       startOllama = packages.startOllama;
+      qutebrowser = packages.qutebrowser;
       udisksmenu = packages.udisksmenu;
       wiki = packages.wiki;
 
       # overrides
       libdisplay-info = prev.libdisplay-info_0_3;
       mpv = packages.mpv;
-      typescript-language-server = pkgs-stable.typescript-language-server;
       audacity = pkgs-stable.audacity;
       pywal = pkgs-stable.pywal;
       rassumfrassum = pkgs-stable.rassumfrassum;
@@ -62,6 +63,7 @@ in
             roll = packages.roll;
             pertab = packages.pertab;
             embark = packages.embark;
+            code-review = packages.code-review;
             gptel-preset-collection = packages.gptel-preset-collection;
           }
         ));

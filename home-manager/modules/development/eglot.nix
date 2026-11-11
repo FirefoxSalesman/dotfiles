@@ -33,16 +33,34 @@
                                                                      (cape-capf-inside-string #'cape-dict))
                                                                     #'cape-dabbrev))))
               ''
+	      # https://www.jamescherti.com/emacs-eglot-apply-code-actions-fixes-on-save/
+	      ''
+		('before-save
+                    (lambda ()
+		       (when (and (fboundp 'eglot-managed-p)
+                             (eglot-managed-p)
+                             (fboundp 'eglot-server-capable)
+                             (eglot-server-capable :codeActionProvider)
+                             (fboundp 'eglot-current-server)
+                             (fboundp 'eglot-code-actions)
+                             (fboundp 'eglot-execute))
+                    (when-let* ((server (eglot-current-server)))
+                      (save-restriction
+                        (widen)
+			(dolist (action (eglot-code-actions (point-min) (point-max)
+                                                              "source.fixAll" nil))
+                            (eglot-execute server action)))))))
+	      ''
             ];
             # https://www.jamescherti.com/emacs-eglot-performance/
             setopt = {
               eglot-sync-connect = lib.mkForce 0;
-              # eglot-events-buffer-config = [
-              #   "':size"
-              #   0
-              #   "':format"
-              #   "'full"
-              # ];
+              eglot-events-buffer-config = [
+                "':size"
+                0
+                "':format"
+                "'full"
+              ];
               eglot-max-file-watches = 3000;
               eglot-report-progress = false;
               eglot-code-action-indications = false;
