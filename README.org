@@ -38,12 +38,6 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + https://gitlab.com/rycee/configurations
 
 * TODO Future Improvements
-** Home Manager
-+ [ ] Figure out how to auto install photogimp
-+ [ ] Add qutebrowser's userscripts to nix
-
-** Emacs
-+ [ ] The python files from emacs-qutebrowser should be part of the emacs package & be provided by nix
 + [ ] dash template gets cleaned up & goes to live in its own repo
 + [ ] diff-hl
 + [ ] https://ianyepan.github.io/posts/git-blame-emacs/
@@ -57,6 +51,7 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
   - [X] Mixin generator function
     1. Put a new mixin in the mixins folder
     2. Add that mixin to the mixin config
++ [ ] Get the alias builder to the framework
 + [ ] https://github.com/karthink/gptel-annotate
 + [ ] https://github.com/yibie/exc.el
 + [ ] burnish
