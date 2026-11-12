@@ -45,7 +45,7 @@
         ];
         # file = {
         #   ".config/emacs/agents/bughunter.org" = ''
-        #
+        #     
         #   '';
         # };
       };
@@ -62,18 +62,18 @@
               "@theupsider/lsp-mcp@latest"
             ];
           };
-          jj = {
+	  jj = {
             command = "npx";
             args = [
               "-y"
               "jj-mcp-server"
             ];
           };
-        };
+        } ;
         emacs.init = {
           ai = {
             copilot = {
-              enable = true;
+              enable = false;
               keepOutOf = [
                 "c-ts-mode"
                 "json5-ts-mode"
@@ -154,12 +154,12 @@
                    'newline
                    "RET"
                    'newline)
-
+                  
                   (gptel-make-preset
                       'translate
                     :system "Translate to english."
                     :model 'llama3.2:3b)
-
+                  
                   (defun efs/translate (foreign-text)
                     "Translates FOREIGN-TEXT to English & outputs it in an org buffer called Translation."
                     (with-current-buffer (get-buffer-create "Translation")
@@ -169,11 +169,11 @@
                         (gptel-request
                   	  (concat
                              foreign-text " Translate the following text to English.")))))
-
+                  
                   (with-eval-after-load 'evil
                     (evil-ex-define-cmd
                      "translateb" (cmd! (efs/translate (buffer-string)))))
-
+                  
                   (defun efs/semantic-search (term)
                     "Search for TERM in your notes."
                     (require 'org-semantic)
@@ -186,21 +186,21 @@
                                (plist-get entry :text)
                                "\n\n\n"))
                             (plist-get (org-semantic-search term) :hits))))
-
+                  
                   (gptel-make-tool
                    :name "Denote"
                    :function 'efs/semantic-search
                    :description "Search the user's notes for a word or phrase. This tool will return parts of the notes that are a close match."
                    :args '((:name "term" :type "string" :description "The word or phrase to search for.")))
-
-
+                  
+                  
                   (gptel-make-preset
                    'denote
                    :system
                    '(:append
                      "Search the user's notes to learn about the relevant topic, then respond.")
                    :tools '(:append ("Denote")))
-
+                  
                 '';
               };
 
@@ -213,7 +213,7 @@
                   '(:append
                     "Search the web to learn about the relevant topic, then respond.")
                   :tools '(:append ("WebSearch" "WebFetch")))
-
+                
                 (gptel-make-preset
                     'jarvis
                   :description "A preset for executing shell commands."
@@ -227,7 +227,7 @@
                 - When the user wants to squash a VCs change, call 'jj squash'.
                 - When the user wants to describe a VCs change, call 'jj describe'.")
                   :tools '(:append ("Bash")))
-
+                
                 (gptel-make-preset
                     'efs-agent
                   :description "An extended opencode agent with LSP support"
@@ -236,7 +236,7 @@
                 - If possible, always init the LSP server for the language you're working in before doing any work.
                 - If you must reformat a file & an lsp server is available, use the LSP server's formatting capabilities. Refrain from reformatting otherwise.
                 - If an LSP server is available, use its search capabilities librerally when trying to understand the codebase.
-
+                
                 # Version Control
                 - JJ is used as a version control system.
                 - Before doing any work, use the new tool to create a new change.

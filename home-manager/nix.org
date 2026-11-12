@@ -2560,7 +2560,10 @@ https://jointhefreeworld.org/blog/articles/emacs/emacs-eglot-scala-kotlin/index.
 	  pyvenv = {
 	    enable = true;
 	    demand = true;
-	    config = "(pyvenv-mode)";
+	    config = ''
+	      (pyvenv-mode)
+	      (pyvenv-tracking-mode)
+	    '';
 	  };
         };
       };
@@ -5798,7 +5801,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
         emacs.init = {
           ai = {
             copilot = {
-              enable = true;
+              enable = false;
               keepOutOf = [
                 "c-ts-mode"
                 "json5-ts-mode"

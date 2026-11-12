@@ -16,7 +16,10 @@
 	  pyvenv = {
 	    enable = true;
 	    demand = true;
-	    config = "(pyvenv-mode)";
+	    config = ''
+	      (pyvenv-mode)
+	      (pyvenv-tracking-mode)
+	    '';
 	  };
         };
       };
