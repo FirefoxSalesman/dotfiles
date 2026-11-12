@@ -5641,10 +5641,11 @@ NEG subtracts if it is true."
     (call-interactively 'switch-to-buffer))))
 #+end_src
 
-** Gptel
+** AI
+*** Gptel
 https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 
-#+begin_src nix-ts :tangle modules/gptel.nix :noweb yes
+#+begin_src nix-ts :tangle modules/ai/gptel.nix :noweb yes
 { inputs, ... }:
 
 {
@@ -5709,33 +5710,22 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
               "@theupsider/lsp-mcp@latest"
             ];
           };
-	  jj = {
+          jj = {
             command = "npx";
             args = [
               "-y"
               "jj-mcp-server"
             ];
           };
-        } ;
+        };
         emacs.init = {
-          ai = {
-            copilot = {
-              enable = true;
-              keepOutOf = [
-                "c-ts-mode"
-                "json5-ts-mode"
-                "json-ts-mode"
-                "LaTeX-mode"
-                "zenscript-mode"
-              ];
-            };
-            gptel = {
-              enable = true;
-              enableMcpIntegration = true;
-              introspection.enable = true;
-              agent.enable = true;
-            };
+          ai.gptel = {
+            enable = true;
+            enableMcpIntegration = true;
+            introspection.enable = true;
+            agent.enable = true;
           };
+
           usePackage =
             let
               mkOllama = models: infix: {
@@ -5980,6 +5970,56 @@ Inserts into the source buffer and triggers font-lock."
           (goto-char (point-max))
           (insert chunk)
           (font-lock-ensure))))))
+#+end_src
+
+*** Minuet
+#+begin_src nix-ts :tangle modules/ai/minuet.nix
+{
+  flake.homeModules.ai.programs.emacs.init = {
+    ai.minuet.enable = true;
+    usePackage =
+      let
+        mkMinuet = opt: ''
+          (plist-put ${opt} :end-point "http://localhost:11434/v1/completions")
+          (plist-put ${opt} :name "Ollama")
+          (plist-put ${opt} :api-key "TERM")
+          (plist-put ${opt} :model "qwen2.5-coder:1.5b")
+	'';
+      in
+      {
+        minuet = {
+          setopt.minuet-provider = "'openai-fim-compatible";
+          ghookf = [ "('(eshell-mode org-mode) 'minuet-auto-suggestion-mode)" ];
+          gfhookf = [ "('doom-escape 'minuet-dismiss-suggestion)" ];
+          config = ''
+	    ${mkMinuet "minuet-openai-fim-compatible-options"}
+            (minuet-set-optional-options minuet-openai-fim-compatible-options :max_tokens 56)
+          '';
+        };
+
+        minuet-duet = {
+          enable = true;
+          setopt.minuet-duet-provider = "'openai-fim-compatible";
+          ghookf = [ "('(eshell-mode prog-mode org-mode) 'minuet-duet-auto-mode)" ];
+          gfhook = [ "('minuet-duet-auto-block-predicates 'efs/minuet-duet-only-in-evil-normal-p)" ];
+          gfhookf = [ "('doom-escape 'minuet-duet-dismiss)" ];
+          generalOne.minuet-duet-active-mode-map = {
+            "M-y" = "'minuet-duet-predict";
+            "C-i" = "'minuet-duet-apply";
+          };
+          preface = ''
+            (defun efs/minuet-duet-only-in-evil-normal-p ()
+              "Return non-nil to block duet prediction outside evil normal state."
+              (not (and (bound-and-true-p evil-local-mode)
+                        (evil-normal-state-p))))
+          '';
+          config = ''
+	    ${mkMinuet "minuet-duet-openai-compatible-options"}
+          '';
+        };
+      };
+  };
+}
 #+end_src
 
 ** Multimedia
@@ -7078,26 +7118,26 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
 
       programs.vesktop = {
         enable = true;
-        settings = {
-          minimizeToTray = false;
-          tray = false;
-          hardwareAcceleration = true;
-        };
-        vencord = {
-          useSystem = true;
-          settings = {
-            autoUpdate = false;
-            autoUpdateNotification = false;
-            plugins = {
-              FakeNitro.enabled = true;
-              AnonymizeFileNames.enabled = true;
-              BetterSettings.enabled = true;
-              FixYoutubeEmbeds.enabled = true;
-              ImageZoom.enabled = true;
-              YoutubeAdblock.enabled = true;
-            };
-          };
-        };
+        # settings = {
+        #   minimizeToTray = false;
+        #   tray = false;
+        #   hardwareAcceleration = true;
+        # };
+        # vencord = {
+        #   useSystem = true;
+        #   settings = {
+        #     autoUpdate = false;
+        #     autoUpdateNotification = false;
+        #     plugins = {
+        #       FakeNitro.enabled = true;
+        #       AnonymizeFileNames.enabled = true;
+        #       BetterSettings.enabled = true;
+        #       FixYoutubeEmbeds.enabled = true;
+        #       ImageZoom.enabled = true;
+        #       YoutubeAdblock.enabled = true;
+        #     };
+        #   };
+        # };
       };
     };
 }
