@@ -5989,7 +5989,7 @@ Inserts into the source buffer and triggers font-lock."
       {
         minuet = {
           setopt.minuet-provider = "'openai-fim-compatible";
-          ghookf = [ "('(eshell-mode org-mode) 'minuet-auto-suggestion-mode)" ];
+          ghookf = [ "('(eshell-mode text-mode) 'minuet-auto-suggestion-mode)" ];
           gfhookf = [ "('doom-escape 'minuet-dismiss-suggestion)" ];
           config = ''
 	    ${mkMinuet "minuet-openai-fim-compatible-options"}
@@ -5998,14 +5998,14 @@ Inserts into the source buffer and triggers font-lock."
         };
 
         minuet-duet = {
-          enable = true;
+          enable = false;
           setopt.minuet-duet-provider = "'openai-fim-compatible";
           ghookf = [ "('(eshell-mode prog-mode org-mode) 'minuet-duet-auto-mode)" ];
           gfhook = [ "('minuet-duet-auto-block-predicates 'efs/minuet-duet-only-in-evil-normal-p)" ];
           gfhookf = [ "('doom-escape 'minuet-duet-dismiss)" ];
-          generalOne.minuet-duet-active-mode-map = {
-            "M-y" = "'minuet-duet-predict";
-            "C-i" = "'minuet-duet-apply";
+          generalOneConfig = {
+            ":n"."M-y" = "'minuet-duet-predict";
+            minuet-duet-active-mode-map."C-i" = "'minuet-duet-apply";
           };
           preface = ''
             (defun efs/minuet-duet-only-in-evil-normal-p ()
