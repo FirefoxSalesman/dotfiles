@@ -41,9 +41,6 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] dash template gets cleaned up & goes to live in its own repo
 + [ ] diff-hl
 + [ ] https://ianyepan.github.io/posts/git-blame-emacs/
-+ [ ] doxygen
-+ [ ] https://github.com/florommel/poimap (i am being greedy)
-+ [ ] https://github.com/MArpogaus/modern-tab
 + [-] Port mcdev
   - [ ] Mixin method selector (partially done, but it may be nice if we could have method signatures)
   - [X] Mixin @At.value selector
@@ -55,3 +52,4 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] https://github.com/karthink/gptel-annotate
 + [ ] https://github.com/yibie/exc.el
 + [ ] burnish
++ [ ] Make majutsu merging behave
