@@ -14,7 +14,7 @@
           hardwareAcceleration = true;
         };
         vencord = {
-          useSystem = true;
+          # useSystem = true;
           settings = {
             autoUpdate = false;
             autoUpdateNotification = false;

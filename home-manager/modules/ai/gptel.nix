@@ -62,33 +62,22 @@
               "@theupsider/lsp-mcp@latest"
             ];
           };
-	  jj = {
+          jj = {
             command = "npx";
             args = [
               "-y"
               "jj-mcp-server"
             ];
           };
-        } ;
+        };
         emacs.init = {
-          ai = {
-            copilot = {
-              enable = false;
-              keepOutOf = [
-                "c-ts-mode"
-                "json5-ts-mode"
-                "json-ts-mode"
-                "LaTeX-mode"
-                "zenscript-mode"
-              ];
-            };
-            gptel = {
-              enable = true;
-              enableMcpIntegration = true;
-              introspection.enable = true;
-              agent.enable = true;
-            };
+          ai.gptel = {
+            enable = true;
+            enableMcpIntegration = true;
+            introspection.enable = true;
+            agent.enable = true;
           };
+
           usePackage =
             let
               mkOllama = models: infix: {
@@ -120,7 +109,7 @@
                   ];
                   gptel-use-tools = "'force";
                 }
-                // mkOllama [ "phi4-mini" "llama3.2:3b" "qwen2.5:3b" ] "";
+                // mkOllama [ "llama3.2:3b" "qwen2.5:3b" ] "";
                 generalOne.global-leader."gi" = "'gptel-inline";
                 preface = ''
                   (defun start-ollama ()
