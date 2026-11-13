@@ -104,8 +104,7 @@ let
       allowUnfree = true;
       nvidia.acceptLicense = true;
       permittedInsecurePackages = [
-        "pnpm-10.29.2"
-        "electron-40.10.5"
+	"qutebrowser-3.7.0"
       ];
     };
   };
@@ -302,8 +301,7 @@ let
       allowUnfree = true;
       nvidia.acceptLicense = true;
       permittedInsecurePackages = [
-        "pnpm-10.29.2"
-        "electron-40.10.5"
+	"qutebrowser-3.7.0"
       ];
     };
     overlays = [
@@ -1998,10 +1996,11 @@ I think most of it was from the github page for lsp mode, but it's been a while,
             extraPackages = [ pkgs.jujutsu ];
             command = [ "majutsu-git-fetch" ];
             extraConfig = ":autoload majutsu-repository-config-id";
+            ghookf = [ ''('find-file 'majutsu-conflict-ensure-mode)'' ];
             config = ''
-              	      (magit-add-section-hook 'majutsu-log-sections-hook #'magit-todos--insert-todos nil 'append)
-              	      (majutsu-forge-mode)
-              	    '';
+              (magit-add-section-hook 'majutsu-log-sections-hook #'magit-todos--insert-todos nil 'append)
+              (majutsu-forge-mode)
+            '';
           };
 
           projection-ibuffer = {
@@ -6056,53 +6055,59 @@ Inserts into the source buffer and triggers font-lock."
 #+end_src
 
 *** Minuet
-#+begin_src nix-ts :tangle modules/ai/minuet.nix
+#+begin_src nix-ts :tangle modules/ai/minuet.nix :noweb yes
 {
   flake.homeModules.ai.programs.emacs.init = {
     ai.minuet.enable = true;
-    usePackage =
-      let
-        mkMinuet = opt: ''
-          (plist-put ${opt} :end-point "http://localhost:11434/v1/completions")
-          (plist-put ${opt} :name "Ollama")
-          (plist-put ${opt} :api-key "TERM")
-          (plist-put ${opt} :model "qwen2.5-coder:1.5b")
-	'';
-      in
-      {
-        minuet = {
-          setopt.minuet-provider = "'openai-fim-compatible";
-          ghookf = [ "('(eshell-mode text-mode) 'minuet-auto-suggestion-mode)" ];
-          gfhookf = [ "('doom-escape 'minuet-dismiss-suggestion)" ];
-          config = ''
-	    ${mkMinuet "minuet-openai-fim-compatible-options"}
-            (minuet-set-optional-options minuet-openai-fim-compatible-options :max_tokens 56)
-          '';
-        };
-
-        minuet-duet = {
-          enable = false;
-          setopt.minuet-duet-provider = "'openai-fim-compatible";
-          ghookf = [ "('(eshell-mode prog-mode org-mode) 'minuet-duet-auto-mode)" ];
-          gfhook = [ "('minuet-duet-auto-block-predicates 'efs/minuet-duet-only-in-evil-normal-p)" ];
-          gfhookf = [ "('doom-escape 'minuet-duet-dismiss)" ];
-          generalOneConfig = {
-            ":n"."M-y" = "'minuet-duet-predict";
-            minuet-duet-active-mode-map."C-i" = "'minuet-duet-apply";
-          };
-          preface = ''
-            (defun efs/minuet-duet-only-in-evil-normal-p ()
-              "Return non-nil to block duet prediction outside evil normal state."
-              (not (and (bound-and-true-p evil-local-mode)
-                        (evil-normal-state-p))))
-          '';
-          config = ''
-	    ${mkMinuet "minuet-duet-openai-compatible-options"}
-          '';
-        };
-      };
+    usePackage.minuet = {
+      setopt.minuet-provider = "'openai-fim-compatible";
+      ghookf = [ "('(eshell-mode text-mode) 'minuet-auto-suggestion-mode)" ];
+      gfhookf = [
+        "('doom-escape 'minuet-dismiss-suggestion)"
+        ''('eshell-mode (efs/minuet-prompt-builder "You are an AI command line completion engine. Provide contextually appropriate completions: shell commands when the user is writing shell commands & emacs lisp when the user is writing emacs lisp.\n"))''
+        ''('text-mode (efs/minuet-prompt-builder "You are an AI document completion engine. Provide completions for the user's prose."))''
+      ];
+      preface = ''
+        <<Minuet Preface>>
+      '';
+      config = ''
+        <<Minuet Config>>
+      '';
+    };
   };
 }
+#+end_src
+
+#+name: Minuet Preface
+#+begin_src emacs-lisp
+(defmacro efs/minuet-prompt-builder (text)
+  "Constructs a minuet prompt that can be used in a hook. TEXT is the prompt's prefix."
+  `(local!
+    minuet-default-prompt
+    (concat
+     ,text
+     "
+Input markers:
+- `<contextAfterCursor>`: Context after cursor
+- `<cursorPosition>`: Current cursor location
+- `<contextBeforeCursor>`: Context before cursor
+
+Note that the user input will be provided in **reverse** order: first the
+context after cursor, followed by the context before cursor.
+")))
+#+end_src
+
+#+name: Minuet Config
+#+begin_src emacs-lisp
+(plist-put
+ minuet-openai-fim-compatible-options
+ :end-point "http://localhost:11434/v1/completions")
+(plist-put minuet-openai-fim-compatible-options :name "Ollama")
+(plist-put minuet-openai-fim-compatible-options :api-key "TERM")
+(plist-put minuet-openai-fim-compatible-options :model "codegemma:2b")
+(minuet-set-optional-options
+ minuet-openai-fim-compatible-options
+ :max_tokens 56)
 #+end_src
 
 ** Multimedia
@@ -7206,19 +7211,16 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
           tray = false;
           hardwareAcceleration = true;
         };
-        vencord = {
-          # useSystem = true;
-          settings = {
-            autoUpdate = false;
-            autoUpdateNotification = false;
-            plugins = {
-              FakeNitro.enabled = true;
-              AnonymizeFileNames.enabled = true;
-              BetterSettings.enabled = true;
-              FixYoutubeEmbeds.enabled = true;
-              ImageZoom.enabled = true;
-              YoutubeAdblock.enabled = true;
-            };
+        vencord.settings = {
+          autoUpdate = false;
+          autoUpdateNotification = false;
+          plugins = {
+            FakeNitro.enabled = true;
+            AnonymizeFileNames.enabled = true;
+            BetterSettings.enabled = true;
+            FixYoutubeEmbeds.enabled = true;
+            ImageZoom.enabled = true;
+            YoutubeAdblock.enabled = true;
           };
         };
       };

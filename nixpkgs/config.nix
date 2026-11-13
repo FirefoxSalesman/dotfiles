@@ -1,4 +1,4 @@
 {
-  permittedInsecurePackages = [ "pnpm-10.29.2" ];
+  permittedInsecurePackages = [ "qutebrowser-3.7.0" ];
   allowUnfree = true;
 }

@@ -108,10 +108,11 @@
             extraPackages = [ pkgs.jujutsu ];
             command = [ "majutsu-git-fetch" ];
             extraConfig = ":autoload majutsu-repository-config-id";
+            ghookf = [ ''('find-file 'majutsu-conflict-ensure-mode)'' ];
             config = ''
-              	      (magit-add-section-hook 'majutsu-log-sections-hook #'magit-todos--insert-todos nil 'append)
-              	      (majutsu-forge-mode)
-              	    '';
+              (magit-add-section-hook 'majutsu-log-sections-hook #'magit-todos--insert-todos nil 'append)
+              (majutsu-forge-mode)
+            '';
           };
 
           projection-ibuffer = {
