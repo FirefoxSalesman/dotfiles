@@ -31,7 +31,7 @@
   flake.homeModules.web.programs = {
     emacs.init.usePackage = {
       qutebrowser = {
-	enable = true;
+        enable = true;
         setopt.qutebrowser-history-database = ''"~/.local/qutebrowser/history.sqlite"'';
       };
 
@@ -52,23 +52,41 @@
             (when-let* ((x11-win-id (plist-get window-info :x11-win-id))
                         (buffer (exwm--id->buffer x11-win-id)))
               (with-current-buffer buffer
-                (qutebrowser--with-plist window-info
-                  (win-id (setq-local qutebrowser-exwm-win-id win-id))
-                  (mode (setq-local qutebrowser-exwm-keymode mode))
-                  (icon-file (qutebrowser-exwm--update-favicon icon-file))
-                  (search (setq-local qutebrowser-exwm-current-search search))
-                  (hover (when (string= hover "") (setq hover nil))
-                         (setq-local qutebrowser-exwm-hovered-url hover))
-                  (url (setq-local qutebrowser-exwm-current-url
-                                   (unless (string-empty-p url) url))
-                       (setq-local buffer-file-name
-                                   (when (string-prefix-p "file://" url)
-                                     (string-replace "file://" "" url))))
-                  (x-scroll-perc (setq-local qutebrowser-exwm-x-scroll-perc x-scroll-perc))
-                  (y-scroll-perc (setq-local qutebrowser-exwm-y-scroll-perc y-scroll-perc))
-                  (private (setq-local qutebrowser-exwm-private private))
-                  (recently-audible (setq-local qutebrowser-exwm-recently-audible recently-audible))))))
-          	  '';
+                (qutebrowser--with-plist
+                 window-info
+                 (win-id (setq-local qutebrowser-exwm-win-id win-id))
+                 (mode (setq-local qutebrowser-exwm-keymode mode))
+                 (icon-file (qutebrowser-exwm--update-favicon icon-file))
+                 (search (setq-local qutebrowser-exwm-current-search search))
+                 (hover
+                  (when (string= hover "")
+                    (setq hover nil))
+                  (setq-local qutebrowser-exwm-hovered-url hover))
+                 (url
+                  (setq-local qutebrowser-exwm-current-url
+                              (unless (string-empty-p url)
+                                url))
+                  (setq-local buffer-file-name
+                              (when (string-prefix-p "file://" url)
+                                (string-replace "file://" "" url))))
+                 (x-scroll-perc
+                  (setq-local qutebrowser-exwm-x-scroll-perc x-scroll-perc))
+                 (y-scroll-perc
+                  (setq-local qutebrowser-exwm-y-scroll-perc y-scroll-perc))
+                 (private (setq-local qutebrowser-exwm-private private))
+                 (recently-audible
+                  (setq-local qutebrowser-exwm-recently-audible
+                              recently-audible))))))
+          
+          (with-eval-after-load 'gptel
+            (gptel-make-tool
+             :name "qutebrowser-open"
+             :category "qutebrowser"
+             :function 'qutebrowser-open-url
+             :description "Open a new tab in qutebrowser"
+             :args
+             '((:name "url" :type "string" :description "The url to open"))))
+        '';
       };
 
       qutebrowser-evil = {

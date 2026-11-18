@@ -29,8 +29,8 @@
         settings = {
           downloads.location.directory = "~/dwn";
           url = {
-            default_page = "https://search.inetol.net";
-            start_pages = "https://search.inetol.net";
+            default_page = "https://duckduckgo.com";
+            start_pages = "https://duckduckgo.com";
           };
           hints.chars = "crstbfneia";
         };
