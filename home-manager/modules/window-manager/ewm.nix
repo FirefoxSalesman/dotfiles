@@ -1,9 +1,9 @@
 {
-  perSystem = { lib, pkgs, ... }: {
-    packages.startEwm = pkgs.writeShellScriptBin "startewm" ''
-      emacs --fg-daemon --eval "(require 'ewm)" --eval "(ewm-start-module)" --eval "(efs/run-in-background \"${lib.getExe pkgs.wbg} ~/.config/home-manager/wallpaper.png\")"
-    '';
-  };
+  # perSystem = { lib, pkgs, ... }: {
+    # packages.startEwm = pkgs.writeShellScriptBin "startewm" ''
+      # emacs --fg-daemon --eval "(require 'ewm)" --eval "(ewm-start-module)" --eval "(efs/run-in-background \"${lib.getExe pkgs.wbg} ~/.config/home-manager/wallpaper.png\")"
+    # '';
+  # };
   flake.homeModules.ewm = { lib, pkgs, ... }: {
     programs.emacs.init.usePackage = {
       dashboard.ghookf = [ "('after-init '(dashboard-insert-startupify-lists dashboard-initialize))" ];

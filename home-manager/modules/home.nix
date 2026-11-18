@@ -14,7 +14,7 @@ let
       inputs.emacs-overlay.overlay
       inputs.emacs-init.overlay
       (final: prev: self.overlay final prev pkgs inputs)
-      inputs.ewm.overlays.default
+      # inputs.ewm.overlays.default
     ];
   };
 in

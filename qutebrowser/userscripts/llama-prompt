@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Qutebrowser userscript: send page/selection text + user input to ollama llama3.2:3b
+# Output is inserted into an Emacs buffer named \"*qutebrowser-llam-response*\"
+#
+# Dependencies: ollama & emacsclient with gptel & ezf
+#
+# Save to: ~/.local/share/qutebrowser/userscripts/llama_prompt
+# Then: chmod +x ~/.local/share/qutebrowser/userscripts/llama_prompt
+
+set -euo pipefail
+
+# --- 1. Determine source text ----------------------------------------------
+if [[ -n "$QUTE_SELECTED_TEXT" ]]; then
+    SOURCE_TEXT="$QUTE_SELECTED_TEXT"
+else
+    SOURCE_TEXT="$(cat "$QUTE_TEXT")"
+fi
+
+# --- 2. Get user input ------------------------------------------------------
+USER_INPUT=$(printf '' | ezf)
+
+# If user cancelled, exit quietly
+if [[ -z ${USER_INPUT:-} ]]; then
+    exit 0
+fi
+
+# --- 3. Construct prompt ----------------------------------------------------
+CONTEXT=$(echo "$SOURCE_TEXT\n" | sed 's/"/\\"/g')
+PROMPT=$(echo "$USER_INPUT" | sed 's/"/\\"/g')
+
+# --- 5. Send to Emacs buffer ------------------------------------------------
+emacsclient --eval "(with-current-buffer (get-buffer-create \"*qutebrowser-llm-response*\") (org-mode) (gptel-mode) (insert \"In the browser page:\n\" \"#+begin_src\n\" \"$CONTEXT\" \"#+end_src\n\n\" \"$PROMPT\") (gptel-send) (switch-to-buffer (current-buffer)))"

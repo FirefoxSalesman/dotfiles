@@ -17,7 +17,7 @@
 
     emacs-init.url = "github:firefoxsalesman/NixEmacs";
 
-    ewm.url = "https://codeberg.org/ezemtsov/ewm/archive/master.tar.gz";
+    # ewm.url = "https://codeberg.org/ezemtsov/ewm/archive/master.tar.gz";
 
     home-manager = {
       url = "github:nix-community/home-manager";

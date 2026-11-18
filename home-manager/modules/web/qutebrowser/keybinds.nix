@@ -3,6 +3,7 @@
     cn = "spawn --userscript org-protocol capture Pn";
     cd = "spawn --userscript org-protocol capture Pd";
     cl = "spawn --userscript org-protocol store-link";
+    ca = "spawn --userscript llama-prompt";
     m = "search-next";
     M = "search-prev";
     e = "fake-key <Down>";
