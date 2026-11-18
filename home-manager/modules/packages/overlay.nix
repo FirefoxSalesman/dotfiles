@@ -62,6 +62,7 @@ in
             pertab = packages.pertab;
             embark = packages.embark;
             code-review = packages.code-review;
+            whisper = packages.whisper;
             gptel-preset-collection = packages.gptel-preset-collection;
           }
         ));

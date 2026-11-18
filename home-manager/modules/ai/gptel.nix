@@ -42,6 +42,7 @@
         packages = [
           pkgs.ollama
           pkgs.jdt-language-server
+          pkgs.cursor-cli
         ];
         # file = {
         #   ".config/emacs/agents/bughunter.org" = ''
@@ -235,6 +236,16 @@
 
               gptel-quick.setopt = mkOllama [ "qwen2.5:3b" ] "-quick";
 
+              agent-shell = {
+                enable = true;
+                gfhookf = [ "('agent-shell-mode (lambda () (display-line-numbers-mode -1)))" ];
+                generalOne.global-leader = {
+                  "a" = "'(:ignore t)";
+                  "as" = "'agent-shell-opencode-start-agent";
+                  "ar" = "'agent-shell-send-region";
+                };
+              };
+
               gptel-inline = {
                 enable = true;
                 after = [ "gptel" ];
@@ -287,7 +298,7 @@
               };
 
               popper.setopt.popper-reference-buffers = [
-                ''"^\\*gptel-opencode-agent:.*\\*"''
+                "'agent-shell-mode"
                 ''"^\\*gptel:.*\\*"''
                 ''"^\\*Ollama\\*"''
                 ''"^\\*copilot\\*"''

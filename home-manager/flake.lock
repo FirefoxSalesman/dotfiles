@@ -955,6 +955,7 @@
         "repeaters": "repeaters",
         "roll": "roll",
         "stylix": "stylix",
+        "whisper": "whisper",
         "wrapper-modules": "wrapper-modules"
       }
     },
@@ -1215,6 +1216,22 @@
       "original": {
         "owner": "firefoxsalesman",
         "repo": "use-package-eglot",
+        "type": "github"
+      }
+    },
+    "whisper": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1793641232,
+        "narHash": "sha256-LUgzdRNZZJ3p9mKVpaV0xuscotTCFEe503pFpj2sfsg=",
+        "owner": "sachac",
+        "repo": "whisper.el",
+        "rev": "ef27429e52c548079b466003a7726c50a44c8077",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sachac",
+        "repo": "whisper.el",
         "type": "github"
       }
     },

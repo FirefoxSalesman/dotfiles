@@ -84,6 +84,11 @@
       url = "github:doomelpa/code-review";
       flake = false;
     };
+
+    whisper = {
+      url = "github:sachac/whisper.el";
+      flake = false;
+    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
@@ -157,6 +162,7 @@ in
             pertab = packages.pertab;
             embark = packages.embark;
             code-review = packages.code-review;
+            whisper = packages.whisper;
             gptel-preset-collection = packages.gptel-preset-collection;
           }
         ));
@@ -5689,6 +5695,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
         packages = [
           pkgs.ollama
           pkgs.jdt-language-server
+          pkgs.cursor-cli
         ];
         # file = {
         #   ".config/emacs/agents/bughunter.org" = ''
@@ -5772,6 +5779,16 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 
               gptel-quick.setopt = mkOllama [ "qwen2.5:3b" ] "-quick";
 
+              agent-shell = {
+                enable = true;
+                gfhookf = [ "('agent-shell-mode (lambda () (display-line-numbers-mode -1)))" ];
+                generalOne.global-leader = {
+                  "a" = "'(:ignore t)";
+                  "as" = "'agent-shell-opencode-start-agent";
+                  "ar" = "'agent-shell-send-region";
+                };
+              };
+
               gptel-inline = {
                 enable = true;
                 after = [ "gptel" ];
@@ -5806,7 +5823,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
               };
 
               popper.setopt.popper-reference-buffers = [
-                ''"^\\*gptel-opencode-agent:.*\\*"''
+                "'agent-shell-mode"
                 ''"^\\*gptel:.*\\*"''
                 ''"^\\*Ollama\\*"''
                 ''"^\\*copilot\\*"''
@@ -6025,6 +6042,41 @@ context after cursor, followed by the context before cursor.
 (minuet-set-optional-options
  minuet-openai-fim-compatible-options
  :max_tokens 56)
+#+end_src
+
+*** Whisper
+#+begin_src nix-ts :tangle modules/ai/whisper.nix
+{ inputs, ... }:
+
+{
+  perSystem =
+    { pkgs, ... }:
+    let
+      epkgs = pkgs.emacs.pkgs;
+    in
+    {
+      packages.whisper = (
+        epkgs.callPackage epkgs.trivialBuild rec {
+          pname = "whisper";
+          version = "current";
+          src = inputs.whisper;
+
+          propagatedUserEnvPkgs = with epkgs; [ ];
+
+          buildInputs = propagatedUserEnvPkgs;
+        }
+      );
+    };
+
+  flake.homeModules.ai = { pkgs, ... }: {
+    programs.emacs.init.usePackage.whisper = {
+      enable = true;
+      extraPackages = [ pkgs.cmake ];
+      generalOne.global-leader."W" = "'whisper-run";
+      setopt.whisper-install-directory = ''(concat user-emacs-directory "/whisper")'';
+    };
+  };
+}
 #+end_src
 
 ** Multimedia

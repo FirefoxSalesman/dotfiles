@@ -79,6 +79,11 @@
       url = "github:doomelpa/code-review";
       flake = false;
     };
+
+    whisper = {
+      url = "github:sachac/whisper.el";
+      flake = false;
+    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
