@@ -10,6 +10,7 @@
         wget
         zbar
         # scripts
+	ezf
         hdmihelper
         pkg
         rustc

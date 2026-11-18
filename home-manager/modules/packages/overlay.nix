@@ -32,7 +32,7 @@ in
       i3status-rs = packages.i3status-rs;
       playAlbum = packages.playAlbum;
       pkg = packages.pkg;
-      startEwm = packages.startEwm;
+      # startEwm = packages.startEwm;
       startOllama = packages.startOllama;
       qutebrowser = packages.qutebrowser;
       udisksmenu = packages.udisksmenu;
@@ -63,6 +63,7 @@ in
             pertab = packages.pertab;
             embark = packages.embark;
             code-review = packages.code-review;
+            whisper = packages.whisper;
             gptel-preset-collection = packages.gptel-preset-collection;
           }
         ));
