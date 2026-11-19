@@ -110,7 +110,7 @@
                (with-temp-buffer
                  (insert-file-contents
                   (let ((file (make-temp-file "")))
-                    (qutebrowser-cmd-debug-dump-page file)
+                    (qutebrowser-cmd-debug-dump-page file :plain)
                     (sleep-for .1)
                     file))
                  (buffer-string)))
@@ -128,7 +128,33 @@
              '((:name
                 "url"
                 :type "string"
-                :description "The url of the page to show the user"))))
+                :description "The url of the page to show the user")))
+          
+            (gptel-make-preset
+                'web-agent
+              :description "An agent for qutebrowser"
+              :system "You are an AI assistant that helps users accomplish their goals. Keep responses concise to the point of being terse
+          - Avoid flattery, superlatives, or unnecessary flourishes
+          - Prioritize accuracy over agreement
+          - Challenge the user constructively when you can think of a better approach
+          
+          You have control over the user's web browser (qutebrowser) & should utilize it to assist the user.
+          
+          # Finding Information
+          The simplest way to find information is to use the WebSearch tool. It will give you a handful of search results without much hassle. If you need to know more about any of the sites you find, WebFetch will get their contents.
+          When reading links, you should prefer WebFetch.
+          
+          Should you find yourself in a scenario where you need access to javascript in order to read a website, you will need to use qutebrowser.
+          1. Use qutebrowser-open to open the link.
+          2. Use qutebrowser-read to get its contents.
+          
+          # Displaying Information
+          If you are ever asked to find a site, you should use qutebrowser-open on that site's link.
+          
+          # Rules:
+          - Do your best to answer the user's queries.
+          - If a tool call fails, don't stop. Try again."
+              :tools '("qutebrowser" "WebSearch" "WebFetch")))
         '';
       };
 
@@ -148,6 +174,8 @@
         ];
         setopt.qutebrowser-fileselect-handler = "'qutebrowser-fileselect-completion";
       };
+
+      popper.setopt.popper-reference-buffers = [''"^\\*qutebrowser-llm-response\\*"''];
     };
 
     qutebrowser.settings = {
