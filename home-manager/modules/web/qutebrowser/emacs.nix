@@ -83,9 +83,52 @@
              :name "qutebrowser-open"
              :category "qutebrowser"
              :function 'qutebrowser-open-url
-             :description "Open a new tab in qutebrowser"
+             :description "Open a new tab in qutebrowser."
              :args
-             '((:name "url" :type "string" :description "The url to open"))))
+             '((:name
+                "url"
+                :type "string"
+                :description "The url to open or term to search for.")))
+          
+            (gptel-make-tool
+             :name "qutebrowser-list"
+             :category "qutebrowser"
+             :function
+             (lambda ()
+               (mapcar
+                (lambda (browser)
+                  (qutebrowser-exwm-buffer-url browser))
+                (qutebrowser-exwm-buffer-list)))
+             :description "List all open qutebrowser urls."
+             :args '())
+          
+            (gptel-make-tool
+             :name "qutebrowser-read"
+             :category "qutebrowser"
+             :function
+             (lambda ()
+               (with-temp-buffer
+                 (insert-file-contents
+                  (let ((file (make-temp-file "")))
+                    (qutebrowser-cmd-debug-dump-page file)
+                    (sleep-for .1)
+                    file))
+                 (buffer-string)))
+             :description "Read the most recently opened tab's HTML."
+             :args '())
+          
+            (gptel-make-tool
+             :name "qutebrowser-surface"
+             :category "qutebrowser"
+             :function
+             (lambda (url)
+               (switch-to-buffer (qutebrowser-exwm-find-buffer url)))
+             :description "Show a qutebrowser tab to the user."
+             :args
+             '((:name
+                "url"
+                :type "string"
+                :description "The url of the page to show the user"))))
         '';
       };
 
