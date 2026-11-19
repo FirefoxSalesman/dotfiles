@@ -7241,6 +7241,8 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
         ];
         setopt.qutebrowser-fileselect-handler = "'qutebrowser-fileselect-completion";
       };
+
+      popper.setopt.popper-reference-buffers = [''"^\\*qutebrowser-llm-response\\*"''];
     };
 
     qutebrowser.settings = {
@@ -7309,9 +7311,78 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
    :name "qutebrowser-open"
    :category "qutebrowser"
    :function 'qutebrowser-open-url
-   :description "Open a new tab in qutebrowser"
+   :description "Open a new tab in qutebrowser."
    :args
-   '((:name "url" :type "string" :description "The url to open"))))
+   '((:name
+      "url"
+      :type "string"
+      :description "The url to open or term to search for.")))
+
+  (gptel-make-tool
+   :name "qutebrowser-list"
+   :category "qutebrowser"
+   :function
+   (lambda ()
+     (mapcar
+      (lambda (browser)
+        (qutebrowser-exwm-buffer-url browser))
+      (qutebrowser-exwm-buffer-list)))
+   :description "List all open qutebrowser urls."
+   :args '())
+
+  (gptel-make-tool
+   :name "qutebrowser-read"
+   :category "qutebrowser"
+   :function
+   (lambda ()
+     (with-temp-buffer
+       (insert-file-contents
+        (let ((file (make-temp-file "")))
+          (qutebrowser-cmd-debug-dump-page file :plain)
+          (sleep-for .1)
+          file))
+       (buffer-string)))
+   :description "Read the most recently opened tab's HTML."
+   :args '())
+
+  (gptel-make-tool
+   :name "qutebrowser-surface"
+   :category "qutebrowser"
+   :function
+   (lambda (url)
+     (switch-to-buffer (qutebrowser-exwm-find-buffer url)))
+   :description "Show a qutebrowser tab to the user."
+   :args
+   '((:name
+      "url"
+      :type "string"
+      :description "The url of the page to show the user")))
+
+  (gptel-make-preset
+      'web-agent
+    :description "An agent for qutebrowser"
+    :system "You are an AI assistant that helps users accomplish their goals. Keep responses concise to the point of being terse
+- Avoid flattery, superlatives, or unnecessary flourishes
+- Prioritize accuracy over agreement
+- Challenge the user constructively when you can think of a better approach
+
+You have control over the user's web browser (qutebrowser) & should utilize it to assist the user.
+
+# Finding Information
+The simplest way to find information is to use the WebSearch tool. It will give you a handful of search results without much hassle. If you need to know more about any of the sites you find, WebFetch will get their contents.
+When reading links, you should prefer WebFetch.
+
+Should you find yourself in a scenario where you need access to javascript in order to read a website, you will need to use qutebrowser.
+1. Use qutebrowser-open to open the link.
+2. Use qutebrowser-read to get its contents.
+
+# Displaying Information
+If you are ever asked to find a site, you should use qutebrowser-open on that site's link.
+
+# Rules:
+- Do your best to answer the user's queries.
+- If a tool call fails, don't stop. Try again."
+    :tools '("qutebrowser" "WebSearch" "WebFetch")))
 #+end_src
 
 ** Chat
