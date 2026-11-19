@@ -5861,16 +5861,6 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 
               gptel-quick.setopt = mkOllama [ "qwen2.5:3b" ] "-quick";
 
-              agent-shell = {
-                enable = true;
-                gfhookf = [ "('agent-shell-mode (lambda () (display-line-numbers-mode -1)))" ];
-                generalOne.global-leader = {
-                  "a" = "'(:ignore t)";
-                  "as" = "'agent-shell-opencode-start-agent";
-                  "ar" = "'agent-shell-send-region";
-                };
-              };
-
               gptel-inline = {
                 enable = true;
                 after = [ "gptel" ];
@@ -5905,7 +5895,6 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
               };
 
               popper.setopt.popper-reference-buffers = [
-                "'agent-shell-mode"
                 ''"^\\*gptel:.*\\*"''
                 ''"^\\*Ollama\\*"''
                 ''"^\\*copilot\\*"''
