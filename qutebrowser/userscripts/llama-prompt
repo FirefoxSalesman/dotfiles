@@ -19,7 +19,7 @@ prompt() {
 
     PROMPT=$(echo "$USER_INPUT" | sed 's/"/\\"/g')
 
-    emacsclient --eval "(with-current-buffer (get-buffer-create \"*qutebrowser-llm-response*\") (org-mode) (gptel-mode) (setq-local gptel--preset 'web-agent) (insert \"In the browser page:\n\" \"#+begin_src\n\" \"$1\" \"#+end_src\n\n\" \"$PROMPT\") (gptel-send) (switch-to-buffer (current-buffer)))"
+    emacsclient --eval "(with-current-buffer (get-buffer-create \"*qutebrowser-llm-response*\") (org-mode) (gptel-mode) (gptel--apply-preset 'web-agent (lambda (sym val) (set (make-local-variable sym) val))) (insert \"In the browser page:\n\" \"#+begin_src\n\" \"$1\" \"#+end_src\n\n\" \"$PROMPT\") (gptel-send) (switch-to-buffer (current-buffer)))"
 }
 
 add-context() {
