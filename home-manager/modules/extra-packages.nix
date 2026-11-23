@@ -10,7 +10,7 @@
         wget
         zbar
         # scripts
-	ezf
+        ezf
         hdmihelper
         pkg
         rustc
@@ -27,12 +27,12 @@
             ''"cursor-agent"''
             ''"acp"''
           ];
-	  generalOne.global-leader = {
-	    "a" = '''(:ignore t :which-key "agent-shell")'';
-	    "af" = "'agent-shell-send-file";
-	    "as" = "'agent-shell-cursor-start-agent";
-	    "ar" = "'agent-shell-send-region";
-	  };
+          generalOne.global-leader = {
+            "a" = '''(:ignore t :which-key "agent-shell")'';
+            "af" = "'agent-shell-send-file";
+            "as" = "'agent-shell-cursor-start-agent";
+            "ar" = "'agent-shell-send-region";
+          };
         };
 
         popper.setopt.popper-reference-buffers = [ "'agent-shell-mode" ];

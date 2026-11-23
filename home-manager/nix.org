@@ -1760,7 +1760,7 @@ I couldn't get olivetti to work.
         wget
         zbar
         # scripts
-	ezf
+        ezf
         hdmihelper
         pkg
         rustc
@@ -1777,12 +1777,12 @@ I couldn't get olivetti to work.
             ''"cursor-agent"''
             ''"acp"''
           ];
-	  generalOne.global-leader = {
-	    "a" = '''(:ignore t :which-key "agent-shell")'';
-	    "af" = "'agent-shell-send-file";
-	    "as" = "'agent-shell-cursor-start-agent";
-	    "ar" = "'agent-shell-send-region";
-	  };
+          generalOne.global-leader = {
+            "a" = '''(:ignore t :which-key "agent-shell")'';
+            "af" = "'agent-shell-send-file";
+            "as" = "'agent-shell-cursor-start-agent";
+            "ar" = "'agent-shell-send-region";
+          };
         };
 
         popper.setopt.popper-reference-buffers = [ "'agent-shell-mode" ];
@@ -2644,7 +2644,7 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
               #   "':format"
               #   "'full"
               # ];
-              eglot-max-file-watches = 3000;
+              eglot-max-file-watches = false;
               eglot-report-progress = false;
               eglot-code-action-indications = false;
             };
@@ -2800,7 +2800,8 @@ I'm running dired with a couple of small packages that improve on it
 #+begin_src emacs-lisp
 (with-eval-after-load 'dired-x
   (gsetq
-   dired-omit-extensions (delete ".class" dired-omit-extensions)))
+   dired-omit-extensions
+   (delete ".bin" (delete ".class" dired-omit-extensions))))
 #+end_src
 
 #+NAME: Emacs Openwith Config

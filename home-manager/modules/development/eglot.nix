@@ -61,7 +61,7 @@
               #   "':format"
               #   "'full"
               # ];
-              eglot-max-file-watches = 3000;
+              eglot-max-file-watches = false;
               eglot-report-progress = false;
               eglot-code-action-indications = false;
             };

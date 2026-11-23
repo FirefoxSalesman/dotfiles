@@ -30,7 +30,8 @@
           config = ''
             (with-eval-after-load 'dired-x
               (gsetq
-               dired-omit-extensions (delete ".class" dired-omit-extensions)))
+               dired-omit-extensions
+               (delete ".bin" (delete ".class" dired-omit-extensions))))
           '';
         };
 
