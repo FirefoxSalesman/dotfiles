@@ -51,6 +51,8 @@ qutebrowser/config.py
 qutebrowser/quickmarks
 qutebrowser/greasemonkey
 sage
+sops/
+sops-nix/
 starship.toml
 stylix
 systemd

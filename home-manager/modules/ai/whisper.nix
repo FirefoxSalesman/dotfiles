@@ -20,7 +20,7 @@
       );
     };
 
-  flake.homeModules.ai = { pkgs, ... }: {
+  flake.homeModules.personalAI = { pkgs, ... }: {
     programs.emacs.init.usePackage = {
       whisper = {
         enable = true;

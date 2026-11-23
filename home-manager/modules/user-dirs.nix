@@ -1,5 +1,12 @@
 {
-  flake.homeModules.main = { config, ... }: {
+  flake.homeModules.main = { lib, config, ... }: {
+    home.sessionVariables = {
+        XDG_DATA_HOME = "$HOME/.local";
+        XDG_STATE_HOME = "$HOME/.local/state";
+        XDG_CACHE_HOME = "$HOME/.cache";
+        XDG_CONFIG_HOME = "$HOME/.config";
+        XDG_DATA_DIRS = lib.mkForce "$HOME/.nix-profile/share:$XDG_DATA_DIRS";
+    };
     xdg.userDirs = {
       enable = true;
       setSessionVariables = true;

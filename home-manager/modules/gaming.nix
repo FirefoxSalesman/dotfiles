@@ -13,11 +13,15 @@
       ];
     };
 
-    programs.lutris = {
-      enable = true;
-      runners = {
-	# libretro.package = pkgs.retroarch;
-	ppsspp.package = pkgs.ppsspp;
+    programs = {
+      emacs.init.ide.languages.zenscript.enable = true;
+
+      lutris = {
+        enable = true;
+        runners = {
+          # libretro.package = pkgs.retroarch;
+          ppsspp.package = pkgs.ppsspp;
+        };
       };
     };
   };

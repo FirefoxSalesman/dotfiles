@@ -12,7 +12,12 @@
     usePackage = {
       prettify-symbols = {
         enable = true;
-        ghookf = [ "('prog-mode 'prettify-symbols-mode)" ];
+        hook = [
+          {
+            names = [ "prog-mode" ];
+            actions = [ "'prettify-symbols-mode" ];
+          }
+        ];
       };
 
       dashboard.setopt = {

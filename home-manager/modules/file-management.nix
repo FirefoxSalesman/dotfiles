@@ -1,8 +1,9 @@
 { inputs, ... }:
 {
   perSystem =
-    { pkgs, ... }:
+    { pkgs, config, ... }:
     {
+      overlayAttrs = { inherit (config.packages) mpvmacs; };
       packages.mpvmacs = pkgs.writeShellScriptBin "mpvmacs" ''
         emacsclient -e "(mpv-play \"$1\")"
       '';
@@ -36,7 +37,12 @@
         };
 
         dirvish = {
-          gfhookf = [ "('dirvish-directory-view-mode 'diredfl-mode)" ];
+          hook = [
+            {
+              namesDeferred = [ "dirvish-directory-view-mode" ];
+              actions = [ "'diredfl-mode" ];
+            }
+          ];
           setopt.dirvish-use-mode-line = false;
           # Borrowed from doom
           generalTwoConfig.":n".dirvish-mode-map = {
@@ -58,7 +64,12 @@
         openwith = {
           enable = true;
           defer = true;
-          ghookf = [ "('dired-mode 'openwith-mode)" ];
+          hook = [
+            {
+              namesDeferred = [ "dired-mode" ];
+              actions = [ "'openwith-mode" ];
+            }
+          ];
           config = ''
             (gsetq
              openwith-associations
@@ -93,7 +104,12 @@
 
         image = {
           enable = true;
-          gfhookf = [ "('image-mode 'image-transform-fit-to-window)" ];
+          hook = [
+            {
+              namesDeferred = [ "image-mode" ];
+              actions = [ "'image-transform-fit-to-window" ];
+            }
+          ];
           generalTwoConfig.":n".image-map = {
             "E" = "'image-next-file";
             "O" = "'image-previous-file";

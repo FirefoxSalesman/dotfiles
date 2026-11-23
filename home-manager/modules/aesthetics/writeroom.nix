@@ -1,8 +1,24 @@
+{ self, ... }:
 {
   flake.homeModules.aesthetics.programs.emacs.init.usePackage.writeroom-mode = {
     enable = true;
-    ghookf = [ "((gen-mode-hooks '(Man org-agenda org Info markdown-ts shrface)) 'writeroom-mode)" ];
-    gfhookf = [ "('writeroom-mode-enable 'visual-line-mode)" ];
+    hook = [
+      {
+        names = [
+          "Man-mode"
+          "org-agenda-mode"
+          "org-mode"
+          "Info-mode"
+          "markdown-ts-mode"
+          "shrface-mode"
+        ];
+        actions = [ "'writeroom-mode" ];
+      }
+      {
+        namesDeferred = [ "writeroom-mode-enable" ];
+        actions = [ "'visual-line-mode" ];
+      }
+    ];
     setopt = {
       writeroom-mode-line = true;
       writeroom-maximize-window = false;

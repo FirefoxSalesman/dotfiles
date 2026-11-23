@@ -24,19 +24,23 @@
         usePackage = {
           org = {
             extraPackages = [ pkgs.xdo ];
-            gfhookf = [
-              ''
-                ('org-mode (list 'ispell-minor-mode
-                	    (local! completion-at-point-functions (list (cape-capf-super
-                                                                           #'tempel-complete
-                						           #'cape-file)
-                                                                        #'pcomplete-completions-at-point
-                						        #'ob-gptel-capf
-                						        #'cape-tex
-                						        #'cape-elisp-block
-                						        #'cape-dict
-                                                                        #'cape-dabbrev))))''
-	      #''('after-save (lambda () (when (eq major-mode 'org-mode) (org-babel-tangle))))''
+            hook = [
+              {
+                namesDeferred = [ "org-mode" ];
+                actions = [
+                  "'ispell-minor-mode"
+                  ''
+                    (local! completion-at-point-functions (list (cape-capf-super
+                                                                   #'tempel-complete
+                                    				   #'cape-file)
+                                                                #'pcomplete-completions-at-point
+                                    				#'ob-gptel-capf
+                                    				#'cape-tex
+                                    				#'cape-elisp-block
+                                    				#'cape-dict
+                                                                #'cape-dabbrev))''
+                ];
+              }
             ];
             custom.org-directory = ''"~/doc"'';
             setopt = {

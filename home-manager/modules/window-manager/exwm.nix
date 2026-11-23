@@ -55,13 +55,21 @@
 
         usePackage.exwm = {
           extraPackages = [ pkgs.xwininfo ];
-          gfhookf = [
+          hook = [
             # When window "class" updates, use it to set the buffer name
-            "('exwm-update-class (lambda () (exwm-workspace-rename-buffer exwm-class-name)))"
+            {
+              namesDeferred = [ "exwm-update-class" ];
+              actions = [ "(lambda () (exwm-workspace-rename-buffer exwm-class-name))" ];
+            }
             # When EXWM starts up, do some extra configuration
-            ''
-              ('exwm-init (lambda ()
-                          (start-process-shell-command "xbanish" nil "${lib.getExe pkgs.xbanish}")))''
+            {
+              namesDeferred = [ "exwm-init" ];
+              actions = [
+                ''
+                  (lambda ()
+                          (start-process-shell-command "xbanish" nil "${lib.getExe pkgs.xbanish}"))''
+              ];
+            }
           ];
           # Ctrl+q will enable the next key to be sent directly
           generalOneConfig.exwm-mode-map = {

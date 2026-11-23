@@ -1,8 +1,11 @@
 {
   flake.homeModules.notifications.programs.emacs.init.usePackage.ednc = {
     enable = true;
-    gfhook = [
-      "('ednc-notification-presentation-functions #'show-notification-in-echo-area)"
+    hook = [
+      {
+        fullNamesDeferred = [ "ednc-notification-presentation-functions" ];
+        actions = [ "#'show-notification-in-echo-area" ];
+      }
     ];
     deferIncrementally = true;
     config = ''

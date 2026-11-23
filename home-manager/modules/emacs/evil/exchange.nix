@@ -6,7 +6,12 @@
         evil-operator-state-map."k" = "'evil-exchange/cx";
         evil-visual-state-map."k" = "'evil-exchange";
       };
-      gfhookf = [ "('doom-escape (lambda () (when (featurep 'evil-exchange) (evil-exchange-cancel))))" ];
+      hook = [
+        {
+          namesDeferred = [ "doom-escape" ];
+          actions = [ "(lambda () (when (featurep 'evil-exchange) (evil-exchange-cancel)))" ];
+        }
+      ];
     };
   };
 }

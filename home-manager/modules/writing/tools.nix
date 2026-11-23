@@ -17,7 +17,12 @@
         usePackage = {
           jinx = {
             enable = true;
-            ghookf = [ "('on-init-ui 'global-jinx-mode)" ];
+            hook = [
+              {
+                names = [ "on-init-ui" ];
+                actions = [ "'global-jinx-mode" ];
+              }
+            ];
             generalOneConfig.":n" = {
               "C-M-i" = "'jinx-correct";
               "]s" = "'jinx-next";
@@ -27,7 +32,12 @@
 
           pdf-tools = {
             generalOneConfig.pdf-view-mode-map."C-s" = "'search-forward";
-            gfhookf = [ "('pdf-view-mode 'pdf-view-midnight-minor-mode)" ];
+            hook = [
+              {
+                namesDeferred = [ "pdf-view-mode" ];
+                actions = [ "'pdf-view-midnight-minor-mode" ];
+              }
+            ];
           };
 
           evil-collection-pdf = {

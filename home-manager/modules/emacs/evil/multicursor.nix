@@ -6,11 +6,16 @@
       "evil-mc-pause-cursors"
       "evil-mc-make-cursor-here"
     ];
-    gfhookf = [
-      ''
-        ('doom-escape (lambda () (when (and (featurep 'evil-mc) (evil-mc-has-cursors-p))
-        	(evil-mc-undo-all-cursors)
-        						 (evil-mc-resume-cursors) t)))''
+    hook = [
+      {
+        namesDeferred = [ "doom-escape" ];
+        actions = [
+          ''
+            (lambda () (when (and (featurep 'evil-mc) (evil-mc-has-cursors-p))
+                    (evil-mc-undo-all-cursors)
+                    (evil-mc-resume-cursors) t))''
+        ];
+      }
     ];
     generalOne = {
       ":nv"."bz" = "'evil-mc-hydra/body";

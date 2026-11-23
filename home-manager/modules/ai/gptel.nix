@@ -1,34 +1,42 @@
 { inputs, ... }:
 
 {
-  perSystem = { lib, pkgs, ... }: {
-    packages =
-      let
-        epkgs = pkgs.emacs.pkgs;
-      in
-      {
-        startOllama = pkgs.writeShellScriptBin "start-ollama" ''
-          if [[ "$(pidof ollama)" -gt 0 ]]; then
-                  echo "ollama already running"
-                else
-                  ${lib.getExe pkgs.ollama} serve
-                fi
-        '';
-        gptel-preset-collection = (
-          epkgs.callPackage epkgs.trivialBuild rec {
-            pname = "gptel-preset-collection";
-            version = "current";
-            src = inputs.gptel-preset-collection;
+  perSystem =
+    {
+      lib,
+      pkgs,
+      config,
+      ...
+    }:
+    {
+      overlayAttrs = { inherit (config.packages) startOllama; };
+      packages =
+        let
+          epkgs = pkgs.emacs.pkgs;
+        in
+        {
+          startOllama = pkgs.writeShellScriptBin "start-ollama" ''
+            if [[ "$(pidof ollama)" -gt 0 ]]; then
+                    echo "ollama already running"
+                  else
+                    ${lib.getExe pkgs.ollama} serve
+                  fi
+          '';
+          gptel-preset-collection = (
+            epkgs.callPackage epkgs.trivialBuild rec {
+              pname = "gptel-preset-collection";
+              version = "current";
+              src = inputs.gptel-preset-collection;
 
-            propagatedUserEnvPkgs = with epkgs; [
-              gptel
-            ];
+              propagatedUserEnvPkgs = with epkgs; [
+                gptel
+              ];
 
-            buildInputs = propagatedUserEnvPkgs;
-          }
-        );
-      };
-  };
+              buildInputs = propagatedUserEnvPkgs;
+            }
+          );
+        };
+    };
 
   flake.homeModules.ai =
     {
@@ -44,30 +52,87 @@
           pkgs.jdt-language-server
           pkgs.cursor-cli
         ];
-        # file = {
-        #   ".config/emacs/agents/bughunter.org" = ''
-        #     
-        #   '';
-        # };
+        file = {
+          ".config/emacs/agents/web-agent.org".text = ''
+            :properties:
+            :name: web-agent
+            :description: Specialized agent for research & information gathering, with access to the user's web browser. Use this agent if you need answers from the web or if you need to manipulate the user's web browser.
+            :tools: Skill WebFetch WebSearch qutebrowser
+            :end:
+            You are an autonomous research subagent with access to websearch & the user's web browser. Your purpose is to search for & gather information efficiently, as needed & manipulate the browser when asked. Keep responses concise to the point of being terse
+            <core_responsibilities>
+            *Online Research:*
+            - Search the web across multiple sources for information
+            - Find solutions to technical problems and known issues
+            - Research best practices, documentation, and troubleshooting
+            - Compare multiple sources to provide comprehensive answers
+            - Extract relevant information from documentation and forums
+            
+            *Browser Manipulation:*
+            - Open new tabs in qutebrowser for presentation to the user.
+            - Close existing tabs in qutebrowser.
+            - Present qutebrowser tabs to the user
+            - Read qutebrowser tabs
+            
+            *Key principle:* Return focused, relevant findings without context bloat & present information to the user
+            </core_responsibilities>
+            
+            <research_methodology>
+            *Context efficiency:*
+            - Your response goes back to another agent with limited context
+            - Be selective: include only information that directly answers the task
+            - Use summaries and synthesis over raw dumps
+            - Provide specific sources (URLs, file paths) for follow-up
+            - Include quotes/snippets only when they illustrate the point
+            </research_methodology>
+            
+            <tool_usage_guidelines>
+            * Finding Information
+            The simplest way to find information is to use the WebSearch tool. It will give you a handful of search results without much hassle. When answering the user's query you should include the links from your websearches in your response, as well as a summary of what you saw in the web search.
+            If you need to know more about any of the sites you find, WebFetch will get their contents.
+            When reading links, you should prefer WebFetch.
+            
+            Should you find yourself in a scenario where you need access to javascript in order to read a website, you will need to use qutebrowser.
+            1. Use qutebrowser-open to open the link.
+            2. Use qutebrowser-read to get its contents.
+            
+            * Displaying Information
+            If you are ever asked to find a site, you should use qutebrowser-open on that site's link.
+            
+            * Finding Qutebrowser Tabs
+            When you are asked to find or surface a qutebrowser tab:
+            1. Use qutebrowser-list to list every tab the user has open.
+            2. Select the tab whose url best matches the user's request.
+            3. Run qutebrowser-surface on that tab.
+            You MUST run qutebrowser-surface on the most likely tab you find
+            
+            *Closing Qutebrowser Tabs*
+            When the you are asked to close a qutebrowser tab:
+            1. Use qutebrowser-list to list every tab the user has open.
+            2. Select the tab whose url best matches the user's request.
+            3. Run qutebrowser-close-tab on that tab.
+            You MUST run qutebrowser-close-tab on the most likely tab you find
+            
+            *When additional skills are needed*
+            {{SKILLS}}
+            </tool_usage_guidelines>
+            
+            * Rules:
+            + Do your best to answer the queries or complete the browser manipulations.
+            + If a tool call fails, don't stop. Try again.
+            + You are an autonomous subagent. You can't ask follow up questions
+          '';
+        };
       };
       programs = {
         mcp.servers = {
-          nixos = {
-            command = "${pkgs.uv}/bin/uvx";
-            args = [ "mcp-nixos" ];
-          };
+          nixos.command = lib.getExe pkgs.mcp-nixos;
+          memory.command = lib.getExe pkgs.mcp-server-memory;
           lsp = {
-            command = "npx";
+            command = "${pkgs.nodejs}/bin/npx";
             args = [
               "-y"
               "@theupsider/lsp-mcp@latest"
-            ];
-          };
-          jj = {
-            command = "npx";
-            args = [
-              "-y"
-              "jj-mcp-server"
             ];
           };
         };
@@ -121,13 +186,6 @@
                 config = ''
                   (start-ollama)
                   (require 'gptel-agent)
-                  (gptel-make-gh-copilot "copilot")
-                  (gptel-make-openai "OpenRouter"
-                    :host "openrouter.ai"
-                    :endpoint "/api/v1/chat/completions"
-                    :stream t
-                    :key (lambda () (auth-source-pass-get 'secret "openrouter-api-key"))                   ;can be a function that returns the key
-                    :models '(nvidia/nemotron-3.5-super-vl:free cohere/north-mini-code:free nvidia/nemotron-3-ultra-550b-a55b:free recursive/flint-v1.0:free xingchen-agi/xing4.0-29b-a4b:free liquid/lfm-2.5-2.6:free google/gemma-4-31b-it:free google/gemma-4-26b-a4b-it:free nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free))
                   (efs/evil-collection-remap
                    'evil-collection-gptel-setup
                    'normal
@@ -195,14 +253,7 @@
               };
 
               gptel-agent.config = ''
-                (gptel-make-preset
-                    'web
-                  :description "A preset for quick & cheap websearches."
-                  :model 'llama3.2:3b
-                  :system
-                  '(:append
-                    "Search the web to learn about the relevant topic, then respond.")
-                  :tools '(:append ("WebSearch" "WebFetch")))
+                (add-to-list 'gptel-agent-dirs "~/.config/emacs/agents/")
                 
                 (gptel-make-preset
                     'jarvis
@@ -291,6 +342,7 @@
 
               popper.setopt.popper-reference-buffers = [
                 ''"^\\*gptel:.*\\*"''
+                ''"^\\*gptel-inline\\*"''
                 ''"^\\*Ollama\\*"''
                 ''"^\\*copilot\\*"''
               ];

@@ -12,6 +12,10 @@
     emacs-overlay.url = "github:nix-community/emacs-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
     import-tree.url = "github:vic/import-tree";
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     wrapper-modules.url = "github:BirdeeHub/nix-wrapper-modules";
 
@@ -102,72 +106,46 @@
 
 let
   system = "x86_64-linux";
-  pkgs-stable = import inputs.nixpkgs-stable {
-    inherit system;
-    config = {
-      problems.handlers.posthog.broken = "warn"; # or "ignore"
-      allowUnfree = true;
-      nvidia.acceptLicense = true;
-      permittedInsecurePackages = [
-	"qutebrowser-3.7.0"
-      ];
-    };
-  };
 in
 {
-  flake.overlay =
-    final: prev: pkgs: inputs:
-    let
-      packages = self.packages.${pkgs.system};
-    in
-    {
-      # shell scripts
-      ezf = packages.ezf;
-      cast = packages.cast;
-      doomer = packages.doomer;
-      ffmpeg-bulk = packages.ffmpeg-bulk;
-      masstube = packages.masstube;
-      mpvmacs = packages.mpvmacs;
-      hdmihelper = packages.hdmihelper;
-      i3status-rs = packages.i3status-rs;
-      playAlbum = packages.playAlbum;
-      pkg = packages.pkg;
-      # startEwm = packages.startEwm;
-      startOllama = packages.startOllama;
-      qutebrowser = packages.qutebrowser;
-      udisksmenu = packages.udisksmenu;
-      wiki = packages.wiki;
-
-      # overrides
-      libdisplay-info = prev.libdisplay-info_0_3;
-      mpv = packages.mpv;
-      audacity = pkgs-stable.audacity;
-      pywal = pkgs-stable.pywal;
-      rassumfrassum = pkgs-stable.rassumfrassum;
-      kmonad = inputs.kmonad.packages.${pkgs.system}.default;
-      lutris = pkgs-stable.lutris;
-      sage = pkgs-stable.sage;
-
-      #emacs packages
-      emacsPackagesFor =
-        emacs:
-        ((prev.emacsPackagesFor emacs).overrideScope (
-          nfinal: nprev: {
-            qutebrowser = packages.qutebrowser-emacs;
-            doom-nano-modeline = packages.doom-nano-modeline;
-            repeaters = packages.repeaters;
-            app-launcher = packages.app-launcher;
-            ezf = packages.emacs-ezf;
-            mpc-wrapper = packages.mpc-wrapper;
-            roll = packages.roll;
-            pertab = packages.pertab;
-            embark = packages.embark;
-            code-review = packages.code-review;
-            whisper = packages.whisper;
-            gptel-preset-collection = packages.gptel-preset-collection;
-          }
-        ));
+  flake = {
+    pkgs-stable = import inputs.nixpkgs-stable let {
+      inherit system;
+      config = {
+        allowUnfree = true;
+        nvidia.acceptLicense = true;
+        permittedInsecurePackages = [
+          "qutebrowser-3.7.0"
+        ];
+      };
     };
+
+    overlay =
+      final: prev: pkgs: inputs:
+      let
+        packages = self.packages.${pkgs.system};
+      in
+      {
+        emacsPackagesFor =
+          emacs:
+          ((prev.emacsPackagesFor emacs).overrideScope (
+            nfinal: nprev: {
+              qutebrowser = packages.qutebrowser-emacs;
+              doom-nano-modeline = packages.doom-nano-modeline;
+              repeaters = packages.repeaters;
+              app-launcher = packages.app-launcher;
+              ezf = packages.emacs-ezf;
+              mpc-wrapper = packages.mpc-wrapper;
+              roll = packages.roll;
+              pertab = packages.pertab;
+              embark = packages.embark;
+              code-review = packages.code-review;
+              whisper = packages.whisper;
+              gptel-preset-collection = packages.gptel-preset-collection;
+            }
+          ));
+      };
+  };
 }
 #+end_src
 
@@ -177,8 +155,8 @@ in
 { inputs, ... }:
 
 {
-  perSystem = { pkgs, ... }: {
-
+  perSystem = { config, pkgs, ... }: {
+    overlayAttrs = { inherit (config.packages) hdmihelper; };
     packages.hdmihelper = pkgs.writeShellScriptBin "hdmihelper" ''
       case "$1" in
         dual ) xrandr --output HDMI-1-0 --right-of eDP-1 --mode 1920x1080 --output eDP-1 --primary --mode 1920x1080 ;;
@@ -201,6 +179,7 @@ Dev templates: https://github.com/the-nix-way/dev-templates
     {
       lib,
       pkgs,
+      config,
       self',
       ...
     }:
@@ -212,6 +191,7 @@ Dev templates: https://github.com/the-nix-way/dev-templates
       };
     in
     {
+      overlayAttrs = { inherit (config.packages) pkg; };
       packages.pkg = pkgs.writeShellScriptBin "pkg" ''
         	<<Pkg Body>>
       '';
@@ -297,7 +277,12 @@ xdg-mime default org-protocol.desktop x-scheme-handler/org-protocol
 * Home Manager
 ** Main Config
 #+begin_src nix-ts :tangle modules/home.nix
-{ self, inputs, ... }:
+{
+  self,
+  inputs,
+  lib,
+  ...
+}:
 let
   system = "x86_64-linux";
   pkgs = import inputs.nixpkgs {
@@ -307,19 +292,23 @@ let
       allowUnfree = true;
       nvidia.acceptLicense = true;
       permittedInsecurePackages = [
-	"qutebrowser-3.7.0"
+        "qutebrowser-3.7.0"
       ];
     };
     overlays = [
       inputs.emacs-overlay.overlay
       inputs.emacs-init.overlay
+      self.overlays.default
       (final: prev: self.overlay final prev pkgs inputs)
       # inputs.ewm.overlays.default
     ];
   };
 in
 {
-  imports = [ inputs.home-manager.flakeModules.home-manager ];
+  imports = with inputs; [
+    home-manager.flakeModules.home-manager
+    flake-parts.flakeModules.easyOverlay
+  ];
   systems = [ "x86_64-linux" ];
   flake = {
     homeConfigurations."holschcc@emacs" = inputs.home-manager.lib.homeManagerConfiguration {
@@ -327,6 +316,13 @@ in
       modules = [
         inputs.self.homeModules.main
         inputs.self.homeModules.emacs-host
+      ];
+    };
+    homeConfigurations."holschcc@work" = inputs.home-manager.lib.homeManagerConfiguration {
+      inherit pkgs;
+      modules = [
+        inputs.self.homeModules.main
+        inputs.self.homeModules.work-host
       ];
     };
     homeConfigurations."holschcc@monitors" = inputs.home-manager.lib.homeManagerConfiguration {
@@ -342,6 +338,7 @@ in
       {
         imports = with inputs; [
           self.homeModules.aesthetics
+          self.homeModules.sops
           self.homeModules.ai
           self.homeModules.canary
           self.homeModules.chat
@@ -354,18 +351,13 @@ in
           # self.homeModules.ewm
           self.homeModules.wm
           self.homeModules.fileManager
-          self.homeModules.gaming
           self.homeModules.java
-          self.homeModules.ledger
-          self.homeModules.c
-          self.homeModules.python
           self.homeModules.media
           self.homeModules.notifications
           self.homeModules.passwordManagement
           # self.homeModules.sage
           self.homeModules.shellConfig
           self.homeModules.web
-          self.homeModules.webdev
           self.homeModules.writing
           stylix.homeModules.stylix
           emacs-init.homeModules.emacs-init
@@ -414,7 +406,7 @@ in
             nvidia = {
               enable = true;
               sha256 = "sha256-CqsFGNtTz3PEEtx/MrvIUMqV6DnYkj0N5L/0LByRac4=";
-	      version = "580.196.07";
+              version = "580.196.07";
             };
           };
         };
@@ -425,26 +417,102 @@ in
 
 ** Host-Predicated Code
 #+begin_src nix-ts :tangle modules/hosts.nix
+{ inputs, ... }:
+
 {
   flake.homeModules = {
-    emacs-host.hosts = {
-      xrandr-command = ''
-        	xrandr --setprovideroutputsource modesetting NVIDIA-0
+    emacs-host.imports = with inputs.self.homeModules; [
+      personalMachine
+      singleMonitorMachine
+    ];
+    work-host = { pkgs, ... }: {
+      imports = with inputs.self.homeModules; [
+        singleMonitorMachine
+        workAI
+      ];
+      home.packages = with pkgs; [
+        rustc
+        cargo
+        uv
+        cmake
+        firefox
+      ];
+      programs.emacs.init = {
+        ide.languages.python.enable = true;
+        usePackage.ghostel.init = ''
+          (defun efs/ghostel-command (command name) (require 'ghostel) (ghostel-shell-command command name))
+          (defun efs/ghostel-docker-command (container) (efs/ghostel-command (concat "docker exec -it '" container "' bash -c '. /opt/tetramem/python_env/bin/activate; bash -i'") container))
+          (defun efs/enter-excelsior () (interactive) (efs/ghostel-docker-command "excelsior-sw-environ"))
+          (defun efs/enter-sdk () (interactive) (efs/ghostel-docker-command "tetramem-sdk"))
+          (defun efs/openocd () (interactive) (efs/ghostel-command "/mnt/nfs/ssunil/toolchains/hermetic/openocd/bin/openocd -c \"bindto 0.0.0.0\" -c \"set JTAGSN MLX200EVK025C\" -f board/mlx200_rv64_ft4232ha_evk.cfg" "openocd"))
+          (defun efs/run-excelsior () (interactive) (shell-command "docker run -dit --name excelsior-sw-environ --replace --mount \"src=$HOME/.ssh,target=/root/.ssh,type=bind\" --mount \"src=$HOME/tetramem,target=/root/tetramem,type=bind\" --mount \"src=$HOME/kernelagent,target=/root/kernelagent,type=bind\" --mount \"src=/dev/ftdi-MLX200EVK025C-ch02,target=/dev/ftdi-MLX200EVK025C-ch02,type=bind\" --device \"/dev/ft4232ha_MLX200EVK025C_uart:/dev/ft4232ha_MLX200EVK025C_uart\" --network host 'excelsior-sw-environ'"))
+        '';
+      };
+    };
+    monitors-host = {
+      imports = [ inputs.self.homeModules.personalMachine ];
+      hosts = {
+        xrandr-command = ''
+          xrandr --output DP-4 --primary --mode 1920x1080 --output DVI-I-1 --mode 1920x1200
+        '';
+        exwm-monitors = [
+          ''0 "DP-4"''
+          ''1 "DVI-I-1"''
+        ];
+        wantBattery = false;
+      };
+    };
+    singleMonitorMachine = {
+      hosts = {
+        xrandr-command = ''
+          xrandr --setprovideroutputsource modesetting NVIDIA-0
           xrandr --auto
           xrandr --dpi 96
-      '';
-      exwm-monitors = [ ''0 "eDP-1-1"'' ];
-      wantBattery = true;
+        '';
+        exwm-monitors = [ ''0 "eDP-1-1"'' ];
+        wantBattery = true;
+      };
     };
-    monitors-host.hosts = {
-      xrandr-command = ''
-        	  xrandr --output DP-4 --primary --mode 1920x1080 --output DVI-I-1 --mode 1920x1200
-      '';
-      exwm-monitors = [
-        ''0 "DP-4"''
-        ''1 "DVI-I-1"''
-      ];
-      wantBattery = false;
+    personalMachine.imports = with inputs.self; [
+      homeModules.gaming
+      homeModules.ledger
+      homeModules.webdev
+      homeModules.personalAI
+      homeModules.personalChat
+    ];
+  };
+}
+#+end_src
+
+** Sops Setup
+#+begin_src nix-ts :tangle modules/sops.nix
+{ inputs, ... }:
+{
+  flake = {
+    mkEnvVar = pkgs: config: secretName: varName: {
+      sops.secrets."${secretName}" = { };
+      home.sessionVariables."${varName}" = "$(${pkgs.coreutils}/bin/cat ${
+        config.sops.secrets."${secretName}".path
+      })";
+    };
+
+    homeModules.sops = { pkgs, ... }: {
+      imports = [ inputs.sops-nix.homeManagerModules.sops ];
+      home.packages = [ pkgs.sops ];
+      sops = {
+        age.keyFile = "/home/holschcc/.config/sops/age/keys.txt";
+        defaultSopsFile = ../secrets/secrets.yaml;
+        defaultSopsFormat = "yaml";
+      };
+      programs.emacs.init.usePackage.sops = {
+        enable = true;
+        hook = [
+          {
+            names = [ "on-first-file" ];
+            actions = [ "'global-sops-mode" ];
+          }
+        ];
+      };
     };
   };
 }
@@ -453,7 +521,14 @@ in
 ** User Dirs
 #+begin_src nix-ts :tangle modules/user-dirs.nix
 {
-  flake.homeModules.main = { config, ... }: {
+  flake.homeModules.main = { lib, config, ... }: {
+    home.sessionVariables = {
+        XDG_DATA_HOME = "$HOME/.local";
+        XDG_STATE_HOME = "$HOME/.local/state";
+        XDG_CACHE_HOME = "$HOME/.cache";
+        XDG_CONFIG_HOME = "$HOME/.config";
+        XDG_DATA_DIRS = lib.mkForce "$HOME/.nix-profile/share:$XDG_DATA_DIRS";
+    };
     xdg.userDirs = {
       enable = true;
       setSessionVariables = true;
@@ -561,12 +636,19 @@ It's mostly here for eshell to get completions from, but it's a usable shell
         };
         usePackage = {
           eshell = {
-            ghookf = [ "('eshell-first-time-mode 'efs/configure-eshell)" ];
-            gfhookf = [
-              ''
-                ('eshell-post-command (lambda () (eshell-write-history eshell-history-file-name t)
-                		                (eshell-read-history eshell-history-file-name t)))
-              ''
+            hook = [
+              {
+                names = [ "eshell-first-time-mode" ];
+                actions = [ "'efs/configure-eshell" ];
+              }
+              {
+                namesDeferred = [ "eshell-post-command" ];
+                actions = [
+                  ''
+                    (lambda () (eshell-write-history eshell-history-file-name t)
+                                    		                (eshell-read-history eshell-history-file-name t))''
+                ];
+              }
             ];
             general."s-<enter>" = "'efs/make-eshell";
             setopt = {
@@ -592,8 +674,13 @@ It's mostly here for eshell to get completions from, but it's a usable shell
             '';
           };
 
-          fish-completion.gfhookf = [
-            "('fish-completion-mode (local! completion-at-point-functions (list 'tempel-complete 'pcomplete-completions-at-point)))"
+          fish-completion.hook = [
+            {
+              namesDeferred = [ "fish-completion-mode" ];
+              actions = [
+                "(local! completion-at-point-functions (list 'tempel-complete 'pcomplete-completions-at-point))"
+              ];
+            }
           ];
 
           evil-collection-eshell = {
@@ -616,7 +703,12 @@ It's mostly here for eshell to get completions from, but it's a usable shell
           esh-help = {
             enable = true;
             after = [ "eshell" ];
-            gfhookf = [ "('eshell-mode 'eldoc-box-hover-at-point-mode)" ];
+            hook = [
+              {
+                namesDeferred = [ "eshell-mode" ];
+                actions = [ "'eldoc-box-hover-at-point-mode" ];
+              }
+            ];
             config = "(setup-esh-help-eldoc)";
           };
 
@@ -672,6 +764,42 @@ It's mostly here for eshell to get completions from, but it's a usable shell
       (apply 'concat (mapcar (lambda (x) (concat x " ")) args))))))
 #+end_src
 
+*** ghostel
+#+begin_src nix-ts :tangle modules/shells/ghostel.nix
+{
+  flake.homeModules.shellConfig.programs.emacs.init.usePackage = {
+    ghostel = {
+      enable = true;
+      hook = [
+        {
+          names = [ "on-first-input" ];
+          actions = [
+            "'ghostel-compile-global-mode"
+            "'ghostel-comint-global-mode"
+          ];
+        }
+        {
+          names = [
+            "ghostel-mode"
+            "ghostel-compile-view-mode"
+          ];
+          actions = [ "(lambda () (display-line-numbers-mode -1))" ];
+        }
+      ];
+      generalTwoConfig.":n".ghostel-mode-map = {
+        g = "'ghostel-yank";
+        G = "'ghostel-yank";
+      };
+    };
+
+    popper.setopt.popper-reference-buffers = [
+      "'ghostel-mode"
+      "'ghostel-compile-view-mode"
+    ];
+  };
+}
+#+end_src
+
 *** starship
 a prompt for bash & fish
 #+begin_src nix-ts :tangle modules/shells/starship.nix
@@ -713,7 +841,6 @@ export NPM_CONFIG_USERCONFIG="$XDG_CONFIG_HOME/npm/npmrc";
 export XCOMPOSECACHE="$XDG_CACHE_HOME/x11/xcompose";
 export GOPATH="$XDG_DATA_HOME/go";
 export DOT_SAGE="$XDG_CONFIG_HOME/sage";
-# export XAUTHORITY="$XDG_RUNTIME_DIR/Xauthority";
 export CARGO_HOME="$XDG_DATA_HOME/cargo";
 export GNUPGHOME="$XDG_DATA_HOME/share/gnupg";
 export PASSWORD_STORE_DIR="$XDG_DATA_HOME/share/pass";
@@ -739,7 +866,7 @@ export GPG_TTY=$(tty)
 # Refresh gpg-agent tty in case user switches into an X session
 gpg-connect-agent updatestartuptty /bye >/dev/null
 
-# [ "$(tty)" = "/dev/tty1" ] && ! pidof -s Xorg >/dev/null 2>&1 && exec startx
+[ "$(tty)" = "/dev/tty1" ] && ! pidof -s Xorg >/dev/null 2>&1 && exec startx
 #+end_src
 
 **** Configuration template
@@ -892,27 +1019,15 @@ aliasesStr = concatStringsSep "\n"
 *** Environment variables
 #+begin_src nix-ts :tangle modules/shells/environment-variables.nix
 {
-  flake.homeModules.shellConfig =
-    { lib, config, ... }:
-    {
-      home.sessionVariables = {
-        XDG_DATA_HOME = "$HOME/.local";
-        XDG_STATE_HOME = "$HOME/.local/state";
-        XDG_CACHE_HOME = "$HOME/.cache";
-        XDG_CONFIG_HOME = "$HOME/.config";
-        XDG_DATA_DIRS = lib.mkForce "$HOME/.nix-profile/share:$XDG_DATA_DIRS";
-        EDITOR = "emacsclient";
-        BROWSER = "qutebrowser";
-        _JAVA_OPTIONS = "-Djava.util.prefs.userRoot=$XDG_CONFIG_HOME/java";
-        GTK2_RC_FILES = "/home/holschcc/.gtkrc-2.0";
-        SSH_AUTH_SOCK = "$(gpgconf --list-dirs agent-ssh-socket)";
-        _JAVA_AWT_WM_NONREPARENTING = "1";
-        PATH = "/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/holschcc/bin:/home/holschcc//.local/bin:/home/holschcc/.nix-profile/bin";
-        OLLAMA_API_BASE = "http://127.0.0.1:11434";
-        GEMINI_API_KEY = "TERM"; # This makes minuet happy
-	QTWEBENGINE_REMOTE_DEBUGGING="9222 qutebrowser";
-      };
-    };
+  flake.homeModules.shellConfig.home.sessionVariables = {
+    _JAVA_OPTIONS = "-Djava.util.prefs.userRoot=$XDG_CONFIG_HOME/java";
+    GTK2_RC_FILES = "/home/holschcc/.gtkrc-2.0";
+    SSH_AUTH_SOCK = "$(gpgconf --list-dirs agent-ssh-socket)";
+    _JAVA_AWT_WM_NONREPARENTING = "1";
+    PATH = "/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/holschcc/bin:/home/holschcc/.nix-profile/bin";
+    OLLAMA_API_BASE = "http://127.0.0.1:11434";
+    GEMINI_API_KEY = "TERM"; # This makes minuet happy
+  };
 }
 #+end_src
 
@@ -933,7 +1048,12 @@ aliasesStr = concatStringsSep "\n"
     usePackage = {
       prettify-symbols = {
         enable = true;
-        ghookf = [ "('prog-mode 'prettify-symbols-mode)" ];
+        hook = [
+          {
+            names = [ "prog-mode" ];
+            actions = [ "'prettify-symbols-mode" ];
+          }
+        ];
       };
 
       dashboard.setopt = {
@@ -1108,7 +1228,10 @@ Pywal integration: https://github.com/danth/stylix/issues/99
 We use this to format the date, time, & battery percentage in our modeline.
 #+begin_src nix-ts :tangle modules/aesthetics/modeline/i3bar.nix
 {
-  perSystem = { pkgs, ... }: {
+  perSystem = { pkgs, config, ... }: {
+    overlayAttrs = {
+      inherit (config.packages) i3status-rs;
+    };
     packages.i3status-rs = pkgs.writeShellScriptBin "i3status-rust" ''
       ${pkgs.i3status-rust}/bin/i3status-rs ~/.config/i3status-rust/config-default.toml
     '';
@@ -1159,7 +1282,12 @@ We use this to format the date, time, & battery percentage in our modeline.
 
         emacs.init.usePackage.i3bar = {
           enable = true;
-          ghookf = [ "('tab-bar-mode 'i3bar-mode)" ];
+          hook = [
+            {
+              names = [ "tab-bar-mode" ];
+              actions = [ "'i3bar-mode" ];
+            }
+          ];
           setopt.i3bar-command = ''"${lib.getExe pkgs.i3status-rs}"'';
         };
       };
@@ -1490,32 +1618,43 @@ A great deal was borrowed from:
 + https://github.com/Panadestein/emacsd/
 #+begin_src nix-ts :tangle modules/aesthetics/shrface.nix :noweb yes
 {
-  flake.homeModules.aesthetics.programs.emacs.init.usePackage = {
-    shr-tag-pre-highlight = {
-      enable = true;
-      after = [ "shrface" ];
-      preface = ''
-        <<Emacs Ricing Shr Tag Pre Highlight Preface>>
-      '';
-      config = ''
-        <<Emacs Ricing Shr Tag Pre Highlight Config>>
-      '';
-    };
+  flake.homeModules.aesthetics = { lib, ... }: {
+    programs.emacs.init.usePackage = {
+      shr-tag-pre-highlight = {
+        enable = true;
+        after = [ "shrface" ];
+        preface = ''
+          <<Emacs Ricing Shr Tag Pre Highlight Preface>>
+        '';
+        config = ''
+          <<Emacs Ricing Shr Tag Pre Highlight Config>>
+        '';
+      };
 
-    shrface = {
-      enable = true;
-      ghookf = [ "('(eww-mode elfeed-show-mode nov-mode) 'shrface-mode)" ];
-      setopt.shrface-header-line-max-level = 0;
-      config = ''
-        	  <<Emacs Ricing Shrface Config>>
-        	'';
-      generalOneConfig.shr-map."RET" =
-        "`,(cmd! (if (major-mode? 'eww-mode) (eww-follow-link) (shr-browse-url)))";
-      generalTwoConfig.local-leader.shrface-mode-map = {
-        "l" = "'shrface-links-consult";
-        "o" = "'shrface-headline-consult";
-        "]c" = "'org-next-block";
-        "[c" = "'org-previous-block";
+      shrface = {
+        enable = true;
+        setopt.shrface-header-line-max-level = 0;
+        config = ''
+          	  <<Emacs Ricing Shrface Config>>
+          	'';
+        generalOneConfig.shr-map."RET" =
+          "`,(cmd! (if (major-mode? 'eww-mode) (eww-follow-link) (shr-browse-url)))";
+        generalTwoConfig.local-leader.shrface-mode-map = {
+          "l" = "'shrface-links-consult";
+          "o" = "'shrface-headline-consult";
+          "]c" = "'org-next-block";
+          "[c" = "'org-previous-block";
+        };
+        hook = [
+          {
+            names = [
+              "eww-mode"
+              "elfeed-show-mode"
+              "nov-mode"
+            ];
+            actions = [ "'shrface-mode" ];
+          }
+        ];
       };
     };
   };
@@ -1667,11 +1806,27 @@ A great deal was borrowed from:
 *** Writeroom
 I couldn't get olivetti to work.
 #+begin_src nix-ts :tangle modules/aesthetics/writeroom.nix
+{ self, ... }:
 {
   flake.homeModules.aesthetics.programs.emacs.init.usePackage.writeroom-mode = {
     enable = true;
-    ghookf = [ "((gen-mode-hooks '(Man org-agenda org Info markdown-ts shrface)) 'writeroom-mode)" ];
-    gfhookf = [ "('writeroom-mode-enable 'visual-line-mode)" ];
+    hook = [
+      {
+        names = [
+          "Man-mode"
+          "org-agenda-mode"
+          "org-mode"
+          "Info-mode"
+          "markdown-ts-mode"
+          "shrface-mode"
+        ];
+        actions = [ "'writeroom-mode" ];
+      }
+      {
+        namesDeferred = [ "writeroom-mode-enable" ];
+        actions = [ "'visual-line-mode" ];
+      }
+    ];
     setopt = {
       writeroom-mode-line = true;
       writeroom-maximize-window = false;
@@ -1748,6 +1903,7 @@ I couldn't get olivetti to work.
 
 ** Extra Packages
 #+begin_src nix-ts :tangle modules/extra-packages.nix
+{ inputs, ... }:
 {
   flake.homeModules.extraPackages =
     { config, pkgs, ... }:
@@ -1763,30 +1919,7 @@ I couldn't get olivetti to work.
         ezf
         hdmihelper
         pkg
-        rustc
-        cargo
-        uv
-        # python3
-        cmake
-        firefox
       ];
-      programs.emacs.init.usePackage = {
-        agent-shell = {
-          enable = true;
-          custom.agent-shell-cursor-acp-command = [
-            ''"cursor-agent"''
-            ''"acp"''
-          ];
-          generalOne.global-leader = {
-            "a" = '''(:ignore t :which-key "agent-shell")'';
-            "af" = "'agent-shell-send-file";
-            "as" = "'agent-shell-cursor-start-agent";
-            "ar" = "'agent-shell-send-region";
-          };
-        };
-
-        popper.setopt.popper-reference-buffers = [ "'agent-shell-mode" ];
-      };
     };
 }
 #+end_src
@@ -1847,11 +1980,9 @@ I think most of it was from the github page for lsp mode, but it's been a while,
           languages = {
             bash.enable = true;
             json.enable = true;
-            lua.enable = true;
             toml.enable = true;
             yaml.enable = true;
             xml.enable = true;
-            zenscript.enable = true;
           };
         };
 
@@ -1864,20 +1995,22 @@ I think most of it was from the github page for lsp mode, but it's been a while,
         };
 
         usePackage = {
-	  eat.init = ''
-	    (defun efs/eat-command (command) (require 'eat) (eat command 'N))
-	    (defun efs/eat-docker-command (container) (efs/eat-command (concat "docker exec -it '" container "' bash -c '. /opt/tetramem/python_env/bin/activate; bash -i'")))
-	    (defun efs/enter-excelsior () (interactive) (efs/eat-docker-command "excelsior-sw-environ"))
-	    (defun efs/enter-sdk () (interactive) (efs/eat-docker-command "tetramem-sdk"))
-	    (defun efs/openocd () (interactive) (efs/eat-command "/mnt/nfs/ssunil/toolchains/hermetic/openocd/bin/openocd -c \"bindto 0.0.0.0\" -c \"set JTAGSN MLX200EVK025C\" -f board/mlx200_rv64_ft4232ha_evk.cfg"))
-	    (defun efs/run-excelsior () (interactive) (shell-command "docker run -dit --name excelsior-sw-environ --replace --mount \"src=$HOME/.ssh,target=/root/.ssh,type=bind\" --mount \"src=$HOME/tetramem,target=/root/tetramem,type=bind\" --mount \"src=$HOME/kernelagent,target=/root/kernelagent,type=bind\" --mount \"src=/dev/ftdi-MLX200EVK025C-ch02,target=/dev/ftdi-MLX200EVK025C-ch02,type=bind\" --device \"/dev/ft4232ha_MLX200EVK025C_uart:/dev/ft4232ha_MLX200EVK025C_uart\" --network host 'excelsior-sw-environ'"))
-	  '';
-          rainbow-delimiters = {
+	  rainbow-delimiters = {
             enable = true;
-            ghookf = [ "('prog-mode 'rainbow-delimiters-mode)" ];
+            hook = [
+              {
+                names = [ "prog-mode" ];
+                actions = [ "'rainbow-delimiters-mode" ];
+              }
+            ];
           };
 
-          racket-mode.gfhookf = [ "('racket-mode 'hs-minor-mode)" ];
+          racket-mode.hook = [
+            {
+              namesDeferred = [ "racket-mode " ];
+              actions = [ "'hs-minor-mode" ];
+            }
+          ];
 
           toml-ts-mode = {
             extraPackages = [ pkgs.tombi ];
@@ -1924,109 +2057,131 @@ I think most of it was from the github page for lsp mode, but it's been a while,
   flake.homeModules.development =
     { pkgs, lib, ... }:
     {
-      programs.emacs.init = {
-        ide = {
-          magit = {
-            enable = true;
-            forge = true;
-            todo = true;
-          };
-          project = true;
+      programs = {
+        mcp.servers.jj = {
+          command = "${pkgs.nodejs}/bin/npx";
+          args = [
+            "-y"
+            "jj-mcp-server"
+          ];
         };
-        usePackage = {
-          git-modes = {
-            enable = true;
-            mode = [
-              ''("/\\.gitattributes\\'" . gitattributes-mode)''
-              ''("/info/attributes\\'" . gitattributes-mode)''
-              ''("/git/attributes\\'" . gitattributes-mode)''
-              ''("/\\.gitconfig\\'" . gitconfig-mode)''
-              ''("/\\.git/config\\'" . gitconfig-mode)''
-              ''("/modules/.*/config\\'" . gitconfig-mode)''
-              ''("/git/config\\'" . gitconfig-mode)''
-              ''("/\\.gitmodules\\'" . gitconfig-mode)''
-              ''("/etc/gitconfig\\'" . gitconfig-mode)''
-              ''("/\\.gitignore\\'" . gitignore-mode)''
-              ''("/info/exclude\\'" . gitignore-mode)''
-              ''("/git/ignore\\'" . gitignore-mode)''
-            ];
+        emacs.init = {
+          ide = {
+            magit = {
+              enable = true;
+              forge = true;
+              todo = true;
+            };
+            project = true;
           };
+          usePackage = {
+            git-modes = {
+              enable = true;
+              mode = [
+                ''("/\\.gitattributes\\'" . gitattributes-mode)''
+                ''("/info/attributes\\'" . gitattributes-mode)''
+                ''("/git/attributes\\'" . gitattributes-mode)''
+                ''("/\\.gitconfig\\'" . gitconfig-mode)''
+                ''("/\\.git/config\\'" . gitconfig-mode)''
+                ''("/modules/.*/config\\'" . gitconfig-mode)''
+                ''("/git/config\\'" . gitconfig-mode)''
+                ''("/\\.gitmodules\\'" . gitconfig-mode)''
+                ''("/etc/gitconfig\\'" . gitconfig-mode)''
+                ''("/\\.gitignore\\'" . gitignore-mode)''
+                ''("/info/exclude\\'" . gitignore-mode)''
+                ''("/git/ignore\\'" . gitignore-mode)''
+              ];
+            };
 
-          magit =
-            let
-              mkMajutsuCmd = name: magitCommand: majutsuCommand: ''
-                (defun efs/vcs-${name} ()
-                       "Do a magit/jutsu ${name} depending on what kind of repo we have."
-                        (interactive)
-                        (require 'majutsu)
-                        (if (majutsu-toplevel)
-                            (progn ${majutsuCommand})
-                            ${magitCommand}))
-              '';
-            in
-            {
-              setopt.magit-process-find-password-functions = [ "'magit-process-password-auth-source" ];
-              preface = ''
-                (defun efs/vcs-status (&optional dir)
-                       "Do a magit/jutsu status depending on what kind of repo we have."
-                        (interactive)
-                        (require 'majutsu)
-                        (if (majutsu-toplevel)
-                            (progn (majutsu dir))
-                            (magit dir)))
-                ${mkMajutsuCmd "commit" "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-commit)"}
-                ${mkMajutsuCmd "pull" "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)"}
-                ${mkMajutsuCmd "push" "(magit-push)" "(call-interactively 'majutsu-git-push)"}
-                ${mkMajutsuCmd "branch" "(magit-branch)" "(majutsu-bookmark)"}
-              '';
-              generalOne.project-prefix-map = {
-                "v" = "'efs/vcs-status";
-                "c" = "'efs/vcs-commit";
-                "p" = "'efs/vcs-pull";
-                "P" = "'efs/vcs-push";
-                "b" = "'efs/vcs-branch";
-              };
-              bindLocal.project-prefix-map = lib.mkForce { };
-              generalOneConfig = {
-                magit-mode-map = {
-                  "e" = "'evil-next-visual-line";
-                  "B" = "'evil-goto-line";
+            magit =
+              let
+                mkMajutsuCmd = name: magitCommand: majutsuCommand: ''
+                  (defun efs/vcs-${name} ()
+                                 "Do a magit/jutsu ${name} depending on what kind of repo we have."
+                                  (interactive)
+                                  (require 'majutsu)
+                                  (if (majutsu-toplevel)
+                                      (progn ${majutsuCommand})
+                                      ${magitCommand}))
+                '';
+              in
+              {
+                setopt.magit-process-find-password-functions = [ "'magit-process-password-auth-source" ];
+                preface = ''
+                  (defun efs/vcs-status (&optional dir)
+                                 "Do a magit/jutsu status depending on what kind of repo we have."
+                                  (interactive)
+                                  (require 'majutsu)
+                                  (if (majutsu-toplevel)
+                                      (progn (majutsu dir))
+                                      (magit dir)))
+                          ${mkMajutsuCmd "commit" "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-commit)"}
+                          ${mkMajutsuCmd "pull" "(magit-pull)"
+                            "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)"
+                          }
+                          ${mkMajutsuCmd "push" "(magit-push)" "(call-interactively 'majutsu-git-push)"}
+                          ${mkMajutsuCmd "branch" "(magit-branch)" "(majutsu-bookmark)"}
+                '';
+                generalOne.project-prefix-map = {
+                  "v" = "'efs/vcs-status";
+                  "c" = "'efs/vcs-commit";
+                  "p" = "'efs/vcs-pull";
+                  "P" = "'efs/vcs-push";
+                  "b" = "'efs/vcs-branch";
                 };
-                magit-status-mode-map."j" = "'magit-unstage-files";
+                bindLocal.project-prefix-map = lib.mkForce { };
+                generalOneConfig = {
+                  magit-mode-map = {
+                    "e" = "'evil-next-visual-line";
+                    "B" = "'evil-goto-line";
+                  };
+                  magit-status-mode-map."j" = "'magit-unstage-files";
+                };
+              };
+
+            code-review.enable = lib.mkForce false;
+
+            majutsu = {
+              enable = true;
+              extraPackages = [ pkgs.jujutsu ];
+              command = [ "majutsu-git-fetch" ];
+              extraConfig = ":autoload majutsu-repository-config-id";
+              hook = [
+                {
+                  names = [ "find-file" ];
+                  actions = [ "'majutsu-conflict-ensure-mode" ];
+                }
+              ];
+              generalTwoConfig.":n".majutsu-mode-map = {
+                "e" = "'evil-next-visual-line";
+                "o" = "'evil-previous-visual-line";
+                "B" = "'evil-goto-line";
+              };
+              setopt.majutsu-display-buffer-function = "'majutsu-display-buffer-same-window-except-diff-v1";
+              config = ''
+                (magit-add-section-hook 'majutsu-log-sections-hook #'magit-todos--insert-todos nil 'append)
+                        (majutsu-forge-mode)
+              '';
+            };
+
+            projection-ibuffer = {
+              enable = true;
+              generalOne.project-prefix-map = {
+                C-b = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
+                i = '''("info" . projection-show-project-info)'';
               };
             };
 
-          code-review.enable = lib.mkForce false;
-
-          majutsu = {
-            enable = true;
-            extraPackages = [ pkgs.jujutsu ];
-            command = [ "majutsu-git-fetch" ];
-            extraConfig = ":autoload majutsu-repository-config-id";
-            ghookf = [ ''('find-file 'majutsu-conflict-ensure-mode)'' ];
-            config = ''
-              (magit-add-section-hook 'majutsu-log-sections-hook #'magit-todos--insert-todos nil 'append)
-              (majutsu-forge-mode)
-            '';
-          };
-
-          projection-ibuffer = {
-            enable = true;
-            generalOne.project-prefix-map = {
-              C-b = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
-              i = '''("info" . projection-show-project-info)'';
+            projection-multi = {
+              custom.projection-gradle-use-daemon = false;
+              config = ''
+                <<Emacs Development Projection Config>>
+              '';
             };
-          };
 
-          forge.config = ''
-            (add-to-list 'forge-alist '("gitlab.tetramem-eng.com" "gitlab.tetramem-eng.com/api/v4" "gitlab.tetramem-eng.com"
-              forge-gitlab-repository))'';
-
-          projection-multi = {
-            custom.projection-gradle-use-daemon = false;
-            config = ''
-              <<Emacs Development Projection Config>>
-            '';
+            forge.config = ''
+              (add-to-list 'forge-alist '("gitlab.tetramem-eng.com" "gitlab.tetramem-eng.com/api/v4" "gitlab.tetramem-eng.com"
+                forge-gitlab-repository))'';
           };
         };
       };
@@ -2086,7 +2241,18 @@ I think most of it was from the github page for lsp mode, but it's been a while,
               ''("\\.jsx?\\'" . jtsx-jsx-mode)''
               ''("\\.tsx\\'" . jtsx-tsx-mode)''
             ];
-            ghookf = [ "('(jtsx-jsx-mode jtsx-tsx-mode) '(hs-minor-mode emmet-mode))" ];
+            hook = [
+              {
+                names = [
+                  "jtsx-jsx-mode"
+                  "jtsx-tsx-mode"
+                ];
+                actions = [
+                  "'hs-minor-mode"
+                  "'emmet-mode"
+                ];
+              }
+            ];
             config = ''
               <<Jtsx Config>>
             '';
@@ -2185,8 +2351,14 @@ I think most of it was from the github page for lsp mode, but it's been a while,
       enable = true;
       semel = true;
     };
-    usePackage.elisp-mode.gfhookf = [
-      "('emacs-lisp-mode (list (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))) 'hs-minor-mode))"
+    usePackage.elisp-mode.hook = [
+      {
+        namesDeferred = [ "emacs-lisp-mode" ];
+        actions = [
+          "(local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point)))"
+          "'hs-minor-mode"
+        ];
+      }
     ];
   };
 }
@@ -2604,36 +2776,44 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 
         usePackage = {
           eglot = {
-            gfhookf = [
-              ''
-                ('eglot-managed-mode (local! completion-at-point-functions
-                                                             (list (cape-capf-choose
-                                                                    #'efs/mixin-completion-at-point
-                					            (cape-capf-super
-                                                                     #'tempel-complete
-                                                                     (cape-capf-buster #'eglot-completion-at-point)
-                                                                     (cape-capf-inside-comment #'cape-dict)
-                                                                     (cape-capf-inside-string #'cape-dict))
-                                                                    #'cape-dabbrev))))
-              ''
-	      # https://www.jamescherti.com/emacs-eglot-apply-code-actions-fixes-on-save/
-	      ''
-		('before-save
+            hook = [
+              {
+                namesDeferred = [ "eglot-managed-mode" ];
+                actions = [
+                  ''
+                    (local! completion-at-point-functions
+                            (list (cape-capf-choose
+                                   #'efs/mixin-completion-at-point
+                    		   (cape-capf-super
+                                    #'tempel-complete
+                                    (cape-capf-buster #'eglot-completion-at-point)
+                                    (cape-capf-inside-comment #'cape-dict)
+                                    (cape-capf-inside-string #'cape-dict))
+                                   #'cape-dabbrev)))
+                  ''
+                ];
+              }
+              # https://www.jamescherti.com/emacs-eglot-apply-code-actions-fixes-on-save/
+              {
+                namesDeferred = [ "before-save" ];
+                actions = [
+                  ''
                     (lambda ()
-		       (when (and (fboundp 'eglot-managed-p)
-                             (eglot-managed-p)
-                             (fboundp 'eglot-server-capable)
-                             (eglot-server-capable :codeActionProvider)
-                             (fboundp 'eglot-current-server)
-                             (fboundp 'eglot-code-actions)
-                             (fboundp 'eglot-execute))
-                    (when-let* ((server (eglot-current-server)))
-                      (save-restriction
-                        (widen)
-			(dolist (action (eglot-code-actions (point-min) (point-max)
-                                                              "source.fixAll" nil))
-                            (eglot-execute server action)))))))
-	      ''
+                       (when (and (fboundp 'eglot-managed-p)
+                                 (eglot-managed-p)
+                                 (fboundp 'eglot-server-capable)
+                                 (eglot-server-capable :codeActionProvider)
+                                 (fboundp 'eglot-current-server)
+                                 (fboundp 'eglot-code-actions)
+                                 (fboundp 'eglot-execute))
+                        (when-let* ((server (eglot-current-server)))
+                          (save-restriction
+                            (widen)
+                            (dolist (action (eglot-code-actions (point-min) (point-max)
+                                                                       "source.fixAll" nil))
+                                     (eglot-execute server action))))))''
+                ];
+              }
             ];
             # https://www.jamescherti.com/emacs-eglot-performance/
             setopt = {
@@ -2653,7 +2833,7 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
             '';
           };
 
-	  #https://github.com/nemethf/eglot-x/blob/5cd6f936b9dc571edd4437b8fbf93ff68b0e723b/eglot-x.el
+          #https://github.com/nemethf/eglot-x/blob/5cd6f936b9dc571edd4437b8fbf93ff68b0e723b/eglot-x.el
           eglot-x.config = ''
             (cl-defmethod eglot-execute :around (server action)
               "Execute ACTION locally if possible, otherwise ask SERVER to execute it."
@@ -2721,8 +2901,9 @@ I'm running dired with a couple of small packages that improve on it
 { inputs, ... }:
 {
   perSystem =
-    { pkgs, ... }:
+    { pkgs, config, ... }:
     {
+      overlayAttrs = { inherit (config.packages) mpvmacs; };
       packages.mpvmacs = pkgs.writeShellScriptBin "mpvmacs" ''
         emacsclient -e "(mpv-play \"$1\")"
       '';
@@ -2753,7 +2934,12 @@ I'm running dired with a couple of small packages that improve on it
         };
 
         dirvish = {
-          gfhookf = [ "('dirvish-directory-view-mode 'diredfl-mode)" ];
+          hook = [
+            {
+              namesDeferred = [ "dirvish-directory-view-mode" ];
+              actions = [ "'diredfl-mode" ];
+            }
+          ];
           setopt.dirvish-use-mode-line = false;
           # Borrowed from doom
           generalTwoConfig.":n".dirvish-mode-map = {
@@ -2775,7 +2961,12 @@ I'm running dired with a couple of small packages that improve on it
         openwith = {
           enable = true;
           defer = true;
-          ghookf = [ "('dired-mode 'openwith-mode)" ];
+          hook = [
+            {
+              namesDeferred = [ "dired-mode" ];
+              actions = [ "'openwith-mode" ];
+            }
+          ];
           config = ''
             <<Emacs Openwith Config>>
           '';
@@ -2783,7 +2974,12 @@ I'm running dired with a couple of small packages that improve on it
 
         image = {
           enable = true;
-          gfhookf = [ "('image-mode 'image-transform-fit-to-window)" ];
+          hook = [
+            {
+              namesDeferred = [ "image-mode" ];
+              actions = [ "'image-transform-fit-to-window" ];
+            }
+          ];
           generalTwoConfig.":n".image-map = {
             "E" = "'image-next-file";
             "O" = "'image-previous-file";
@@ -2839,20 +3035,22 @@ I'm running dired with a couple of small packages that improve on it
 ** Emacs
 *** Main
 #+begin_src nix-ts :tangle modules/emacs.nix :noweb yes
-{ inputs, ... }:
-
 {
   flake.homeModules.emacs =
     { config, pkgs, ... }:
 
     {
-      home.packages = with pkgs; [
-        xclip
-        xsel
-        xdotool
-        zip
-        unzip
-      ];
+      home = {
+        packages = with pkgs; [
+          xclip
+          xsel
+          xdotool
+          zip
+          unzip
+        ];
+        sessionVariables.EDITOR = "emacsclient";
+      };
+
       programs.emacs = {
         enable = true;
         package = pkgs.emacs-gtk;
@@ -2899,12 +3097,6 @@ or aliases. Stolen from Doom."
   "Creates a lambda that runs setq-local on the variable VAR with the value provided by BODY."
   `(lambda (&rest args) (setq-local ,var ,body)))
 
-(defun gen-mode-hooks (modes)
-  "Takes a list of symbols, MODES, & appends -mode to them."
-  (mapcar
-   (lambda (mode) (intern (concat (symbol-name mode) "-mode")))
-   modes))
-
 (defmacro efs/evil-collection-remap (fun state map &rest args)
   "Adds more key definitions directly after running some evil-collection setup function.
 `FUN` is the evil-collection function to advise.
@@ -2949,8 +3141,14 @@ Most of this was shamelessly lifted from Emacs from Scratch.
         enable = true;
         setopt = {
           confirm-kill-processes = false;
-          trusted-content = [ ''"~/projects/generic-todo/"'' ''"~/projects/DungeonsLibs/"''] ;
-          safe-local-variable-directories = [ ''"~/projects/generic-todo/"'' ''"~/projects/DungeonsLibs/"''] ;
+          trusted-content = [
+            ''"~/projects/generic-todo/"''
+            ''"~/projects/DungeonsLibs/"''
+          ];
+          safe-local-variable-directories = [
+            ''"~/projects/generic-todo/"''
+            ''"~/projects/DungeonsLibs/"''
+          ];
         };
       };
 
@@ -2962,7 +3160,12 @@ Most of this was shamelessly lifted from Emacs from Scratch.
 
       loaddefs = {
         enable = true;
-        ghookf = [ "('on-first-file 'save-place-mode)" ];
+        hook = [
+          {
+            names = [ "on-first-file" ];
+            actions = [ "'save-place-mode" ];
+          }
+        ];
       };
     };
   };
@@ -3193,11 +3396,16 @@ Cursors hydra: https://hungyi.net/posts/hydra-for-evil-mc/
       "evil-mc-pause-cursors"
       "evil-mc-make-cursor-here"
     ];
-    gfhookf = [
-      ''
-        ('doom-escape (lambda () (when (and (featurep 'evil-mc) (evil-mc-has-cursors-p))
-        	(evil-mc-undo-all-cursors)
-        						 (evil-mc-resume-cursors) t)))''
+    hook = [
+      {
+        namesDeferred = [ "doom-escape" ];
+        actions = [
+          ''
+            (lambda () (when (and (featurep 'evil-mc) (evil-mc-has-cursors-p))
+                    (evil-mc-undo-all-cursors)
+                    (evil-mc-resume-cursors) t))''
+        ];
+      }
     ];
     generalOne = {
       ":nv"."bz" = "'evil-mc-hydra/body";
@@ -3263,7 +3471,12 @@ Cursors hydra: https://hungyi.net/posts/hydra-for-evil-mc/
         evil-operator-state-map."k" = "'evil-exchange/cx";
         evil-visual-state-map."k" = "'evil-exchange";
       };
-      gfhookf = [ "('doom-escape (lambda () (when (featurep 'evil-exchange) (evil-exchange-cancel))))" ];
+      hook = [
+        {
+          namesDeferred = [ "doom-escape" ];
+          actions = [ "(lambda () (when (featurep 'evil-exchange) (evil-exchange-cancel)))" ];
+        }
+      ];
     };
   };
 }
@@ -3276,11 +3489,17 @@ Note: You still need to install udisks manually if you're not using this on nixo
 
 {
   perSystem =
-    { pkgs, self', ... }:
+    {
+      pkgs,
+      self',
+      config,
+      ...
+    }:
     let
       ezf = self'.packages.ezf;
     in
     {
+      overlayAttrs = { inherit (config.packages) udisksmenu; };
       packages.udisksmenu = pkgs.writeShellScriptBin "udisksmenu" ''
         action=$(${pkgs.coreutils}/bin/printf 'mount\nunmount' | ${ezf}/bin/ezf)
         disk=$(${pkgs.coreutils}/bin/ls /dev | ${pkgs.ripgrep}/bin/rg sd[a-z] | ${ezf}/bin/ezf)
@@ -3697,9 +3916,13 @@ Vertico is basically dmenu for emacs. It lists out all the options in a command 
         setopt.vertico-multiform-commands = [
           "'(music-menu grid)"
           "'(man grid)"
-          # "'(t posframe)"
         ];
-        ghookf = [ "('vertico-mode 'vertico-multiform-mode)" ];
+        hook = [
+          {
+            names = [ "vertico-mode" ];
+            actions = [ "'vertico-multiform-mode" ];
+          }
+        ];
       };
 
       vertico-quick.setopt = {
@@ -3856,7 +4079,12 @@ Evil integration is from noctuid & minad
     };
     usePackage = {
       consult = {
-        ghookf = [ "('minibuffer-setup 'consult-initial-narrow)" ];
+        hook = [
+          {
+            names = [ "minibuffer-setup" ];
+            actions = [ "'consult-initial-narrow" ];
+          }
+        ];
         command = [
           "consult-goto-line"
           "consult-keep-lines"
@@ -4157,7 +4385,12 @@ Diagnostic (%s): %s\n\nCode:\n%s"
       ace-isearch = {
         enable = true;
         demand = true;
-        gfhookf = [ "('pdf-view-mode (lambda () (ace-isearch-mode -1)))" ];
+        hook = [
+          {
+            namesDeferred = [ "pdf-view-mode" ];
+            actions = [ "(lambda () (ace-isearch-mode -1))" ];
+          }
+        ];
         generalOneConfig.isearch-mode-map."C-a" = "'avy-isearch";
         config = "(global-ace-isearch-mode)";
         setopt = {
@@ -4185,11 +4418,12 @@ An alternative to fzf.
 { inputs, ... }:
 {
   perSystem =
-    { pkgs, self', ... }:
+    { pkgs, self', config, ... }:
     let
       epkgs = pkgs.emacs.pkgs;
     in
     {
+      overlayAttrs = { inherit (config.packages) ezf; };
       packages = {
         emacs-ezf = (
           epkgs.callPackage epkgs.trivialBuild rec {
@@ -4258,11 +4492,19 @@ Helpful gives more information, & which-key tells what keybinds you have availab
 { inputs, ... }:
 
 {
-  perSystem = { pkgs, self', ... }: {
-    packages.wiki = pkgs.writeShellScriptBin "wiki" ''
-      <<Wiki>>
-    '';
-  };
+  perSystem =
+    {
+      pkgs,
+      self',
+      config,
+      ...
+    }:
+    {
+      overlayAttrs = { inherit (config.packages) wiki; };
+      packages.wiki = pkgs.writeShellScriptBin "wiki" ''
+        <<Wiki>>
+      '';
+    };
 
   flake.homeModules.emacs = { lib, pkgs, ... }: {
     programs.emacs.init = {
@@ -4308,7 +4550,12 @@ Helpful gives more information, & which-key tells what keybinds you have availab
             ];
             evil-owl-display-method = "'posframe";
           };
-          ghookf = [ "('evil-mode 'evil-owl-mode)" ];
+          hook = [
+            {
+              names = [ "evil-mode" ];
+              actions = [ "'evil-owl-mode" ];
+            }
+          ];
         };
 
         emacs.generalOne.help-map."A" =
@@ -4447,8 +4694,11 @@ EDNC does the same thing as dunst. It will pop up any new notifications inside o
 {
   flake.homeModules.notifications.programs.emacs.init.usePackage.ednc = {
     enable = true;
-    gfhook = [
-      "('ednc-notification-presentation-functions #'show-notification-in-echo-area)"
+    hook = [
+      {
+        fullNamesDeferred = [ "ednc-notification-presentation-functions" ];
+        actions = [ "#'show-notification-in-echo-area" ];
+      }
     ];
     deferIncrementally = true;
     config = ''
@@ -4499,19 +4749,23 @@ How to add a latex package
         usePackage = {
           org = {
             extraPackages = [ pkgs.xdo ];
-            gfhookf = [
-              ''
-                ('org-mode (list 'ispell-minor-mode
-                	    (local! completion-at-point-functions (list (cape-capf-super
-                                                                           #'tempel-complete
-                						           #'cape-file)
-                                                                        #'pcomplete-completions-at-point
-                						        #'ob-gptel-capf
-                						        #'cape-tex
-                						        #'cape-elisp-block
-                						        #'cape-dict
-                                                                        #'cape-dabbrev))))''
-	      #''('after-save (lambda () (when (eq major-mode 'org-mode) (org-babel-tangle))))''
+            hook = [
+              {
+                namesDeferred = [ "org-mode" ];
+                actions = [
+                  "'ispell-minor-mode"
+                  ''
+                    (local! completion-at-point-functions (list (cape-capf-super
+                                                                   #'tempel-complete
+                                    				   #'cape-file)
+                                                                #'pcomplete-completions-at-point
+                                    				#'ob-gptel-capf
+                                    				#'cape-tex
+                                    				#'cape-elisp-block
+                                    				#'cape-dict
+                                                                #'cape-dabbrev))''
+                ];
+              }
             ];
             custom.org-directory = ''"~/doc"'';
             setopt = {
@@ -4705,7 +4959,12 @@ No idea what the rest of this is for.
       };
       usePackage = {
         markdown-ts-mode = {
-          gfhookf = [ "('markdown-ts-mode 'efs/markdown-font-setup)" ];
+          hook = [
+            {
+              namesDeferred = [ "markdown-ts-mode" ];
+              actions = [ "'efs/markdown-font-setup" ];
+            }
+          ];
           init = ''
             <<Emacs Markdown Init>>
           '';
@@ -4715,7 +4974,12 @@ No idea what the rest of this is for.
           enable = true;
           defer = true;
           setopt.markdown-ts-appear-table-style = "'unicode";
-          ghookf = [ "('markdown-ts-mode 'markdown-ts-appear-mode)" ];
+          hook = [
+            {
+              names = [ "markdown-ts-mode" ];
+              actions = [ "'markdown-ts-appear-mode" ];
+            }
+          ];
         };
       };
     };
@@ -4761,7 +5025,12 @@ No idea what the rest of this is for.
         usePackage = {
           jinx = {
             enable = true;
-            ghookf = [ "('on-init-ui 'global-jinx-mode)" ];
+            hook = [
+              {
+                names = [ "on-init-ui" ];
+                actions = [ "'global-jinx-mode" ];
+              }
+            ];
             generalOneConfig.":n" = {
               "C-M-i" = "'jinx-correct";
               "]s" = "'jinx-next";
@@ -4771,7 +5040,12 @@ No idea what the rest of this is for.
 
           pdf-tools = {
             generalOneConfig.pdf-view-mode-map."C-s" = "'search-forward";
-            gfhookf = [ "('pdf-view-mode 'pdf-view-midnight-minor-mode)" ];
+            hook = [
+              {
+                namesDeferred = [ "pdf-view-mode" ];
+                actions = [ "'pdf-view-midnight-minor-mode" ];
+              }
+            ];
           };
 
           evil-collection-pdf = {
@@ -4919,7 +5193,12 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
         config = ''
           <<Tab Bar Config>>
         '';
-        ghookf = [ "('exwm-init 'tab-bar-mode)" ];
+        hook = [
+          {
+            names = [ "exwm-init" ];
+            actions = [ "'tab-bar-mode" ];
+          }
+        ];
         # ghookf = [ "('ewm-mode 'tab-bar-mode)" ];
         general = {
           "s-u" = "'tab-bar-hydra/body";
@@ -4965,7 +5244,24 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
 
       pertab = {
         enable = true;
-        ghookf = [ "('tab-bar-mode 'pertab-mode)" ];
+        hook =
+          let
+            ratio = hook: sign: {
+              namesDeferred = [
+                "pertab-follow-${hook}"
+                "pertab-scroll-${hook}"
+              ];
+              actions = [ "(lambda () (golden-ratio-mode ${sign}1))" ];
+            };
+          in
+          [
+            {
+              names = [ "tab-bar-mode" ];
+              actions = [ "'pertab-mode" ];
+            }
+            (ratio "enter" "-")
+            (ratio "exit" "+")
+          ];
         generalOneConfig.pertab-mode-map = {
           "s-e" = "'pertab-focus-down";
           "s-o" = "'pertab-focus-up";
@@ -4987,20 +5283,24 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
           pertab-previous-buffer-function = "'bufler-cycle-buffers-backward";
           roll-debug-enabled = false;
         };
-        gfhookf = [
-          "('(pertab-follow-enter pertab-scroll-enter) (lambda () (golden-ratio-mode -1)))"
-          "('(pertab-follow-exit pertab-scroll-exit) (lambda () (golden-ratio-mode +1)))"
-        ];
-	config = ''
-	  <<Pertab Config>>
-	'';
+        config = ''
+          <<Pertab Config>>
+        '';
       };
 
       pertab-monocle = pertabExtension;
       pertab-follow = pertabExtension;
       pertab-master-stack = pertabExtension;
       pertab-scroll = {
-        gfhookf = [ "('pertab-follow-enter 'balance-windows)" ];
+        hook = [
+          {
+            namesDeferred = [
+              "pertab-scroll-enter"
+              "pertab-follow-enter"
+            ];
+            actions = [ "'balance-windows" ];
+          }
+        ];
       }
       // pertabExtension;
     };
@@ -5036,7 +5336,12 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
       programs.emacs.init.usePackage = {
         javelin = {
           enable = true;
-          gfhookf = [ "('kill-emacs 'javelin-clear-all)" ];
+          hook = [
+            {
+              namesDeferred = [ "kill-emacs" ];
+              actions = [ "'javelin-clear-all" ];
+            }
+          ];
           custom.javelin-disable-confirmation = true;
           general = {
             "s-1" = "'javelin-go-to-1";
@@ -5079,7 +5384,12 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
   flake.homeModules.wm.programs.emacs.init.usePackage = {
     bufler = {
       enable = true;
-      ghookf = [ "('tab-bar-mode 'bufler-mode)" ];
+      hook = [
+        {
+          names = [ "tab-bar-mode" ];
+          actions = [ "'bufler-mode" ];
+        }
+      ];
       general = {
         "s-b" = "'bufler-hydra/body";
         "s-f" = "'bufler-workspace-focus-buffer";
@@ -5116,8 +5426,19 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 
     bufler-workspace-tabs = {
       enable = true;
-      ghookf = [ "('bufler-mode 'bufler-workspace-workspaces-as-tabs-mode)" ];
-      gfhookf = [ "('bufler-workspace-workspaces-as-tabs-mode '(global-tab-line-mode burly-tabs-mode))" ];
+      hook = [
+        {
+          names = [ "bufler-mode" ];
+          actions = [ "'bufler-workspace-workspaces-as-tabs-mode" ];
+        }
+        {
+          namesDeferred = [ "bufler-workspace-workspaces-as-tabs-mode" ];
+          actions = [
+            "'global-tab-line-mode"
+            "'burly-tabs-mode"
+          ];
+        }
+      ];
     };
   };
 }
@@ -5137,6 +5458,8 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
   (group-or
    "Browsers"
    (name-match "Qutebrowser" (rx bos "Qutebrowser"))
+   (name-match
+    "qutebrowser-llm-response" (rx bos "qutebrowser-llm-response"))
    (name-match "Tor Browser" (rx bos "Tor Browser"))
    (mode-match "eww-mode" (rx bos "eww-"))))
  (group
@@ -5407,13 +5730,21 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 
         usePackage.exwm = {
           extraPackages = [ pkgs.xwininfo ];
-          gfhookf = [
+          hook = [
             # When window "class" updates, use it to set the buffer name
-            "('exwm-update-class (lambda () (exwm-workspace-rename-buffer exwm-class-name)))"
+            {
+              namesDeferred = [ "exwm-update-class" ];
+              actions = [ "(lambda () (exwm-workspace-rename-buffer exwm-class-name))" ];
+            }
             # When EXWM starts up, do some extra configuration
-            ''
-              ('exwm-init (lambda ()
-                          (start-process-shell-command "xbanish" nil "${lib.getExe pkgs.xbanish}")))''
+            {
+              namesDeferred = [ "exwm-init" ];
+              actions = [
+                ''
+                  (lambda ()
+                          (start-process-shell-command "xbanish" nil "${lib.getExe pkgs.xbanish}"))''
+              ];
+            }
           ];
           # Ctrl+q will enable the next key to be sent directly
           generalOneConfig.exwm-mode-map = {
@@ -5520,15 +5851,36 @@ NEG subtracts if it is true."
 *** EWM
 #+begin_src nix-ts :tangle modules/window-manager/ewm.nix
 {
-  # perSystem = { lib, pkgs, ... }: {
-    # packages.startEwm = pkgs.writeShellScriptBin "startewm" ''
-      # emacs --fg-daemon --eval "(require 'ewm)" --eval "(ewm-start-module)" --eval "(efs/run-in-background \"${lib.getExe pkgs.wbg} ~/.config/home-manager/wallpaper.png\")"
-    # '';
-  # };
+  # perSystem =
+  #   {
+  #     lib,
+  #     pkgs,
+  #     config,
+  #     ...
+  #   }:
+  #   {
+  #     overlayAttrs = { inherit (config.packages) startEwm; };
+  #     packages.startEwm = pkgs.writeShellScriptBin "startewm" ''
+  #       emacs --fg-daemon --eval "(require 'ewm)" --eval "(ewm-start-module)" --eval "(efs/run-in-background \"${lib.getExe pkgs.wbg} ~/.config/home-manager/wallpaper.png\")"
+  #     '';
+  #   };
   flake.homeModules.ewm = { lib, pkgs, ... }: {
     programs.emacs.init.usePackage = {
-      dashboard.ghookf = [ "('after-init '(dashboard-insert-startupify-lists dashboard-initialize))" ];
-      evil.gfhookf = [ "('after-init 'evil-mode)" ];
+      dashboard.hook = [
+        {
+          names = [ "after-init" ];
+          actions = [
+            "'dashboard-insert-startupify-lists"
+            "'dashboard-initialize"
+          ];
+        }
+      ];
+      evil.hook = [
+        {
+          namesDeferred = [ "after-init" ];
+          actions = [ "'evil-mode" ];
+        }
+      ];
       ewm = {
         enable = true;
         defer = true;
@@ -5607,7 +5959,12 @@ NEG subtracts if it is true."
 {
   flake.homeModules.wm.programs.emacs.init.usePackage.popper = {
     enable = true;
-    ghookf = [ "('on-first-buffer 'popper-mode)" ];
+    hook = [
+      {
+        names = [ "on-first-buffer" ];
+        actions = [ "'popper-mode" ];
+      }
+    ];
     general = {
       "s-'" = "'popper-toggle";
       "s-\\\"" = "'popper-cycle";
@@ -5730,6 +6087,27 @@ NEG subtracts if it is true."
 #+end_src
 
 ** AI
+*** Keys
+#+begin_src nix-ts :tangle modules/ai/keys.nix
+{ self, ... }:
+{
+  flake.homeModules.personalAI =
+    { pkgs, config, ... }:
+    {
+      programs.emacs.init.usePackage.gptel.config = ''
+        (gptel-make-gh-copilot "copilot")
+        (gptel-make-openai "OpenRouter"
+          :host "openrouter.ai"
+          :endpoint "/api/v1/chat/completions"
+          :stream t
+          :key (lambda () (getenv "OPENROUTER_API_KEY"))
+          :models '(nvidia/nemotron-3.5-super-vl:free))
+      '';
+    }
+    // self.mkEnvVar pkgs config "openrouter_api_key" "OPENROUTER_API_KEY";
+}
+#+end_src
+
 *** Gptel
 https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 
@@ -5737,34 +6115,42 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 { inputs, ... }:
 
 {
-  perSystem = { lib, pkgs, ... }: {
-    packages =
-      let
-        epkgs = pkgs.emacs.pkgs;
-      in
-      {
-        startOllama = pkgs.writeShellScriptBin "start-ollama" ''
-          if [[ "$(pidof ollama)" -gt 0 ]]; then
-                  echo "ollama already running"
-                else
-                  ${lib.getExe pkgs.ollama} serve
-                fi
-        '';
-        gptel-preset-collection = (
-          epkgs.callPackage epkgs.trivialBuild rec {
-            pname = "gptel-preset-collection";
-            version = "current";
-            src = inputs.gptel-preset-collection;
+  perSystem =
+    {
+      lib,
+      pkgs,
+      config,
+      ...
+    }:
+    {
+      overlayAttrs = { inherit (config.packages) startOllama; };
+      packages =
+        let
+          epkgs = pkgs.emacs.pkgs;
+        in
+        {
+          startOllama = pkgs.writeShellScriptBin "start-ollama" ''
+            if [[ "$(pidof ollama)" -gt 0 ]]; then
+                    echo "ollama already running"
+                  else
+                    ${lib.getExe pkgs.ollama} serve
+                  fi
+          '';
+          gptel-preset-collection = (
+            epkgs.callPackage epkgs.trivialBuild rec {
+              pname = "gptel-preset-collection";
+              version = "current";
+              src = inputs.gptel-preset-collection;
 
-            propagatedUserEnvPkgs = with epkgs; [
-              gptel
-            ];
+              propagatedUserEnvPkgs = with epkgs; [
+                gptel
+              ];
 
-            buildInputs = propagatedUserEnvPkgs;
-          }
-        );
-      };
-  };
+              buildInputs = propagatedUserEnvPkgs;
+            }
+          );
+        };
+    };
 
   flake.homeModules.ai =
     {
@@ -5780,30 +6166,21 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
           pkgs.jdt-language-server
           pkgs.cursor-cli
         ];
-        # file = {
-        #   ".config/emacs/agents/bughunter.org" = ''
-        #     <<Bughunter Subagent>>
-        #   '';
-        # };
+        file = {
+          ".config/emacs/agents/web-agent.org".text = ''
+            <<Web Agent>>
+          '';
+        };
       };
       programs = {
         mcp.servers = {
-          nixos = {
-            command = "${pkgs.uv}/bin/uvx";
-            args = [ "mcp-nixos" ];
-          };
+          nixos.command = lib.getExe pkgs.mcp-nixos;
+          memory.command = lib.getExe pkgs.mcp-server-memory;
           lsp = {
-            command = "npx";
+            command = "${pkgs.nodejs}/bin/npx";
             args = [
               "-y"
               "@theupsider/lsp-mcp@latest"
-            ];
-          };
-          jj = {
-            command = "npx";
-            args = [
-              "-y"
-              "jj-mcp-server"
             ];
           };
         };
@@ -5897,6 +6274,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 
               popper.setopt.popper-reference-buffers = [
                 ''"^\\*gptel:.*\\*"''
+                ''"^\\*gptel-inline\\*"''
                 ''"^\\*Ollama\\*"''
                 ''"^\\*copilot\\*"''
               ];
@@ -5919,13 +6297,6 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 #+begin_src emacs-lisp
 (start-ollama)
 (require 'gptel-agent)
-(gptel-make-gh-copilot "copilot")
-(gptel-make-openai "OpenRouter"
-  :host "openrouter.ai"
-  :endpoint "/api/v1/chat/completions"
-  :stream t
-  :key (lambda () (auth-source-pass-get 'secret "openrouter-api-key"))                   ;can be a function that returns the key
-  :models '(nvidia/nemotron-3.5-super-vl:free cohere/north-mini-code:free nvidia/nemotron-3-ultra-550b-a55b:free recursive/flint-v1.0:free xingchen-agi/xing4.0-29b-a4b:free liquid/lfm-2.5-2.6:free google/gemma-4-31b-it:free google/gemma-4-26b-a4b-it:free nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free))
 (efs/evil-collection-remap
  'evil-collection-gptel-setup
  'normal
@@ -5993,14 +6364,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 
 #+NAME: Emacs Gptel Agent Config
 #+begin_src emacs-lisp
-(gptel-make-preset
-    'web
-  :description "A preset for quick & cheap websearches."
-  :model 'llama3.2:3b
-  :system
-  '(:append
-    "Search the web to learn about the relevant topic, then respond.")
-  :tools '(:append ("WebSearch" "WebFetch")))
+(add-to-list 'gptel-agent-dirs "~/.config/emacs/agents/")
 
 (gptel-make-preset
     'jarvis
@@ -6034,6 +6398,77 @@ Here are some tips:
   :tools '(:append ("mcp-lsp" "mcp-jj")))
 #+end_src
 
+#+name: Web Agent
+#+begin_src org
+:properties:
+:name: web-agent
+:description: Specialized agent for research & information gathering, with access to the user's web browser. Use this agent if you need answers from the web or if you need to manipulate the user's web browser.
+:tools: Skill WebFetch WebSearch qutebrowser
+:end:
+You are an autonomous research subagent with access to websearch & the user's web browser. Your purpose is to search for & gather information efficiently, as needed & manipulate the browser when asked. Keep responses concise to the point of being terse
+<core_responsibilities>
+,*Online Research:*
+- Search the web across multiple sources for information
+- Find solutions to technical problems and known issues
+- Research best practices, documentation, and troubleshooting
+- Compare multiple sources to provide comprehensive answers
+- Extract relevant information from documentation and forums
+
+,*Browser Manipulation:*
+- Open new tabs in qutebrowser for presentation to the user.
+- Close existing tabs in qutebrowser.
+- Present qutebrowser tabs to the user
+- Read qutebrowser tabs
+
+,*Key principle:* Return focused, relevant findings without context bloat & present information to the user
+</core_responsibilities>
+
+<research_methodology>
+,*Context efficiency:*
+- Your response goes back to another agent with limited context
+- Be selective: include only information that directly answers the task
+- Use summaries and synthesis over raw dumps
+- Provide specific sources (URLs, file paths) for follow-up
+- Include quotes/snippets only when they illustrate the point
+</research_methodology>
+
+<tool_usage_guidelines>
+,* Finding Information
+The simplest way to find information is to use the WebSearch tool. It will give you a handful of search results without much hassle. When answering the user's query you should include the links from your websearches in your response, as well as a summary of what you saw in the web search.
+If you need to know more about any of the sites you find, WebFetch will get their contents.
+When reading links, you should prefer WebFetch.
+
+Should you find yourself in a scenario where you need access to javascript in order to read a website, you will need to use qutebrowser.
+1. Use qutebrowser-open to open the link.
+2. Use qutebrowser-read to get its contents.
+
+,* Displaying Information
+If you are ever asked to find a site, you should use qutebrowser-open on that site's link.
+
+,* Finding Qutebrowser Tabs
+When you are asked to find or surface a qutebrowser tab:
+1. Use qutebrowser-list to list every tab the user has open.
+2. Select the tab whose url best matches the user's request.
+3. Run qutebrowser-surface on that tab.
+You MUST run qutebrowser-surface on the most likely tab you find
+
+,*Closing Qutebrowser Tabs*
+When the you are asked to close a qutebrowser tab:
+1. Use qutebrowser-list to list every tab the user has open.
+2. Select the tab whose url best matches the user's request.
+3. Run qutebrowser-close-tab on that tab.
+You MUST run qutebrowser-close-tab on the most likely tab you find
+
+,*When additional skills are needed*
+{{SKILLS}}
+</tool_usage_guidelines>
+
+,* Rules:
++ Do your best to answer the queries or complete the browser manipulations.
++ If a tool call fails, don't stop. Try again.
++ You are an autonomous subagent. You can't ask follow up questions
+#+end_src
+
 #+NAME: Emacs MCP Config
 #+begin_src emacs-lisp
 ;; Borrowed from Karthinks
@@ -6062,19 +6497,53 @@ Inserts into the source buffer and triggers font-lock."
           (font-lock-ensure))))))
 #+end_src
 
+*** Copilot
+#+begin_src nix-ts :tangle modules/ai/copilot.nix
+{
+  flake.homeModules.personalAI.programs.emacs.init.ai.copilot = {
+    enable = true;
+    keepOutOf = [
+      "json5-ts-mode"
+      "json-ts-mode"
+      "zenscript-mode"
+    ];
+  };
+}
+#+end_src
+
 *** Minuet
 #+begin_src nix-ts :tangle modules/ai/minuet.nix :noweb yes
 {
-  flake.homeModules.ai.programs.emacs.init = {
+  flake.homeModules.workAI.programs.emacs.init = {
     ai.minuet.enable = true;
     usePackage.minuet = {
       setopt.minuet-provider = "'openai-fim-compatible";
-      ghookf = [ "('(eshell-mode text-mode) 'minuet-auto-suggestion-mode)" ];
-      gfhookf = [
-        "('doom-escape 'minuet-dismiss-suggestion)"
-        ''('eshell-mode (efs/minuet-prompt-builder "You are an AI command line completion engine. Provide contextually appropriate completions: shell commands when the user is writing shell commands & emacs lisp when the user is writing emacs lisp.\n"))''
-        ''('text-mode (efs/minuet-prompt-builder "You are an AI document completion engine. Provide completions for the user's prose."))''
-      ];
+      hook =
+        let
+          mkModePrompt = mode: engineKind: responseKind: {
+            namesDeferred = [ mode ];
+            actions = [
+              ''(efs/minuet-prompt-builder "You are an AI ${engineKind} completion engine. ${responseKind}\n")''
+            ];
+          };
+        in
+        [
+          {
+            names = [
+              "eshell-mode"
+              "text-mode"
+            ];
+            actions = [ "'minuet-auto-suggestion-mode" ];
+          }
+          {
+            namesDeferred = [ "doom-escape" ];
+            actions = [ "'minuet-dismiss-suggestion" ];
+          }
+          (mkModePrompt "eshell-mode" "command line"
+            "Provide contextually appropriate completions: shell commands when the user is writing shell commands & emacs lisp when the user is writing emacs lisp."
+          )
+          (mkModePrompt "text-mode" "document" "Provide completions for the user's prose.")
+        ];
       preface = ''
         <<Minuet Preface>>
       '';
@@ -6142,7 +6611,7 @@ context after cursor, followed by the context before cursor.
       );
     };
 
-  flake.homeModules.ai = { pkgs, ... }: {
+  flake.homeModules.personalAI = { pkgs, ... }: {
     programs.emacs.init.usePackage = {
       whisper = {
         enable = true;
@@ -6206,6 +6675,34 @@ Useful in `speech-input-commands'."
     ,name ,(mapcar (lambda (p) (concat "jarvis" p)) pattern) ,rest))
 #+end_src
 
+*** Agents
+#+begin_src nix-ts :tangle modules/ai/agents.nix
+{
+  flake.homeModules.ai.programs.emacs.init.usePackage = {
+    agent-shell = {
+      enable = true;
+      custom.agent-shell-cursor-acp-command = [
+        ''"cursor-agent"''
+        ''"acp"''
+      ];
+      hook = [
+        {
+          namesDeferred = [ "agent-shell-mode" ];
+          actions = [ "(lambda () (display-line-numbers-mode -1))" ];
+        }
+      ];
+      generalOne.global-leader = {
+        "a" = "'(:ignore t)";
+        "as" = "'agent-shell";
+        "ar" = "'agent-shell-send-region";
+      };
+    };
+
+    popper.setopt.popper-reference-buffers = [ "'agent-shell-mode" ];
+  };
+}
+#+end_src
+
 ** Multimedia
 *** AV Editing
 #+begin_src nix-ts :tangle modules/multimedia/av.nix
@@ -6213,8 +6710,9 @@ Useful in `speech-input-commands'."
 
 {
   perSystem =
-    { pkgs, ... }:
+    { pkgs, config, ... }:
     {
+      overlayAttrs = { inherit (config.packages) doomer; };
       packages.doomer = pkgs.writeShellScriptBin "doomer" ''
         ${pkgs.sox}/bin/sox "$1" "$1.flac" pitch -500 treble -20 pad 0 3 reverb 80 tempo .8 highpass 1000 lowpass 700 compand 0.3,0.8 0
       '';
@@ -6241,12 +6739,14 @@ Useful in `speech-input-commands'."
       lib,
       pkgs,
       self',
+      config,
       ...
     }:
     let
       epkgs = pkgs.emacs.pkgs;
     in
     {
+      overlayAttrs = { inherit (config.packages) playAlbum; };
       packages = {
         mpc-wrapper = (
           epkgs.callPackage epkgs.trivialBuild rec {
@@ -6347,24 +6847,31 @@ The mpv package lets us start an mpv process & puppeteer it with emacs. I'm defi
 { inputs, ... }:
 
 {
-  perSystem = { pkgs, ... }: {
-    packages.mpv = (
-      inputs.wrapper-modules.wrappers.mpv.wrap {
-        pkgs = pkgs;
-        script = {
-          thumbnail.path = pkgs.mpvScripts.thumbnail;
-          sponsorblock.path = pkgs.mpvScripts.sponsorblock;
-          quality-menu.path = pkgs.mpvScripts.quality-menu;
-        };
-        "mpv.conf".content = ''
-          fs=no
-          hwdec=auto
-          x11-bypass-compositor=no
-          volume-max=250
-        '';
-      }
-    );
-  };
+  perSystem =
+    {
+      pkgs,
+      config,
+      ...
+    }:
+    {
+      overlayAttrs = { inherit (config.packages) mpv; };
+      packages.mpv = (
+        inputs.wrapper-modules.wrappers.mpv.wrap {
+          pkgs = pkgs;
+          script = {
+            thumbnail.path = pkgs.mpvScripts.thumbnail;
+            sponsorblock.path = pkgs.mpvScripts.sponsorblock;
+            quality-menu.path = pkgs.mpvScripts.quality-menu;
+          };
+          "mpv.conf".content = ''
+            fs=no
+            hwdec=auto
+            x11-bypass-compositor=no
+            volume-max=250
+          '';
+        }
+      );
+    };
 
   flake.homeModules.media = { pkgs, config, ... }: {
     home.packages = [ pkgs.yt-dlp ];
@@ -6378,10 +6885,10 @@ The mpv package lets us start an mpv process & puppeteer it with emacs. I'm defi
         config = ''
           <<Emacs Mpv Config>>
         '';
-	generalOne.global-leader = {
-	  "mP" = '''mpv-pause'';
-	  "mj" = '''mpv-jump-to-chapter'';
-	};
+        generalOne.global-leader = {
+          "mP" = "'mpv-pause";
+          "mj" = "'mpv-jump-to-chapter";
+        };
       };
 
       mpv.enable = true;
@@ -6428,11 +6935,17 @@ For moving massive quantities of Jordan Peterson's podcast into my mp3 player
 #+begin_src nix-ts :tangle modules/multimedia/podcast.nix :noweb yes
 {
   perSystem =
-    { pkgs, self', ... }:
+    {
+      pkgs,
+      config,
+      self',
+      ...
+    }:
     let
       packages = self'.packages;
     in
     {
+      overlayAttrs = { inherit (config.packages) cast ffmpeg-bulk masstube; };
       packages = {
         cast = (
           pkgs.writeShellScriptBin "cast" ''
@@ -6700,7 +7213,20 @@ I use kmonad to manage my keybinds.
 Canary is my layout of choice.
 *Important*: Add your user to the input & uinput groups
 #+begin_src nix-ts :tangle modules/keyboard.nix :noweb yes
+{ inputs, ... }:
+
 {
+  perSystem =
+    {
+      lib,
+      pkgs,
+      config,
+      ...
+    }:
+    {
+      overlayAttrs = { inherit (config.packages) kmonad; };
+      packages.kmonad = inputs.kmonad.packages.${pkgs.system}.default;
+    };
   flake.homeModules.canary =
     { pkgs, lib, ... }:
 
@@ -6999,17 +7525,31 @@ https://greasyfork.org/en/scripts/374833-yt2invidio
 #+NAME: Internet Qutebrowser
 #+begin_src nix-ts :tangle modules/web/qutebrowser/misc.nix :noweb yes
 {
-  perSystem = { lib, pkgs, ... }: {
-    packages.qutebrowser = pkgs.qutebrowser.overrideAttrs (oldAttrs: {
-      propagatedBuildInputs = oldAttrs.propagatedBuildInputs ++ [ pkgs.python314Packages.idna ];
-    });
-  };
+  perSystem =
+    {
+      lib,
+      pkgs,
+      config,
+      ...
+    }:
+    {
+      overlayAttrs = { inherit (config.packages) qutebrowser; };
+      packages.qutebrowser = pkgs.qutebrowser.overrideAttrs (oldAttrs: {
+        propagatedBuildInputs = oldAttrs.propagatedBuildInputs ++ [ pkgs.python314Packages.idna ];
+      });
+    };
 
   flake.homeModules.web =
     { config, pkgs, ... }:
 
     {
-      home.packages = with pkgs.python314Packages; [ adblock ];
+      home = {
+        packages = with pkgs.python314Packages; [ adblock ];
+        sessionVariables = {
+          QTWEBENGINE_REMOTE_DEBUGGING = "9222 qutebrowser";
+          BROWSER = "qutebrowser";
+        };
+      };
 
       programs.qutebrowser = {
         enable = true;
@@ -7205,6 +7745,8 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
 
   flake.homeModules.web.programs = {
     emacs.init.usePackage = {
+      gptel.generalOneConfig.global-leader.gw = "'efs/qutebrowser-chat";
+
       qutebrowser = {
         enable = true;
         setopt.qutebrowser-history-database = ''"~/.local/qutebrowser/history.sqlite"'';
@@ -7213,13 +7755,16 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
       qutebrowser-exwm = {
         enable = true;
         package = epkgs: epkgs.qutebrowser;
-        ghookf = [
-          "('exwm-init 'global-qutebrowser-exwm-mode)"
+        hook = [
+          {
+            names = [ "exwm-init" ];
+            actions = [ "'global-qutebrowser-exwm-mode" ];
+          }
+          {
+            namesDeferred = [ "qutebrowser-exwm-mode" ];
+            actions = [ "'evil-normal-state" ];
+          }
         ];
-        gfhookf = [
-          "('qutebrowser-exwm-mode 'evil-normal-state)"
-        ];
-        # setopt.qutebrowser-history-database = ''"~/.local/qutebrowser/history.sqlite"'';
         # It gets grumpy if I don't redefine the function for some reason.
         config = ''
           <<Qutebrowser Evil Config>>
@@ -7229,21 +7774,27 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
       qutebrowser-evil = {
         enable = true;
         package = epkgs: epkgs.qutebrowser;
-        ghookf = [
-          "('global-qutebrowser-exwm-mode 'qutebrowser-evil-state-mode)"
+        hook = [
+          {
+            names = [ "global-qutebrowser-exwm-mode" ];
+            actions = [ "'qutebrowser-evil-state-mode" ];
+          }
         ];
       };
 
       qutebrowser-fileselect = {
         enable = true;
         package = epkgs: epkgs.qutebrowser;
-        ghookf = [
-          "('global-qutebrowser-exwm-mode 'qutebrowser-fileselect-mode)"
+        hook = [
+          {
+            names = [ "global-qutebrowser-exwm-mode" ];
+            actions = [ "'qutebrowser-fileselect-mode" ];
+          }
         ];
         setopt.qutebrowser-fileselect-handler = "'qutebrowser-fileselect-completion";
       };
 
-      popper.setopt.popper-reference-buffers = [''"^\\*qutebrowser-llm-response\\*"''];
+      popper.setopt.popper-reference-buffers = [ ''"^\\*qutebrowser-llm-response\\*"'' ];
     };
 
     qutebrowser.settings = {
@@ -7351,18 +7902,36 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
    :category "qutebrowser"
    :function
    (lambda (url)
-     (switch-to-buffer (qutebrowser-exwm-find-buffer url)))
+     (switch-to-buffer (qutebrowser-exwm-find-buffer url))
+     "Switched to tab successfully!")
    :description "Show a qutebrowser tab to the user."
+   :confirm t
    :args
    '((:name
       "url"
       :type "string"
       :description "The url of the page to show the user")))
 
+  (gptel-make-tool
+   :name "qutebrowser-close-tab"
+   :category "qutebrowser"
+   :function
+   (lambda (url)
+     (kill-buffer (qutebrowser-exwm-find-buffer url))
+     "Closed tab successfully!")
+   :description "Close a qutebrowser tab."
+   :confirm t
+   :args
+   '((:name
+      "url"
+      :type "string"
+      :description "The url of the page to close.")))
+
   (gptel-make-preset
-      'web-agent
-    :description "An agent for qutebrowser"
-    :system "You are an AI assistant that helps users accomplish their goals. Keep responses concise to the point of being terse
+   'web-agent
+   :description "An agent for qutebrowser"
+   :system
+   "You are an AI assistant that helps users accomplish their goals. Keep responses concise to the point of being terse
 - Avoid flattery, superlatives, or unnecessary flourishes
 - Prioritize accuracy over agreement
 - Challenge the user constructively when you can think of a better approach
@@ -7370,7 +7939,8 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
 You have control over the user's web browser (qutebrowser) & should utilize it to assist the user.
 
 # Finding Information
-The simplest way to find information is to use the WebSearch tool. It will give you a handful of search results without much hassle. If you need to know more about any of the sites you find, WebFetch will get their contents.
+The simplest way to find information is to use the WebSearch tool. It will give you a handful of search results without much hassle. When answering the user's query you should include the links from your websearches in your response, as well as a summary of what you saw in the web search.
+If you need to know more about any of the sites you find, WebFetch will get their contents.
 When reading links, you should prefer WebFetch.
 
 Should you find yourself in a scenario where you need access to javascript in order to read a website, you will need to use qutebrowser.
@@ -7380,43 +7950,70 @@ Should you find yourself in a scenario where you need access to javascript in or
 # Displaying Information
 If you are ever asked to find a site, you should use qutebrowser-open on that site's link.
 
+# Finding Qutebrowser Tabs
+When the user asks you to find or surface a qutebrowser tab:
+1. Use qutebrowser-list to list every tab the user has open.
+2. Select the tab whose url best matches the user's request.
+3. Run qutebrowser-surface on that tab.
+You MUST run qutebrowser-surface on the most likely tab you find
+
+# Closing Qutebrowser Tabs
+When the user asks you to close a qutebrowser tab:
+1. Use qutebrowser-list to list every tab the user has open.
+2. Select the tab whose url best matches the user's request.
+3. Run qutebrowser-close-tab on that tab.
+You MUST run qutebrowser-close-tab on the most likely tab you find
+
 # Rules:
 - Do your best to answer the user's queries.
 - If a tool call fails, don't stop. Try again."
-    :tools '("qutebrowser" "WebSearch" "WebFetch")))
+   :tools '("qutebrowser" "WebSearch" "WebFetch"))
+
+  (defun efs/qutebrowser-chat ()
+    "Create & return a buffer for chatting with qutebrowser"
+    (interactive)
+    (with-current-buffer (get-buffer-create
+                          "*qutebrowser-llm-response*")
+      (cd "~/")
+      (org-mode)
+      (gptel-mode)
+      (gptel--apply-preset
+       'web-agent
+       (lambda (sym val) (set (make-local-variable sym) val)))
+      (switch-to-buffer (current-buffer))
+      (current-buffer))))
 #+end_src
 
 ** Chat
 #+begin_src nix-ts :tangle modules/chat.nix
-{ inputs, ... }:
-
 {
-  flake.homeModules.chat =
-    { config, pkgs, ... }:
-    {
-      home.packages = with pkgs; [ thunderbird ];
-
-      programs.vesktop = {
-        enable = true;
-        settings = {
-          minimizeToTray = false;
-          tray = false;
-          hardwareAcceleration = true;
-        };
-        vencord.settings = {
-          autoUpdate = false;
-          autoUpdateNotification = false;
-          plugins = {
-            FakeNitro.enabled = true;
-            AnonymizeFileNames.enabled = true;
-            BetterSettings.enabled = true;
-            FixYoutubeEmbeds.enabled = true;
-            ImageZoom.enabled = true;
-            YoutubeAdblock.enabled = true;
-          };
+  flake.homeModules = {
+    chat =
+      { pkgs, ... }:
+      {
+        home.packages = [ pkgs.thunderbird ];
+      };
+    personalChat.programs.vesktop = {
+      enable = true;
+      settings = {
+        minimizeToTray = false;
+        tray = false;
+        hardwareAcceleration = true;
+      };
+      vencord.settings = {
+        autoUpdate = false;
+        autoUpdateNotification = false;
+        plugins = {
+          FakeNitro.enabled = true;
+          AnonymizeFileNames.enabled = true;
+          BetterSettings.enabled = true;
+          FixYoutubeEmbeds.enabled = true;
+          ImageZoom.enabled = true;
+          YoutubeAdblock.enabled = true;
         };
       };
     };
+  };
 }
 #+end_src
 
@@ -7452,11 +8049,15 @@ Setting up your alsoftrc correctly makes Minecraft happy
       ];
     };
 
-    programs.lutris = {
-      enable = true;
-      runners = {
-	# libretro.package = pkgs.retroarch;
-	ppsspp.package = pkgs.ppsspp;
+    programs = {
+      emacs.init.ide.languages.zenscript.enable = true;
+
+      lutris = {
+        enable = true;
+        runners = {
+          # libretro.package = pkgs.retroarch;
+          ppsspp.package = pkgs.ppsspp;
+        };
       };
     };
   };

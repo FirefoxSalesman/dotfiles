@@ -10,8 +10,14 @@
       enable = true;
       semel = true;
     };
-    usePackage.elisp-mode.gfhookf = [
-      "('emacs-lisp-mode (list (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))) 'hs-minor-mode))"
+    usePackage.elisp-mode.hook = [
+      {
+        namesDeferred = [ "emacs-lisp-mode" ];
+        actions = [
+          "(local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point)))"
+          "'hs-minor-mode"
+        ];
+      }
     ];
   };
 }

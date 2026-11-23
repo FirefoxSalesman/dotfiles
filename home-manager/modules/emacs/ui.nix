@@ -13,8 +13,14 @@
         enable = true;
         setopt = {
           confirm-kill-processes = false;
-          trusted-content = [ ''"~/projects/generic-todo/"'' ''"~/projects/DungeonsLibs/"''] ;
-          safe-local-variable-directories = [ ''"~/projects/generic-todo/"'' ''"~/projects/DungeonsLibs/"''] ;
+          trusted-content = [
+            ''"~/projects/generic-todo/"''
+            ''"~/projects/DungeonsLibs/"''
+          ];
+          safe-local-variable-directories = [
+            ''"~/projects/generic-todo/"''
+            ''"~/projects/DungeonsLibs/"''
+          ];
         };
       };
 
@@ -26,7 +32,12 @@
 
       loaddefs = {
         enable = true;
-        ghookf = [ "('on-first-file 'save-place-mode)" ];
+        hook = [
+          {
+            names = [ "on-first-file" ];
+            actions = [ "'save-place-mode" ];
+          }
+        ];
       };
     };
   };

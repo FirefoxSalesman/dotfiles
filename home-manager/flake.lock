@@ -258,11 +258,11 @@
         "use-package-eglot": "use-package-eglot"
       },
       "locked": {
-        "lastModified": 1792738013,
-        "narHash": "sha256-ET1JkxZgGA0fEH3+le6ixyZNSThVwMHW1QlA7l3uxoY=",
+        "lastModified": 1795280071,
+        "narHash": "sha256-tvt8/G02kXyWe52fut/mVuh6v6ZDgq+caszGib9T2lc=",
         "owner": "firefoxsalesman",
         "repo": "NixEmacs",
-        "rev": "58b570f5d1d86cdeb9bb0dc868eca4e4bd440f64",
+        "rev": "47c53eff49669485ba92d795fd91b0905b755bd3",
         "type": "github"
       },
       "original": {
@@ -541,11 +541,11 @@
     "macher-agent": {
       "flake": false,
       "locked": {
-        "lastModified": 1794123107,
-        "narHash": "sha256-KSlHgHAYVwmuSi9Diwq/HDRqGdLcqeRQydK7t+SfRks=",
+        "lastModified": 1795244471,
+        "narHash": "sha256-/WJVufp6FJ5ZjduMldRFQNP/oxSgiEUwgGAY48Z/t3E=",
         "owner": "elij",
         "repo": "macher-agent",
-        "rev": "1b8e48d80779a7f54fde71908943d4b773e4bf05",
+        "rev": "e17a50b344fead8fe5527fa37848820c4694da9a",
         "type": "github"
       },
       "original": {
@@ -921,6 +921,7 @@
         "pertab": "pertab",
         "repeaters": "repeaters",
         "roll": "roll",
+        "sops-nix": "sops-nix",
         "stylix": "stylix",
         "whisper": "whisper",
         "wrapper-modules": "wrapper-modules"
@@ -1024,6 +1025,26 @@
       "original": {
         "type": "file",
         "url": "https://devimages-cdn.apple.com/design/resources/download/SF-Pro.dmg"
+      }
+    },
+    "sops-nix": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794866654,
+        "narHash": "sha256-Y28AMB8lyKjASdJ0BVsR2AqR1cUsVuo8RVVpzHoECho=",
+        "owner": "Mic92",
+        "repo": "sops-nix",
+        "rev": "7c637afdccdf9bcf35c4a2d67b58a77c1fd843a4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Mic92",
+        "repo": "sops-nix",
+        "type": "github"
       }
     },
     "stylix": {

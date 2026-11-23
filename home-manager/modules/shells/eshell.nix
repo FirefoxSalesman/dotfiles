@@ -15,12 +15,19 @@
         };
         usePackage = {
           eshell = {
-            ghookf = [ "('eshell-first-time-mode 'efs/configure-eshell)" ];
-            gfhookf = [
-              ''
-                ('eshell-post-command (lambda () (eshell-write-history eshell-history-file-name t)
-                		                (eshell-read-history eshell-history-file-name t)))
-              ''
+            hook = [
+              {
+                names = [ "eshell-first-time-mode" ];
+                actions = [ "'efs/configure-eshell" ];
+              }
+              {
+                namesDeferred = [ "eshell-post-command" ];
+                actions = [
+                  ''
+                    (lambda () (eshell-write-history eshell-history-file-name t)
+                                    		                (eshell-read-history eshell-history-file-name t))''
+                ];
+              }
             ];
             general."s-<enter>" = "'efs/make-eshell";
             setopt = {
@@ -83,8 +90,13 @@
             '';
           };
 
-          fish-completion.gfhookf = [
-            "('fish-completion-mode (local! completion-at-point-functions (list 'tempel-complete 'pcomplete-completions-at-point)))"
+          fish-completion.hook = [
+            {
+              namesDeferred = [ "fish-completion-mode" ];
+              actions = [
+                "(local! completion-at-point-functions (list 'tempel-complete 'pcomplete-completions-at-point))"
+              ];
+            }
           ];
 
           evil-collection-eshell = {
@@ -107,7 +119,12 @@
           esh-help = {
             enable = true;
             after = [ "eshell" ];
-            gfhookf = [ "('eshell-mode 'eldoc-box-hover-at-point-mode)" ];
+            hook = [
+              {
+                namesDeferred = [ "eshell-mode" ];
+                actions = [ "'eldoc-box-hover-at-point-mode" ];
+              }
+            ];
             config = "(setup-esh-help-eldoc)";
           };
 

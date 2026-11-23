@@ -23,7 +23,12 @@
       };
       usePackage = {
         markdown-ts-mode = {
-          gfhookf = [ "('markdown-ts-mode 'efs/markdown-font-setup)" ];
+          hook = [
+            {
+              namesDeferred = [ "markdown-ts-mode" ];
+              actions = [ "'efs/markdown-font-setup" ];
+            }
+          ];
           init = ''
             (defun efs/markdown-font-setup ()
               (variable-pitch-mode)
@@ -45,7 +50,12 @@
           enable = true;
           defer = true;
           setopt.markdown-ts-appear-table-style = "'unicode";
-          ghookf = [ "('markdown-ts-mode 'markdown-ts-appear-mode)" ];
+          hook = [
+            {
+              names = [ "markdown-ts-mode" ];
+              actions = [ "'markdown-ts-appear-mode" ];
+            }
+          ];
         };
       };
     };

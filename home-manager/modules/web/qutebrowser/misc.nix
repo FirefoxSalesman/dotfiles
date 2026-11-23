@@ -1,15 +1,29 @@
 {
-  perSystem = { lib, pkgs, ... }: {
-    packages.qutebrowser = pkgs.qutebrowser.overrideAttrs (oldAttrs: {
-      propagatedBuildInputs = oldAttrs.propagatedBuildInputs ++ [ pkgs.python314Packages.idna ];
-    });
-  };
+  perSystem =
+    {
+      lib,
+      pkgs,
+      config,
+      ...
+    }:
+    {
+      overlayAttrs = { inherit (config.packages) qutebrowser; };
+      packages.qutebrowser = pkgs.qutebrowser.overrideAttrs (oldAttrs: {
+        propagatedBuildInputs = oldAttrs.propagatedBuildInputs ++ [ pkgs.python314Packages.idna ];
+      });
+    };
 
   flake.homeModules.web =
     { config, pkgs, ... }:
 
     {
-      home.packages = with pkgs.python314Packages; [ adblock ];
+      home = {
+        packages = with pkgs.python314Packages; [ adblock ];
+        sessionVariables = {
+          QTWEBENGINE_REMOTE_DEBUGGING = "9222 qutebrowser";
+          BROWSER = "qutebrowser";
+        };
+      };
 
       programs.qutebrowser = {
         enable = true;

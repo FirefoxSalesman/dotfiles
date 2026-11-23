@@ -15,7 +15,6 @@
           	export XCOMPOSECACHE="$XDG_CACHE_HOME/x11/xcompose";
           	export GOPATH="$XDG_DATA_HOME/go";
           	export DOT_SAGE="$XDG_CONFIG_HOME/sage";
-          	# export XAUTHORITY="$XDG_RUNTIME_DIR/Xauthority";
           	export CARGO_HOME="$XDG_DATA_HOME/cargo";
           	export GNUPGHOME="$XDG_DATA_HOME/share/gnupg";
           	export PASSWORD_STORE_DIR="$XDG_DATA_HOME/share/pass";
@@ -41,7 +40,7 @@
           	# Refresh gpg-agent tty in case user switches into an X session
           	gpg-connect-agent updatestartuptty /bye >/dev/null
           	
-          	# [ "$(tty)" = "/dev/tty1" ] && ! pidof -s Xorg >/dev/null 2>&1 && exec startx
+          	[ "$(tty)" = "/dev/tty1" ] && ! pidof -s Xorg >/dev/null 2>&1 && exec startx
         '';
       };
     };

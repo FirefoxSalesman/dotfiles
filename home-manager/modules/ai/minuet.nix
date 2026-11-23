@@ -1,14 +1,34 @@
 {
-  flake.homeModules.ai.programs.emacs.init = {
+  flake.homeModules.workAI.programs.emacs.init = {
     ai.minuet.enable = true;
     usePackage.minuet = {
       setopt.minuet-provider = "'openai-fim-compatible";
-      ghookf = [ "('(eshell-mode text-mode) 'minuet-auto-suggestion-mode)" ];
-      gfhookf = [
-        "('doom-escape 'minuet-dismiss-suggestion)"
-        ''('eshell-mode (efs/minuet-prompt-builder "You are an AI command line completion engine. Provide contextually appropriate completions: shell commands when the user is writing shell commands & emacs lisp when the user is writing emacs lisp.\n"))''
-        ''('text-mode (efs/minuet-prompt-builder "You are an AI document completion engine. Provide completions for the user's prose."))''
-      ];
+      hook =
+        let
+          mkModePrompt = mode: engineKind: responseKind: {
+            namesDeferred = [ mode ];
+            actions = [
+              ''(efs/minuet-prompt-builder "You are an AI ${engineKind} completion engine. ${responseKind}\n")''
+            ];
+          };
+        in
+        [
+          {
+            names = [
+              "eshell-mode"
+              "text-mode"
+            ];
+            actions = [ "'minuet-auto-suggestion-mode" ];
+          }
+          {
+            namesDeferred = [ "doom-escape" ];
+            actions = [ "'minuet-dismiss-suggestion" ];
+          }
+          (mkModePrompt "eshell-mode" "command line"
+            "Provide contextually appropriate completions: shell commands when the user is writing shell commands & emacs lisp when the user is writing emacs lisp."
+          )
+          (mkModePrompt "text-mode" "document" "Provide completions for the user's prose.")
+        ];
       preface = ''
         (defmacro efs/minuet-prompt-builder (text)
           "Constructs a minuet prompt that can be used in a hook. TEXT is the prompt's prefix."
