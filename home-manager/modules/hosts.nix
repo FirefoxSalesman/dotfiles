@@ -19,7 +19,10 @@
         firefox
       ];
       programs.emacs.init = {
-        ide.languages.python.enable = true;
+        ide.languages.python = {
+          enable = true;
+	  wantRuff = true;
+        };
         usePackage.ghostel.init = ''
           (defun efs/ghostel-command (command name) (require 'ghostel) (ghostel-shell-command command name))
           (defun efs/ghostel-docker-command (container) (efs/ghostel-command (concat "docker exec -it '" container "' bash -c '. /opt/tetramem/python_env/bin/activate; bash -i'") container))

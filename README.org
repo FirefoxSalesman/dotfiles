@@ -66,3 +66,5 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
   - [X] No unnecessary programming languages (java, webdev & the like)
   - [ ] Python is only for work
   - [X] Openrouter, copilot, & non-cursor agents are only for home
++ [ ] https://git.andros.dev/andros/comet-trail.el
++ [ ] Revoke my secrets
