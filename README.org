@@ -50,8 +50,7 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
     2. Add that mixin to the mixin config
 + [ ] Get the alias builder to the framework
 + [ ] https://github.com/yibie/exc.el
-+ [ ] ghostel
-  - [ ] G also pastes
++ [ ] Find a way to make ghostel play nice with eshell
 + [ ] burnish
 + [ ] Integrate majutsu conflicts into our workflow
 + [-] Agents
@@ -62,7 +61,10 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
   - [ ] Try groq
 + [ ] https://github.com/sini/hm-wrapper-modules
 + [ ] https://git.andros.dev/andros/comet-trail.el
-+ [ ] Revoke my secrets
 + [ ] https://github.com/Kyure-A/agent-skills-nix
++ [ ] https://github.com/yoshinari-nomura/efzf
++ [ ] Take a look at this https://github.com/offline-ant/phimacs
 + [ ] Compilation
-  - [ ]
+  - [ ] Figure out how to have a buffer per project
+  - [ ] Figure out how to have history per project
+  - [ ] Get a better multi-compile.
