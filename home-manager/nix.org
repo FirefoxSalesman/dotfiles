@@ -695,12 +695,15 @@ It's mostly here for eshell to get completions from, but it's a usable shell
               "C-v" = "'evil-collection-eshell-evil-delete-line";
             };
             config = ''
-              	    (efs/evil-collection-remap 'evil-collection-eshell-setup-keys 'normal eshell-mode-map
+              (efs/evil-collection-remap 'evil-collection-eshell-setup-keys 'normal eshell-mode-map
               	    			   "d" 'evil-yank
               	    			   "D" 'evil-yank-line
               	    			   "c" 'evil-visual-state
               	    			   "C" 'evil-visual-line)
-              	  '';
+	     (efs/evil-collection-remap 'evil-collection-eshell-setup-keys 'insert eshell-mode-map
+              	    			   "S-RET" nil
+              	    			   "S-<return>" nil)
+            '';
           };
 
           esh-help = {
@@ -2151,7 +2154,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
               extraConfig = ":autoload majutsu-repository-config-id";
               hook = [
                 {
-                  names = [ "find-file" ];
+                  names = [ "find-file" "after-revert" ];
                   actions = [ "'majutsu-conflict-ensure-mode" ];
                 }
               ];
@@ -2374,7 +2377,7 @@ I think most of it was from the github page for lsp mode, but it's been a while,
     programs.emacs.init = {
       completions.tempel.templates.java-ts-mode = {
 	forge = ''"//? forge"'';
-	neoforge = ''"//? neoforge"'';
+	neoorge = ''"//? neoforge"'';
 	forgeblock = ''"//? forge {" n p n "//? }"'';
 	neoforgeblock = ''"//? neoforge {" n "/*" p n "*///? }"'';
       };
@@ -6113,7 +6116,6 @@ NEG subtracts if it is true."
 
 *** Gptel
 https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
-
 #+begin_src nix-ts :tangle modules/ai/gptel.nix :noweb yes
 { inputs, ... }:
 
@@ -6307,6 +6309,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
  "<return>"
  'gptel-send
  "RET"
+
  'gptel-send)
 (efs/evil-collection-remap
  'evil-collection-gptel-setup
@@ -6315,7 +6318,11 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
  "<return>"
  'newline
  "RET"
- 'newline)
+ 'newline
+ "S-<return>"
+ nil
+ "S-RET"
+ nil)
 
 (gptel-make-preset
     'translate
@@ -6362,7 +6369,6 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
  '(:append
    "Search the user's notes to learn about the relevant topic, then respond.")
  :tools '(:append ("Denote")))
-
 #+end_src
 
 #+NAME: Emacs Gptel Agent Config
@@ -6681,27 +6687,49 @@ Useful in `speech-input-commands'."
 *** Agents
 #+begin_src nix-ts :tangle modules/ai/agents.nix
 {
-  flake.homeModules.ai.programs.emacs.init.usePackage = {
-    agent-shell = {
-      enable = true;
-      custom.agent-shell-cursor-acp-command = [
-        ''"cursor-agent"''
-        ''"acp"''
-      ];
-      hook = [
-        {
-          namesDeferred = [ "agent-shell-mode" ];
-          actions = [ "(lambda () (display-line-numbers-mode -1))" ];
-        }
-      ];
-      generalOne.global-leader = {
-        "a" = "'(:ignore t)";
-        "as" = "'agent-shell";
-        "ar" = "'agent-shell-send-region";
+  flake.homeModules = {
+    ai.programs.emacs.init.usePackage = {
+      agent-shell = {
+        enable = true;
+        custom.agent-shell-cursor-acp-command = [
+          ''"cursor-agent"''
+          ''"acp"''
+        ];
+        hook = [
+          {
+            namesDeferred = [ "agent-shell-mode" ];
+            actions = [
+              "(lambda () (display-line-numbers-mode -1))"
+              "(local! completion-at-point-functions (list 'agent-shell--command-completion-at-point 'agent-shell--file-completion-at-point 'cape-file 'cape-dict 'cape-dabbrev))"
+            ];
+          }
+        ];
+        generalOne.global-leader = {
+          "a" = "'(:ignore t)";
+          "as" = "'agent-shell";
+          "ar" = "'agent-shell-send-region";
+        };
+        config = ''
+          (with-eval-after-load 'evil-collection-agent-shell
+              (efs/evil-collection-remap 'evil-collection-agent-shell-setup
+               'insert agent-shell-mode-map
+               "S-<return>" nil
+               "S-RET" nil))
+        '';
       };
+
+      popper.setopt.popper-reference-buffers = [ "'agent-shell-mode" ];
     };
 
-    popper.setopt.popper-reference-buffers = [ "'agent-shell-mode" ];
+    personalAI.programs = {
+      emacs.init.usePackage.agent-shell.setopt.agent-shell-opencode-default-model-id =
+        ''"openrouter/nvidia/nemotron-3.5-super-vl:free"'';
+      opencode = {
+        enable = true;
+        enableMcpIntegration = true;
+        context = "When you are in a JJ repository, always start a new change before doing any work, & describe that change after you finish your work.";
+      };
+    };
   };
 }
 #+end_src

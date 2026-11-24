@@ -3,7 +3,7 @@
     programs.emacs.init = {
       completions.tempel.templates.java-ts-mode = {
 	forge = ''"//? forge"'';
-	neoforge = ''"//? neoforge"'';
+	neoorge = ''"//? neoforge"'';
 	forgeblock = ''"//? forge {" n p n "//? }"'';
 	neoforgeblock = ''"//? neoforge {" n "/*" p n "*///? }"'';
       };

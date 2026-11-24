@@ -120,7 +120,7 @@
               extraConfig = ":autoload majutsu-repository-config-id";
               hook = [
                 {
-                  names = [ "find-file" ];
+                  names = [ "find-file" "after-revert" ];
                   actions = [ "'majutsu-conflict-ensure-mode" ];
                 }
               ];

@@ -108,12 +108,15 @@
               "C-v" = "'evil-collection-eshell-evil-delete-line";
             };
             config = ''
-              	    (efs/evil-collection-remap 'evil-collection-eshell-setup-keys 'normal eshell-mode-map
+              (efs/evil-collection-remap 'evil-collection-eshell-setup-keys 'normal eshell-mode-map
               	    			   "d" 'evil-yank
               	    			   "D" 'evil-yank-line
               	    			   "c" 'evil-visual-state
               	    			   "C" 'evil-visual-line)
-              	  '';
+	     (efs/evil-collection-remap 'evil-collection-eshell-setup-keys 'insert eshell-mode-map
+              	    			   "S-RET" nil
+              	    			   "S-<return>" nil)
+            '';
           };
 
           esh-help = {

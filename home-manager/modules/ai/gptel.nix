@@ -193,6 +193,7 @@
                    "<return>"
                    'gptel-send
                    "RET"
+                  
                    'gptel-send)
                   (efs/evil-collection-remap
                    'evil-collection-gptel-setup
@@ -201,7 +202,11 @@
                    "<return>"
                    'newline
                    "RET"
-                   'newline)
+                   'newline
+                   "S-<return>"
+                   nil
+                   "S-RET"
+                   nil)
                   
                   (gptel-make-preset
                       'translate
@@ -248,7 +253,6 @@
                    '(:append
                      "Search the user's notes to learn about the relevant topic, then respond.")
                    :tools '(:append ("Denote")))
-                  
                 '';
               };
 
