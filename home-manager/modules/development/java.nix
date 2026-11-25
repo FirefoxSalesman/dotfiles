@@ -3,18 +3,17 @@
     programs.emacs.init = {
       completions.tempel.templates.java-ts-mode = {
 	forge = ''"//? forge"'';
-	neoorge = ''"//? neoforge"'';
+	neoforge = ''"//? neoforge"'';
 	forgeblock = ''"//? forge {" n p n "//? }"'';
 	neoforgeblock = ''"//? neoforge {" n "/*" p n "*///? }"'';
       };
+
       ide.languages = {
         kotlin.enable = true;
-        java = {
-          enable = true;
-          moreEglot = true;
-        };
+        java.enable = true;
         gradle.enable = true;
       };
+
       usePackage = {
         kotlin-ts-mode = {
           extraPackages = lib.mkForce [ ];
@@ -300,13 +299,14 @@
                 (efs/register-mixin-to-json
                  (substring name 0 (- (length name) 5)))))
           '';
-          generalTwoConfig.":n".java-ts-mode-map = {
+	  generalTwoConfig.":n".java-ts-mode-map = {
             "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "block_comment"))'';
             "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "block_comment"))'';
             "o" = "'evil-previous-visual-line";
             "O" = "'evil-scroll-up";
           };
         };
+
         jarchive = {
           enable = true;
           after = [

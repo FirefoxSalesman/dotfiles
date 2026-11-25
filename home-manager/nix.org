@@ -2388,18 +2388,17 @@ I think most of it was from the github page for lsp mode, but it's been a while,
     programs.emacs.init = {
       completions.tempel.templates.java-ts-mode = {
 	forge = ''"//? forge"'';
-	neoorge = ''"//? neoforge"'';
+	neoforge = ''"//? neoforge"'';
 	forgeblock = ''"//? forge {" n p n "//? }"'';
 	neoforgeblock = ''"//? neoforge {" n "/*" p n "*///? }"'';
       };
+
       ide.languages = {
         kotlin.enable = true;
-        java = {
-          enable = true;
-          moreEglot = true;
-        };
+        java.enable = true;
         gradle.enable = true;
       };
+
       usePackage = {
         kotlin-ts-mode = {
           extraPackages = lib.mkForce [ ];
@@ -2412,13 +2411,14 @@ I think most of it was from the github page for lsp mode, but it's been a while,
           preface = ''
             <<Java Preface>>
           '';
-          generalTwoConfig.":n".java-ts-mode-map = {
+	  generalTwoConfig.":n".java-ts-mode-map = {
             "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "block_comment"))'';
             "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "block_comment"))'';
             "o" = "'evil-previous-visual-line";
             "O" = "'evil-scroll-up";
           };
         };
+
         jarchive = {
           enable = true;
           after = [
@@ -2834,16 +2834,16 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
             ];
             # https://www.jamescherti.com/emacs-eglot-performance/
             setopt = {
-              eglot-sync-connect = lib.mkForce 0;
-              # eglot-events-buffer-config = [
-              #   "':size"
-              #   0
-              #   "':format"
-              #   "'full"
-              # ];
+	      eglot-sync-connect = lib.mkForce 0;
               eglot-max-file-watches = false;
               eglot-report-progress = false;
               eglot-code-action-indications = false;
+	      eglot-events-buffer-config = [
+		"':size"
+		0
+		"':format"
+		"'full"
+	      ];
             };
             config = ''
               <<Development Eglot Config>>

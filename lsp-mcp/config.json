@@ -14,7 +14,10 @@
       "languages": [
         "java"
       ]
+    },
+    "/home/holschcc/dissect/eglot-java": {
+      "languages": []
     }
   },
-  "lastRoot": "/home/holschcc/projects/DungeonsMobs"
+  "lastRoot": "/home/holschcc/dissect/eglot-java"
 }
