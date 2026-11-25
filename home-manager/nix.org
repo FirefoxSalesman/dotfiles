@@ -6105,24 +6105,44 @@ NEG subtracts if it is true."
 
 ** AI
 *** Keys
-#+begin_src nix-ts :tangle modules/ai/keys.nix
+#+begin_src nix-ts :tangle modules/ai/keys.nix :noweb yes
 { self, ... }:
 {
   flake.homeModules.personalAI =
     { pkgs, config, ... }:
     {
       programs.emacs.init.usePackage.gptel.config = ''
-        (gptel-make-gh-copilot "copilot")
-        (gptel-make-openai "OpenRouter"
-          :host "openrouter.ai"
-          :endpoint "/api/v1/chat/completions"
-          :stream t
-          :key (lambda () (getenv "OPENROUTER_API_KEY"))
-          :models '(nvidia/nemotron-3.5-super-vl:free))
+	<<Gptel Keys>>
       '';
     }
-    // self.mkEnvVar pkgs config "openrouter_api_key" "OPENROUTER_API_KEY";
+    // self.mkEnvVar pkgs config "openrouter_api_key" "OPENROUTER_API_KEY"
+    // self.mkEnvVar pkgs config "groq_api_key" "GROQ_API_KEY";
 }
+#+end_src
+
+#+name: Gptel Keys
+#+begin_src emacs-lisp
+(gptel-make-gh-copilot "copilot")
+(gptel-make-openai
+ "OpenRouter"
+ :host "openrouter.ai"
+ :endpoint "/api/v1/chat/completions"
+ :stream t
+ :key (lambda () (getenv "OPENROUTER_API_KEY"))
+ :models '(nvidia/nemotron-3.5-super-vl:free))
+(gptel-make-openai
+ "Groq"
+ :host "api.groq.com"
+ :endpoint "/openai/v1/chat/completions"
+ :stream t
+ :key (lambda () (getenv "GROQ_API_KEY"))
+ :models
+ '(openai/gpt-oss-20b openai/gpt-oss-120b qwen/qwen3.8-27b))
+(with-eval-after-load 'gptel-agent
+  (gptel-make-preset
+   'subagent
+   :model 'nvidia/nemotron-3.5-super-vl:free)
+  (setopt gptel-agent-preset 'subagent))
 #+end_src
 
 *** Gptel
@@ -6188,114 +6208,101 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
           '';
         };
       };
-      programs = {
-        mcp.servers = {
-          nixos.command = lib.getExe pkgs.mcp-nixos;
-          memory.command = lib.getExe pkgs.mcp-server-memory;
-          lsp = {
-            command = "${pkgs.nodejs}/bin/npx";
-            args = [
-              "-y"
-              "@theupsider/lsp-mcp@latest"
-            ];
-          };
+      programs.emacs.init = {
+        ai.gptel = {
+          enable = true;
+          enableMcpIntegration = true;
+          introspection.enable = true;
+          agent.enable = true;
         };
-        emacs.init = {
-          ai.gptel = {
-            enable = true;
-            enableMcpIntegration = true;
-            introspection.enable = true;
-            agent.enable = true;
-          };
 
-          usePackage =
-            let
-              mkOllama = models: infix: {
-                "gptel${infix}-model" = "'${lib.findFirst (x: true) "" models}";
-                "gptel${infix}-backend" = ''
-                  (gptel-make-ollama "Ollama"
-                  	           :stream t
-                  	           :protocol "http"
-                  	           :host "localhost:11434"
-                  	           :models '(${lib.concatMapStrings (k: "${k} ") models}))
-                '';
-              };
-            in
-            {
-              gptel = {
-                command = [ "start-ollama" ];
-                generalOne.global-leader."gs" = '''("start" . start-ollama)'';
-                setopt = {
-                  gptel-max-tokens = 10000000;
-                  gptel-prompt-prefix-alist = [
-                    ''`(markdown-mode . ,(concat "meatbag ›  "))''
-                    ''`(org-mode . ,(concat  "meatbag ›  "))''
-                    ''`(text-mode . ,(concat "meatbag ›  "))''
-                  ];
-                  gptel-response-prefix-alist = [
-                    '''(markdown-mode . "HK-47  ")''
-                    '''(org-mode . "HK-47  ")''
-                    '''(text-mode . "HK-47  ")''
-                  ];
-                  gptel-use-tools = "'force";
-                }
-                // mkOllama [ "llama3.2:3b" "qwen2.5:3b" ] "";
-                generalOne.global-leader."gi" = "'gptel-inline";
-                preface = ''
-                  <<Emacs Gptel Preface>>
-                '';
-                config = ''
-                  <<Emacs Gptel Config>>
-                '';
-              };
-
-              gptel-agent.config = ''
-                <<Emacs Gptel Agent Config>>
+        usePackage =
+          let
+            mkOllama = models: infix: {
+              "gptel${infix}-model" = "'${lib.findFirst (x: true) "" models}";
+              "gptel${infix}-backend" = ''
+                (gptel-make-ollama "Ollama"
+                	           :stream t
+                	           :protocol "http"
+                	           :host "localhost:11434"
+                	           :models '(${lib.concatMapStrings (k: "${k} ") models}))
               '';
+            };
+          in
+          {
+            gptel = {
+              command = [ "start-ollama" ];
+              generalOne.global-leader."gs" = '''("start" . start-ollama)'';
+              setopt = {
+                gptel-max-tokens = 10000000;
+                gptel-prompt-prefix-alist = [
+                  ''`(markdown-mode . ,(concat "meatbag ›  "))''
+                  ''`(org-mode . ,(concat  "meatbag ›  "))''
+                  ''`(text-mode . ,(concat "meatbag ›  "))''
+                ];
+                gptel-response-prefix-alist = [
+                  '''(markdown-mode . "HK-47  ")''
+                  '''(org-mode . "HK-47  ")''
+                  '''(text-mode . "HK-47  ")''
+                ];
+                gptel-use-tools = "'force";
+              }
+              // mkOllama [ "llama3.2:3b" "qwen2.5:3b" ] "";
+              generalOne.global-leader."gi" = "'gptel-inline";
+              preface = ''
+                <<Emacs Gptel Preface>>
+              '';
+              config = ''
+                <<Emacs Gptel Config>>
+              '';
+            };
 
-              gptel-quick.setopt = mkOllama [ "qwen2.5:3b" ] "-quick";
+            gptel-agent.config = ''
+              <<Emacs Gptel Agent Config>>
+            '';
 
-              gptel-inline = {
-                enable = true;
-                after = [ "gptel" ];
-                config = ''
-                  <<Emacs Gptel Inline Config>>
-                '';
-                generalTwoConfig.":nm" = {
-                  gptel-inline-map = {
-                    "RET" = "'gptel-inline-send";
-                    "H" = "'gptel-inline-help";
-                    "C-a" = "'gptel-inline-append";
-                    "C-b" = "'gptel-switch-buffer";
-                    "C-SPC" = "'gptel-inline-cycle-reference";
-                  };
-                  gptel-inline--response-overlay-mode-map = {
-                    "M-e" = "'gptel-inline--response-overlay-down";
-                    "M-o" = "'gptel-inline--response-overlay-up";
-                    "C-M-e" = "'gptel-inline--response-overlay-pagedown";
-                    "C-M-o" = "'gptel-inline--response-overlay-pageup";
-                    "C-d" = "'gptel-inline--response-overlay-dispatch";
-                  };
+            gptel-quick.setopt = mkOllama [ "qwen2.5:3b" ] "-quick";
+
+            gptel-inline = {
+              enable = true;
+              after = [ "gptel" ];
+              config = ''
+                <<Emacs Gptel Inline Config>>
+              '';
+              generalTwoConfig.":nm" = {
+                gptel-inline-map = {
+                  "RET" = "'gptel-inline-send";
+                  "H" = "'gptel-inline-help";
+                  "C-a" = "'gptel-inline-append";
+                  "C-b" = "'gptel-switch-buffer";
+                  "C-SPC" = "'gptel-inline-cycle-reference";
+                };
+                gptel-inline--response-overlay-mode-map = {
+                  "M-e" = "'gptel-inline--response-overlay-down";
+                  "M-o" = "'gptel-inline--response-overlay-up";
+                  "C-M-e" = "'gptel-inline--response-overlay-pagedown";
+                  "C-M-o" = "'gptel-inline--response-overlay-pageup";
+                  "C-d" = "'gptel-inline--response-overlay-dispatch";
                 };
               };
-
-              mcp.config = ''
-                <<Emacs MCP Config>>
-              '';
-
-              gptel-preset-collection = {
-                enable = true;
-                after = [ "gptel" ];
-              };
-
-              popper.setopt.popper-reference-buffers = [
-                ''"^\\*gptel:.*\\*"''
-                ''"^\\*gptel-inline\\*"''
-                ''"^\\*Ollama\\*"''
-                ''"^\\*copilot\\*"''
-              ];
             };
-        };
+
+            mcp.config = ''
+              <<Emacs MCP Config>>
+            '';
+
+            gptel-preset-collection = {
+              enable = true;
+              after = [ "gptel" ];
+            };
+
+            popper.setopt.popper-reference-buffers = [
+              ''"^\\*gptel:.*\\*"''
+              ''"^\\*gptel-inline\\*"''
+              ''"^\\*Ollama\\*"''
+              ''"^\\*copilot\\*"''
+            ];
+          };
       };
     };
 }
@@ -6387,24 +6394,26 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 (add-to-list 'gptel-agent-dirs "~/.config/emacs/agents/")
 
 (gptel-make-preset
-    'jarvis
-  :description "A preset for executing shell commands."
-  :model 'qwen2.5:3b
-  :system
-  '(:append
-    "You are a command runner. Your task is to execute shell commands to achieve the user's goal.
+ 'jarvis
+ :description "A preset for executing shell commands."
+ :model 'qwen2.5:3b
+ :system
+ '(:append
+   "You are a command runner. Your task is to execute shell commands to achieve the user's goal.
 Here are some tips:
 - When the user wants to regenerate their configs, run 'pkg rebuild'.
 - When the user wants to make a new VCs change, call 'jj new'. If the user says what the change is for, use 'jj new -m \"What the change is for\"'.
 - When the user wants to squash a VCs change, call 'jj squash'.
 - When the user wants to describe a VCs change, call 'jj describe'.")
-  :tools '(:append ("Bash")))
+ :tools '(:append ("Bash")))
 
 (gptel-make-preset
     'efs-agent
   :description "An extended opencode agent with LSP support"
   :parents '(gptel-agent)
-  :system '(:append "# Language Server Protocol
+  :system
+  '(:append
+    "# Language Server Protocol
 - If possible, always init the LSP server for the language you're working in before doing any work.
 - If you must reformat a file & an lsp server is available, use the LSP server's formatting capabilities. Refrain from reformatting otherwise.
 - If an LSP server is available, use its search capabilities librerally when trying to understand the codebase.
@@ -6693,6 +6702,35 @@ Useful in `speech-input-commands'."
   "Define a phony command prefaced with `jarvis'."
   `(phony-defun
     ,name ,(mapcar (lambda (p) (concat "jarvis" p)) pattern) ,rest))
+#+end_src
+
+*** MCP
+#+begin_src nix-ts :tangle modules/ai/mcp.nix
+{
+  flake.homeModules.ai = { pkgs, lib, ... }: {
+    programs.mcp = {
+      enable = true;
+      servers = {
+        nixos = {
+          enable = true;
+          command = lib.getExe pkgs.mcp-nixos;
+        };
+        memory = {
+          enable = true;
+          command = lib.getExe pkgs.mcp-server-memory;
+        };
+        lsp = {
+          enable = true;
+          command = "${pkgs.nodejs}/bin/npx";
+          args = [
+            "-y"
+            "@theupsider/lsp-mcp@latest"
+          ];
+        };
+      };
+    };
+  };
+}
 #+end_src
 
 *** Agents

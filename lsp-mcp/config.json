@@ -1,0 +1,20 @@
+{
+  "workspaces": {
+    "/home/holschcc/.config/home-manager": {
+      "languages": []
+    },
+    "/home/holschcc/pi": {
+      "languages": [
+        "javascript",
+        "typescript",
+        "c"
+      ]
+    },
+    "/home/holschcc/projects/DungeonsMobs": {
+      "languages": [
+        "java"
+      ]
+    }
+  },
+  "lastRoot": "/home/holschcc/projects/DungeonsMobs"
+}
