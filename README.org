@@ -52,15 +52,15 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + [ ] https://github.com/yibie/exc.el
 + [ ] Find a way to make ghostel play nice with eshell
 + [ ] burnish
-+ [ ] Integrate majutsu conflicts into our workflow
++ [ ] Add keys for majutsu conflicts that're consistent with smerge mode
 + [-] Agents
   - [ ] Try some agent shell extensions
   - [X] Try opencode
   - [ ] Try pi
   - [ ] Try cline
-  - [ ] Try groq
+  - [X] Try groq
 + [ ] https://github.com/sini/hm-wrapper-modules
-+ [ ] https://git.andros.dev/andros/comet-trail.el
++ [ ] Look into holo layer
 + [ ] https://github.com/Kyure-A/agent-skills-nix
 + [ ] https://github.com/yoshinari-nomura/efzf
 + [ ] Take a look at this https://github.com/offline-ant/phimacs
@@ -68,3 +68,4 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
   - [ ] Figure out how to have a buffer per project
   - [ ] Figure out how to have history per project
   - [ ] Get a better multi-compile.
++ [ ] Get the robot to have a look at jdt:// links

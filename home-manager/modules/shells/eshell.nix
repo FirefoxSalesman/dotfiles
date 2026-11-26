@@ -71,13 +71,16 @@
               
               (advice-add #'eshell/cat :around #'adviced:eshell/cat)
               
-              (defun eshell/v (&rest args)
+              (defun eshell/jarvis (&rest args)
                 "Vibe command for eshell. Ollama will execute the instruction in ARGS."
                 (let ((gptel-model 'qwen2.5:3b))
+                  (gptel--apply-preset
+                   'jarvis (lambda (sym val) (set (make-local-variable sym) val)))
                   (gptel-request
                    (concat
-                    "You are a command runner. You must run the command that achieves the user's goal."
-                    (apply 'concat (mapcar (lambda (x) (concat x " ")) args))))))
+                    "@jarvis"
+                    (apply 'concat (mapcar (lambda (x) (concat x " ")) args)))))
+                t)
               (advice-add 'eshell-read-aliases-list :after (lambda (&rest _)
                               (dolist (alias '(${
                                 lib.optionals (config.home.shellAliases != { }) (
