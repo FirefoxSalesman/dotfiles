@@ -1,3 +1,4 @@
+{ inputs, ... }:
 {
   flake.homeModules.extraPackages =
     { config, pkgs, ... }:
@@ -10,6 +11,7 @@
         wget
         zbar
         # scripts
+        ezf
         hdmihelper
         pkg
       ];

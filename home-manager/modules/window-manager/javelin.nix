@@ -5,7 +5,12 @@
       programs.emacs.init.usePackage = {
         javelin = {
           enable = true;
-          gfhookf = [ "('kill-emacs 'javelin-clear-all)" ];
+          hook = [
+            {
+              namesDeferred = [ "kill-emacs" ];
+              actions = [ "'javelin-clear-all" ];
+            }
+          ];
           custom.javelin-disable-confirmation = true;
           general = {
             "s-1" = "'javelin-go-to-1";

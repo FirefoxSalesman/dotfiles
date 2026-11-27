@@ -1,4 +1,17 @@
+{ inputs, ... }:
+
 {
+  perSystem =
+    {
+      lib,
+      pkgs,
+      config,
+      ...
+    }:
+    {
+      overlayAttrs = { inherit (config.packages) kmonad; };
+      packages.kmonad = inputs.kmonad.packages.${pkgs.system}.default;
+    };
   flake.homeModules.canary =
     { pkgs, lib, ... }:
 

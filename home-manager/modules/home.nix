@@ -1,25 +1,35 @@
-{ self, inputs, ... }:
+{
+  self,
+  inputs,
+  lib,
+  ...
+}:
 let
   system = "x86_64-linux";
   pkgs = import inputs.nixpkgs {
     inherit system;
     config = {
+      problems.handlers.posthog.broken = "warn"; # or "ignore"
       allowUnfree = true;
+      nvidia.acceptLicense = true;
       permittedInsecurePackages = [
-        "pnpm-10.29.2"
-        "electron-40.10.5"
+        "qutebrowser-3.7.0"
       ];
     };
     overlays = [
-      inputs.ewm.overlays.default
-      (final: prev: self.overlay final prev pkgs inputs)
-      inputs.emacs-init.overlay
       inputs.emacs-overlay.overlay
+      inputs.emacs-init.overlay
+      self.overlays.default
+      (final: prev: self.overlay final prev pkgs inputs)
+      # inputs.ewm.overlays.default
     ];
   };
 in
 {
-  imports = [ inputs.home-manager.flakeModules.home-manager ];
+  imports = with inputs; [
+    home-manager.flakeModules.home-manager
+    flake-parts.flakeModules.easyOverlay
+  ];
   systems = [ "x86_64-linux" ];
   flake = {
     homeConfigurations."holschcc@emacs" = inputs.home-manager.lib.homeManagerConfiguration {
@@ -27,6 +37,13 @@ in
       modules = [
         inputs.self.homeModules.main
         inputs.self.homeModules.emacs-host
+      ];
+    };
+    homeConfigurations."holschcc@work" = inputs.home-manager.lib.homeManagerConfiguration {
+      inherit pkgs;
+      modules = [
+        inputs.self.homeModules.main
+        inputs.self.homeModules.work-host
       ];
     };
     homeConfigurations."holschcc@monitors" = inputs.home-manager.lib.homeManagerConfiguration {
@@ -42,6 +59,7 @@ in
       {
         imports = with inputs; [
           self.homeModules.aesthetics
+          self.homeModules.sops
           self.homeModules.ai
           self.homeModules.canary
           self.homeModules.chat
@@ -54,16 +72,13 @@ in
           # self.homeModules.ewm
           self.homeModules.wm
           self.homeModules.fileManager
-          self.homeModules.gaming
           self.homeModules.java
-          self.homeModules.ledger
           self.homeModules.media
           self.homeModules.notifications
           self.homeModules.passwordManagement
           # self.homeModules.sage
           self.homeModules.shellConfig
           self.homeModules.web
-          self.homeModules.webdev
           self.homeModules.writing
           stylix.homeModules.stylix
           emacs-init.homeModules.emacs-init
@@ -107,7 +122,14 @@ in
           programs.home-manager.enable = true;
 
           nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
-          targets.genericLinux.gpu.enable = true;
+          targets.genericLinux.gpu = {
+            enable = true;
+            nvidia = {
+              enable = true;
+              sha256 = "sha256-CqsFGNtTz3PEEtx/MrvIUMqV6DnYkj0N5L/0LByRac4=";
+              version = "580.196.07";
+            };
+          };
         };
       };
   };

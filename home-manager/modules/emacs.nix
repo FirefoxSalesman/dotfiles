@@ -1,17 +1,19 @@
-{ inputs, ... }:
-
 {
   flake.homeModules.emacs =
     { config, pkgs, ... }:
 
     {
-      home.packages = with pkgs; [
-        xclip
-        xsel
-        xdotool
-        zip
-        unzip
-      ];
+      home = {
+        packages = with pkgs; [
+          xclip
+          xsel
+          xdotool
+          zip
+          unzip
+        ];
+        sessionVariables.EDITOR = "emacsclient";
+      };
+
       programs.emacs = {
         enable = true;
         package = pkgs.emacs-gtk;
@@ -43,12 +45,6 @@
             (defmacro local! (var body)
               "Creates a lambda that runs setq-local on the variable VAR with the value provided by BODY."
               `(lambda (&rest args) (setq-local ,var ,body)))
-            
-            (defun gen-mode-hooks (modes)
-              "Takes a list of symbols, MODES, & appends -mode to them."
-              (mapcar
-               (lambda (mode) (intern (concat (symbol-name mode) "-mode")))
-               modes))
             
             (defmacro efs/evil-collection-remap (fun state map &rest args)
               "Adds more key definitions directly after running some evil-collection setup function.

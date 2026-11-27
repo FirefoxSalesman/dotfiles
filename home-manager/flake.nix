@@ -7,6 +7,10 @@
     emacs-overlay.url = "github:nix-community/emacs-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
     import-tree.url = "github:vic/import-tree";
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     wrapper-modules.url = "github:BirdeeHub/nix-wrapper-modules";
 
@@ -17,7 +21,7 @@
 
     emacs-init.url = "github:firefoxsalesman/NixEmacs";
 
-    ewm.url = "https://codeberg.org/ezemtsov/ewm/archive/master.tar.gz";
+    # ewm.url = "https://codeberg.org/ezemtsov/ewm/archive/master.tar.gz";
 
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -70,13 +74,18 @@
       flake = false;
     };
 
-    gptel-got = {
-      url = "https://git.bajsicki.com/phil/gptel-got";
+    gptel-preset-collection = {
+      url = "github:karthink/gptel-preset-collection";
       flake = false;
     };
 
-    gptel-agent-harness = {
-      url = "https://github.com/beacoder/gptel-agent-harness";
+    code-review = {
+      url = "github:doomelpa/code-review";
+      flake = false;
+    };
+
+    whisper = {
+      url = "github:sachac/whisper.el";
       flake = false;
     };
   };

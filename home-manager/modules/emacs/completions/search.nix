@@ -5,7 +5,12 @@
       ace-isearch = {
         enable = true;
         demand = true;
-        gfhookf = [ "('pdf-view-mode (lambda () (ace-isearch-mode -1)))" ];
+        hook = [
+          {
+            namesDeferred = [ "pdf-view-mode" ];
+            actions = [ "(lambda () (ace-isearch-mode -1))" ];
+          }
+        ];
         generalOneConfig.isearch-mode-map."C-a" = "'avy-isearch";
         config = "(global-ace-isearch-mode)";
         setopt = {

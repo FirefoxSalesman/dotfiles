@@ -21,11 +21,7 @@
       prelude = ''
         (use-package
          repeaters
-         :demand t
-         :config
-         (repeaters-define-maps
-          '(("next-error" ;; borrowed from the hydra wiki
-             next-error "`" next-error "n" previous-error "e"))))
+         :demand t)
         
         (use-package
          repeat

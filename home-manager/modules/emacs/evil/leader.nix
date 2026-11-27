@@ -2,11 +2,17 @@
 
 {
   perSystem =
-    { pkgs, self', ... }:
+    {
+      pkgs,
+      self',
+      config,
+      ...
+    }:
     let
       ezf = self'.packages.ezf;
     in
     {
+      overlayAttrs = { inherit (config.packages) udisksmenu; };
       packages.udisksmenu = pkgs.writeShellScriptBin "udisksmenu" ''
         action=$(${pkgs.coreutils}/bin/printf 'mount\nunmount' | ${ezf}/bin/ezf)
         disk=$(${pkgs.coreutils}/bin/ls /dev | ${pkgs.ripgrep}/bin/rg sd[a-z] | ${ezf}/bin/ezf)

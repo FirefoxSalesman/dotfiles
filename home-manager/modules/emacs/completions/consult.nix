@@ -6,7 +6,12 @@
     };
     usePackage = {
       consult = {
-        ghookf = [ "('minibuffer-setup 'consult-initial-narrow)" ];
+        hook = [
+          {
+            names = [ "minibuffer-setup" ];
+            actions = [ "'consult-initial-narrow" ];
+          }
+        ];
         command = [
           "consult-goto-line"
           "consult-keep-lines"

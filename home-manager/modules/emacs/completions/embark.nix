@@ -43,16 +43,27 @@
     programs.emacs.init = {
       completions.smallExtras.embark = true;
       usePackage.embark = {
-        general."M-a" = "'embark-dwim";
+        general = {
+          "M-a" = "'embark-dwim";
+          "M-A" = "'embark-act";
+        };
         generalTwo.":n".vertico-map."a" = "'embark-act";
         generalOneConfig = {
-          embark-file-map = {
+	  embark-region-map = {
+	    "r" = '''(gptel-rewrite :which-key "rewrite with gptel")'';
+	    "a" = '''(gptel-add :which-key "add to context")'';
+	    "s" = '''(gptel-send :which-key "send to gptel")'';
+	  };
+	  embark-file-map = {
+	    "a" = '''(gptel-add-file :which-key "add to context")'';
             "v" = "(my/embark-split-action find-file pertab-vertical-split)";
             "h" = "(my/embark-split-action find-file pertab-horizontal-split)";
             "t" = "(my/embark-split-action find-file tab-new)";
             "o" = "(my/embark-ace-action find-file)";
+            "g" = "'efs/vcs-status";
           };
           embark-buffer-map = {
+	    "a" = '''(gptel-add :which-key "add to context")'';
             "v" = "(my/embark-split-action switch-to-buffer pertab-vertical-split)";
             "h" = "(my/embark-split-action switch-to-buffer pertab-horizontal-split)";
             "t" = "(my/embark-split-action switch-to-buffer tab-new)";
@@ -64,6 +75,9 @@
             "t" = "(my/embark-split-action bookmark-jump tab-new)";
             "o" = "(my/embark-ace-action bookmark-jump)";
           };
+          embark-symbol-map."R" = "'elisp-refs-symbol";
+          embark-identifier-map."$" = "'jinx-correct";
+	  embark-flymake-map."a" = '''(efs/embark-gptel-explain-diagnostic :which-key "explain diagnostic with gptel")'';
         };
         preface = ''
           (eval-when-compile
@@ -87,6 +101,24 @@
                    (let ((aw-dispatch-always t))
                      (aw-switch-to-window (aw-select nil))
                      (call-interactively (symbol-function ',fn)))))))
+          
+          (defun efs/embark-gptel-explain-diagnostic ()
+            "Ask gptel to explain the Flymake diagnostic at point."
+            (interactive)
+            (require 'gptel-quick)
+            (if-let* ((diag (car (flymake-diagnostics (point)))))
+                (let* ((text (format
+                              "Explain this diagnostic in %s and suggest a fix.\n\n\
+          Diagnostic (%s): %s\n\nCode:\n%s"
+                              (buffer-name)
+                              (flymake-diagnostic-type diag)
+                              (flymake-diagnostic-text diag)
+                              (buffer-substring-no-properties
+                               (flymake-diagnostic-beg diag)
+                               (flymake-diagnostic-end diag))))
+                       )
+                  (gptel-quick text))
+              (user-error "No Flymake diagnostic at point")))
         '';
       };
     };

@@ -4,6 +4,7 @@
     {
       lib,
       pkgs,
+      config,
       self',
       ...
     }:
@@ -15,6 +16,7 @@
       };
     in
     {
+      overlayAttrs = { inherit (config.packages) pkg; };
       packages.pkg = pkgs.writeShellScriptBin "pkg" ''
         	optimize() {
         	    ${lib.getExe nh} clean user -q

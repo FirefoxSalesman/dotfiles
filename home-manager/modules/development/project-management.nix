@@ -1,98 +1,170 @@
+{ inputs, ... }:
 {
+  perSystem =
+    { pkgs, ... }:
+    let
+      epkgs = pkgs.emacs.pkgs;
+    in
+    {
+      packages.code-review = epkgs.callPackage epkgs.trivialBuild rec {
+        pname = "code-review";
+        version = "pinned";
+        src = inputs.code-review;
+        propagatedUserEnvPkgs = with epkgs; [
+          closql
+          magit
+          transient
+          a
+          ghub
+          uuidgen
+          deferred
+          markdown-mode
+          forge
+          emojify
+        ];
+        buildInputs = propagatedUserEnvPkgs;
+      };
+    };
+
   flake.homeModules.development =
     { pkgs, lib, ... }:
     {
-      programs.emacs.init = {
-        ide = {
-          magit = {
-            enable = true;
-            forge = true;
-            todo = true;
-          };
-          project = true;
+      programs = {
+        mcp.servers.jj = {
+          command = "${pkgs.nodejs}/bin/npx";
+          args = [
+            "-y"
+            "jj-mcp-server"
+          ];
         };
-        usePackage = {
-          git-modes = {
-            enable = true;
-            mode = [
-              ''("/\\.gitattributes\\'" . gitattributes-mode)''
-              ''("/info/attributes\\'" . gitattributes-mode)''
-              ''("/git/attributes\\'" . gitattributes-mode)''
-	      ''("/\\.gitconfig\\'" . gitconfig-mode)''
-	      ''("/\\.git/config\\'" . gitconfig-mode)''
-	      ''("/modules/.*/config\\'" . gitconfig-mode)''
-	      ''("/git/config\\'" . gitconfig-mode)''
-	      ''("/\\.gitmodules\\'" . gitconfig-mode)''
-	      ''("/etc/gitconfig\\'" . gitconfig-mode)''
-	      ''("/\\.gitignore\\'" . gitignore-mode)''
-	      ''("/info/exclude\\'" . gitignore-mode)''
-	      ''("/git/ignore\\'" . gitignore-mode)''
-            ];
+        emacs.init = {
+          ide = {
+            magit = {
+              enable = true;
+              forge = true;
+              todo = true;
+            };
+            project = true;
           };
+          usePackage = {
+            git-modes = {
+              enable = true;
+              mode = [
+                ''("/\\.gitattributes\\'" . gitattributes-mode)''
+                ''("/info/attributes\\'" . gitattributes-mode)''
+                ''("/git/attributes\\'" . gitattributes-mode)''
+                ''("/\\.gitconfig\\'" . gitconfig-mode)''
+                ''("/\\.git/config\\'" . gitconfig-mode)''
+                ''("/modules/.*/config\\'" . gitconfig-mode)''
+                ''("/git/config\\'" . gitconfig-mode)''
+                ''("/\\.gitmodules\\'" . gitconfig-mode)''
+                ''("/etc/gitconfig\\'" . gitconfig-mode)''
+                ''("/\\.gitignore\\'" . gitignore-mode)''
+                ''("/info/exclude\\'" . gitignore-mode)''
+                ''("/git/ignore\\'" . gitignore-mode)''
+              ];
+            };
 
-          magit = {
-            setopt.magit-process-find-password-functions = [ "'magit-process-password-auth-source" ];
-            generalOne.project-prefix-map =
+            magit =
               let
-                mkMajutsuCmd = magitCommand: majutsuCommand: ''
-                  `,(cmd! (if (file-exists-p (nix-emacs-project-file ".jj"))
-                          (progn ${majutsuCommand})
-                          ${magitCommand}))
+                mkMajutsuCmd = name: magitCommand: majutsuCommand: ''
+                  (defun efs/vcs-${name} ()
+                                 "Do a magit/jutsu ${name} depending on what kind of repo we have."
+                                  (interactive)
+                                  (require 'majutsu)
+                                  (if (majutsu-toplevel)
+                                      (progn ${majutsuCommand})
+                                      ${magitCommand}))
                 '';
               in
               {
-                "v" = mkMajutsuCmd "(magit)" "(majutsu)";
-                "c" = mkMajutsuCmd "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-commit)";
-                "p" = mkMajutsuCmd "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)";
-                "P" = mkMajutsuCmd "(magit-push)" "(call-interactively 'majutsu-git-push)";
-                "b" = mkMajutsuCmd "(magit-bookmark)" "(majutsu-bookmark)";
+                setopt.magit-process-find-password-functions = [ "'magit-process-password-auth-source" ];
+                preface = ''
+                  (defun efs/vcs-status (&optional dir)
+                                 "Do a magit/jutsu status depending on what kind of repo we have."
+                                  (interactive)
+                                  (require 'majutsu)
+                                  (if (majutsu-toplevel)
+                                      (progn (majutsu dir))
+                                      (magit dir)))
+                          ${mkMajutsuCmd "commit" "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-commit)"}
+                          ${mkMajutsuCmd "pull" "(magit-pull)"
+                            "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)"
+                          }
+                          ${mkMajutsuCmd "push" "(magit-push)" "(call-interactively 'majutsu-git-push)"}
+                          ${mkMajutsuCmd "branch" "(magit-branch)" "(majutsu-bookmark)"}
+                '';
+                generalOne.project-prefix-map = {
+                  "v" = "'efs/vcs-status";
+                  "c" = "'efs/vcs-commit";
+                  "p" = "'efs/vcs-pull";
+                  "P" = "'efs/vcs-push";
+                  "b" = "'efs/vcs-branch";
+                };
+                bindLocal.project-prefix-map = lib.mkForce { };
+                generalOneConfig = {
+                  magit-mode-map = {
+                    "e" = "'evil-next-visual-line";
+                    "B" = "'evil-goto-line";
+                  };
+                  magit-status-mode-map."j" = "'magit-unstage-files";
+                };
               };
-            bindLocal.project-prefix-map = lib.mkForce { };
-            generalOneConfig = {
-              magit-mode-map = {
+
+            code-review.enable = lib.mkForce false;
+
+            majutsu = {
+              enable = true;
+              extraPackages = [ pkgs.jujutsu ];
+              command = [ "majutsu-git-fetch" ];
+              extraConfig = ":autoload majutsu-repository-config-id";
+              hook = [
+                {
+                  names = [ "find-file" "after-revert" ];
+                  actions = [ "'majutsu-conflict-ensure-mode" ];
+                }
+              ];
+              generalTwoConfig.":n".majutsu-mode-map = {
                 "e" = "'evil-next-visual-line";
+                "o" = "'evil-previous-visual-line";
                 "B" = "'evil-goto-line";
               };
-              magit-status-mode-map."j" = "'magit-unstage-files";
+              setopt.majutsu-display-buffer-function = "'majutsu-display-buffer-same-window-except-diff-v1";
+              config = ''
+                (magit-add-section-hook 'majutsu-log-sections-hook #'magit-todos--insert-todos nil 'append)
+                        (majutsu-forge-mode)
+              '';
             };
-            # https://github.com/magit/magit/issues/5557
-            config = ''
-              (defalias 'magit--any
-                      (static-if (fboundp 'member-if) #'member-if #'cl-member-if))
-            '';
-          };
 
-          majutsu = {
-            enable = true;
-            extraPackages = [ pkgs.jujutsu ];
-            command = [ "majutsu-git-fetch" ];
-            extraConfig = ":autoload majutsu-repository-config-id";
-          };
-
-          projection-ibuffer = {
-            enable = true;
-            generalOne.project-prefix-map = {
-              C-b = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
-              i = '''("info" . projection-show-project-info)'';
+            projection-ibuffer = {
+              enable = true;
+              generalOne.project-prefix-map = {
+                C-b = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
+                i = '''("info" . projection-show-project-info)'';
+              };
             };
-          };
 
-          projection-multi = {
-            custom.projection-gradle-use-daemon = false;
-            config = ''
-              (advice-add
-               'projection-multi-npm-scripts--targets-from-file2
-               :override
-               (lambda ()
-                 (hash-table-keys
-                  (gethash
-                   "scripts"
-                   (with-temp-buffer
-                     (insert-file-contents
-                      (expand-file-name
-                       (concat (project-root (project-current)) "package.json")))
-                     (json-parse-string (buffer-string)))))))
-            '';
+            projection-multi = {
+              custom.projection-gradle-use-daemon = false;
+              config = ''
+                (advice-add
+                 'projection-multi-npm-scripts--targets-from-file2
+                 :override
+                 (lambda ()
+                   (hash-table-keys
+                    (gethash
+                     "scripts"
+                     (with-temp-buffer
+                       (insert-file-contents
+                        (expand-file-name
+                         (concat (project-root (project-current)) "package.json")))
+                       (json-parse-string (buffer-string)))))))
+              '';
+            };
+
+            forge.config = ''
+              (add-to-list 'forge-alist '("gitlab.tetramem-eng.com" "gitlab.tetramem-eng.com/api/v4" "gitlab.tetramem-eng.com"
+                forge-gitlab-repository))'';
           };
         };
       };

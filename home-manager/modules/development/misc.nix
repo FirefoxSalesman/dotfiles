@@ -12,12 +12,9 @@
           languages = {
             bash.enable = true;
             json.enable = true;
-            lua.enable = true;
             toml.enable = true;
-            rust.enable = true;
             yaml.enable = true;
             xml.enable = true;
-            zenscript.enable = true;
           };
         };
 
@@ -30,12 +27,22 @@
         };
 
         usePackage = {
-          rainbow-delimiters = {
+	  rainbow-delimiters = {
             enable = true;
-            ghookf = [ "('prog-mode 'rainbow-delimiters-mode)" ];
+            hook = [
+              {
+                names = [ "prog-mode" ];
+                actions = [ "'rainbow-delimiters-mode" ];
+              }
+            ];
           };
 
-          racket-mode.gfhookf = [ "('racket-mode 'hs-minor-mode)" ];
+          racket-mode.hook = [
+            {
+              namesDeferred = [ "racket-mode " ];
+              actions = [ "'hs-minor-mode" ];
+            }
+          ];
 
           toml-ts-mode = {
             extraPackages = [ pkgs.tombi ];

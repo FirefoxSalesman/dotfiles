@@ -1,10 +1,16 @@
 {
   perSystem =
-    { pkgs, self', ... }:
+    {
+      pkgs,
+      config,
+      self',
+      ...
+    }:
     let
       packages = self'.packages;
     in
     {
+      overlayAttrs = { inherit (config.packages) cast ffmpeg-bulk masstube; };
       packages = {
         cast = (
           pkgs.writeShellScriptBin "cast" ''

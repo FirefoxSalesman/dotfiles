@@ -3,6 +3,8 @@
     { pkgs, lib, ... }:
     {
       home.shellAliases = {
+        openocd = "/mnt/nfs/ssunil/toolchains/hermetic/openocd/bin/openocd";
+        gdbn = "/mnt/nfs/ssunil/toolchains/hermetic/toolchains/nds64le-elf-newlib-v5f/bin/riscv64-elf-gdb";
         ffrecord = "ffmpeg -f sndio -i snd/0.mon -f x11grab -r 30 -s 1920x1080 -i :0 -c:v libx164 -preset ultrafast -acodec copy ~/test.mkv";
         ffaud = "ffmpeg -f alsa -channels 1 -sample_rate 44100 -i default:CARD=Mic output.flac";
         sx = "startx";
@@ -14,8 +16,8 @@
         gc = "git clone";
         gp = "git pull";
         gP = "git push";
-	reboot = "doas reboot";
-	halt = "doas shutdown -P now";
+        reboot = "doas reboot";
+        halt = "doas shutdown -P now";
       };
     };
 }

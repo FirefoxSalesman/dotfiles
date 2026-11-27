@@ -1,24 +1,31 @@
 { inputs, ... }:
 
 {
-  perSystem = { pkgs, ... }: {
-    packages.mpv = (
-      inputs.wrapper-modules.wrappers.mpv.wrap {
-        pkgs = pkgs;
-        script = {
-          thumbnail.path = pkgs.mpvScripts.thumbnail;
-          sponsorblock.path = pkgs.mpvScripts.sponsorblock;
-          quality-menu.path = pkgs.mpvScripts.quality-menu;
-        };
-        "mpv.conf".content = ''
-          fs=no
-          hwdec=auto
-          x11-bypass-compositor=no
-          volume-max=250
-        '';
-      }
-    );
-  };
+  perSystem =
+    {
+      pkgs,
+      config,
+      ...
+    }:
+    {
+      overlayAttrs = { inherit (config.packages) mpv; };
+      packages.mpv = (
+        inputs.wrapper-modules.wrappers.mpv.wrap {
+          pkgs = pkgs;
+          script = {
+            thumbnail.path = pkgs.mpvScripts.thumbnail;
+            sponsorblock.path = pkgs.mpvScripts.sponsorblock;
+            quality-menu.path = pkgs.mpvScripts.quality-menu;
+          };
+          "mpv.conf".content = ''
+            fs=no
+            hwdec=auto
+            x11-bypass-compositor=no
+            volume-max=250
+          '';
+        }
+      );
+    };
 
   flake.homeModules.media = { pkgs, config, ... }: {
     home.packages = [ pkgs.yt-dlp ];
@@ -37,10 +44,10 @@
             (interactive)
             (mpv-play-url (eww-current-url)))
         '';
-	generalOne.global-leader = {
-	  "mP" = '''mpv-pause'';
-	  "mj" = '''mpv-jump-to-chapter'';
-	};
+        generalOne.global-leader = {
+          "mP" = "'mpv-pause";
+          "mj" = "'mpv-jump-to-chapter";
+        };
       };
 
       mpv.enable = true;

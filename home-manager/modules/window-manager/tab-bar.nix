@@ -52,7 +52,12 @@
             (tab-bar-select-tab (string-to-number (read-string "Tab Number: ")))
             (setq tab-bar-tab-hints nil))
         '';
-        ghookf = [ "('exwm-init 'tab-bar-mode)" ];
+        hook = [
+          {
+            names = [ "exwm-init" ];
+            actions = [ "'tab-bar-mode" ];
+          }
+        ];
         # ghookf = [ "('ewm-mode 'tab-bar-mode)" ];
         general = {
           "s-u" = "'tab-bar-hydra/body";
@@ -98,7 +103,24 @@
 
       pertab = {
         enable = true;
-        ghookf = [ "('tab-bar-mode 'pertab-mode)" ];
+        hook =
+          let
+            ratio = hook: sign: {
+              namesDeferred = [
+                "pertab-follow-${hook}"
+                "pertab-scroll-${hook}"
+              ];
+              actions = [ "(lambda () (golden-ratio-mode ${sign}1))" ];
+            };
+          in
+          [
+            {
+              names = [ "tab-bar-mode" ];
+              actions = [ "'pertab-mode" ];
+            }
+            (ratio "enter" "-")
+            (ratio "exit" "+")
+          ];
         generalOneConfig.pertab-mode-map = {
           "s-e" = "'pertab-focus-down";
           "s-o" = "'pertab-focus-up";
@@ -120,25 +142,29 @@
           pertab-previous-buffer-function = "'bufler-cycle-buffers-backward";
           roll-debug-enabled = false;
         };
-        gfhookf = [
-          "('(pertab-follow-enter pertab-scroll-enter) (lambda () (golden-ratio-mode -1)))"
-          "('(pertab-follow-exit pertab-scroll-exit) (lambda () (golden-ratio-mode +1)))"
-        ];
-	config = ''
-	  (repeaters-define-maps
-	   '(("delete-windows"
-	      pertab-kill-buffer-close-window
-	      "K"
-	      pertab-close-window
-	      "k")))
-	'';
+        config = ''
+          (repeaters-define-maps
+           '(("delete-windows"
+              pertab-kill-buffer-close-window
+              "K"
+              pertab-close-window
+              "k")))
+        '';
       };
 
       pertab-monocle = pertabExtension;
       pertab-follow = pertabExtension;
       pertab-master-stack = pertabExtension;
       pertab-scroll = {
-        gfhookf = [ "('pertab-follow-enter 'balance-windows)" ];
+        hook = [
+          {
+            namesDeferred = [
+              "pertab-scroll-enter"
+              "pertab-follow-enter"
+            ];
+            actions = [ "'balance-windows" ];
+          }
+        ];
       }
       // pertabExtension;
     };

@@ -21,31 +21,57 @@
 
         usePackage = {
           eglot = {
-            gfhookf = [
-              ''
-                ('eglot-managed-mode (local! completion-at-point-functions
-                                                             (list (cape-capf-choose
-                                                                    #'efs/mixin-completion-at-point
-                					            (cape-capf-super
-                                                                     #'tempel-complete
-                                                                     (cape-capf-buster #'eglot-completion-at-point)
-                                                                     (cape-capf-inside-comment #'cape-dict)
-                                                                     (cape-capf-inside-string #'cape-dict))
-                                                                    #'cape-dabbrev))))
-              ''
+            hook = [
+              {
+                namesDeferred = [ "eglot-managed-mode" ];
+                actions = [
+                  ''
+                    (local! completion-at-point-functions
+                            (list (cape-capf-choose
+                                   #'efs/mixin-completion-at-point
+                    		   (cape-capf-super
+                                    #'tempel-complete
+                                    (cape-capf-buster #'eglot-completion-at-point)
+                                    (cape-capf-inside-comment #'cape-dict)
+                                    (cape-capf-inside-string #'cape-dict))
+                                   #'cape-dabbrev)))
+                  ''
+                ];
+              }
+              # https://www.jamescherti.com/emacs-eglot-apply-code-actions-fixes-on-save/
+              {
+                namesDeferred = [ "before-save" ];
+                actions = [
+                  ''
+                    (lambda ()
+                       (when (and (fboundp 'eglot-managed-p)
+                                 (eglot-managed-p)
+                                 (fboundp 'eglot-server-capable)
+                                 (eglot-server-capable :codeActionProvider)
+                                 (fboundp 'eglot-current-server)
+                                 (fboundp 'eglot-code-actions)
+                                 (fboundp 'eglot-execute))
+                        (when-let* ((server (eglot-current-server)))
+                          (save-restriction
+                            (widen)
+                            (dolist (action (eglot-code-actions (point-min) (point-max)
+                                                                       "source.fixAll" nil))
+                                     (eglot-execute server action))))))''
+                ];
+              }
             ];
             # https://www.jamescherti.com/emacs-eglot-performance/
             setopt = {
-              eglot-sync-connect = lib.mkForce 0;
-              eglot-events-buffer-config = [
-                "':size"
-                0
-                "':format"
-                "'full"
-              ];
-              eglot-max-file-watches = 3000;
+	      eglot-sync-connect = lib.mkForce 0;
+              eglot-max-file-watches = false;
               eglot-report-progress = false;
               eglot-code-action-indications = false;
+	      eglot-events-buffer-config = [
+		"':size"
+		0
+		"':format"
+		"'full"
+	      ];
             };
             config = ''
               (efs/evil-collection-remap
@@ -59,7 +85,7 @@
             '';
           };
 
-	  #https://github.com/nemethf/eglot-x/blob/5cd6f936b9dc571edd4437b8fbf93ff68b0e723b/eglot-x.el
+          #https://github.com/nemethf/eglot-x/blob/5cd6f936b9dc571edd4437b8fbf93ff68b0e723b/eglot-x.el
           eglot-x.config = ''
             (cl-defmethod eglot-execute :around (server action)
               "Execute ACTION locally if possible, otherwise ask SERVER to execute it."

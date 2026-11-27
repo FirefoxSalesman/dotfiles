@@ -2,7 +2,12 @@
   flake.homeModules.wm.programs.emacs.init.usePackage = {
     bufler = {
       enable = true;
-      ghookf = [ "('tab-bar-mode 'bufler-mode)" ];
+      hook = [
+        {
+          names = [ "tab-bar-mode" ];
+          actions = [ "'bufler-mode" ];
+        }
+      ];
       general = {
         "s-b" = "'bufler-hydra/body";
         "s-f" = "'bufler-workspace-focus-buffer";
@@ -25,6 +30,8 @@
           (group-or
            "Browsers"
            (name-match "Qutebrowser" (rx bos "Qutebrowser"))
+           (name-match
+            "qutebrowser-llm-response" (rx bos "qutebrowser-llm-response"))
            (name-match "Tor Browser" (rx bos "Tor Browser"))
            (mode-match "eww-mode" (rx bos "eww-"))))
          (group
@@ -163,8 +170,19 @@
 
     bufler-workspace-tabs = {
       enable = true;
-      ghookf = [ "('bufler-mode 'bufler-workspace-workspaces-as-tabs-mode)" ];
-      gfhookf = [ "('bufler-workspace-workspaces-as-tabs-mode '(global-tab-line-mode burly-tabs-mode))" ];
+      hook = [
+        {
+          names = [ "bufler-mode" ];
+          actions = [ "'bufler-workspace-workspaces-as-tabs-mode" ];
+        }
+        {
+          namesDeferred = [ "bufler-workspace-workspaces-as-tabs-mode" ];
+          actions = [
+            "'global-tab-line-mode"
+            "'burly-tabs-mode"
+          ];
+        }
+      ];
     };
   };
 }

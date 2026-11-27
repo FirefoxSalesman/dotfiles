@@ -32,7 +32,18 @@
               ''("\\.jsx?\\'" . jtsx-jsx-mode)''
               ''("\\.tsx\\'" . jtsx-tsx-mode)''
             ];
-            ghookf = [ "('(jtsx-jsx-mode jtsx-tsx-mode) '(hs-minor-mode emmet-mode))" ];
+            hook = [
+              {
+                names = [
+                  "jtsx-jsx-mode"
+                  "jtsx-tsx-mode"
+                ];
+                actions = [
+                  "'hs-minor-mode"
+                  "'emmet-mode"
+                ];
+              }
+            ];
             config = ''
               (dolist (lang '(javascript jsdoc tsx typescript))
                 (unless (treesit-language-available-p lang)

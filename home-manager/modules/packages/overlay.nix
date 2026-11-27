@@ -2,65 +2,44 @@
 
 let
   system = "x86_64-linux";
-  pkgs-stable = import inputs.nixpkgs-stable {
-    inherit system;
-    config = {
-      allowUnfree = true;
-      permittedInsecurePackages = [
-        "pnpm-10.29.2"
-        "electron-40.10.5"
-      ];
-    };
-  };
 in
 {
-  flake.overlay =
-    final: prev: pkgs: inputs:
-    let
-      packages = self.packages.${pkgs.system};
-    in
-    {
-      # shell scripts
-      ezf = packages.ezf;
-      cast = packages.cast;
-      doomer = packages.doomer;
-      ffmpeg-bulk = packages.ffmpeg-bulk;
-      masstube = packages.masstube;
-      mpvmacs = packages.mpvmacs;
-      hdmihelper = packages.hdmihelper;
-      i3status-rs = packages.i3status-rs;
-      playAlbum = packages.playAlbum;
-      pkg = packages.pkg;
-      startEwm = packages.startEwm;
-      startOllama = packages.startOllama;
-      udisksmenu = packages.udisksmenu;
-      wiki = packages.wiki;
-
-      # overrides
-      libdisplay-info = prev.libdisplay-info_0_3;
-      mpv = packages.mpv;
-      rassumfrassum = pkgs-stable.rassumfrassum;
-      kmonad = inputs.kmonad.packages.${pkgs.system}.default;
-      lutris = pkgs-stable.lutris;
-      sage = pkgs-stable.sage;
-
-      #emacs packages
-      emacsPackagesFor =
-        emacs:
-        ((prev.emacsPackagesFor emacs).overrideScope (
-          nfinal: nprev: {
-            qutebrowser = packages.qutebrowser-emacs;
-            doom-nano-modeline = packages.doom-nano-modeline;
-            repeaters = packages.repeaters;
-            app-launcher = packages.app-launcher;
-            ezf = packages.emacs-ezf;
-            mpc-wrapper = packages.mpc-wrapper;
-            roll = packages.roll;
-            pertab = packages.pertab;
-            embark = packages.embark;
-            gptel-got = packages.gptel-got;
-            gptel-agent-harness = packages.gptel-agent-harness;
-          }
-        ));
+  flake = {
+    pkgs-stable = import inputs.nixpkgs-stable let {
+      inherit system;
+      config = {
+        allowUnfree = true;
+        nvidia.acceptLicense = true;
+        permittedInsecurePackages = [
+          "qutebrowser-3.7.0"
+        ];
+      };
     };
+
+    overlay =
+      final: prev: pkgs: inputs:
+      let
+        packages = self.packages.${pkgs.system};
+      in
+      {
+        emacsPackagesFor =
+          emacs:
+          ((prev.emacsPackagesFor emacs).overrideScope (
+            nfinal: nprev: {
+              qutebrowser = packages.qutebrowser-emacs;
+              doom-nano-modeline = packages.doom-nano-modeline;
+              repeaters = packages.repeaters;
+              app-launcher = packages.app-launcher;
+              ezf = packages.emacs-ezf;
+              mpc-wrapper = packages.mpc-wrapper;
+              roll = packages.roll;
+              pertab = packages.pertab;
+              embark = packages.embark;
+              code-review = packages.code-review;
+              whisper = packages.whisper;
+              gptel-preset-collection = packages.gptel-preset-collection;
+            }
+          ));
+      };
+  };
 }

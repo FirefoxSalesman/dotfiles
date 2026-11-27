@@ -1,8 +1,8 @@
 { inputs, ... }:
 
 {
-  perSystem = { pkgs, ... }: {
-
+  perSystem = { config, pkgs, ... }: {
+    overlayAttrs = { inherit (config.packages) hdmihelper; };
     packages.hdmihelper = pkgs.writeShellScriptBin "hdmihelper" ''
       case "$1" in
         dual ) xrandr --output HDMI-1-0 --right-of eDP-1 --mode 1920x1080 --output eDP-1 --primary --mode 1920x1080 ;;

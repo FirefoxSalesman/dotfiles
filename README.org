@@ -38,24 +38,33 @@ Not all the stuff I've stolen is still here, & most of the places I've stolen fr
 + https://gitlab.com/rycee/configurations
 
 * TODO Future Improvements
-** Home Manager
-+ [ ] Figure out how to auto install photogimp
-+ [ ] Add qutebrowser's userscripts to nix
-
-** Emacs
-+ [ ] The python files from emacs-qutebrowser should be part of the emacs package & be provided by nix
 + [ ] dash template gets cleaned up & goes to live in its own repo
 + [ ] diff-hl
 + [ ] https://ianyepan.github.io/posts/git-blame-emacs/
-+ [ ] doxygen
-+ [ ] Switch to markdown-ts
-+ [ ] https://github.com/Thysrael/markdown-ts-appear
-+ [ ] https://github.com/florommel/poimap (i am being greedy)
-+ [ ] https://github.com/MArpogaus/modern-tab
-+ [ ] Pull mcp stuff into the framework
 + [-] Port mcdev
   - [ ] Mixin method selector (partially done, but it may be nice if we could have method signatures)
+  - [X] Mixin @At.value selector
   - [X] Mixins.json addition function
   - [X] Mixin generator function
     1. Put a new mixin in the mixins folder
     2. Add that mixin to the mixin config
++ [ ] Get the alias builder to the framework
++ [ ] https://github.com/yibie/exc.el
++ [ ] Find a way to make ghostel play nice with eshell
++ [ ] burnish
++ [ ] Integrate majutsu conflicts into our workflow
++ [-] Agents
+  - [ ] Try some agent shell extensions
+  - [X] Try opencode
+  - [ ] Try pi
+  - [ ] Try cline
+  - [ ] Try groq
++ [ ] https://github.com/sini/hm-wrapper-modules
++ [ ] https://git.andros.dev/andros/comet-trail.el
++ [ ] https://github.com/Kyure-A/agent-skills-nix
++ [ ] https://github.com/yoshinari-nomura/efzf
++ [ ] Take a look at this https://github.com/offline-ant/phimacs
++ [ ] Compilation
+  - [ ] Figure out how to have a buffer per project
+  - [ ] Figure out how to have history per project
+  - [ ] Get a better multi-compile.

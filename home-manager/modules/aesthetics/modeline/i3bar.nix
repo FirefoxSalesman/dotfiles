@@ -1,5 +1,8 @@
 {
-  perSystem = { pkgs, ... }: {
+  perSystem = { pkgs, config, ... }: {
+    overlayAttrs = {
+      inherit (config.packages) i3status-rs;
+    };
     packages.i3status-rs = pkgs.writeShellScriptBin "i3status-rust" ''
       ${pkgs.i3status-rust}/bin/i3status-rs ~/.config/i3status-rust/config-default.toml
     '';
@@ -50,7 +53,12 @@
 
         emacs.init.usePackage.i3bar = {
           enable = true;
-          ghookf = [ "('tab-bar-mode 'i3bar-mode)" ];
+          hook = [
+            {
+              names = [ "tab-bar-mode" ];
+              actions = [ "'i3bar-mode" ];
+            }
+          ];
           setopt.i3bar-command = ''"${lib.getExe pkgs.i3status-rs}"'';
         };
       };

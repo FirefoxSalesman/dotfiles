@@ -1,13 +1,34 @@
 {
-  perSystem = { lib, pkgs, ... }: {
-    packages.startEwm = pkgs.writeShellScriptBin "startewm" ''
-      emacs --fg-daemon --eval "(require 'ewm)" --eval "(ewm-start-module)" --eval "(efs/run-in-background \"${lib.getExe pkgs.wbg} ~/.config/home-manager/wallpaper.png\")"
-    '';
-  };
+  # perSystem =
+  #   {
+  #     lib,
+  #     pkgs,
+  #     config,
+  #     ...
+  #   }:
+  #   {
+  #     overlayAttrs = { inherit (config.packages) startEwm; };
+  #     packages.startEwm = pkgs.writeShellScriptBin "startewm" ''
+  #       emacs --fg-daemon --eval "(require 'ewm)" --eval "(ewm-start-module)" --eval "(efs/run-in-background \"${lib.getExe pkgs.wbg} ~/.config/home-manager/wallpaper.png\")"
+  #     '';
+  #   };
   flake.homeModules.ewm = { lib, pkgs, ... }: {
     programs.emacs.init.usePackage = {
-      dashboard.ghookf = [ "('after-init '(dashboard-insert-startupify-lists dashboard-initialize))" ];
-      evil.gfhookf = [ "('after-init 'evil-mode)" ];
+      dashboard.hook = [
+        {
+          names = [ "after-init" ];
+          actions = [
+            "'dashboard-insert-startupify-lists"
+            "'dashboard-initialize"
+          ];
+        }
+      ];
+      evil.hook = [
+        {
+          namesDeferred = [ "after-init" ];
+          actions = [ "'evil-mode" ];
+        }
+      ];
       ewm = {
         enable = true;
         defer = true;

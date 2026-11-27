@@ -6,12 +6,14 @@
       lib,
       pkgs,
       self',
+      config,
       ...
     }:
     let
       epkgs = pkgs.emacs.pkgs;
     in
     {
+      overlayAttrs = { inherit (config.packages) playAlbum; };
       packages = {
         mpc-wrapper = (
           epkgs.callPackage epkgs.trivialBuild rec {

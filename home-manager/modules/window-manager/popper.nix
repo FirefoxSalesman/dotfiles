@@ -1,7 +1,12 @@
 {
   flake.homeModules.wm.programs.emacs.init.usePackage.popper = {
     enable = true;
-    ghookf = [ "('on-first-buffer 'popper-mode)" ];
+    hook = [
+      {
+        names = [ "on-first-buffer" ];
+        actions = [ "'popper-mode" ];
+      }
+    ];
     general = {
       "s-'" = "'popper-toggle";
       "s-\\\"" = "'popper-cycle";

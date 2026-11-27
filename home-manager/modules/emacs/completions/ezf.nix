@@ -1,11 +1,12 @@
 { inputs, ... }:
 {
   perSystem =
-    { pkgs, self', ... }:
+    { pkgs, self', config, ... }:
     let
       epkgs = pkgs.emacs.pkgs;
     in
     {
+      overlayAttrs = { inherit (config.packages) ezf; };
       packages = {
         emacs-ezf = (
           epkgs.callPackage epkgs.trivialBuild rec {

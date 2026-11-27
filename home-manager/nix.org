@@ -12,6 +12,10 @@
     emacs-overlay.url = "github:nix-community/emacs-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
     import-tree.url = "github:vic/import-tree";
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     wrapper-modules.url = "github:BirdeeHub/nix-wrapper-modules";
 
@@ -22,7 +26,7 @@
 
     emacs-init.url = "github:firefoxsalesman/NixEmacs";
 
-    ewm.url = "https://codeberg.org/ezemtsov/ewm/archive/master.tar.gz";
+    # ewm.url = "https://codeberg.org/ezemtsov/ewm/archive/master.tar.gz";
 
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -75,13 +79,18 @@
       flake = false;
     };
 
-    gptel-got = {
-      url = "https://git.bajsicki.com/phil/gptel-got";
+    gptel-preset-collection = {
+      url = "github:karthink/gptel-preset-collection";
       flake = false;
     };
 
-    gptel-agent-harness = {
-      url = "https://github.com/beacoder/gptel-agent-harness";
+    code-review = {
+      url = "github:doomelpa/code-review";
+      flake = false;
+    };
+
+    whisper = {
+      url = "github:sachac/whisper.el";
       flake = false;
     };
   };
@@ -97,67 +106,46 @@
 
 let
   system = "x86_64-linux";
-  pkgs-stable = import inputs.nixpkgs-stable {
-    inherit system;
-    config = {
-      allowUnfree = true;
-      permittedInsecurePackages = [
-        "pnpm-10.29.2"
-        "electron-40.10.5"
-      ];
-    };
-  };
 in
 {
-  flake.overlay =
-    final: prev: pkgs: inputs:
-    let
-      packages = self.packages.${pkgs.system};
-    in
-    {
-      # shell scripts
-      ezf = packages.ezf;
-      cast = packages.cast;
-      doomer = packages.doomer;
-      ffmpeg-bulk = packages.ffmpeg-bulk;
-      masstube = packages.masstube;
-      mpvmacs = packages.mpvmacs;
-      hdmihelper = packages.hdmihelper;
-      i3status-rs = packages.i3status-rs;
-      playAlbum = packages.playAlbum;
-      pkg = packages.pkg;
-      startEwm = packages.startEwm;
-      startOllama = packages.startOllama;
-      udisksmenu = packages.udisksmenu;
-      wiki = packages.wiki;
-
-      # overrides
-      libdisplay-info = prev.libdisplay-info_0_3;
-      mpv = packages.mpv;
-      rassumfrassum = pkgs-stable.rassumfrassum;
-      kmonad = inputs.kmonad.packages.${pkgs.system}.default;
-      lutris = pkgs-stable.lutris;
-      sage = pkgs-stable.sage;
-
-      #emacs packages
-      emacsPackagesFor =
-        emacs:
-        ((prev.emacsPackagesFor emacs).overrideScope (
-          nfinal: nprev: {
-            qutebrowser = packages.qutebrowser-emacs;
-            doom-nano-modeline = packages.doom-nano-modeline;
-            repeaters = packages.repeaters;
-            app-launcher = packages.app-launcher;
-            ezf = packages.emacs-ezf;
-            mpc-wrapper = packages.mpc-wrapper;
-            roll = packages.roll;
-            pertab = packages.pertab;
-            embark = packages.embark;
-            gptel-got = packages.gptel-got;
-            gptel-agent-harness = packages.gptel-agent-harness;
-          }
-        ));
+  flake = {
+    pkgs-stable = import inputs.nixpkgs-stable let {
+      inherit system;
+      config = {
+        allowUnfree = true;
+        nvidia.acceptLicense = true;
+        permittedInsecurePackages = [
+          "qutebrowser-3.7.0"
+        ];
+      };
     };
+
+    overlay =
+      final: prev: pkgs: inputs:
+      let
+        packages = self.packages.${pkgs.system};
+      in
+      {
+        emacsPackagesFor =
+          emacs:
+          ((prev.emacsPackagesFor emacs).overrideScope (
+            nfinal: nprev: {
+              qutebrowser = packages.qutebrowser-emacs;
+              doom-nano-modeline = packages.doom-nano-modeline;
+              repeaters = packages.repeaters;
+              app-launcher = packages.app-launcher;
+              ezf = packages.emacs-ezf;
+              mpc-wrapper = packages.mpc-wrapper;
+              roll = packages.roll;
+              pertab = packages.pertab;
+              embark = packages.embark;
+              code-review = packages.code-review;
+              whisper = packages.whisper;
+              gptel-preset-collection = packages.gptel-preset-collection;
+            }
+          ));
+      };
+  };
 }
 #+end_src
 
@@ -167,8 +155,8 @@ in
 { inputs, ... }:
 
 {
-  perSystem = { pkgs, ... }: {
-
+  perSystem = { config, pkgs, ... }: {
+    overlayAttrs = { inherit (config.packages) hdmihelper; };
     packages.hdmihelper = pkgs.writeShellScriptBin "hdmihelper" ''
       case "$1" in
         dual ) xrandr --output HDMI-1-0 --right-of eDP-1 --mode 1920x1080 --output eDP-1 --primary --mode 1920x1080 ;;
@@ -191,6 +179,7 @@ Dev templates: https://github.com/the-nix-way/dev-templates
     {
       lib,
       pkgs,
+      config,
       self',
       ...
     }:
@@ -202,6 +191,7 @@ Dev templates: https://github.com/the-nix-way/dev-templates
       };
     in
     {
+      overlayAttrs = { inherit (config.packages) pkg; };
       packages.pkg = pkgs.writeShellScriptBin "pkg" ''
         	<<Pkg Body>>
       '';
@@ -287,28 +277,38 @@ xdg-mime default org-protocol.desktop x-scheme-handler/org-protocol
 * Home Manager
 ** Main Config
 #+begin_src nix-ts :tangle modules/home.nix
-{ self, inputs, ... }:
+{
+  self,
+  inputs,
+  lib,
+  ...
+}:
 let
   system = "x86_64-linux";
   pkgs = import inputs.nixpkgs {
     inherit system;
     config = {
+      problems.handlers.posthog.broken = "warn"; # or "ignore"
       allowUnfree = true;
+      nvidia.acceptLicense = true;
       permittedInsecurePackages = [
-        "pnpm-10.29.2"
-        "electron-40.10.5"
+        "qutebrowser-3.7.0"
       ];
     };
     overlays = [
-      inputs.ewm.overlays.default
-      (final: prev: self.overlay final prev pkgs inputs)
-      inputs.emacs-init.overlay
       inputs.emacs-overlay.overlay
+      inputs.emacs-init.overlay
+      self.overlays.default
+      (final: prev: self.overlay final prev pkgs inputs)
+      # inputs.ewm.overlays.default
     ];
   };
 in
 {
-  imports = [ inputs.home-manager.flakeModules.home-manager ];
+  imports = with inputs; [
+    home-manager.flakeModules.home-manager
+    flake-parts.flakeModules.easyOverlay
+  ];
   systems = [ "x86_64-linux" ];
   flake = {
     homeConfigurations."holschcc@emacs" = inputs.home-manager.lib.homeManagerConfiguration {
@@ -316,6 +316,13 @@ in
       modules = [
         inputs.self.homeModules.main
         inputs.self.homeModules.emacs-host
+      ];
+    };
+    homeConfigurations."holschcc@work" = inputs.home-manager.lib.homeManagerConfiguration {
+      inherit pkgs;
+      modules = [
+        inputs.self.homeModules.main
+        inputs.self.homeModules.work-host
       ];
     };
     homeConfigurations."holschcc@monitors" = inputs.home-manager.lib.homeManagerConfiguration {
@@ -331,6 +338,7 @@ in
       {
         imports = with inputs; [
           self.homeModules.aesthetics
+          self.homeModules.sops
           self.homeModules.ai
           self.homeModules.canary
           self.homeModules.chat
@@ -343,16 +351,13 @@ in
           # self.homeModules.ewm
           self.homeModules.wm
           self.homeModules.fileManager
-          self.homeModules.gaming
           self.homeModules.java
-          self.homeModules.ledger
           self.homeModules.media
           self.homeModules.notifications
           self.homeModules.passwordManagement
           # self.homeModules.sage
           self.homeModules.shellConfig
           self.homeModules.web
-          self.homeModules.webdev
           self.homeModules.writing
           stylix.homeModules.stylix
           emacs-init.homeModules.emacs-init
@@ -396,7 +401,14 @@ in
           programs.home-manager.enable = true;
 
           nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
-          targets.genericLinux.gpu.enable = true;
+          targets.genericLinux.gpu = {
+            enable = true;
+            nvidia = {
+              enable = true;
+              sha256 = "sha256-CqsFGNtTz3PEEtx/MrvIUMqV6DnYkj0N5L/0LByRac4=";
+              version = "580.196.07";
+            };
+          };
         };
       };
   };
@@ -405,26 +417,105 @@ in
 
 ** Host-Predicated Code
 #+begin_src nix-ts :tangle modules/hosts.nix
+{ inputs, ... }:
+
 {
   flake.homeModules = {
-    emacs-host.hosts = {
-      xrandr-command = ''
-        	xrandr --setprovideroutputsource modesetting NVIDIA-0
+    emacs-host.imports = with inputs.self.homeModules; [
+      personalMachine
+      singleMonitorMachine
+    ];
+    work-host = { pkgs, ... }: {
+      imports = with inputs.self.homeModules; [
+        singleMonitorMachine
+        workAI
+      ];
+      home.packages = with pkgs; [
+        rustc
+        cargo
+        uv
+        cmake
+        firefox
+      ];
+      programs.emacs.init = {
+        ide.languages.python = {
+          enable = true;
+	  wantRuff = true;
+        };
+        usePackage.ghostel.init = ''
+          (defun efs/ghostel-command (command name) (require 'ghostel) (ghostel-shell-command command name))
+          (defun efs/ghostel-docker-command (container) (efs/ghostel-command (concat "docker exec -it '" container "' bash -c '. /opt/tetramem/python_env/bin/activate; bash -i'") container))
+          (defun efs/enter-excelsior () (interactive) (efs/ghostel-docker-command "excelsior-sw-environ"))
+          (defun efs/enter-sdk () (interactive) (efs/ghostel-docker-command "tetramem-sdk"))
+          (defun efs/openocd () (interactive) (efs/ghostel-command "/mnt/nfs/ssunil/toolchains/hermetic/openocd/bin/openocd -c \"bindto 0.0.0.0\" -c \"set JTAGSN MLX200EVK025C\" -f board/mlx200_rv64_ft4232ha_evk.cfg" "openocd"))
+          (defun efs/run-excelsior () (interactive) (shell-command "docker run -dit --name excelsior-sw-environ --replace --mount \"src=$HOME/.ssh,target=/root/.ssh,type=bind\" --mount \"src=$HOME/tetramem,target=/root/tetramem,type=bind\" --mount \"src=$HOME/kernelagent,target=/root/kernelagent,type=bind\" --mount \"src=/dev/ftdi-MLX200EVK025C-ch02,target=/dev/ftdi-MLX200EVK025C-ch02,type=bind\" --device \"/dev/ft4232ha_MLX200EVK025C_uart:/dev/ft4232ha_MLX200EVK025C_uart\" --network host 'excelsior-sw-environ'"))
+        '';
+      };
+    };
+    monitors-host = {
+      imports = [ inputs.self.homeModules.personalMachine ];
+      hosts = {
+        xrandr-command = ''
+          xrandr --output DP-4 --primary --mode 1920x1080 --output DVI-I-1 --mode 1920x1200
+        '';
+        exwm-monitors = [
+          ''0 "DP-4"''
+          ''1 "DVI-I-1"''
+        ];
+        wantBattery = false;
+      };
+    };
+    singleMonitorMachine = {
+      hosts = {
+        xrandr-command = ''
+          xrandr --setprovideroutputsource modesetting NVIDIA-0
           xrandr --auto
           xrandr --dpi 96
-      '';
-      exwm-monitors = [ ''0 "eDP-1-1"'' ];
-      wantBattery = true;
+        '';
+        exwm-monitors = [ ''0 "eDP-1-1"'' ];
+        wantBattery = true;
+      };
     };
-    monitors-host.hosts = {
-      xrandr-command = ''
-        	  xrandr --output DP-4 --primary --mode 1920x1080 --output DVI-I-1 --mode 1920x1200
-      '';
-      exwm-monitors = [
-        ''0 "DP-4"''
-        ''1 "DVI-I-1"''
-      ];
-      wantBattery = false;
+    personalMachine.imports = with inputs.self; [
+      homeModules.gaming
+      homeModules.ledger
+      homeModules.webdev
+      homeModules.personalAI
+      homeModules.personalChat
+    ];
+  };
+}
+#+end_src
+
+** Sops Setup
+#+begin_src nix-ts :tangle modules/sops.nix
+{ inputs, ... }:
+{
+  flake = {
+    mkEnvVar = pkgs: config: secretName: varName: {
+      sops.secrets."${secretName}" = { };
+      home.sessionVariables."${varName}" = "$(${pkgs.coreutils}/bin/cat ${
+        config.sops.secrets."${secretName}".path
+      })";
+    };
+
+    homeModules.sops = { pkgs, ... }: {
+      imports = [ inputs.sops-nix.homeManagerModules.sops ];
+      home.packages = [ pkgs.sops ];
+      sops = {
+        age.keyFile = "/home/holschcc/.config/sops/age/keys.txt";
+        defaultSopsFile = ../secrets/secrets.yaml;
+        defaultSopsFormat = "yaml";
+      };
+      programs.emacs.init.usePackage.sops = {
+        enable = true;
+        hook = [
+          {
+            names = [ "on-first-file" ];
+            actions = [ "'global-sops-mode" ];
+          }
+        ];
+      };
     };
   };
 }
@@ -433,7 +524,14 @@ in
 ** User Dirs
 #+begin_src nix-ts :tangle modules/user-dirs.nix
 {
-  flake.homeModules.main = { config, ... }: {
+  flake.homeModules.main = { lib, config, ... }: {
+    home.sessionVariables = {
+        XDG_DATA_HOME = "$HOME/.local";
+        XDG_STATE_HOME = "$HOME/.local/state";
+        XDG_CACHE_HOME = "$HOME/.cache";
+        XDG_CONFIG_HOME = "$HOME/.config";
+        XDG_DATA_DIRS = lib.mkForce "$HOME/.nix-profile/share:$XDG_DATA_DIRS";
+    };
     xdg.userDirs = {
       enable = true;
       setSessionVariables = true;
@@ -461,6 +559,8 @@ in
     { pkgs, lib, ... }:
     {
       home.shellAliases = {
+        openocd = "/mnt/nfs/ssunil/toolchains/hermetic/openocd/bin/openocd";
+        gdbn = "/mnt/nfs/ssunil/toolchains/hermetic/toolchains/nds64le-elf-newlib-v5f/bin/riscv64-elf-gdb";
         ffrecord = "ffmpeg -f sndio -i snd/0.mon -f x11grab -r 30 -s 1920x1080 -i :0 -c:v libx164 -preset ultrafast -acodec copy ~/test.mkv";
         ffaud = "ffmpeg -f alsa -channels 1 -sample_rate 44100 -i default:CARD=Mic output.flac";
         sx = "startx";
@@ -472,8 +572,8 @@ in
         gc = "git clone";
         gp = "git pull";
         gP = "git push";
-	reboot = "doas reboot";
-	halt = "doas shutdown -P now";
+        reboot = "doas reboot";
+        halt = "doas shutdown -P now";
       };
     };
 }
@@ -539,12 +639,19 @@ It's mostly here for eshell to get completions from, but it's a usable shell
         };
         usePackage = {
           eshell = {
-            ghookf = [ "('eshell-first-time-mode 'efs/configure-eshell)" ];
-            gfhookf = [
-              ''
-                ('eshell-post-command (lambda () (eshell-write-history eshell-history-file-name t)
-                		                (eshell-read-history eshell-history-file-name t)))
-              ''
+            hook = [
+              {
+                names = [ "eshell-first-time-mode" ];
+                actions = [ "'efs/configure-eshell" ];
+              }
+              {
+                namesDeferred = [ "eshell-post-command" ];
+                actions = [
+                  ''
+                    (lambda () (eshell-write-history eshell-history-file-name t)
+                                    		                (eshell-read-history eshell-history-file-name t))''
+                ];
+              }
             ];
             general."s-<enter>" = "'efs/make-eshell";
             setopt = {
@@ -570,8 +677,13 @@ It's mostly here for eshell to get completions from, but it's a usable shell
             '';
           };
 
-          fish-completion.gfhookf = [
-            "('fish-completion-mode (local! completion-at-point-functions (list 'tempel-complete 'pcomplete-completions-at-point)))"
+          fish-completion.hook = [
+            {
+              namesDeferred = [ "fish-completion-mode" ];
+              actions = [
+                "(local! completion-at-point-functions (list 'tempel-complete 'pcomplete-completions-at-point))"
+              ];
+            }
           ];
 
           evil-collection-eshell = {
@@ -583,18 +695,26 @@ It's mostly here for eshell to get completions from, but it's a usable shell
               "C-v" = "'evil-collection-eshell-evil-delete-line";
             };
             config = ''
-              	    (efs/evil-collection-remap 'evil-collection-eshell-setup-keys 'normal eshell-mode-map
+              (efs/evil-collection-remap 'evil-collection-eshell-setup-keys 'normal eshell-mode-map
               	    			   "d" 'evil-yank
               	    			   "D" 'evil-yank-line
               	    			   "c" 'evil-visual-state
               	    			   "C" 'evil-visual-line)
-              	  '';
+	     (efs/evil-collection-remap 'evil-collection-eshell-setup-keys 'insert eshell-mode-map
+              	    			   "S-RET" nil
+              	    			   "S-<return>" nil)
+            '';
           };
 
           esh-help = {
             enable = true;
             after = [ "eshell" ];
-            gfhookf = [ "('eshell-mode 'eldoc-box-hover-at-point-mode)" ];
+            hook = [
+              {
+                namesDeferred = [ "eshell-mode" ];
+                actions = [ "'eldoc-box-hover-at-point-mode" ];
+              }
+            ];
             config = "(setup-esh-help-eldoc)";
           };
 
@@ -640,6 +760,50 @@ It's mostly here for eshell to get completions from, but it's a usable shell
     (apply orig-fun args)))
 
 (advice-add #'eshell/cat :around #'adviced:eshell/cat)
+
+(defun eshell/v (&rest args)
+  "Vibe command for eshell. Ollama will execute the instruction in ARGS."
+  (let ((gptel-model 'qwen2.5:3b))
+    (gptel-request
+     (concat
+      "You are a command runner. You must run the command that achieves the user's goal."
+      (apply 'concat (mapcar (lambda (x) (concat x " ")) args))))))
+#+end_src
+
+*** ghostel
+#+begin_src nix-ts :tangle modules/shells/ghostel.nix
+{
+  flake.homeModules.shellConfig.programs.emacs.init.usePackage = {
+    ghostel = {
+      enable = true;
+      hook = [
+        {
+          names = [ "on-first-input" ];
+          actions = [
+            "'ghostel-compile-global-mode"
+            "'ghostel-comint-global-mode"
+          ];
+        }
+        {
+          names = [
+            "ghostel-mode"
+            "ghostel-compile-view-mode"
+          ];
+          actions = [ "(lambda () (display-line-numbers-mode -1))" ];
+        }
+      ];
+      generalTwoConfig.":n".ghostel-mode-map = {
+        g = "'ghostel-yank";
+        G = "'ghostel-yank";
+      };
+    };
+
+    popper.setopt.popper-reference-buffers = [
+      "'ghostel-mode"
+      "'ghostel-compile-view-mode"
+    ];
+  };
+}
 #+end_src
 
 *** starship
@@ -683,7 +847,6 @@ export NPM_CONFIG_USERCONFIG="$XDG_CONFIG_HOME/npm/npmrc";
 export XCOMPOSECACHE="$XDG_CACHE_HOME/x11/xcompose";
 export GOPATH="$XDG_DATA_HOME/go";
 export DOT_SAGE="$XDG_CONFIG_HOME/sage";
-# export XAUTHORITY="$XDG_RUNTIME_DIR/Xauthority";
 export CARGO_HOME="$XDG_DATA_HOME/cargo";
 export GNUPGHOME="$XDG_DATA_HOME/share/gnupg";
 export PASSWORD_STORE_DIR="$XDG_DATA_HOME/share/pass";
@@ -692,6 +855,22 @@ export ERRFILE="$XDG_CACHE_HOME/X11/xsession-errors"
 export XINITRC="$XDG_CONFIG_HOME"/X11/xinitrc
 export HISTFILE="''${XDG_STATE_HOME}"/bash/history
 GRADLE_USER_HOME="$XDG_DATA_HOME"/gradle
+
+if ! pgrep -x -u "''${USER}" gpg-agent >/dev/null 2>&1; then
+  gpg-connect-agent /bye >/dev/null 2>&1
+fi
+
+# Set SSH to use gpg-agent
+unset SSH_AGENT_PID
+if [ "''${gnupg_SSH_AUTH_SOCK_by:-0}" -ne $$ ]; then
+  export SSH_AUTH_SOCK="/run/user/$UID/gnupg/S.gpg-agent.ssh"
+fi
+
+# Set GPG TTY
+export GPG_TTY=$(tty)
+
+# Refresh gpg-agent tty in case user switches into an X session
+gpg-connect-agent updatestartuptty /bye >/dev/null
 
 [ "$(tty)" = "/dev/tty1" ] && ! pidof -s Xorg >/dev/null 2>&1 && exec startx
 #+end_src
@@ -846,26 +1025,15 @@ aliasesStr = concatStringsSep "\n"
 *** Environment variables
 #+begin_src nix-ts :tangle modules/shells/environment-variables.nix
 {
-  flake.homeModules.shellConfig =
-    { lib, config, ... }:
-    {
-      home.sessionVariables = {
-        XDG_DATA_HOME = "$HOME/.local";
-        XDG_STATE_HOME = "$HOME/.local/state";
-        XDG_CACHE_HOME = "$HOME/.cache";
-        XDG_CONFIG_HOME = "$HOME/.config";
-        XDG_DATA_DIRS = lib.mkForce "$HOME/.nix-profile/share:$XDG_DATA_DIRS";
-        EDITOR = "emacsclient";
-        BROWSER = "qutebrowser";
-        _JAVA_OPTIONS = "-Djava.util.prefs.userRoot=$XDG_CONFIG_HOME/java";
-        GTK2_RC_FILES = "/home/holschcc/.gtkrc-2.0";
-        SSH_AUTH_SOCK = "$(gpgconf --list-dirs agent-ssh-socket)";
-        _JAVA_AWT_WM_NONREPARENTING = "1";
-        PATH = "/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/holschcc/bin:/home/holschcc/.nix-profile/bin";
-        OLLAMA_API_BASE = "http://127.0.0.1:11434";
-	QTWEBENGINE_REMOTE_DEBUGGING="9222 qutebrowser";
-      };
-    };
+  flake.homeModules.shellConfig.home.sessionVariables = {
+    _JAVA_OPTIONS = "-Djava.util.prefs.userRoot=$XDG_CONFIG_HOME/java";
+    GTK2_RC_FILES = "/home/holschcc/.gtkrc-2.0";
+    SSH_AUTH_SOCK = "$(gpgconf --list-dirs agent-ssh-socket)";
+    _JAVA_AWT_WM_NONREPARENTING = "1";
+    PATH = "/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/holschcc/.local/bin:/home/holschcc/.nix-profile/bin";
+    OLLAMA_API_BASE = "http://127.0.0.1:11434";
+    GEMINI_API_KEY = "TERM"; # This makes minuet happy
+  };
 }
 #+end_src
 
@@ -886,7 +1054,12 @@ aliasesStr = concatStringsSep "\n"
     usePackage = {
       prettify-symbols = {
         enable = true;
-        ghookf = [ "('prog-mode 'prettify-symbols-mode)" ];
+        hook = [
+          {
+            names = [ "prog-mode" ];
+            actions = [ "'prettify-symbols-mode" ];
+          }
+        ];
       };
 
       dashboard.setopt = {
@@ -1046,6 +1219,7 @@ Pywal integration: https://github.com/danth/stylix/issues/99
      `(eshell-git-prompt-powerline-dir-face ((t (:background ,blue))))
      `(hl-line-face ((t (:background ,green))))
      `(solaire-hl-line-face ((t (:background ,green))))
+     `(markdown-ts-in-table ((t (:inherit fixed-pitch :font "Jet Brains Mono" :family "Monospace"))))
      `(tab-bar ((t :inherit mode-line)))
      `(eshell-git-prompt-powerline-clean-face
        ((t (:background ,green))))
@@ -1060,7 +1234,10 @@ Pywal integration: https://github.com/danth/stylix/issues/99
 We use this to format the date, time, & battery percentage in our modeline.
 #+begin_src nix-ts :tangle modules/aesthetics/modeline/i3bar.nix
 {
-  perSystem = { pkgs, ... }: {
+  perSystem = { pkgs, config, ... }: {
+    overlayAttrs = {
+      inherit (config.packages) i3status-rs;
+    };
     packages.i3status-rs = pkgs.writeShellScriptBin "i3status-rust" ''
       ${pkgs.i3status-rust}/bin/i3status-rs ~/.config/i3status-rust/config-default.toml
     '';
@@ -1111,7 +1288,12 @@ We use this to format the date, time, & battery percentage in our modeline.
 
         emacs.init.usePackage.i3bar = {
           enable = true;
-          ghookf = [ "('tab-bar-mode 'i3bar-mode)" ];
+          hook = [
+            {
+              names = [ "tab-bar-mode" ];
+              actions = [ "'i3bar-mode" ];
+            }
+          ];
           setopt.i3bar-command = ''"${lib.getExe pkgs.i3status-rs}"'';
         };
       };
@@ -1442,32 +1624,43 @@ A great deal was borrowed from:
 + https://github.com/Panadestein/emacsd/
 #+begin_src nix-ts :tangle modules/aesthetics/shrface.nix :noweb yes
 {
-  flake.homeModules.aesthetics.programs.emacs.init.usePackage = {
-    shr-tag-pre-highlight = {
-      enable = true;
-      after = [ "shrface" ];
-      preface = ''
-        <<Emacs Ricing Shr Tag Pre Highlight Preface>>
-      '';
-      config = ''
-        <<Emacs Ricing Shr Tag Pre Highlight Config>>
-      '';
-    };
+  flake.homeModules.aesthetics = { lib, ... }: {
+    programs.emacs.init.usePackage = {
+      shr-tag-pre-highlight = {
+        enable = true;
+        after = [ "shrface" ];
+        preface = ''
+          <<Emacs Ricing Shr Tag Pre Highlight Preface>>
+        '';
+        config = ''
+          <<Emacs Ricing Shr Tag Pre Highlight Config>>
+        '';
+      };
 
-    shrface = {
-      enable = true;
-      ghookf = [ "('(eww-mode elfeed-show-mode nov-mode) 'shrface-mode)" ];
-      setopt.shrface-header-line-max-level = 0;
-      config = ''
-        	  <<Emacs Ricing Shrface Config>>
-        	'';
-      generalOneConfig.shr-map."RET" =
-        "`,(cmd! (if (major-mode? 'eww-mode) (eww-follow-link) (shr-browse-url)))";
-      generalTwoConfig.local-leader.shrface-mode-map = {
-        "l" = "'shrface-links-consult";
-        "o" = "'shrface-headline-consult";
-        "]c" = "'org-next-block";
-        "[c" = "'org-previous-block";
+      shrface = {
+        enable = true;
+        setopt.shrface-header-line-max-level = 0;
+        config = ''
+          	  <<Emacs Ricing Shrface Config>>
+          	'';
+        generalOneConfig.shr-map."RET" =
+          "`,(cmd! (if (major-mode? 'eww-mode) (eww-follow-link) (shr-browse-url)))";
+        generalTwoConfig.local-leader.shrface-mode-map = {
+          "l" = "'shrface-links-consult";
+          "o" = "'shrface-headline-consult";
+          "]c" = "'org-next-block";
+          "[c" = "'org-previous-block";
+        };
+        hook = [
+          {
+            names = [
+              "eww-mode"
+              "elfeed-show-mode"
+              "nov-mode"
+            ];
+            actions = [ "'shrface-mode" ];
+          }
+        ];
       };
     };
   };
@@ -1619,11 +1812,27 @@ A great deal was borrowed from:
 *** Writeroom
 I couldn't get olivetti to work.
 #+begin_src nix-ts :tangle modules/aesthetics/writeroom.nix
+{ self, ... }:
 {
   flake.homeModules.aesthetics.programs.emacs.init.usePackage.writeroom-mode = {
     enable = true;
-    ghookf = [ "((gen-mode-hooks '(Man org-agenda org Info markdown shrface)) 'writeroom-mode)" ];
-    gfhookf = [ "('writeroom-mode-enable 'visual-line-mode)" ];
+    hook = [
+      {
+        names = [
+          "Man-mode"
+          "org-agenda-mode"
+          "org-mode"
+          "Info-mode"
+          "markdown-ts-mode"
+          "shrface-mode"
+        ];
+        actions = [ "'writeroom-mode" ];
+      }
+      {
+        namesDeferred = [ "writeroom-mode-enable" ];
+        actions = [ "'visual-line-mode" ];
+      }
+    ];
     setopt = {
       writeroom-mode-line = true;
       writeroom-maximize-window = false;
@@ -1698,8 +1907,20 @@ I couldn't get olivetti to work.
 }
 #+end_src
 
+*** Cursor Prettification
+#+begin_src nix-ts :tangle modules/aesthetics/cursor-prettification.nix
+{
+  flake.homeModules.aesthetics.programs.emacs.init.usePackage.comet-trail = {
+    enable = true;
+    config = "(hook! 'fundamental-mode 'comet-trail-mode)";
+    afterCall = [ "on-init-ui-hook" ];
+  };
+}
+#+end_src
+
 ** Extra Packages
 #+begin_src nix-ts :tangle modules/extra-packages.nix
+{ inputs, ... }:
 {
   flake.homeModules.extraPackages =
     { config, pkgs, ... }:
@@ -1712,6 +1933,7 @@ I couldn't get olivetti to work.
         wget
         zbar
         # scripts
+        ezf
         hdmihelper
         pkg
       ];
@@ -1775,12 +1997,9 @@ I think most of it was from the github page for lsp mode, but it's been a while,
           languages = {
             bash.enable = true;
             json.enable = true;
-            lua.enable = true;
             toml.enable = true;
-            rust.enable = true;
             yaml.enable = true;
             xml.enable = true;
-            zenscript.enable = true;
           };
         };
 
@@ -1793,12 +2012,22 @@ I think most of it was from the github page for lsp mode, but it's been a while,
         };
 
         usePackage = {
-          rainbow-delimiters = {
+	  rainbow-delimiters = {
             enable = true;
-            ghookf = [ "('prog-mode 'rainbow-delimiters-mode)" ];
+            hook = [
+              {
+                names = [ "prog-mode" ];
+                actions = [ "'rainbow-delimiters-mode" ];
+              }
+            ];
           };
 
-          racket-mode.gfhookf = [ "('racket-mode 'hs-minor-mode)" ];
+          racket-mode.hook = [
+            {
+              namesDeferred = [ "racket-mode " ];
+              actions = [ "'hs-minor-mode" ];
+            }
+          ];
 
           toml-ts-mode = {
             extraPackages = [ pkgs.tombi ];
@@ -1814,90 +2043,162 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 
 *** Project Management
 #+begin_src nix-ts :tangle modules/development/project-management.nix :noweb yes
+{ inputs, ... }:
 {
+  perSystem =
+    { pkgs, ... }:
+    let
+      epkgs = pkgs.emacs.pkgs;
+    in
+    {
+      packages.code-review = epkgs.callPackage epkgs.trivialBuild rec {
+        pname = "code-review";
+        version = "pinned";
+        src = inputs.code-review;
+        propagatedUserEnvPkgs = with epkgs; [
+          closql
+          magit
+          transient
+          a
+          ghub
+          uuidgen
+          deferred
+          markdown-mode
+          forge
+          emojify
+        ];
+        buildInputs = propagatedUserEnvPkgs;
+      };
+    };
+
   flake.homeModules.development =
     { pkgs, lib, ... }:
     {
-      programs.emacs.init = {
-        ide = {
-          magit = {
-            enable = true;
-            forge = true;
-            todo = true;
-          };
-          project = true;
+      programs = {
+        mcp.servers.jj = {
+          command = "${pkgs.nodejs}/bin/npx";
+          args = [
+            "-y"
+            "jj-mcp-server"
+          ];
         };
-        usePackage = {
-          git-modes = {
-            enable = true;
-            mode = [
-              ''("/\\.gitattributes\\'" . gitattributes-mode)''
-              ''("/info/attributes\\'" . gitattributes-mode)''
-              ''("/git/attributes\\'" . gitattributes-mode)''
-	      ''("/\\.gitconfig\\'" . gitconfig-mode)''
-	      ''("/\\.git/config\\'" . gitconfig-mode)''
-	      ''("/modules/.*/config\\'" . gitconfig-mode)''
-	      ''("/git/config\\'" . gitconfig-mode)''
-	      ''("/\\.gitmodules\\'" . gitconfig-mode)''
-	      ''("/etc/gitconfig\\'" . gitconfig-mode)''
-	      ''("/\\.gitignore\\'" . gitignore-mode)''
-	      ''("/info/exclude\\'" . gitignore-mode)''
-	      ''("/git/ignore\\'" . gitignore-mode)''
-            ];
+        emacs.init = {
+          ide = {
+            magit = {
+              enable = true;
+              forge = true;
+              todo = true;
+            };
+            project = true;
           };
+          usePackage = {
+            git-modes = {
+              enable = true;
+              mode = [
+                ''("/\\.gitattributes\\'" . gitattributes-mode)''
+                ''("/info/attributes\\'" . gitattributes-mode)''
+                ''("/git/attributes\\'" . gitattributes-mode)''
+                ''("/\\.gitconfig\\'" . gitconfig-mode)''
+                ''("/\\.git/config\\'" . gitconfig-mode)''
+                ''("/modules/.*/config\\'" . gitconfig-mode)''
+                ''("/git/config\\'" . gitconfig-mode)''
+                ''("/\\.gitmodules\\'" . gitconfig-mode)''
+                ''("/etc/gitconfig\\'" . gitconfig-mode)''
+                ''("/\\.gitignore\\'" . gitignore-mode)''
+                ''("/info/exclude\\'" . gitignore-mode)''
+                ''("/git/ignore\\'" . gitignore-mode)''
+              ];
+            };
 
-          magit = {
-            setopt.magit-process-find-password-functions = [ "'magit-process-password-auth-source" ];
-            generalOne.project-prefix-map =
+            magit =
               let
-                mkMajutsuCmd = magitCommand: majutsuCommand: ''
-                  `,(cmd! (if (file-exists-p (nix-emacs-project-file ".jj"))
-                          (progn ${majutsuCommand})
-                          ${magitCommand}))
+                mkMajutsuCmd = name: magitCommand: majutsuCommand: ''
+                  (defun efs/vcs-${name} ()
+                                 "Do a magit/jutsu ${name} depending on what kind of repo we have."
+                                  (interactive)
+                                  (require 'majutsu)
+                                  (if (majutsu-toplevel)
+                                      (progn ${majutsuCommand})
+                                      ${magitCommand}))
                 '';
               in
               {
-                "v" = mkMajutsuCmd "(magit)" "(majutsu)";
-                "c" = mkMajutsuCmd "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-commit)";
-                "p" = mkMajutsuCmd "(magit-pull)" "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)";
-                "P" = mkMajutsuCmd "(magit-push)" "(call-interactively 'majutsu-git-push)";
-                "b" = mkMajutsuCmd "(magit-bookmark)" "(majutsu-bookmark)";
+                setopt.magit-process-find-password-functions = [ "'magit-process-password-auth-source" ];
+                preface = ''
+                  (defun efs/vcs-status (&optional dir)
+                                 "Do a magit/jutsu status depending on what kind of repo we have."
+                                  (interactive)
+                                  (require 'majutsu)
+                                  (if (majutsu-toplevel)
+                                      (progn (majutsu dir))
+                                      (magit dir)))
+                          ${mkMajutsuCmd "commit" "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-commit)"}
+                          ${mkMajutsuCmd "pull" "(magit-pull)"
+                            "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)"
+                          }
+                          ${mkMajutsuCmd "push" "(magit-push)" "(call-interactively 'majutsu-git-push)"}
+                          ${mkMajutsuCmd "branch" "(magit-branch)" "(majutsu-bookmark)"}
+                '';
+                generalOne.project-prefix-map = {
+                  "v" = "'efs/vcs-status";
+                  "c" = "'efs/vcs-commit";
+                  "p" = "'efs/vcs-pull";
+                  "P" = "'efs/vcs-push";
+                  "b" = "'efs/vcs-branch";
+                };
+                bindLocal.project-prefix-map = lib.mkForce { };
+                generalOneConfig = {
+                  magit-mode-map = {
+                    "e" = "'evil-next-visual-line";
+                    "B" = "'evil-goto-line";
+                  };
+                  magit-status-mode-map."j" = "'magit-unstage-files";
+                };
               };
-            bindLocal.project-prefix-map = lib.mkForce { };
-            generalOneConfig = {
-              magit-mode-map = {
+
+            code-review.enable = lib.mkForce false;
+
+            majutsu = {
+              enable = true;
+              extraPackages = [ pkgs.jujutsu ];
+              command = [ "majutsu-git-fetch" ];
+              extraConfig = ":autoload majutsu-repository-config-id";
+              hook = [
+                {
+                  names = [ "find-file" "after-revert" ];
+                  actions = [ "'majutsu-conflict-ensure-mode" ];
+                }
+              ];
+              generalTwoConfig.":n".majutsu-mode-map = {
                 "e" = "'evil-next-visual-line";
+                "o" = "'evil-previous-visual-line";
                 "B" = "'evil-goto-line";
               };
-              magit-status-mode-map."j" = "'magit-unstage-files";
+              setopt.majutsu-display-buffer-function = "'majutsu-display-buffer-same-window-except-diff-v1";
+              config = ''
+                (magit-add-section-hook 'majutsu-log-sections-hook #'magit-todos--insert-todos nil 'append)
+                        (majutsu-forge-mode)
+              '';
             };
-            # https://github.com/magit/magit/issues/5557
-            config = ''
-              (defalias 'magit--any
-                      (static-if (fboundp 'member-if) #'member-if #'cl-member-if))
-            '';
-          };
 
-          majutsu = {
-            enable = true;
-            extraPackages = [ pkgs.jujutsu ];
-            command = [ "majutsu-git-fetch" ];
-            extraConfig = ":autoload majutsu-repository-config-id";
-          };
-
-          projection-ibuffer = {
-            enable = true;
-            generalOne.project-prefix-map = {
-              C-b = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
-              i = '''("info" . projection-show-project-info)'';
+            projection-ibuffer = {
+              enable = true;
+              generalOne.project-prefix-map = {
+                C-b = ''`("ibuffer" . ,(cmd! (ibuffer) (ibuffer-filter-by-projection-root (project-current))))'';
+                i = '''("info" . projection-show-project-info)'';
+              };
             };
-          };
 
-          projection-multi = {
-            custom.projection-gradle-use-daemon = false;
-            config = ''
-              <<Emacs Development Projection Config>>
-            '';
+            projection-multi = {
+              custom.projection-gradle-use-daemon = false;
+              config = ''
+                <<Emacs Development Projection Config>>
+              '';
+            };
+
+            forge.config = ''
+              (add-to-list 'forge-alist '("gitlab.tetramem-eng.com" "gitlab.tetramem-eng.com/api/v4" "gitlab.tetramem-eng.com"
+                forge-gitlab-repository))'';
           };
         };
       };
@@ -1957,7 +2258,18 @@ I think most of it was from the github page for lsp mode, but it's been a while,
               ''("\\.jsx?\\'" . jtsx-jsx-mode)''
               ''("\\.tsx\\'" . jtsx-tsx-mode)''
             ];
-            ghookf = [ "('(jtsx-jsx-mode jtsx-tsx-mode) '(hs-minor-mode emmet-mode))" ];
+            hook = [
+              {
+                names = [
+                  "jtsx-jsx-mode"
+                  "jtsx-tsx-mode"
+                ];
+                actions = [
+                  "'hs-minor-mode"
+                  "'emmet-mode"
+                ];
+              }
+            ];
             config = ''
               <<Jtsx Config>>
             '';
@@ -2056,8 +2368,14 @@ I think most of it was from the github page for lsp mode, but it's been a while,
       enable = true;
       semel = true;
     };
-    usePackage.elisp-mode.gfhookf = [
-      "('emacs-lisp-mode (local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point))))"
+    usePackage.elisp-mode.hook = [
+      {
+        namesDeferred = [ "emacs-lisp-mode" ];
+        actions = [
+          "(local! completion-at-point-functions (list (cape-capf-super 'tempel-complete 'elisp-completion-at-point)))"
+          "'hs-minor-mode"
+        ];
+      }
     ];
   };
 }
@@ -2068,14 +2386,19 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 {
   flake.homeModules.java = { lib, ... }: {
     programs.emacs.init = {
+      completions.tempel.templates.java-ts-mode = {
+	forge = ''"//? forge"'';
+	neoforge = ''"//? neoforge"'';
+	forgeblock = ''"//? forge {" n p n "//? }"'';
+	neoforgeblock = ''"//? neoforge {" n "/*" p n "*///? }"'';
+      };
+
       ide.languages = {
-        kotlin.enable = false;
-        java = {
-          enable = true;
-          moreEglot = true;
-        };
+        kotlin.enable = true;
+        java.enable = true;
         gradle.enable = true;
       };
+
       usePackage = {
         kotlin-ts-mode = {
           extraPackages = lib.mkForce [ ];
@@ -2088,13 +2411,14 @@ I think most of it was from the github page for lsp mode, but it's been a while,
           preface = ''
             <<Java Preface>>
           '';
-          generalTwoConfig.":n".java-ts-mode-map = {
+	  generalTwoConfig.":n".java-ts-mode-map = {
             "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "block_comment"))'';
             "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "block_comment"))'';
             "o" = "'evil-previous-visual-line";
             "O" = "'evil-scroll-up";
           };
         };
+
         jarchive = {
           enable = true;
           after = [
@@ -2109,10 +2433,9 @@ I think most of it was from the github page for lsp mode, but it's been a while,
 }
 #+end_src
 
-Borrowed from here:
-https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 #+NAME: Java Preface
 #+begin_src emacs-lisp
+;; Borrowed from here: https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
 (defun tkj/java-decompile-class ()
   "Run the FernFlower decompiler on the current .class file using
  fernflower, and opens the decompiled Java file."
@@ -2211,33 +2534,42 @@ https://gitlab.com/skybert/my-little-friends/-/blob/master/emacs/.emacs
     (kill-buffer buffer)
     methods))
 
+(defun efs/mixin-at-identifier (kind input-node)
+  "Return true if the identifier of INPUT-NODE or its parent is KIND."
+  (let* ((parent (treesit-node-parent input-node))
+         (grandparent (treesit-node-parent parent)))
+    (and (equal (treesit-node-type grandparent) "element_value_pair")
+         (or (equal
+              kind
+              (treesit-node-text
+               (treesit-search-subtree grandparent "identifier") t))
+             (equal
+              kind
+              (treesit-node-text
+               (treesit-search-subtree parent "identifier") t))))))
+
+(defun efs/assemble-mixin-completions (completions bounds)
+  "Assemble COMPLETIONS for the current mixin."
+  (list (car bounds) (cdr bounds) completions :exclusive 'no))
+
 ;https://emacs.stackexchange.com/questions/15276/how-do-i-write-a-simple-completion-at-point-functions-function
 (defun efs/mixin-completion-at-point ()
   "A capf the contains the names of methods you might mix into."
   (when-let* ((bounds (bounds-of-thing-at-point 'word))
               (node-at-point
                (treesit-node-at
-                (marker-last-position (point-marker))))
-              (parent (treesit-node-parent node-at-point))
-              (node (treesit-node-parent parent))
-              (is-method
-               (and (equal
-                     (treesit-node-type node) "element_value_pair")
-                    (or (equal
-                         "method"
-                         (treesit-node-text
-                          (treesit-search-subtree node "identifier")
-                          t))
-                        (equal
-                         "method"
-                         (treesit-node-text
-                          (treesit-search-subtree parent "identifier")
-                          t))))))
-    (list
-     (car bounds)
-     (cdr bounds)
-     (efs/get-mixin-methods)
-     :exclusive 'no)))
+                (marker-last-position (point-marker)))))
+    (if (efs/mixin-at-identifier "method" node-at-point)
+        (efs/assemble-mixin-completions
+         (efs/get-mixin-methods) bounds)
+      (when (efs/mixin-at-identifier "value" node-at-point)
+        (efs/assemble-mixin-completions
+         '("HEAD"
+           "TAIL"
+           "RETURN"
+           "INVOKE"
+           "INVOKE_ASSIGN")
+         bounds)))))
 
 (defun efs/register-mixin-to-json (mixin-name)
   "Add MIXIN-NAME to mixins.modid.json."
@@ -2389,14 +2721,17 @@ https://jointhefreeworld.org/blog/articles/emacs/emacs-eglot-scala-kotlin/index.
 #+begin_src nix-ts :tangle modules/development/c.nix
 {
   flake.homeModules.c.programs.emacs.init = {
-      ide.languages.c.enable = true;
-      usePackage.c-ts-mode.generalTwoConfig.":n".c-ts-mode-map = {
-        "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "comment"))'';
-        "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "comment"))'';
-        "o" = "'evil-previous-visual-line";
-        "O" = "'evil-scroll-up";
-      };
+    ide.languages.c = {
+      enable = true;
+      preferClangd = true;
     };
+    usePackage.c-ts-mode.generalTwoConfig.":n".c-ts-mode-map = {
+      "S" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-below "comment"))'';
+      "R" = ''`,(cmd! (nix-emacs/starred-evil-open 'evil-open-above "comment"))'';
+      "o" = "'evil-previous-visual-line";
+      "O" = "'evil-scroll-up";
+    };
+  };
 }
 #+end_src
 
@@ -2411,9 +2746,20 @@ https://jointhefreeworld.org/blog/articles/emacs/emacs-eglot-scala-kotlin/index.
           enable = true;
           wantRuff = true;
         };
-        usePackage.python-ts-mode.setopt = {
-          python-shell-interpreter = ''"ipython"'';
-          python-shell-interpreter-args = ''"-i --simple-prompt"'';
+        usePackage = {
+          python-ts-mode.setopt = {
+            python-shell-interpreter = ''"ipython"'';
+            python-shell-interpreter-args = ''"-i --simple-prompt"'';
+          };
+
+	  pyvenv = {
+	    enable = true;
+	    demand = true;
+	    config = ''
+	      (pyvenv-mode)
+	      (pyvenv-tracking-mode)
+	    '';
+	  };
         };
       };
     };
@@ -2447,38 +2793,64 @@ https://gist.github.com/rosholger/e519c04243ae7ccb5bbf7ebef3f1cec2
 
         usePackage = {
           eglot = {
-            gfhookf = [
-              ''
-                ('eglot-managed-mode (local! completion-at-point-functions
-                                                             (list (cape-capf-choose
-                                                                    #'efs/mixin-completion-at-point
-                					            (cape-capf-super
-                                                                     #'tempel-complete
-                                                                     (cape-capf-buster #'eglot-completion-at-point)
-                                                                     (cape-capf-inside-comment #'cape-dict)
-                                                                     (cape-capf-inside-string #'cape-dict))
-                                                                    #'cape-dabbrev))))
-              ''
+            hook = [
+              {
+                namesDeferred = [ "eglot-managed-mode" ];
+                actions = [
+                  ''
+                    (local! completion-at-point-functions
+                            (list (cape-capf-choose
+                                   #'efs/mixin-completion-at-point
+                    		   (cape-capf-super
+                                    #'tempel-complete
+                                    (cape-capf-buster #'eglot-completion-at-point)
+                                    (cape-capf-inside-comment #'cape-dict)
+                                    (cape-capf-inside-string #'cape-dict))
+                                   #'cape-dabbrev)))
+                  ''
+                ];
+              }
+              # https://www.jamescherti.com/emacs-eglot-apply-code-actions-fixes-on-save/
+              {
+                namesDeferred = [ "before-save" ];
+                actions = [
+                  ''
+                    (lambda ()
+                       (when (and (fboundp 'eglot-managed-p)
+                                 (eglot-managed-p)
+                                 (fboundp 'eglot-server-capable)
+                                 (eglot-server-capable :codeActionProvider)
+                                 (fboundp 'eglot-current-server)
+                                 (fboundp 'eglot-code-actions)
+                                 (fboundp 'eglot-execute))
+                        (when-let* ((server (eglot-current-server)))
+                          (save-restriction
+                            (widen)
+                            (dolist (action (eglot-code-actions (point-min) (point-max)
+                                                                       "source.fixAll" nil))
+                                     (eglot-execute server action))))))''
+                ];
+              }
             ];
             # https://www.jamescherti.com/emacs-eglot-performance/
             setopt = {
-              eglot-sync-connect = lib.mkForce 0;
-              eglot-events-buffer-config = [
-                "':size"
-                0
-                "':format"
-                "'full"
-              ];
-              eglot-max-file-watches = 3000;
+	      eglot-sync-connect = lib.mkForce 0;
+              eglot-max-file-watches = false;
               eglot-report-progress = false;
               eglot-code-action-indications = false;
+	      eglot-events-buffer-config = [
+		"':size"
+		0
+		"':format"
+		"'full"
+	      ];
             };
             config = ''
               <<Development Eglot Config>>
             '';
           };
 
-	  #https://github.com/nemethf/eglot-x/blob/5cd6f936b9dc571edd4437b8fbf93ff68b0e723b/eglot-x.el
+          #https://github.com/nemethf/eglot-x/blob/5cd6f936b9dc571edd4437b8fbf93ff68b0e723b/eglot-x.el
           eglot-x.config = ''
             (cl-defmethod eglot-execute :around (server action)
               "Execute ACTION locally if possible, otherwise ask SERVER to execute it."
@@ -2546,8 +2918,9 @@ I'm running dired with a couple of small packages that improve on it
 { inputs, ... }:
 {
   perSystem =
-    { pkgs, ... }:
+    { pkgs, config, ... }:
     {
+      overlayAttrs = { inherit (config.packages) mpvmacs; };
       packages.mpvmacs = pkgs.writeShellScriptBin "mpvmacs" ''
         emacsclient -e "(mpv-play \"$1\")"
       '';
@@ -2578,7 +2951,12 @@ I'm running dired with a couple of small packages that improve on it
         };
 
         dirvish = {
-          gfhookf = [ "('dirvish-directory-view-mode 'diredfl-mode)" ];
+          hook = [
+            {
+              namesDeferred = [ "dirvish-directory-view-mode" ];
+              actions = [ "'diredfl-mode" ];
+            }
+          ];
           setopt.dirvish-use-mode-line = false;
           # Borrowed from doom
           generalTwoConfig.":n".dirvish-mode-map = {
@@ -2600,7 +2978,12 @@ I'm running dired with a couple of small packages that improve on it
         openwith = {
           enable = true;
           defer = true;
-          ghookf = [ "('dired-mode 'openwith-mode)" ];
+          hook = [
+            {
+              namesDeferred = [ "dired-mode" ];
+              actions = [ "'openwith-mode" ];
+            }
+          ];
           config = ''
             <<Emacs Openwith Config>>
           '';
@@ -2608,7 +2991,12 @@ I'm running dired with a couple of small packages that improve on it
 
         image = {
           enable = true;
-          gfhookf = [ "('image-mode 'image-transform-fit-to-window)" ];
+          hook = [
+            {
+              namesDeferred = [ "image-mode" ];
+              actions = [ "'image-transform-fit-to-window" ];
+            }
+          ];
           generalTwoConfig.":n".image-map = {
             "E" = "'image-next-file";
             "O" = "'image-previous-file";
@@ -2625,7 +3013,8 @@ I'm running dired with a couple of small packages that improve on it
 #+begin_src emacs-lisp
 (with-eval-after-load 'dired-x
   (gsetq
-   dired-omit-extensions (delete ".class" dired-omit-extensions)))
+   dired-omit-extensions
+   (delete ".bin" (delete ".class" dired-omit-extensions))))
 #+end_src
 
 #+NAME: Emacs Openwith Config
@@ -2663,20 +3052,22 @@ I'm running dired with a couple of small packages that improve on it
 ** Emacs
 *** Main
 #+begin_src nix-ts :tangle modules/emacs.nix :noweb yes
-{ inputs, ... }:
-
 {
   flake.homeModules.emacs =
     { config, pkgs, ... }:
 
     {
-      home.packages = with pkgs; [
-        xclip
-        xsel
-        xdotool
-        zip
-        unzip
-      ];
+      home = {
+        packages = with pkgs; [
+          xclip
+          xsel
+          xdotool
+          zip
+          unzip
+        ];
+        sessionVariables.EDITOR = "emacsclient";
+      };
+
       programs.emacs = {
         enable = true;
         package = pkgs.emacs-gtk;
@@ -2723,12 +3114,6 @@ or aliases. Stolen from Doom."
   "Creates a lambda that runs setq-local on the variable VAR with the value provided by BODY."
   `(lambda (&rest args) (setq-local ,var ,body)))
 
-(defun gen-mode-hooks (modes)
-  "Takes a list of symbols, MODES, & appends -mode to them."
-  (mapcar
-   (lambda (mode) (intern (concat (symbol-name mode) "-mode")))
-   modes))
-
 (defmacro efs/evil-collection-remap (fun state map &rest args)
   "Adds more key definitions directly after running some evil-collection setup function.
 `FUN` is the evil-collection function to advise.
@@ -2773,7 +3158,14 @@ Most of this was shamelessly lifted from Emacs from Scratch.
         enable = true;
         setopt = {
           confirm-kill-processes = false;
-          trusted-content = [ ''"~/projects/generic-todo/"'' ];
+          trusted-content = [
+            ''"~/projects/generic-todo/"''
+            ''"~/projects/DungeonsLibs/"''
+          ];
+          safe-local-variable-directories = [
+            ''"~/projects/generic-todo/"''
+            ''"~/projects/DungeonsLibs/"''
+          ];
         };
       };
 
@@ -2785,7 +3177,12 @@ Most of this was shamelessly lifted from Emacs from Scratch.
 
       loaddefs = {
         enable = true;
-        ghookf = [ "('on-first-file 'save-place-mode)" ];
+        hook = [
+          {
+            names = [ "on-first-file" ];
+            actions = [ "'save-place-mode" ];
+          }
+        ];
       };
     };
   };
@@ -2861,11 +3258,24 @@ My keybinds have been rearranged to work with Canary. Evil is used for the purpo
           evilNerdCommenter.enable = true;
           god.enable = true;
         };
-        usePackage.evil = {
-          setopt.evil-buffer-regexps = [ '''("^ \\*Minibuf.*\\*" . insert)'' ];
-          config = ''
-            <<Evil Config>>
-          '';
+        usePackage = {
+          evil = {
+            setopt.evil-buffer-regexps = [ '''("^ \\*Minibuf.*\\*" . insert)'' ];
+            config = ''
+              <<Evil Config>>
+            '';
+          };
+          simple = {
+            generalOne.":nm" = {
+              "M-m" = "'next-error";
+              "M-M" = "'previous-error";
+            };
+            config = ''
+              (repeaters-define-maps
+                '(("next-error" ;; borrowed from the hydra wiki
+                   next-error "m" previous-error "M")))
+            '';
+          };
         };
       };
     };
@@ -3003,11 +3413,16 @@ Cursors hydra: https://hungyi.net/posts/hydra-for-evil-mc/
       "evil-mc-pause-cursors"
       "evil-mc-make-cursor-here"
     ];
-    gfhookf = [
-      ''
-        ('doom-escape (lambda () (when (and (featurep 'evil-mc) (evil-mc-has-cursors-p))
-        	(evil-mc-undo-all-cursors)
-        						 (evil-mc-resume-cursors) t)))''
+    hook = [
+      {
+        namesDeferred = [ "doom-escape" ];
+        actions = [
+          ''
+            (lambda () (when (and (featurep 'evil-mc) (evil-mc-has-cursors-p))
+                    (evil-mc-undo-all-cursors)
+                    (evil-mc-resume-cursors) t))''
+        ];
+      }
     ];
     generalOne = {
       ":nv"."bz" = "'evil-mc-hydra/body";
@@ -3073,7 +3488,12 @@ Cursors hydra: https://hungyi.net/posts/hydra-for-evil-mc/
         evil-operator-state-map."k" = "'evil-exchange/cx";
         evil-visual-state-map."k" = "'evil-exchange";
       };
-      gfhookf = [ "('doom-escape (lambda () (when (featurep 'evil-exchange) (evil-exchange-cancel))))" ];
+      hook = [
+        {
+          namesDeferred = [ "doom-escape" ];
+          actions = [ "(lambda () (when (featurep 'evil-exchange) (evil-exchange-cancel)))" ];
+        }
+      ];
     };
   };
 }
@@ -3086,11 +3506,17 @@ Note: You still need to install udisks manually if you're not using this on nixo
 
 {
   perSystem =
-    { pkgs, self', ... }:
+    {
+      pkgs,
+      self',
+      config,
+      ...
+    }:
     let
       ezf = self'.packages.ezf;
     in
     {
+      overlayAttrs = { inherit (config.packages) udisksmenu; };
       packages.udisksmenu = pkgs.writeShellScriptBin "udisksmenu" ''
         action=$(${pkgs.coreutils}/bin/printf 'mount\nunmount' | ${ezf}/bin/ezf)
         disk=$(${pkgs.coreutils}/bin/ls /dev | ${pkgs.ripgrep}/bin/rg sd[a-z] | ${ezf}/bin/ezf)
@@ -3507,9 +3933,13 @@ Vertico is basically dmenu for emacs. It lists out all the options in a command 
         setopt.vertico-multiform-commands = [
           "'(music-menu grid)"
           "'(man grid)"
-          # "'(t posframe)"
         ];
-        ghookf = [ "('vertico-mode 'vertico-multiform-mode)" ];
+        hook = [
+          {
+            names = [ "vertico-mode" ];
+            actions = [ "'vertico-multiform-mode" ];
+          }
+        ];
       };
 
       vertico-quick.setopt = {
@@ -3666,7 +4096,12 @@ Evil integration is from noctuid & minad
     };
     usePackage = {
       consult = {
-        ghookf = [ "('minibuffer-setup 'consult-initial-narrow)" ];
+        hook = [
+          {
+            names = [ "minibuffer-setup" ];
+            actions = [ "'consult-initial-narrow" ];
+          }
+        ];
         command = [
           "consult-goto-line"
           "consult-keep-lines"
@@ -3794,6 +4229,7 @@ The version of embark in nixpkgs doesn't work right with org mode because it's m
 Credits:
 Which-key indicator from the embark wiki
 avy actions from karthink
+https://blog.fidelramos.net/software/embark-custom-actions
 #+begin_src nix-ts :tangle modules/emacs/completions/embark.nix :noweb yes
 { inputs, ... }:
 
@@ -3840,16 +4276,27 @@ avy actions from karthink
     programs.emacs.init = {
       completions.smallExtras.embark = true;
       usePackage.embark = {
-        general."M-a" = "'embark-dwim";
+        general = {
+          "M-a" = "'embark-dwim";
+          "M-A" = "'embark-act";
+        };
         generalTwo.":n".vertico-map."a" = "'embark-act";
         generalOneConfig = {
-          embark-file-map = {
+	  embark-region-map = {
+	    "r" = '''(gptel-rewrite :which-key "rewrite with gptel")'';
+	    "a" = '''(gptel-add :which-key "add to context")'';
+	    "s" = '''(gptel-send :which-key "send to gptel")'';
+	  };
+	  embark-file-map = {
+	    "a" = '''(gptel-add-file :which-key "add to context")'';
             "v" = "(my/embark-split-action find-file pertab-vertical-split)";
             "h" = "(my/embark-split-action find-file pertab-horizontal-split)";
             "t" = "(my/embark-split-action find-file tab-new)";
             "o" = "(my/embark-ace-action find-file)";
+            "g" = "'efs/vcs-status";
           };
           embark-buffer-map = {
+	    "a" = '''(gptel-add :which-key "add to context")'';
             "v" = "(my/embark-split-action switch-to-buffer pertab-vertical-split)";
             "h" = "(my/embark-split-action switch-to-buffer pertab-horizontal-split)";
             "t" = "(my/embark-split-action switch-to-buffer tab-new)";
@@ -3861,6 +4308,9 @@ avy actions from karthink
             "t" = "(my/embark-split-action bookmark-jump tab-new)";
             "o" = "(my/embark-ace-action bookmark-jump)";
           };
+          embark-symbol-map."R" = "'elisp-refs-symbol";
+          embark-identifier-map."$" = "'jinx-correct";
+	  embark-flymake-map."a" = '''(efs/embark-gptel-explain-diagnostic :which-key "explain diagnostic with gptel")'';
         };
         preface = ''
           <<Emacs Embark Preface>>
@@ -3895,6 +4345,24 @@ Borrowed from Karthinks
          (let ((aw-dispatch-always t))
            (aw-switch-to-window (aw-select nil))
            (call-interactively (symbol-function ',fn)))))))
+
+(defun efs/embark-gptel-explain-diagnostic ()
+  "Ask gptel to explain the Flymake diagnostic at point."
+  (interactive)
+  (require 'gptel-quick)
+  (if-let* ((diag (car (flymake-diagnostics (point)))))
+      (let* ((text (format
+                    "Explain this diagnostic in %s and suggest a fix.\n\n\
+Diagnostic (%s): %s\n\nCode:\n%s"
+                    (buffer-name)
+                    (flymake-diagnostic-type diag)
+                    (flymake-diagnostic-text diag)
+                    (buffer-substring-no-properties
+                     (flymake-diagnostic-beg diag)
+                     (flymake-diagnostic-end diag))))
+             )
+        (gptel-quick text))
+    (user-error "No Flymake diagnostic at point")))
 #+end_src
 
 **** App Launcher
@@ -3934,7 +4402,12 @@ Borrowed from Karthinks
       ace-isearch = {
         enable = true;
         demand = true;
-        gfhookf = [ "('pdf-view-mode (lambda () (ace-isearch-mode -1)))" ];
+        hook = [
+          {
+            namesDeferred = [ "pdf-view-mode" ];
+            actions = [ "(lambda () (ace-isearch-mode -1))" ];
+          }
+        ];
         generalOneConfig.isearch-mode-map."C-a" = "'avy-isearch";
         config = "(global-ace-isearch-mode)";
         setopt = {
@@ -3962,11 +4435,12 @@ An alternative to fzf.
 { inputs, ... }:
 {
   perSystem =
-    { pkgs, self', ... }:
+    { pkgs, self', config, ... }:
     let
       epkgs = pkgs.emacs.pkgs;
     in
     {
+      overlayAttrs = { inherit (config.packages) ezf; };
       packages = {
         emacs-ezf = (
           epkgs.callPackage epkgs.trivialBuild rec {
@@ -4035,11 +4509,19 @@ Helpful gives more information, & which-key tells what keybinds you have availab
 { inputs, ... }:
 
 {
-  perSystem = { pkgs, self', ... }: {
-    packages.wiki = pkgs.writeShellScriptBin "wiki" ''
-      <<Wiki>>
-    '';
-  };
+  perSystem =
+    {
+      pkgs,
+      self',
+      config,
+      ...
+    }:
+    {
+      overlayAttrs = { inherit (config.packages) wiki; };
+      packages.wiki = pkgs.writeShellScriptBin "wiki" ''
+        <<Wiki>>
+      '';
+    };
 
   flake.homeModules.emacs = { lib, pkgs, ... }: {
     programs.emacs.init = {
@@ -4085,7 +4567,12 @@ Helpful gives more information, & which-key tells what keybinds you have availab
             ];
             evil-owl-display-method = "'posframe";
           };
-          ghookf = [ "('evil-mode 'evil-owl-mode)" ];
+          hook = [
+            {
+              names = [ "evil-mode" ];
+              actions = [ "'evil-owl-mode" ];
+            }
+          ];
         };
 
         emacs.generalOne.help-map."A" =
@@ -4165,11 +4652,7 @@ All of this config was origally stolen from Karthinks. I don't think any of the 
 #+begin_src emacs-lisp
 (use-package
  repeaters
- :demand t
- :config
- (repeaters-define-maps
-  '(("next-error" ;; borrowed from the hydra wiki
-     next-error "`" next-error "n" previous-error "e"))))
+ :demand t)
 
 (use-package
  repeat
@@ -4228,8 +4711,11 @@ EDNC does the same thing as dunst. It will pop up any new notifications inside o
 {
   flake.homeModules.notifications.programs.emacs.init.usePackage.ednc = {
     enable = true;
-    gfhook = [
-      "('ednc-notification-presentation-functions #'show-notification-in-echo-area)"
+    hook = [
+      {
+        fullNamesDeferred = [ "ednc-notification-presentation-functions" ];
+        actions = [ "#'show-notification-in-echo-area" ];
+      }
     ];
     deferIncrementally = true;
     config = ''
@@ -4280,18 +4766,23 @@ How to add a latex package
         usePackage = {
           org = {
             extraPackages = [ pkgs.xdo ];
-            gfhookf = [
-              ''
-                ('org-mode (list 'ispell-minor-mode
-                	    (local! completion-at-point-functions (list (cape-capf-super
-                                                                           #'tempel-complete
-                						           #'cape-file)
-                                                                        #'pcomplete-completions-at-point
-                						        #'ob-gptel-capf
-                						        #'cape-tex
-                						        #'cape-elisp-block
-                						        #'cape-dict
-                                                                        #'cape-dabbrev))))''
+            hook = [
+              {
+                namesDeferred = [ "org-mode" ];
+                actions = [
+                  "'ispell-minor-mode"
+                  ''
+                    (local! completion-at-point-functions (list (cape-capf-super
+                                                                   #'tempel-complete
+                                    				   #'cape-file)
+                                                                #'pcomplete-completions-at-point
+                                    				#'ob-gptel-capf
+                                    				#'cape-tex
+                                    				#'cape-elisp-block
+                                    				#'cape-dict
+                                                                #'cape-dabbrev))''
+                ];
+              }
             ];
             custom.org-directory = ''"~/doc"'';
             setopt = {
@@ -4315,11 +4806,6 @@ How to add a latex package
             config = ''
               <<Emacs Org Config>>
             '';
-          };
-
-          org-auto-tangle = {
-            enable = true;
-            ghookf = [ "('org-mode 'org-auto-tangle-mode)" ];
           };
 
           denote = {
@@ -4362,6 +4848,7 @@ How to add a latex package
               ''"people"''
               ''"interview"''
               ''"rust"''
+              ''"tetramem"''
             ];
           };
 
@@ -4372,6 +4859,18 @@ How to add a latex package
               "obl" = "'biblio-lookup";
               "obi" = "'biblio-doi-insert-bibtex";
             };
+          };
+
+          org-semantic = {
+            enable = true;
+            setopt.org-semantic-vault-root = ''"~/doc/denote"'';
+            generalOne.global-leader = {
+              oS = '''(:ignore t :which-key "semantic")'';
+              oSf = "'org-semantic-find";
+              oSp = "'org-semantic-find-at-point";
+              oSr = "'org-semantic-reindex";
+            };
+            config = "(org-semantic-auto-reindex-mode)";
           };
         };
       };
@@ -4453,44 +4952,53 @@ No idea what the rest of this is for.
 *** Markdown
 #+begin_src nix-ts :tangle modules/writing/markdown.nix :noweb yes
 {
-  flake.homeModules.writing.programs.emacs.init = {
-    ide.languages.markdown.enable = true;
-    # Yoinked from heks-emacs
-    completions.tempel.templates.markdown-mode = {
-      gitcollapse = ''
-        & "## " (p "Heading") n n "<details>" n n
-        "<summary>" (p "Sub Heading")  "</summary>" n n
-        (r "Insert Link or comments") n n "</details>"'';
-      bolditalics = ''"***" p "***"'';
-      srcblock = "(call-interactively #'markdown-insert-gfm-code-block)";
-      src = ''"'" p "'"'';
-      unorderlist = ''& "- " (p "First") n> "- " (p "Second") n> "- " (p "Third")'';
-      orderlist = ''& "1. " (p "First") n> "2. " (p "Second") n> "3. " (p "Third")'';
-      insertimage = "(call-interactively #'markdown-insert-image)";
-      insertlink = "(call-interactively #'markdown-insert-link)";
-      hugotitle = ''& "+++" n "title = " (p "title") n "date = " (format-time-string "%Y-%m-%d") n "tags = [ " (p "tag1, tag2 ") "]" n "draft = false" n "+++"'';
-      h1 = ''& "# " p " #"'';
-      h2 = ''& "## " p " ##"'';
-      h3 = ''& "### " p " ###"'';
-      h4 = ''& "#### " p " ####"'';
-      inserttable = "(call-interactively #'markdown-insert-table)";
-    };
-    usePackage.markdown = {
-      generalOneConfig.markdown-mode-map."C-c C-e" = "'markdown-do";
-      gfhookf = [ "('markdown-mode 'efs/markdown-font-setup)" ];
-      setopt = {
-        markdown-command = ''"multimarkdown"'';
-        markdown-hide-markup = true;
+  flake.homeModules.writing = { pkgs, ... }: {
+    programs.emacs.init = {
+      ide.languages.markdown.enable = true;
+      # Yoinked from heks-emacs
+      completions.tempel.templates.markdown-ts-mode = {
+        gitcollapse = ''
+          & "## " (p "Heading") n n "<details>" n n
+          "<summary>" (p "Sub Heading")  "</summary>" n n
+          (r "Insert Link or comments") n n "</details>"'';
+        bolditalics = ''"***" p "***"'';
+        srcblock = ''"```" p n p n "```"'';
+        src = ''"'" p "'"'';
+        unorderlist = ''& "- " (p "First") n> "- " (p "Second") n> "- " (p "Third")'';
+        orderlist = ''& "1. " (p "First") n> "2. " (p "Second") n> "3. " (p "Third")'';
+        insertlink = ''"[" p "](" p ")"'';
+        hugotitle = ''& "+++" n "title = " (p "title") n "date = " (format-time-string "%Y-%m-%d") n "tags = [ " (p "tag1, tag2 ") "]" n "draft = false" n "+++"'';
+        h1 = ''& "# " p " #"'';
+        h2 = ''& "## " p " ##"'';
+        h3 = ''& "### " p " ###"'';
+        h4 = ''& "#### " p " ####"'';
+        inserttable = "(call-interactively #'markdown-ts-table-insert-table)";
       };
-      generalTwoConfig = {
-        ":nm".gfm-mode-map = {
-          "[h" = "'markdown-previous-visible-heading";
-          "]h" = "'markdown-next-visible-heading";
+      usePackage = {
+        markdown-ts-mode = {
+          hook = [
+            {
+              namesDeferred = [ "markdown-ts-mode" ];
+              actions = [ "'efs/markdown-font-setup" ];
+            }
+          ];
+          init = ''
+            <<Emacs Markdown Init>>
+          '';
+        };
+
+        markdown-ts-appear = {
+          enable = true;
+          defer = true;
+          setopt.markdown-ts-appear-table-style = "'unicode";
+          hook = [
+            {
+              names = [ "markdown-ts-mode" ];
+              actions = [ "'markdown-ts-appear-mode" ];
+            }
+          ];
         };
       };
-      preface = ''
-        <<Emacs Markdown Init>>
-      '';
     };
   };
 }
@@ -4501,12 +5009,12 @@ No idea what the rest of this is for.
 (defun efs/markdown-font-setup ()
   (variable-pitch-mode)
   (dolist (face
-           '((markdown-header-face-1 . 1.4)
-             (markdown-header-face-2 . 1.2)
-             (markdown-header-face-3 . 1.1)
-             (markdown-header-face-4 . 1.05)
-             (markdown-header-face-5 . 1.05)
-             (markdown-header-face-6 . 1.05)))
+           '((markdown-ts-heading-1 . 1.4)
+             (markdown-ts-heading-2 . 1.2)
+             (markdown-ts-heading-3 . 1.1)
+             (markdown-ts-heading-4 . 1.05)
+             (markdown-ts-heading-5 . 1.05)
+             (markdown-ts-heading-6 . 1.05)))
     (set-face-attribute (car face) nil
                         :font "SF Pro"
                         :weight 'regular
@@ -4534,7 +5042,12 @@ No idea what the rest of this is for.
         usePackage = {
           jinx = {
             enable = true;
-            ghookf = [ "('on-init-ui 'global-jinx-mode)" ];
+            hook = [
+              {
+                names = [ "on-init-ui" ];
+                actions = [ "'global-jinx-mode" ];
+              }
+            ];
             generalOneConfig.":n" = {
               "C-M-i" = "'jinx-correct";
               "]s" = "'jinx-next";
@@ -4544,7 +5057,12 @@ No idea what the rest of this is for.
 
           pdf-tools = {
             generalOneConfig.pdf-view-mode-map."C-s" = "'search-forward";
-            gfhookf = [ "('pdf-view-mode 'pdf-view-midnight-minor-mode)" ];
+            hook = [
+              {
+                namesDeferred = [ "pdf-view-mode" ];
+                actions = [ "'pdf-view-midnight-minor-mode" ];
+              }
+            ];
           };
 
           evil-collection-pdf = {
@@ -4692,7 +5210,12 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
         config = ''
           <<Tab Bar Config>>
         '';
-        ghookf = [ "('exwm-init 'tab-bar-mode)" ];
+        hook = [
+          {
+            names = [ "exwm-init" ];
+            actions = [ "'tab-bar-mode" ];
+          }
+        ];
         # ghookf = [ "('ewm-mode 'tab-bar-mode)" ];
         general = {
           "s-u" = "'tab-bar-hydra/body";
@@ -4738,7 +5261,24 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
 
       pertab = {
         enable = true;
-        ghookf = [ "('tab-bar-mode 'pertab-mode)" ];
+        hook =
+          let
+            ratio = hook: sign: {
+              namesDeferred = [
+                "pertab-follow-${hook}"
+                "pertab-scroll-${hook}"
+              ];
+              actions = [ "(lambda () (golden-ratio-mode ${sign}1))" ];
+            };
+          in
+          [
+            {
+              names = [ "tab-bar-mode" ];
+              actions = [ "'pertab-mode" ];
+            }
+            (ratio "enter" "-")
+            (ratio "exit" "+")
+          ];
         generalOneConfig.pertab-mode-map = {
           "s-e" = "'pertab-focus-down";
           "s-o" = "'pertab-focus-up";
@@ -4760,20 +5300,24 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
           pertab-previous-buffer-function = "'bufler-cycle-buffers-backward";
           roll-debug-enabled = false;
         };
-        gfhookf = [
-          "('(pertab-follow-enter pertab-scroll-enter) (lambda () (golden-ratio-mode -1)))"
-          "('(pertab-follow-exit pertab-scroll-exit) (lambda () (golden-ratio-mode +1)))"
-        ];
-	config = ''
-	  <<Pertab Config>>
-	'';
+        config = ''
+          <<Pertab Config>>
+        '';
       };
 
       pertab-monocle = pertabExtension;
       pertab-follow = pertabExtension;
       pertab-master-stack = pertabExtension;
       pertab-scroll = {
-        gfhookf = [ "('pertab-follow-enter 'balance-windows)" ];
+        hook = [
+          {
+            namesDeferred = [
+              "pertab-scroll-enter"
+              "pertab-follow-enter"
+            ];
+            actions = [ "'balance-windows" ];
+          }
+        ];
       }
       // pertabExtension;
     };
@@ -4809,7 +5353,12 @@ I borrowed pretty heavily from here: https://github.com/jamescherti/vim-tab-bar.
       programs.emacs.init.usePackage = {
         javelin = {
           enable = true;
-          gfhookf = [ "('kill-emacs 'javelin-clear-all)" ];
+          hook = [
+            {
+              namesDeferred = [ "kill-emacs" ];
+              actions = [ "'javelin-clear-all" ];
+            }
+          ];
           custom.javelin-disable-confirmation = true;
           general = {
             "s-1" = "'javelin-go-to-1";
@@ -4852,7 +5401,12 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
   flake.homeModules.wm.programs.emacs.init.usePackage = {
     bufler = {
       enable = true;
-      ghookf = [ "('tab-bar-mode 'bufler-mode)" ];
+      hook = [
+        {
+          names = [ "tab-bar-mode" ];
+          actions = [ "'bufler-mode" ];
+        }
+      ];
       general = {
         "s-b" = "'bufler-hydra/body";
         "s-f" = "'bufler-workspace-focus-buffer";
@@ -4889,8 +5443,19 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 
     bufler-workspace-tabs = {
       enable = true;
-      ghookf = [ "('bufler-mode 'bufler-workspace-workspaces-as-tabs-mode)" ];
-      gfhookf = [ "('bufler-workspace-workspaces-as-tabs-mode '(global-tab-line-mode burly-tabs-mode))" ];
+      hook = [
+        {
+          names = [ "bufler-mode" ];
+          actions = [ "'bufler-workspace-workspaces-as-tabs-mode" ];
+        }
+        {
+          namesDeferred = [ "bufler-workspace-workspaces-as-tabs-mode" ];
+          actions = [
+            "'global-tab-line-mode"
+            "'burly-tabs-mode"
+          ];
+        }
+      ];
     };
   };
 }
@@ -4910,6 +5475,8 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
   (group-or
    "Browsers"
    (name-match "Qutebrowser" (rx bos "Qutebrowser"))
+   (name-match
+    "qutebrowser-llm-response" (rx bos "qutebrowser-llm-response"))
    (name-match "Tor Browser" (rx bos "Tor Browser"))
    (mode-match "eww-mode" (rx bos "eww-"))))
  (group
@@ -5180,13 +5747,21 @@ Bufler is the other half of tab bar. It lets us automatically narrow buffers dow
 
         usePackage.exwm = {
           extraPackages = [ pkgs.xwininfo ];
-          gfhookf = [
+          hook = [
             # When window "class" updates, use it to set the buffer name
-            "('exwm-update-class (lambda () (exwm-workspace-rename-buffer exwm-class-name)))"
+            {
+              namesDeferred = [ "exwm-update-class" ];
+              actions = [ "(lambda () (exwm-workspace-rename-buffer exwm-class-name))" ];
+            }
             # When EXWM starts up, do some extra configuration
-            ''
-              ('exwm-init (lambda ()
-                          (start-process-shell-command "xbanish" nil "${lib.getExe pkgs.xbanish}")))''
+            {
+              namesDeferred = [ "exwm-init" ];
+              actions = [
+                ''
+                  (lambda ()
+                          (start-process-shell-command "xbanish" nil "${lib.getExe pkgs.xbanish}"))''
+              ];
+            }
           ];
           # Ctrl+q will enable the next key to be sent directly
           generalOneConfig.exwm-mode-map = {
@@ -5293,15 +5868,36 @@ NEG subtracts if it is true."
 *** EWM
 #+begin_src nix-ts :tangle modules/window-manager/ewm.nix
 {
-  perSystem = { lib, pkgs, ... }: {
-    packages.startEwm = pkgs.writeShellScriptBin "startewm" ''
-      emacs --fg-daemon --eval "(require 'ewm)" --eval "(ewm-start-module)" --eval "(efs/run-in-background \"${lib.getExe pkgs.wbg} ~/.config/home-manager/wallpaper.png\")"
-    '';
-  };
+  # perSystem =
+  #   {
+  #     lib,
+  #     pkgs,
+  #     config,
+  #     ...
+  #   }:
+  #   {
+  #     overlayAttrs = { inherit (config.packages) startEwm; };
+  #     packages.startEwm = pkgs.writeShellScriptBin "startewm" ''
+  #       emacs --fg-daemon --eval "(require 'ewm)" --eval "(ewm-start-module)" --eval "(efs/run-in-background \"${lib.getExe pkgs.wbg} ~/.config/home-manager/wallpaper.png\")"
+  #     '';
+  #   };
   flake.homeModules.ewm = { lib, pkgs, ... }: {
     programs.emacs.init.usePackage = {
-      dashboard.ghookf = [ "('after-init '(dashboard-insert-startupify-lists dashboard-initialize))" ];
-      evil.gfhookf = [ "('after-init 'evil-mode)" ];
+      dashboard.hook = [
+        {
+          names = [ "after-init" ];
+          actions = [
+            "'dashboard-insert-startupify-lists"
+            "'dashboard-initialize"
+          ];
+        }
+      ];
+      evil.hook = [
+        {
+          namesDeferred = [ "after-init" ];
+          actions = [ "'evil-mode" ];
+        }
+      ];
       ewm = {
         enable = true;
         defer = true;
@@ -5380,7 +5976,12 @@ NEG subtracts if it is true."
 {
   flake.homeModules.wm.programs.emacs.init.usePackage.popper = {
     enable = true;
-    ghookf = [ "('on-first-buffer 'popper-mode)" ];
+    hook = [
+      {
+        names = [ "on-first-buffer" ];
+        actions = [ "'popper-mode" ];
+      }
+    ];
     general = {
       "s-'" = "'popper-toggle";
       "s-\\\"" = "'popper-cycle";
@@ -5502,57 +6103,90 @@ NEG subtracts if it is true."
     (call-interactively 'switch-to-buffer))))
 #+end_src
 
-** Gptel
-https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
+** AI
+*** Keys
+#+begin_src nix-ts :tangle modules/ai/keys.nix :noweb yes
+{ self, ... }:
+{
+  flake.homeModules.personalAI =
+    { pkgs, config, ... }:
+    {
+      programs.emacs.init.usePackage.gptel.config = ''
+	<<Gptel Keys>>
+      '';
+    }
+    // self.mkEnvVar pkgs config "openrouter_api_key" "OPENROUTER_API_KEY"
+    // self.mkEnvVar pkgs config "groq_api_key" "GROQ_API_KEY";
+}
+#+end_src
 
-#+begin_src nix-ts :tangle modules/gptel.nix :noweb yes
+#+name: Gptel Keys
+#+begin_src emacs-lisp
+(gptel-make-gh-copilot "copilot")
+(gptel-make-openai
+ "OpenRouter"
+ :host "openrouter.ai"
+ :endpoint "/api/v1/chat/completions"
+ :stream t
+ :key (lambda () (getenv "OPENROUTER_API_KEY"))
+ :models '(nvidia/nemotron-3.5-super-vl:free))
+(gptel-make-openai
+ "Groq"
+ :host "api.groq.com"
+ :endpoint "/openai/v1/chat/completions"
+ :stream t
+ :key (lambda () (getenv "GROQ_API_KEY"))
+ :models
+ '(openai/gpt-oss-20b openai/gpt-oss-120b qwen/qwen3.8-27b))
+(with-eval-after-load 'gptel-agent
+  (gptel-make-preset
+   'subagent
+   :model 'nvidia/nemotron-3.5-super-vl:free)
+  (setopt gptel-agent-preset 'subagent))
+#+end_src
+
+*** Gptel
+https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
+#+begin_src nix-ts :tangle modules/ai/gptel.nix :noweb yes
 { inputs, ... }:
 
 {
-  perSystem = { lib, pkgs, ... }: {
-    packages =
-      let
-        epkgs = pkgs.emacs.pkgs;
-      in
-      {
-        startOllama = pkgs.writeShellScriptBin "start-ollama" ''
-          	if [[ "$(pidof ollama)" -gt 0 ]]; then
-                  echo "ollama already running"
-                else
-                  ${lib.getExe pkgs.ollama} serve
-                fi
-        '';
-        gptel-agent-harness = (
-          epkgs.callPackage epkgs.trivialBuild rec {
-            pname = "gptel-agent-harness";
-            version = "current";
-            src = inputs.gptel-agent-harness;
+  perSystem =
+    {
+      lib,
+      pkgs,
+      config,
+      ...
+    }:
+    {
+      overlayAttrs = { inherit (config.packages) startOllama; };
+      packages =
+        let
+          epkgs = pkgs.emacs.pkgs;
+        in
+        {
+          startOllama = pkgs.writeShellScriptBin "start-ollama" ''
+            if [[ "$(pidof ollama)" -gt 0 ]]; then
+                    echo "ollama already running"
+                  else
+                    ${lib.getExe pkgs.ollama} serve
+                  fi
+          '';
+          gptel-preset-collection = (
+            epkgs.callPackage epkgs.trivialBuild rec {
+              pname = "gptel-preset-collection";
+              version = "current";
+              src = inputs.gptel-preset-collection;
 
-            propagatedUserEnvPkgs = with epkgs; [
-              gptel-agent
-              compat
-              gptel
-            ];
+              propagatedUserEnvPkgs = with epkgs; [
+                gptel
+              ];
 
-            buildInputs = propagatedUserEnvPkgs;
-          }
-        );
-        gptel-got = (
-          epkgs.callPackage epkgs.trivialBuild rec {
-            pname = "gptel-got";
-            version = "current";
-            src = inputs.gptel-got;
-
-            propagatedUserEnvPkgs = with epkgs; [
-              org-ql
-              gptel
-            ];
-
-            buildInputs = propagatedUserEnvPkgs;
-          }
-        );
-      };
-  };
+              buildInputs = propagatedUserEnvPkgs;
+            }
+          );
+        };
+    };
 
   flake.homeModules.ai =
     {
@@ -5562,146 +6196,113 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
       ...
     }:
     {
-      home.packages = [ pkgs.ollama ];
-      programs = {
-        mcp.servers.nixos = {
-          command = "${pkgs.uv}/bin/uvx";
-          args = [ "mcp-nixos" ];
+      home = {
+        packages = [
+          pkgs.ollama
+          pkgs.jdt-language-server
+          pkgs.cursor-cli
+        ];
+        file = {
+          ".config/emacs/agents/web-agent.org".text = ''
+            <<Web Agent>>
+          '';
         };
-        emacs.init = {
-          ai = {
-            copilot = {
-              enable = false;
-              keepOutOf = [
-                "c-ts-mode"
-                "json5-ts-mode"
-                "json-ts-mode"
-                "LaTeX-mode"
-                "zenscript-mode"
-              ];
+      };
+      programs.emacs.init = {
+        ai.gptel = {
+          enable = true;
+          enableMcpIntegration = true;
+          introspection.enable = true;
+          agent.enable = true;
+        };
+
+        usePackage =
+          let
+            mkOllama = models: infix: {
+              "gptel${infix}-model" = "'${lib.findFirst (x: true) "" models}";
+              "gptel${infix}-backend" = ''
+                (gptel-make-ollama "Ollama"
+                	           :stream t
+                	           :protocol "http"
+                	           :host "localhost:11434"
+                	           :models '(${lib.concatMapStrings (k: "${k} ") models}))
+              '';
             };
+          in
+          {
             gptel = {
-              enable = true;
-              introspection = {
-                enable = true;
-                model = "qwen3:8b";
-              };
-              agent.enable = true;
+              command = [ "start-ollama" ];
+              generalOne.global-leader."gs" = '''("start" . start-ollama)'';
+              setopt = {
+                gptel-max-tokens = 10000000;
+                gptel-prompt-prefix-alist = [
+                  ''`(markdown-mode . ,(concat "meatbag ›  "))''
+                  ''`(org-mode . ,(concat  "meatbag ›  "))''
+                  ''`(text-mode . ,(concat "meatbag ›  "))''
+                ];
+                gptel-response-prefix-alist = [
+                  '''(markdown-mode . "HK-47  ")''
+                  '''(org-mode . "HK-47  ")''
+                  '''(text-mode . "HK-47  ")''
+                ];
+                gptel-use-tools = "'force";
+              }
+              // mkOllama [ "llama3.2:3b" "qwen2.5:3b" ] "";
+              generalOne.global-leader."gi" = "'gptel-inline";
+              preface = ''
+                <<Emacs Gptel Preface>>
+              '';
+              config = ''
+                <<Emacs Gptel Config>>
+              '';
             };
-          };
-          usePackage =
-            let
-              mkOllama = models: infix: {
-                "gptel${infix}-model" = "'${lib.findFirst (x: true) "" models}";
-                "gptel${infix}-backend" = ''
-                  (gptel-make-ollama "Ollama"
-                  	           :stream t
-                  	           :protocol "http"
-                  	           :host "localhost:11434"
-                  	           :models '(${lib.concatMapStrings (k: "${k} ") models}))
-                '';
-              };
-            in
-            {
-              gptel = {
-                command = [ "start-ollama" ];
-                generalOne.global-leader."gs" = '''("start" . start-ollama)'';
-                setopt = {
-                  gptel-max-tokens = 10000000;
-                  gptel-prompt-prefix-alist = [
-                    ''`(markdown-mode . ,(concat "meatbag ›  "))''
-                    ''`(org-mode . ,(concat  "meatbag ›  "))''
-                    ''`(text-mode . ,(concat "meatbag ›  "))''
-                  ];
-                  gptel-response-prefix-alist = [
-                    '''(markdown-mode . "HK-47  ")''
-                    '''(org-mode . "HK-47  ")''
-                    '''(text-mode . "HK-47  ")''
-                  ];
-                }
-                // mkOllama [ "llama3.2:3b" "qwen2.5-coder:7b" "qwen3:8b" "llama3.2:1b" ] "";
-                generalOne.global-leader."gi" = "'gptel-inline";
-                preface = ''
-                  <<Emacs Gptel Preface>>
-                '';
-                config = ''
-                  <<Emacs Gptel Config>>
-                '';
-              };
 
-              gptel-quick.setopt = mkOllama [ "llama3.2:1b" ] "-quick";
+            gptel-agent.config = ''
+              <<Emacs Gptel Agent Config>>
+            '';
 
-              gptel-inline = {
-                enable = true;
-                after = [ "gptel" ];
-              };
+            gptel-quick.setopt = mkOllama [ "qwen2.5:3b" ] "-quick";
 
-              # gptel-got = {
-              #   enable = true;
-              #   after = ["gptel"];
-              # };
-
-              mcp = {
-                enable = true;
-                after = [ "gptel" ];
-                config = ''
-                  <<Emacs MCP Config>>
-                '';
-                setopt.mcp-hub-servers = lib.optionals (config.programs.mcp.servers != { }) (
-                  lib.mapAttrsToList (
-                    n: v:
-                    if v.enabled != false || v.disabled != true then
-                      let
-                        name = ''"${n}"'';
-                        test =
-                          attr: pass: fail:
-                          if v."${attr}" != null then pass else fail;
-                        commandOrUrl = test "command" ''':command "${v.command}" ${
-                          test "args" "':args '(${lib.concatMapStrings (x: ''"${x}" '') v.args}) " ""
-                        }'' (test "url " ''':url "${v.url} "'' "");
-                        env =
-                          if v.env != { } then
-                            "':env '(${
-                              lib.concatStringsSep " " (lib.flatten (lib.mapAttrsToList (x: y: ''':${x} "${y}"'') v.env))
-                            })"
-                          else
-                            "";
-                      in
-                      [
-                        name
-                        commandOrUrl
-                        env
-                      ]
-                    else
-                      ""
-                  ) config.programs.mcp.servers
-                );
-              };
-
-              gptel-agent-harness = {
-                enable = true;
-                after = [ "gptel-agent" ];
-              };
-
-              aidermacs = {
-                enable = false;
-                extraPackages = [ pkgs.aider-chat ];
-                generalOne.global-leader."gA" = "'aidermacs-transient-menu";
-                config = "(start-ollama)";
-                setopt = {
-                  aidermacs-default-model = ''"ollama/qwen3:8b"'';
-                  aidermacs-extra-args = [ ''"--no-git"'' ];
+            gptel-inline = {
+              enable = true;
+              after = [ "gptel" ];
+              config = ''
+                <<Emacs Gptel Inline Config>>
+              '';
+              generalTwoConfig.":nm" = {
+                gptel-inline-map = {
+                  "RET" = "'gptel-inline-send";
+                  "H" = "'gptel-inline-help";
+                  "C-a" = "'gptel-inline-append";
+                  "C-b" = "'gptel-switch-buffer";
+                  "C-SPC" = "'gptel-inline-cycle-reference";
+                };
+                gptel-inline--response-overlay-mode-map = {
+                  "M-e" = "'gptel-inline--response-overlay-down";
+                  "M-o" = "'gptel-inline--response-overlay-up";
+                  "C-M-e" = "'gptel-inline--response-overlay-pagedown";
+                  "C-M-o" = "'gptel-inline--response-overlay-pageup";
+                  "C-d" = "'gptel-inline--response-overlay-dispatch";
                 };
               };
-
-              popper.setopt.popper-reference-buffers = [
-                "'aidermacs-comint-mode"
-                ''"^\\*gptel-inline\\*"''
-                ''"^\\*Ollama\\*"''
-                ''"^\\*copilot\\*"''
-              ];
             };
-        };
+
+            mcp.config = ''
+              <<Emacs MCP Config>>
+            '';
+
+            gptel-preset-collection = {
+              enable = true;
+              after = [ "gptel" ];
+            };
+
+            popper.setopt.popper-reference-buffers = [
+              ''"^\\*gptel:.*\\*"''
+              ''"^\\*gptel-inline\\*"''
+              ''"^\\*Ollama\\*"''
+              ''"^\\*copilot\\*"''
+            ];
+          };
       };
     };
 }
@@ -5718,7 +6319,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 #+NAME: Emacs Gptel Config
 #+begin_src emacs-lisp
 (start-ollama)
-(gptel-make-gh-copilot "copilot")
+(require 'gptel-agent)
 (efs/evil-collection-remap
  'evil-collection-gptel-setup
  'normal
@@ -5726,6 +6327,7 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
  "<return>"
  'gptel-send
  "RET"
+
  'gptel-send)
 (efs/evil-collection-remap
  'evil-collection-gptel-setup
@@ -5734,86 +6336,451 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
  "<return>"
  'newline
  "RET"
- 'newline)
+ 'newline
+ "S-<return>"
+ nil
+ "S-RET"
+ nil)
 
 (gptel-make-preset
- 'translate
- :system "Translate to english."
- :model 'llama3.2:1b)
+    'translate
+  :system "Translate to english."
+  :model 'llama3.2:3b)
 
 (defun efs/translate (foreign-text)
   "Translates FOREIGN-TEXT to English & outputs it in an org buffer called Translation."
   (with-current-buffer (get-buffer-create "Translation")
     (switch-to-buffer (current-buffer))
     (org-mode)
-    (let ((gptel-model 'llama3.2:1b))
+    (let ((gptel-model 'llama3.2:3b))
       (gptel-request
-       (concat
-        foreign-text " Translate the following text to English.")))))
+	  (concat
+           foreign-text " Translate the following text to English.")))))
 
 (with-eval-after-load 'evil
   (evil-ex-define-cmd
    "translateb" (cmd! (efs/translate (buffer-string)))))
 
+(defun efs/semantic-search (term)
+  "Search for TERM in your notes."
+  (require 'org-semantic)
+  (apply 'concat
+         (mapcar
+          (lambda (entry)
+            (concat
+             (plist-get entry :heading)
+             "\n"
+             (plist-get entry :text)
+             "\n\n\n"))
+          (plist-get (org-semantic-search term) :hits))))
+
+(gptel-make-tool
+ :name "Denote"
+ :function 'efs/semantic-search
+ :description "Search the user's notes for a word or phrase. This tool will return parts of the notes that are a close match."
+ :args '((:name "term" :type "string" :description "The word or phrase to search for.")))
+
+
 (gptel-make-preset
- 'bug-fixer
- :description "Fix lsp bugs"
- :tools
- '("Agent"
-   "TodoWrite"
-   "Glob"
-   "Grep"
-   "Read"
-   "Insert"
-   "Edit"
-   "Write"
-   "Mkdir"
-   "Eval"
-   "Bash"
-   "WebSearch"
-   "WebFetch"
-   "Skill")
- :pre (lambda () (require 'flymake))
- :system "<role_and_behavior>\nYou are an AI assistant that helps users accomplish their goals.\n\n<response_tone>\n- Keep responses concise to the point of being terse\n- Avoid flattery, superlatives, or unnecessary flourishes\n- Prioritize accuracy over agreement\n- Challenge the user constructively when you can think of a better approach\n- Never use bash echo or command-line tools for communication.  Instead, output text directly to the user.\n- Do not write documentation files unless asked for.  Provide responses directly to the user instead.\n</response_tone>\n\n<critical_thinking>\n- Before executing, consider if there's a better way to accomplish the task\n- Think about the larger problem - does the task need to be done this way at all?\n- Provide alternatives when you identify better approaches\n- Question assumptions constructively\n- Investigate to find truth before confirming beliefs\n</critical_thinking>\n</role_and_behavior>\n\n<task_execution_protocol>\nBefore starting ANY task, run this mental checklist:\n\n1. **Is this multi-step work?** If the task requires 3 or more distinct steps → CREATE A TODO LIST IMMEDIATELY using `TodoWrite`. This is not optional.\n\n   **What counts as a \"step\"?**\n   - Individual file edits/modifications (even if similar)\n   - Distinct phases of work (research → implement → test)\n   - Independent subtasks that could fail separately\n   - Actions that need to be tracked/verified\n\n   **Examples requiring todos:**\n   - \"Replace 5+ similar patterns across a file\" → YES (each replacement is a step)\n   - \"Refactor functions in 3 files\" → YES (each file is a step)\n   - \"Research X, then implement Y\" → YES (2+ distinct phases)\n\n   **Examples NOT requiring todos:**\n   - \"Read file X and tell me Y\" → NO (single action)\n   - \"Fix this one bug\" → NO (unless fix spans multiple files)\n\n2. **Does this task need delegation?**\n\n   **DELEGATE to `researcher` when:**\n   - Open-ended web research (multiple sources, uncertain approach)\n   - Searching codebase for understanding/information gathering (not just finding a specific known item)\n   - Task involves exploring unfamiliar code where you don't know exact locations\n   - Searching across 3+ files or when you expect many search results\n   - Building understanding of how something works by reading multiple files\n   - User asks \"how does X work\", \"where is X implemented\", \"find all places that do X\"\n\n   **DELEGATE to `introspector` when:**\n   - Understanding elisp package APIs or Emacs internals.\n   - Exploring Emacs state or package functionality.\n   - For elisp tasks, `introspector` is better than using `researcher` as the\n     results will be the \"source of truth\", from the live Emacs session.\n     Consider using both in sequence (`introspector` first) for complex tasks.\n\n   **DELEGATE to `executor` when:**\n   - Task involves modifying 3+ files (even simple changes across many files)\n   - Task involves 2+ files with complex/interdependent changes\n   - Systematic refactoring (renaming across files, updating patterns, migration tasks)\n   - Batch operations (applying same change to multiple locations)\n   - Multi-phase work (research → implement → test → fix → verify)\n   - Task has clear requirements but will take 5+ tool calls to complete\n   - You have multiple independent tasks in your todo list that can run in parallel\n   - The execution is well-defined but you need to plan/consult on other tasks\n   - Requires loading more than one skill to execute a task.\n\n   **Key signals for delegation:**\n   - User says: \"refactor X to Y\", \"migrate from A to B\", \"update all instances of Z\"\n   - You're thinking: \"I need to edit file1, then file2, then file3...\"\n   - You have a clear plan but executing it will consume significant context\n   - The task is repetitive/mechanical (perfect for autonomous execution)\n\n   **Handle inline when:**\n   - You know exact file paths to read (1-2 files)\n   - Searching for specific well-defined text in known locations\n   - Simple lookups or single-file operations\n   - User provides specific file paths to examine\n   - Quick edits to 1-2 files\n\n3. **Pattern matching for delegation:**\n   - \"how does...\", \"where is...\", \"find all...\", \"search for...\", \"explore...\" → Use `researcher`\n   - \"I need to understand...\" about codebase → Use `researcher`\n   - \"I need to understand...\" about elisp/Emacs → Use `introspector`\n   - \"create/modify these files...\", \"implement feature Z\" (with clear spec) → Use `executor`\n   - \"refactor X to Y\", \"migrate from A to B\", \"update all X\" → Use `executor`\n   - \"rename X to Y across the codebase\" → Use `executor`\n   - \"apply this change to all/multiple files\" → Use `executor`\n   - \"This task has multiple phases/stages\" → Use `TodoWrite` (or delegate to `executor` if it will bloat context)\n\n**Key principle for researcher**: If you're about to grep/glob and aren't sure what you'll find or will need to follow up with more searches, delegate to `researcher`. It's better to delegate early than fill context with irrelevant results.\n\n**Key principle for executor**: If you find yourself planning \"I'll edit file A, then B, then C...\", that's a signal to delegate to `executor`. Let it handle the mechanical execution while you stay available for higher-level decisions.\n\nOnce you delegate to a specialized agent, trust their results and integrate them into your response.\n</task_execution_protocol>\n\n<tool_usage_policy>\nWhen working on tasks, follow these guidelines for tool selection:\n\n**Specialized Tools vs. Shell Commands (CRITICAL):**\n- NEVER use `Bash` for file operations with grep, find, ls, cat, head, tail, sed or awk.\n- ALWAYS use: `Glob`, `Grep`, `Read`, `Edit`, `Write`\n- Reserve `Bash` EXCLUSIVELY for: git, npm, docker, cargo, make, system services and other non-file commands\n- Using bash for file operations violates the tool hierarchy and creates technical debt\n\n**Parallel Tool Execution:**\n- Call multiple tools in a single response when tasks are independent\n- Launch multiple executor agents in parallel for independent Todo tasks\n- Never use placeholders or guess missing parameters\n- Maximize parallel execution to improve efficiency\n\n**Tool Selection Hierarchy:**\n- File search by name → Use `Glob` (NOT find or ls)\n- Directory listing → Use `Glob` with glob pattern `\"*\"` (not ls)\n- Content search → Use `Grep` (NOT grep or rg)\n- Read files → Use `Read` (NOT cat/head/tail)\n- Edit files → Use `Edit` (NOT sed/awk)\n- Write files → Use `Write` (NOT echo >/cat <<EOF)\n- System operations → Use `Bash` (for git, npm, docker, etc.)\n\n<tool name=\"Agent\">\n**MANDATORY delegation scenarios (use Agent immediately):**\n- Open-ended web research with multiple sources → DELEGATE to `researcher`\n- **Searching codebase for code understanding or information gathering** → DELEGATE to `researcher`\n- Exploring unfamiliar code with uncertain search paths → DELEGATE to `researcher`\n- **Expected to search 3+ files or get many search results** → DELEGATE to `researcher`\n- Understanding elisp APIs or Emacs internals → DELEGATE to `introspector`\n- **Well-defined multi-step task that will bloat your context** → DELEGATE to `executor`\n- **Creating/modifying 3+ files with clear requirements** → DELEGATE to `executor`\n- Task explicitly requires specialized investigation → Use appropriate agent\n\n**When NOT to use `Agent`:**\n- You know exact file paths and just need to read 1-2 specific files → use `Read`\n- Searching for ONE specific, well-defined string in known location → use `Grep`\n- User provides specific file paths to examine → handle inline\n- Simple, focused task with all information available → handle inline\n- Quick edits to 1-2 files → handle inline\n\n**Critical distinctions:**\n- **Finding a specific item** (e.g., \"read the config in settings.py\") → Handle inline\n- **Understanding/exploring** (e.g., \"how does authentication work?\") → DELEGATE to `researcher`\n- **Executing well-defined work** (e.g., \"refactor all tests to use new API\") → DELEGATE to `executor`\n\n**How to use the `Agent` tool:**\n- Agents run autonomously and return results in one message\n- Provide detailed, comprehensive instructions in the prompt parameter\n- You can launch multiple agents in parallel for independent tasks\n- Agent results should generally be trusted\n- Integrate results into your response - don't pass responsibility back to the user\n\n**Available agent types:**\n`researcher`: Specialized agent for research and information gathering. Handles both online research (web searches, documentation) and codebase exploration. Read-only operations: searches, analyzes, and reports findings concisely.\n\n`introspector`: Specialized agent for exploring elisp and Emacs package APIs and the state of the Emacs instance in which you are running.  Has access to various elisp introspection tools.\n\n`executor`: Autonomous executor for well-defined, multi-step tasks. Can read, write, and modify files. Use when you know what needs to be done but want to keep the main context clean.\n\n\n</tool>\n\n<tool name=\"TodoWrite\">\n**MANDATORY: Use TodoWrite for any multi-step work (3+ steps)**\n\nYou MUST create a todo list immediately when:\n- Task has 3+ distinct steps or phases\n- Task will span multiple responses or tool calls\n- Task requires careful planning or coordination\n- You receive new instructions with multiple requirements\n- Work might benefit from tracking progress\n\n**When NOT to use `TodoWrite`:**\n- Single, straightforward tasks (one clear action)\n- Trivial tasks with no organizational benefit\n- Tasks completable in less than 3 steps\n- Purely conversational or informational requests\n- User provides a simple question requiring a simple answer\n\n**How to use `TodoWrite`:**\n- Always provide both `content` (imperative: \"Run tests\") and `activeForm` (present continuous: \"Running tests\")\n- Exactly ONE task must be in_progress at any time when you're executing tasks yourself\n- When delegating to executor agents in parallel, multiple tasks can be in_progress simultaneously\n- Mark tasks completed IMMEDIATELY after finishing (don't batch completions)\n- Complete current tasks before starting new ones\n- Send entire todo list with each call (not just changed items)\n- ONLY mark completed when FULLY accomplished - if errors occur, keep as in_progress\n\n**Pattern to recognize:** If you're planning 3+ steps before executing, CREATE A TODO LIST FIRST.\n- Send entire todo list with each call (not just changed items)\n- Remove tasks that are no longer relevant\n- ONLY mark completed when FULLY accomplished - if errors occur, keep as in_progress\n- Create new tasks for blockers/issues that arise\n\n**Task States:**\n- `pending`: Task not yet started\n- `in_progress`: Currently working on (exactly one at a time)\n- `completed`: Task finished successfully\n</tool>\n\n<tool name=\"Glob\">\n**When to use `Glob`:**\n- Searching for files by name patterns or extensions\n- You know the file pattern but not exact location\n- Finding all files of a certain type\n- Exploring project or directory structure\n\n**When NOT to use `Glob`:**\n- Searching file contents → use `Grep`\n- You know the exact file path → use `Read`\n- Doing open-ended multi-round searches → use `Agent` tool with general-purpose agent\n- Use shell commands like find → use `Glob` instead\n\n**How to use `Glob`:**\n- Supports standard glob patterns: `**/*.js`, `*.{ts,tsx}`, `src/**/*.py`\n- List all files with glob pattern `*`\n- Returns files sorted by modification time (most recent first)\n- Can specify a directory path to narrow search scope\n- Can perform multiple glob searches in parallel for different patterns\n</tool>\n\n<tool name=\"Grep\">\n**When to use `Grep`:**\n- Finding ONE specific, well-defined string/pattern in the codebase\n- You know what you're looking for and where it likely is\n- Verifying presence/absence of specific text\n- Quick, focused searches with expected results <20 matches\n\n**When NOT to use `Grep`:**\n- **Building code understanding or exploring unfamiliar code** → DELEGATE to `researcher`\n- **Expected to get many results (20+ matches)** → DELEGATE to `researcher`\n- **Will need follow-up searches based on results** → DELEGATE to `researcher`\n- Searching for files by name → use `Glob`\n- Reading known file contents → use `Read`\n\n**How to use `Grep`:**\n- Supports full regex syntax (ripgrep-based)\n- Can specify directory path and glob pattern to narrow scope\n- Use `context_lines` parameter to see surrounding lines\n- Can perform multiple focused grep searches in parallel\n- **If you find yourself doing a second grep based on first results, you should have used `researcher`**\n</tool>\n\n<tool name=\"Read\">\n**When to use `Read`:**\n- You need to examine file contents\n- Before editing any file (required)\n- You know the exact file path\n- Viewing images, PDFs, or Jupyter notebooks\n- Understanding code structure and implementation\n\n**When NOT to use `Read`:**\n- Searching for files by name → use `Glob`\n- Searching file contents across multiple files → use `Grep`\n- You want to use shell commands like cat → use `Read` instead\n\n**How to use `Read`:**\n- Default behavior reads up to 2000 lines from the beginning\n- For large files, use offset and limit parameters to read specific sections\n- Recommended to read the whole file by omitting offset/limit when possible\n- Always read before editing - the `Edit` tool will error otherwise\n- Can read multiple files in parallel by making multiple `Read` calls\n</tool>\n\n<tool name=\"Insert\">\n**When to use `Insert`:**\n- When you only need to add new content to a file.\n- When you know the exact line number for the insertion.\n- For purely additive actions that don't require changing surrounding context.\n\n**When NOT to use `Insert`:**\n- When you need to replace or modify existing text → use `Edit`.\n- When you need to create a new file entirely → use `Write`.\n\n**How to use `Insert`:**\n- The `line_number` parameter specifies the line *after* which to insert `new_str`.\n- Use `line_number: 0` to insert at the very beginning of the file.\n- Use `line_number: -1` to insert at the very end of the file.\n- This tool is preferred over `Edit` when only insertion is required.\n</tool>\n\n<tool name=\"Bash\">\n**When to use `Bash`:**\n- Terminal operations: git, npm, docker, cargo, etc.\n- Commands that truly require shell execution\n- Running builds, tests, or development servers\n- System administration tasks\n\n**When NOT to use `Bash`:**\n- File operations → use `Read`, `Write`, `Edit`, `Glob`, `Grep` instead\n- Finding files → use `Glob`, not find\n- Searching contents → use `Grep`, not grep/rg\n- Reading files → use `Read`, not cat/head/tail\n- Editing files → use `Edit`, not sed/awk\n- Writing files → use `Write`, not echo or heredocs\n- Communication with user → output text directly, not echo\n\n**How to use `Bash`:**\n- Quote file paths with spaces using double quotes\n- Chain dependent commands with && (or ; if failures are OK)\n- Use absolute paths instead of cd when possible\n- For parallel commands, make multiple `Bash` calls in one message\n</tool>\n\n<tool name=\"Eval\">\n**When to use `Eval`:**\n- Testing elisp code snippets or expressions\n- Verifying code changes work correctly\n- Checking variable values or function behavior\n- Demonstrating elisp functionality to users\n- Calculating results instead of saying \"I can't calculate that\"\n- Quickly changing user settings or checking configuration\n- Exploring Emacs state or testing hypotheses\n\n**When NOT to use `Eval`:**\n- Multi-expression evaluations → make one call per expression (no progn)\n- Complex code that requires multiple statements → break into individual expressions\n- When you need to modify files → use `Edit` instead\n- For bash/shell operations → use `Bash`\n\n**How to use `Eval`:**\n- Provide a single elisp expression as a string\n- Can be function calls, variables, quasi-quoted expressions, or any valid elisp\n- Only the first sexp will be read and evaluated\n- Return values are formatted using %S (strings appear escaped, literals are `read`-compatible)\n- Some objects without printed representation show as #<hash-notation>\n- Make one call per expression - don't combine with progn\n- Use for quick settings changes, variable checks, or demonstrations\n\n**Examples of good usage:**\n- `user-emacs-directory` → check variable value\n- `(setq my-var \"new-value\")` → change setting\n- `(length my-list)` → get list length\n- `(file-exists-p \"/path/to/file\")` → test file existence\n</tool>\n\n<tool name=\"Edit\">\n**When to use `Edit`:**\n- Modifying existing files with surgical precision\n- Making targeted changes to code or configuration\n- Replacing specific strings, functions, or sections\n- Any time you need to change part of an existing file\n\n**When NOT to use `Edit`:**\n- Creating brand new files → use `Write`\n- You haven't read the file yet → must `Read` first (tool will error)\n- The old_string is not unique and you want to replace all occurrences → use `replace_all: true`\n\n**How to use `Edit`:**\n- MUST `Read` the file first (required, tool will error otherwise)\n- Provide exact `old_string` to match (including proper indentation from file content, not line number prefixes)\n- Provide `new_string` as replacement (must be different from old_string)\n- The edit will FAIL if old_string is not unique\n- Preserve exact indentation from the file content (ignore line number prefixes from `Read` output)\n- Always prefer editing existing files over creating new ones\n</tool>\n\n<tool name=\"Write\">\n**When to use `Write`:**\n- Creating new files that don't exist yet\n- Completely replacing the contents of an existing file\n- Generating new code, configuration, or documentation files\n\n**When NOT to use `Write`:**\n- Modifying existing files → use `Edit` instead (more precise and safer)\n- The file already exists and you only need to change part of it → use `Edit`\n- You haven't read the file first (if it exists) → `Read` first, then use `Edit`\n\n**How to use `Write`:**\n- Will overwrite existing files completely - use with caution\n- MUST use `Read` tool first if the file already exists (tool will error otherwise)\n- Always prefer editing existing files rather than creating new ones\n- Provide complete file content as a string\n- File path must be absolute, not relative\n</tool>\n\n<tool name=\"WebSearch\">\n**When to use `WebSearch`:**\n- Searching the web for current information\n- Finding recent documentation or updates\n- Researching topics beyond your knowledge cutoff\n- User requests information about recent events or current data\n\n**When NOT to use `WebSearch`:**\n- Fetching a known URL → use `WebFetch` instead\n- Searching local codebase → use Grep, `Glob`\n- Information within your knowledge cutoff that doesn't require current data\n\n**How to use `WebSearch`:**\n- Provide clear, specific search query\n- Returns search result blocks with relevant information\n- Account for current date when searching (e.g., don't use \"2024\" if current year is 2025)\n</tool>\n\n<tool name=\"WebFetch\">\n**When to use `WebFetch`:**\n- Fetching and analyzing web content when you need full context for potential follow-up questions\n- Retrieving documentation from URLs that are likely small (<1000 lines)\n- The user explicitly wants detailed analysis of the entire page\n- YouTube URLs → always use `WebFetch` for these, it returns the video\n  description and transcript (timestamped paragraphs) instead of page text\n\n**When NOT to use `WebFetch`:**\n- Extracting specific information from large webpages → use `Agent` to avoid context bloat\n- Searching the web for multiple results → use `WebSearch` instead\n- You need to guess or generate URLs → only use URLs provided by user or found in files\n- Local file operations → use `Read`, `Glob`, `Grep`\n\n**How to use `WebFetch`:**\n- For focused information extraction, delegate to `Agent` with `WebFetch` to get only relevant results\n- Direct use is appropriate when full content may be needed for follow-up questions\n- Requires a valid, fully-formed URL (HTTP automatically upgraded to HTTPS)\n- Provide a prompt describing what information to extract\n- Has 15-minute cache for faster repeated access\n- If redirected to different host, make new `WebFetch` with redirect URL\n</tool>\n\n<tool name=\"Skill\">\nLoad a skill to get detailed instructions for a specific task.Skills provide specialized knowledge and step-by-step guidance.Use this when a task matches an available skill's description.\n<available_skills>\n\n</available_skills>\n</tool>\n\n</tool_usage_policy>\n"
- :post
- (lambda ()
-   (insert
-    (concat
-     "You are an expert programmer. Fix the bugs at the following locations."
-     (apply 'concat
-            (mapcar
-             (lambda (diagnostic)
-               (concat
-                (let ((buffer (flymake-diagnostic-buffer diagnostic)))
-                  (if (bufferp buffer)
-                      (buffer-file-name buffer)
-                    buffer))
-                " line "
-                (int-to-string
-                 (let ((beg (flymake-diagnostic-beg diagnostic)))
-                   (if (listp beg)
-                       (car beg)
-                     beg)))
-                ": " (flymake-diagnostic-text diagnostic) "\n"))
-             (flymake--project-diagnostics)))))))
+ 'denote
+ :system
+ '(:append
+   "Search the user's notes to learn about the relevant topic, then respond.")
+ :tools '(:append ("Denote")))
+#+end_src
+
+#+NAME: Emacs Gptel Agent Config
+#+begin_src emacs-lisp
+(add-to-list 'gptel-agent-dirs "~/.config/emacs/agents/")
+
+(gptel-make-preset
+ 'jarvis
+ :description "A preset for executing shell commands."
+ :model 'qwen2.5:3b
+ :system
+ '(:append
+   "You are a command runner. Your task is to execute shell commands to achieve the user's goal.
+Here are some tips:
+- When the user wants to regenerate their configs, run 'pkg rebuild'.
+- When the user wants to make a new VCs change, call 'jj new'. If the user says what the change is for, use 'jj new -m \"What the change is for\"'.
+- When the user wants to squash a VCs change, call 'jj squash'.
+- When the user wants to describe a VCs change, call 'jj describe'.")
+ :tools '(:append ("Bash")))
+
+(gptel-make-preset
+    'efs-agent
+  :description "An extended opencode agent with LSP support"
+  :parents '(gptel-agent)
+  :system
+  '(:append
+    "# Language Server Protocol
+- If possible, always init the LSP server for the language you're working in before doing any work.
+- If you must reformat a file & an lsp server is available, use the LSP server's formatting capabilities. Refrain from reformatting otherwise.
+- If an LSP server is available, use its search capabilities librerally when trying to understand the codebase.
+
+# Version Control
+- JJ is used as a version control system.
+- Before doing any work, use the new tool to create a new change.
+- After completing your work, use the describe tool to describe your change.
+")
+  :pre (lambda () (gptel-mcp-connect '("lsp" "jj") 'sync))
+  :tools '(:append ("mcp-lsp" "mcp-jj")))
+#+end_src
+
+#+name: Web Agent
+#+begin_src org
+:properties:
+:name: web-agent
+:description: Specialized agent for research & information gathering, with access to the user's web browser. Use this agent if you need answers from the web or if you need to manipulate the user's web browser.
+:tools: Skill WebFetch WebSearch qutebrowser
+:end:
+You are an autonomous research subagent with access to websearch & the user's web browser. Your purpose is to search for & gather information efficiently, as needed & manipulate the browser when asked. Keep responses concise to the point of being terse
+<core_responsibilities>
+,*Online Research:*
+- Search the web across multiple sources for information
+- Find solutions to technical problems and known issues
+- Research best practices, documentation, and troubleshooting
+- Compare multiple sources to provide comprehensive answers
+- Extract relevant information from documentation and forums
+
+,*Browser Manipulation:*
+- Open new tabs in qutebrowser for presentation to the user.
+- Close existing tabs in qutebrowser.
+- Present qutebrowser tabs to the user
+- Read qutebrowser tabs
+
+,*Key principle:* Return focused, relevant findings without context bloat & present information to the user
+</core_responsibilities>
+
+<research_methodology>
+,*Context efficiency:*
+- Your response goes back to another agent with limited context
+- Be selective: include only information that directly answers the task
+- Use summaries and synthesis over raw dumps
+- Provide specific sources (URLs, file paths) for follow-up
+- Include quotes/snippets only when they illustrate the point
+</research_methodology>
+
+<tool_usage_guidelines>
+,* Finding Information
+The simplest way to find information is to use the WebSearch tool. It will give you a handful of search results without much hassle. When answering the user's query you should include the links from your websearches in your response, as well as a summary of what you saw in the web search.
+If you need to know more about any of the sites you find, WebFetch will get their contents.
+When reading links, you should prefer WebFetch.
+
+Should you find yourself in a scenario where you need access to javascript in order to read a website, you will need to use qutebrowser.
+1. Use qutebrowser-open to open the link.
+2. Use qutebrowser-read to get its contents.
+
+,* Displaying Information
+If you are ever asked to find a site, you should use qutebrowser-open on that site's link.
+
+,* Finding Qutebrowser Tabs
+When you are asked to find or surface a qutebrowser tab:
+1. Use qutebrowser-list to list every tab the user has open.
+2. Select the tab whose url best matches the user's request.
+3. Run qutebrowser-surface on that tab.
+You MUST run qutebrowser-surface on the most likely tab you find
+
+,*Closing Qutebrowser Tabs*
+When the you are asked to close a qutebrowser tab:
+1. Use qutebrowser-list to list every tab the user has open.
+2. Select the tab whose url best matches the user's request.
+3. Run qutebrowser-close-tab on that tab.
+You MUST run qutebrowser-close-tab on the most likely tab you find
+
+,*When additional skills are needed*
+{{SKILLS}}
+</tool_usage_guidelines>
+
+,* Rules:
++ Do your best to answer the queries or complete the browser manipulations.
++ If a tool call fails, don't stop. Try again.
++ You are an autonomous subagent. You can't ask follow up questions
 #+end_src
 
 #+NAME: Emacs MCP Config
 #+begin_src emacs-lisp
-(require 'mcp-hub)
-(require 'gptel-integrations)
 ;; Borrowed from Karthinks
 (gptel-make-preset
- 'nixos
- :description "TOOLS: Add NixOS MCP"
- :pre (lambda () (gptel-mcp-connect '("nixos") 'sync))
- :system
- '(:append
-   "\n\nUse the provided NixOS tools to look for up-to-date information and\
+    'nixos
+  :description "TOOLS: Add NixOS MCP"
+  :pre (lambda () (gptel-mcp-connect '("nixos") 'sync))
+  :system
+  '(:append
+    "\n\nUse the provided NixOS tools to look for up-to-date information and\
  examine the state of my system")
- :tools '(:append ("mcp-nixos"))
- :model 'qwen3:8b
- :backend "Ollama")
+  :tools '(:append ("mcp-nixos")))
+#+end_src
+
+#+NAME: Emacs Gptel Inline Config
+#+begin_src emacs-lisp
+(defun gptel-inline--response-overlay-append-chunk (ov chunk)
+  "Append text CHUNK to the buffer-based response overlay OV.
+Inserts into the source buffer and triggers font-lock."
+  (let* ((src-buf (plist-get (overlay-get ov 'gptel-inline) :src)))
+    (when (buffer-live-p src-buf)
+      (with-current-buffer src-buf
+        (let ((inhibit-read-only t))
+          (goto-char (point-max))
+          (insert chunk)
+          (font-lock-ensure))))))
+#+end_src
+
+*** Copilot
+#+begin_src nix-ts :tangle modules/ai/copilot.nix
+{
+  flake.homeModules.personalAI.programs.emacs.init.ai.copilot = {
+    enable = true;
+    keepOutOf = [
+      "json5-ts-mode"
+      "json-ts-mode"
+      "zenscript-mode"
+    ];
+  };
+}
+#+end_src
+
+*** Minuet
+#+begin_src nix-ts :tangle modules/ai/minuet.nix :noweb yes
+{
+  flake.homeModules.workAI.programs.emacs.init = {
+    ai.minuet.enable = true;
+    usePackage.minuet = {
+      setopt.minuet-provider = "'openai-fim-compatible";
+      hook =
+        let
+          mkModePrompt = mode: engineKind: responseKind: {
+            namesDeferred = [ mode ];
+            actions = [
+              ''(efs/minuet-prompt-builder "You are an AI ${engineKind} completion engine. ${responseKind}\n")''
+            ];
+          };
+        in
+        [
+          {
+            names = [
+              "eshell-mode"
+              "text-mode"
+            ];
+            actions = [ "'minuet-auto-suggestion-mode" ];
+          }
+          {
+            namesDeferred = [ "doom-escape" ];
+            actions = [ "'minuet-dismiss-suggestion" ];
+          }
+          (mkModePrompt "eshell-mode" "command line"
+            "Provide contextually appropriate completions: shell commands when the user is writing shell commands & emacs lisp when the user is writing emacs lisp."
+          )
+          (mkModePrompt "text-mode" "document" "Provide completions for the user's prose.")
+        ];
+      preface = ''
+        <<Minuet Preface>>
+      '';
+      config = ''
+        <<Minuet Config>>
+      '';
+    };
+  };
+}
+#+end_src
+
+#+name: Minuet Preface
+#+begin_src emacs-lisp
+(defmacro efs/minuet-prompt-builder (text)
+  "Constructs a minuet prompt that can be used in a hook. TEXT is the prompt's prefix."
+  `(local!
+    minuet-default-prompt
+    (concat
+     ,text
+     "
+Input markers:
+- `<contextAfterCursor>`: Context after cursor
+- `<cursorPosition>`: Current cursor location
+- `<contextBeforeCursor>`: Context before cursor
+
+Note that the user input will be provided in **reverse** order: first the
+context after cursor, followed by the context before cursor.
+")))
+#+end_src
+
+#+name: Minuet Config
+#+begin_src emacs-lisp
+(plist-put
+ minuet-openai-fim-compatible-options
+ :end-point "http://localhost:11434/v1/completions")
+(plist-put minuet-openai-fim-compatible-options :name "Ollama")
+(plist-put minuet-openai-fim-compatible-options :api-key "TERM")
+(plist-put minuet-openai-fim-compatible-options :model "codegemma:2b")
+(minuet-set-optional-options
+ minuet-openai-fim-compatible-options
+ :max_tokens 56)
+#+end_src
+
+*** Speech
+#+begin_src nix-ts :tangle modules/ai/whisper.nix :noweb yes
+{ inputs, ... }:
+
+{
+  perSystem =
+    { pkgs, ... }:
+    let
+      epkgs = pkgs.emacs.pkgs;
+    in
+    {
+      packages.whisper = (
+        epkgs.callPackage epkgs.trivialBuild rec {
+          pname = "whisper";
+          version = "current";
+          src = inputs.whisper;
+
+          propagatedUserEnvPkgs = with epkgs; [ ];
+
+          buildInputs = propagatedUserEnvPkgs;
+        }
+      );
+    };
+
+  flake.homeModules.personalAI = { pkgs, ... }: {
+    programs.emacs.init.usePackage = {
+      whisper = {
+        enable = true;
+        extraPackages = [ pkgs.cmake ];
+        generalOne.global-leader = {
+          "W" = '''(:ignore t :which-key "Whisper")'';
+          "Wr" = "'whisper-run";
+          "Wf" = "'whisper-file";
+        };
+        setopt.whisper-install-directory = ''(concat user-emacs-directory "/whisper")'';
+      };
+
+      phony = {
+        enable = true;
+        after = [ "whisper" ];
+        generalOne.global-leader."Wj" = "'phony-mode";
+        preface = ''
+          <<Phony Preface>>
+        '';
+        config = ''
+          (phony-experimental-set-parser-literal-normalizer #'sacha-phony-sanitize-literal)
+	  (phony-mode)
+        '';
+      };
+    };
+  };
+}
+#+end_src
+
+#+name: Phony Preface
+#+begin_src emacs-lisp
+(require 'phony-parser)
+(defun sacha-phony-sanitize-literal (s)
+  "Lowercase and remove punctuation in S."
+  (replace-regexp-in-string "[-,\\.!?:]" "" (downcase s)))
+
+(defun sacha-phony-evaluate (sentence)
+  "Evaluate SENTENCE.
+Throw 'not-parsed if not parsed.
+Based on `phony-test--evaluate'."
+  (let ((parses (phony-parser--parse-utterance sentence)))
+    (unless parses
+      (signal 'sacha-phony-not-parsed sentence))
+    (phony--evaluate-ast (caar parses))))
+
+(defun sacha-whisper-phony (text)
+  "Evaluate TEXT using phony.el definitions.
+Lower-case the first letter of TEXT to match command definitions.
+Useful in `speech-input-commands'."
+  (sacha-phony-evaluate
+   (concat
+    (downcase (substring text 0 1))
+    (if (> (length text) 1)
+        (substring text 1)
+      "")))
+  "")
+
+(defmacro efs/jarvis (name pattern &rest rest)
+  "Define a phony command prefaced with `jarvis'."
+  `(phony-defun
+    ,name ,(mapcar (lambda (p) (concat "jarvis" p)) pattern) ,rest))
+#+end_src
+
+*** MCP
+#+begin_src nix-ts :tangle modules/ai/mcp.nix
+{
+  flake.homeModules.ai = { pkgs, lib, ... }: {
+    programs.mcp = {
+      enable = true;
+      servers = {
+        nixos = {
+          enable = true;
+          command = lib.getExe pkgs.mcp-nixos;
+        };
+        memory = {
+          enable = true;
+          command = lib.getExe pkgs.mcp-server-memory;
+        };
+        lsp = {
+          enable = true;
+          command = "${pkgs.nodejs}/bin/npx";
+          args = [
+            "-y"
+            "@theupsider/lsp-mcp@latest"
+          ];
+        };
+      };
+    };
+  };
+}
+#+end_src
+
+*** Agents
+#+begin_src nix-ts :tangle modules/ai/agents.nix
+{
+  flake.homeModules = {
+    ai.programs.emacs.init.usePackage = {
+      agent-shell = {
+        enable = true;
+        custom.agent-shell-cursor-acp-command = [
+          ''"cursor-agent"''
+          ''"acp"''
+        ];
+        hook = [
+          {
+            namesDeferred = [ "agent-shell-mode" ];
+            actions = [
+              "(lambda () (display-line-numbers-mode -1))"
+              "(local! completion-at-point-functions (list 'agent-shell--command-completion-at-point 'agent-shell--file-completion-at-point 'cape-file 'cape-dict 'cape-dabbrev))"
+            ];
+          }
+        ];
+        generalOne.global-leader = {
+          "a" = "'(:ignore t)";
+          "as" = "'agent-shell";
+          "ar" = "'agent-shell-send-region";
+        };
+        config = ''
+          (with-eval-after-load 'evil-collection-agent-shell
+              (efs/evil-collection-remap 'evil-collection-agent-shell-setup
+               'insert agent-shell-mode-map
+               "S-<return>" nil
+               "S-RET" nil))
+        '';
+      };
+
+      popper.setopt.popper-reference-buffers = [ "'agent-shell-mode" ];
+    };
+
+    personalAI.programs = {
+      emacs.init.usePackage.agent-shell.setopt.agent-shell-opencode-default-model-id =
+        ''"openrouter/nvidia/nemotron-3.5-super-vl:free"'';
+      opencode = {
+        enable = true;
+        enableMcpIntegration = true;
+        context = "When you are in a JJ repository, always start a new change before doing any work, & describe that change after you finish your work.";
+      };
+    };
+  };
+}
 #+end_src
 
 ** Multimedia
@@ -5823,8 +6790,9 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
 
 {
   perSystem =
-    { pkgs, ... }:
+    { pkgs, config, ... }:
     {
+      overlayAttrs = { inherit (config.packages) doomer; };
       packages.doomer = pkgs.writeShellScriptBin "doomer" ''
         ${pkgs.sox}/bin/sox "$1" "$1.flac" pitch -500 treble -20 pad 0 3 reverb 80 tempo .8 highpass 1000 lowpass 700 compand 0.3,0.8 0
       '';
@@ -5851,12 +6819,14 @@ https://sukany.cz/blog/2026-03-23-emacs-gptel-setup/
       lib,
       pkgs,
       self',
+      config,
       ...
     }:
     let
       epkgs = pkgs.emacs.pkgs;
     in
     {
+      overlayAttrs = { inherit (config.packages) playAlbum; };
       packages = {
         mpc-wrapper = (
           epkgs.callPackage epkgs.trivialBuild rec {
@@ -5957,24 +6927,31 @@ The mpv package lets us start an mpv process & puppeteer it with emacs. I'm defi
 { inputs, ... }:
 
 {
-  perSystem = { pkgs, ... }: {
-    packages.mpv = (
-      inputs.wrapper-modules.wrappers.mpv.wrap {
-        pkgs = pkgs;
-        script = {
-          thumbnail.path = pkgs.mpvScripts.thumbnail;
-          sponsorblock.path = pkgs.mpvScripts.sponsorblock;
-          quality-menu.path = pkgs.mpvScripts.quality-menu;
-        };
-        "mpv.conf".content = ''
-          fs=no
-          hwdec=auto
-          x11-bypass-compositor=no
-          volume-max=250
-        '';
-      }
-    );
-  };
+  perSystem =
+    {
+      pkgs,
+      config,
+      ...
+    }:
+    {
+      overlayAttrs = { inherit (config.packages) mpv; };
+      packages.mpv = (
+        inputs.wrapper-modules.wrappers.mpv.wrap {
+          pkgs = pkgs;
+          script = {
+            thumbnail.path = pkgs.mpvScripts.thumbnail;
+            sponsorblock.path = pkgs.mpvScripts.sponsorblock;
+            quality-menu.path = pkgs.mpvScripts.quality-menu;
+          };
+          "mpv.conf".content = ''
+            fs=no
+            hwdec=auto
+            x11-bypass-compositor=no
+            volume-max=250
+          '';
+        }
+      );
+    };
 
   flake.homeModules.media = { pkgs, config, ... }: {
     home.packages = [ pkgs.yt-dlp ];
@@ -5988,10 +6965,10 @@ The mpv package lets us start an mpv process & puppeteer it with emacs. I'm defi
         config = ''
           <<Emacs Mpv Config>>
         '';
-	generalOne.global-leader = {
-	  "mP" = '''mpv-pause'';
-	  "mj" = '''mpv-jump-to-chapter'';
-	};
+        generalOne.global-leader = {
+          "mP" = "'mpv-pause";
+          "mj" = "'mpv-jump-to-chapter";
+        };
       };
 
       mpv.enable = true;
@@ -6038,11 +7015,17 @@ For moving massive quantities of Jordan Peterson's podcast into my mp3 player
 #+begin_src nix-ts :tangle modules/multimedia/podcast.nix :noweb yes
 {
   perSystem =
-    { pkgs, self', ... }:
+    {
+      pkgs,
+      config,
+      self',
+      ...
+    }:
     let
       packages = self'.packages;
     in
     {
+      overlayAttrs = { inherit (config.packages) cast ffmpeg-bulk masstube; };
       packages = {
         cast = (
           pkgs.writeShellScriptBin "cast" ''
@@ -6310,7 +7293,20 @@ I use kmonad to manage my keybinds.
 Canary is my layout of choice.
 *Important*: Add your user to the input & uinput groups
 #+begin_src nix-ts :tangle modules/keyboard.nix :noweb yes
+{ inputs, ... }:
+
 {
+  perSystem =
+    {
+      lib,
+      pkgs,
+      config,
+      ...
+    }:
+    {
+      overlayAttrs = { inherit (config.packages) kmonad; };
+      packages.kmonad = inputs.kmonad.packages.${pkgs.system}.default;
+    };
   flake.homeModules.canary =
     { pkgs, lib, ... }:
 
@@ -6603,15 +7599,37 @@ NAME is the term to search for."
 #+end_src
 
 *** Qutebrowser
+Fixing pass:
+https://github.com/NixOS/nixpkgs/issues/20472
 https://greasyfork.org/en/scripts/374833-yt2invidio
 #+NAME: Internet Qutebrowser
 #+begin_src nix-ts :tangle modules/web/qutebrowser/misc.nix :noweb yes
 {
+  perSystem =
+    {
+      lib,
+      pkgs,
+      config,
+      ...
+    }:
+    {
+      overlayAttrs = { inherit (config.packages) qutebrowser; };
+      packages.qutebrowser = pkgs.qutebrowser.overrideAttrs (oldAttrs: {
+        propagatedBuildInputs = oldAttrs.propagatedBuildInputs ++ [ pkgs.python314Packages.idna ];
+      });
+    };
+
   flake.homeModules.web =
     { config, pkgs, ... }:
 
     {
-      home.packages = [ pkgs.python313Packages.adblock ];
+      home = {
+        packages = with pkgs.python314Packages; [ adblock ];
+        sessionVariables = {
+          QTWEBENGINE_REMOTE_DEBUGGING = "9222 qutebrowser";
+          BROWSER = "qutebrowser";
+        };
+      };
 
       programs.qutebrowser = {
         enable = true;
@@ -6631,8 +7649,8 @@ https://greasyfork.org/en/scripts/374833-yt2invidio
         settings = {
           downloads.location.directory = "~/dwn";
           url = {
-            default_page = "https://search.inetol.net";
-            start_pages = "https://search.inetol.net";
+            default_page = "https://duckduckgo.com";
+            start_pages = "https://duckduckgo.com";
           };
           hints.chars = "crstbfneia";
         };
@@ -6680,6 +7698,8 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
     cn = "spawn --userscript org-protocol capture Pn";
     cd = "spawn --userscript org-protocol capture Pd";
     cl = "spawn --userscript org-protocol store-link";
+    ca = "spawn --userscript llama-prompt prompt";
+    cc = "spawn --userscript llama-prompt context";
     m = "search-next";
     M = "search-prev";
     e = "fake-key <Down>";
@@ -6805,63 +7825,56 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
 
   flake.homeModules.web.programs = {
     emacs.init.usePackage = {
+      gptel.generalOneConfig.global-leader.gw = "'efs/qutebrowser-chat";
+
       qutebrowser = {
-	enable = true;
+        enable = true;
         setopt.qutebrowser-history-database = ''"~/.local/qutebrowser/history.sqlite"'';
       };
 
       qutebrowser-exwm = {
         enable = true;
         package = epkgs: epkgs.qutebrowser;
-        ghookf = [
-          "('exwm-init 'global-qutebrowser-exwm-mode)"
+        hook = [
+          {
+            names = [ "exwm-init" ];
+            actions = [ "'global-qutebrowser-exwm-mode" ];
+          }
+          {
+            namesDeferred = [ "qutebrowser-exwm-mode" ];
+            actions = [ "'evil-normal-state" ];
+          }
         ];
-        gfhookf = [
-          "('qutebrowser-exwm-mode 'evil-normal-state)"
-        ];
-        # setopt.qutebrowser-history-database = ''"~/.local/qutebrowser/history.sqlite"'';
         # It gets grumpy if I don't redefine the function for some reason.
         config = ''
-          (defun qutebrowser-exwm--update-window-info (window-info)
-            "Update buffer-local variables from WINDOW-INFO."
-            (when-let* ((x11-win-id (plist-get window-info :x11-win-id))
-                        (buffer (exwm--id->buffer x11-win-id)))
-              (with-current-buffer buffer
-                (qutebrowser--with-plist window-info
-                  (win-id (setq-local qutebrowser-exwm-win-id win-id))
-                  (mode (setq-local qutebrowser-exwm-keymode mode))
-                  (icon-file (qutebrowser-exwm--update-favicon icon-file))
-                  (search (setq-local qutebrowser-exwm-current-search search))
-                  (hover (when (string= hover "") (setq hover nil))
-                         (setq-local qutebrowser-exwm-hovered-url hover))
-                  (url (setq-local qutebrowser-exwm-current-url
-                                   (unless (string-empty-p url) url))
-                       (setq-local buffer-file-name
-                                   (when (string-prefix-p "file://" url)
-                                     (string-replace "file://" "" url))))
-                  (x-scroll-perc (setq-local qutebrowser-exwm-x-scroll-perc x-scroll-perc))
-                  (y-scroll-perc (setq-local qutebrowser-exwm-y-scroll-perc y-scroll-perc))
-                  (private (setq-local qutebrowser-exwm-private private))
-                  (recently-audible (setq-local qutebrowser-exwm-recently-audible recently-audible))))))
-          	  '';
+          <<Qutebrowser Evil Config>>
+        '';
       };
 
       qutebrowser-evil = {
         enable = true;
         package = epkgs: epkgs.qutebrowser;
-        ghookf = [
-          "('global-qutebrowser-exwm-mode 'qutebrowser-evil-state-mode)"
+        hook = [
+          {
+            names = [ "global-qutebrowser-exwm-mode" ];
+            actions = [ "'qutebrowser-evil-state-mode" ];
+          }
         ];
       };
 
       qutebrowser-fileselect = {
         enable = true;
         package = epkgs: epkgs.qutebrowser;
-        ghookf = [
-          "('global-qutebrowser-exwm-mode 'qutebrowser-fileselect-mode)"
+        hook = [
+          {
+            names = [ "global-qutebrowser-exwm-mode" ];
+            actions = [ "'qutebrowser-fileselect-mode" ];
+          }
         ];
         setopt.qutebrowser-fileselect-handler = "'qutebrowser-fileselect-completion";
       };
+
+      popper.setopt.popper-reference-buffers = [ ''"^\\*qutebrowser-llm-response\\*"'' ];
     };
 
     qutebrowser.settings = {
@@ -6892,42 +7905,195 @@ https://redlib.northboot.xyz/r/qutebrowser/comments/eh10i7/config_share_qute_wit
 }
 #+end_src
 
+#+name: Qutebrowser Evil Config
+#+begin_src emacs-lisp
+(defun qutebrowser-exwm--update-window-info (window-info)
+  "Update buffer-local variables from WINDOW-INFO."
+  (when-let* ((x11-win-id (plist-get window-info :x11-win-id))
+              (buffer (exwm--id->buffer x11-win-id)))
+    (with-current-buffer buffer
+      (qutebrowser--with-plist
+       window-info
+       (win-id (setq-local qutebrowser-exwm-win-id win-id))
+       (mode (setq-local qutebrowser-exwm-keymode mode))
+       (icon-file (qutebrowser-exwm--update-favicon icon-file))
+       (search (setq-local qutebrowser-exwm-current-search search))
+       (hover
+        (when (string= hover "")
+          (setq hover nil))
+        (setq-local qutebrowser-exwm-hovered-url hover))
+       (url
+        (setq-local qutebrowser-exwm-current-url
+                    (unless (string-empty-p url)
+                      url))
+        (setq-local buffer-file-name
+                    (when (string-prefix-p "file://" url)
+                      (string-replace "file://" "" url))))
+       (x-scroll-perc
+        (setq-local qutebrowser-exwm-x-scroll-perc x-scroll-perc))
+       (y-scroll-perc
+        (setq-local qutebrowser-exwm-y-scroll-perc y-scroll-perc))
+       (private (setq-local qutebrowser-exwm-private private))
+       (recently-audible
+        (setq-local qutebrowser-exwm-recently-audible
+                    recently-audible))))))
+
+(with-eval-after-load 'gptel
+  (gptel-make-tool
+   :name "qutebrowser-open"
+   :category "qutebrowser"
+   :function 'qutebrowser-open-url
+   :description "Open a new tab in qutebrowser."
+   :args
+   '((:name
+      "url"
+      :type "string"
+      :description "The url to open or term to search for.")))
+
+  (gptel-make-tool
+   :name "qutebrowser-list"
+   :category "qutebrowser"
+   :function
+   (lambda ()
+     (mapcar
+      (lambda (browser)
+        (qutebrowser-exwm-buffer-url browser))
+      (qutebrowser-exwm-buffer-list)))
+   :description "List all open qutebrowser urls."
+   :args '())
+
+  (gptel-make-tool
+   :name "qutebrowser-read"
+   :category "qutebrowser"
+   :function
+   (lambda ()
+     (with-temp-buffer
+       (insert-file-contents
+        (let ((file (make-temp-file "")))
+          (qutebrowser-cmd-debug-dump-page file :plain)
+          (sleep-for .1)
+          file))
+       (buffer-string)))
+   :description "Read the most recently opened tab's HTML."
+   :args '())
+
+  (gptel-make-tool
+   :name "qutebrowser-surface"
+   :category "qutebrowser"
+   :function
+   (lambda (url)
+     (switch-to-buffer (qutebrowser-exwm-find-buffer url))
+     "Switched to tab successfully!")
+   :description "Show a qutebrowser tab to the user."
+   :confirm t
+   :args
+   '((:name
+      "url"
+      :type "string"
+      :description "The url of the page to show the user")))
+
+  (gptel-make-tool
+   :name "qutebrowser-close-tab"
+   :category "qutebrowser"
+   :function
+   (lambda (url)
+     (kill-buffer (qutebrowser-exwm-find-buffer url))
+     "Closed tab successfully!")
+   :description "Close a qutebrowser tab."
+   :confirm t
+   :args
+   '((:name
+      "url"
+      :type "string"
+      :description "The url of the page to close.")))
+
+  (gptel-make-preset
+   'web-agent
+   :description "An agent for qutebrowser"
+   :system
+   "You are an AI assistant that helps users accomplish their goals. Keep responses concise to the point of being terse
+- Avoid flattery, superlatives, or unnecessary flourishes
+- Prioritize accuracy over agreement
+- Challenge the user constructively when you can think of a better approach
+
+You have control over the user's web browser (qutebrowser) & should utilize it to assist the user.
+
+# Finding Information
+The simplest way to find information is to use the WebSearch tool. It will give you a handful of search results without much hassle. When answering the user's query you should include the links from your websearches in your response, as well as a summary of what you saw in the web search.
+If you need to know more about any of the sites you find, WebFetch will get their contents.
+When reading links, you should prefer WebFetch.
+
+Should you find yourself in a scenario where you need access to javascript in order to read a website, you will need to use qutebrowser.
+1. Use qutebrowser-open to open the link.
+2. Use qutebrowser-read to get its contents.
+
+# Displaying Information
+If you are ever asked to find a site, you should use qutebrowser-open on that site's link.
+
+# Finding Qutebrowser Tabs
+When the user asks you to find or surface a qutebrowser tab:
+1. Use qutebrowser-list to list every tab the user has open.
+2. Select the tab whose url best matches the user's request.
+3. Run qutebrowser-surface on that tab.
+You MUST run qutebrowser-surface on the most likely tab you find
+
+# Closing Qutebrowser Tabs
+When the user asks you to close a qutebrowser tab:
+1. Use qutebrowser-list to list every tab the user has open.
+2. Select the tab whose url best matches the user's request.
+3. Run qutebrowser-close-tab on that tab.
+You MUST run qutebrowser-close-tab on the most likely tab you find
+
+# Rules:
+- Do your best to answer the user's queries.
+- If a tool call fails, don't stop. Try again."
+   :tools '("qutebrowser" "WebSearch" "WebFetch"))
+
+  (defun efs/qutebrowser-chat ()
+    "Create & return a buffer for chatting with qutebrowser"
+    (interactive)
+    (with-current-buffer (get-buffer-create
+                          "*qutebrowser-llm-response*")
+      (cd "~/")
+      (org-mode)
+      (gptel-mode)
+      (gptel--apply-preset
+       'web-agent
+       (lambda (sym val) (set (make-local-variable sym) val)))
+      (switch-to-buffer (current-buffer))
+      (current-buffer))))
+#+end_src
+
 ** Chat
 #+begin_src nix-ts :tangle modules/chat.nix
-{ inputs, ... }:
-
 {
-  flake.homeModules.chat =
-    { config, pkgs, ... }:
-    {
-      home.packages = with pkgs; [
-        thunderbird
-      ];
-
-      programs.vesktop = {
-        enable = true;
-        settings = {
-          minimizeToTray = false;
-          tray = false;
-          hardwareAcceleration = true;
-        };
-        vencord = {
-          useSystem = true;
-          settings = {
-            autoUpdate = false;
-            autoUpdateNotification = false;
-            plugins = {
-              FakeNitro.enabled = true;
-              AnonymizeFileNames.enabled = true;
-              BetterSettings.enabled = true;
-              FixYoutubeEmbeds.enabled = true;
-              ImageZoom.enabled = true;
-              YoutubeAdblock.enabled = true;
-            };
-          };
+  flake.homeModules = {
+    chat =
+      { pkgs, ... }:
+      {
+        home.packages = [ pkgs.thunderbird ];
+      };
+    personalChat.programs.vesktop = {
+      enable = true;
+      settings = {
+        minimizeToTray = false;
+        tray = false;
+        hardwareAcceleration = true;
+      };
+      vencord.settings = {
+        autoUpdate = false;
+        autoUpdateNotification = false;
+        plugins = {
+          FakeNitro.enabled = true;
+          AnonymizeFileNames.enabled = true;
+          BetterSettings.enabled = true;
+          FixYoutubeEmbeds.enabled = true;
+          ImageZoom.enabled = true;
+          YoutubeAdblock.enabled = true;
         };
       };
     };
+  };
 }
 #+end_src
 
@@ -6960,15 +8126,18 @@ Setting up your alsoftrc correctly makes Minecraft happy
         # steam
         # gamemode
         prismlauncher
-        graalvmPackages.graalvm-oracle_17
       ];
     };
 
-    programs.lutris = {
-      enable = true;
-      runners = {
-	# libretro.package = pkgs.retroarch;
-	ppsspp.package = pkgs.ppsspp;
+    programs = {
+      emacs.init.ide.languages.zenscript.enable = true;
+
+      lutris = {
+        enable = true;
+        runners = {
+          # libretro.package = pkgs.retroarch;
+          ppsspp.package = pkgs.ppsspp;
+        };
       };
     };
   };
