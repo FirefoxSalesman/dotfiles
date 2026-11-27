@@ -84,15 +84,15 @@
                                  "Do a magit/jutsu status depending on what kind of repo we have."
                                   (interactive)
                                   (require 'majutsu)
-                                  (if (majutsu-toplevel)
+                                  (if (majutsu-toplevel dir)
                                       (progn (majutsu dir))
                                       (magit dir)))
                           ${mkMajutsuCmd "commit" "(magit-commit)" "(majutsu-bookmark-advance) (majutsu-commit)"}
                           ${mkMajutsuCmd "pull" "(magit-pull)"
-                            "(call-interactively 'majutsu-git-fetch) (majutsu-rebase)"
+                            "(call-interactively 'majutsu-git-fetch)"
                           }
                           ${mkMajutsuCmd "push" "(magit-push)" "(call-interactively 'majutsu-git-push)"}
-                          ${mkMajutsuCmd "branch" "(magit-branch)" "(majutsu-bookmark)"}
+                          ${mkMajutsuCmd "branch" "(call-interactively (magit-branch))" "(majutsu-bookmark)"}
                 '';
                 generalOne.project-prefix-map = {
                   "v" = "'efs/vcs-status";
