@@ -28,6 +28,7 @@ gtk-4.0
 i3status-rust
 ibus/
 java
+JetBrains/
 jj
 kdeglobals
 kdenliverc
@@ -51,6 +52,7 @@ qutebrowser/bookmarks
 qutebrowser/config.py
 qutebrowser/quickmarks
 qutebrowser/greasemonkey
+retroarch/
 sage
 sops/
 sops-nix/
