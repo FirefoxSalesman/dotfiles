@@ -259,7 +259,7 @@ esac
 
 * Notes to my future self
 + Don't let xorg use the nvidia card. It breaks everything
-+ When you set up a machine, add this desktop entry
++ When you set up a machine, add this desktop entry to ~/.local/applications
 #+begin_src
 [Desktop Entry]
 Name=Org-Protocol
@@ -268,10 +268,6 @@ Icon=emacs-icon
 Type=Application
 Terminal=false
 MimeType=x-scheme-handler/org-protocol
-#+end_src
-Then run this command
-#+begin_src bash-ts
-xdg-mime default org-protocol.desktop x-scheme-handler/org-protocol
 #+end_src
 
 * Home Manager
