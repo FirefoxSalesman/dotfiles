@@ -305,7 +305,40 @@
             "o" = "'evil-previous-visual-line";
             "O" = "'evil-scroll-up";
           };
-        };
+	  eglot = lib.mkForce ''("jdtls" :initializationOptions (:extendedClientCapabilities (:classFileContentsSupport t)))'';
+	  config = ''
+            (defun eglot-java--make-path (root-dir &rest path-elements)
+              "Compose a path from a base folder ROOT-DIR and a set of items PATH-ELEMENTS."
+              (let ((new-path          (expand-file-name root-dir))
+                    (new-path-elements path-elements))
+                (dolist (p new-path-elements)
+                  (setq new-path (concat (file-name-as-directory new-path) p)))
+                new-path))
+            
+            (defun eglot-java--jdt-uri-handler (_operation &rest args)
+                          "Support Eclipse jdtls `jdt://' uri scheme."
+                          (let* ((uri (car args))
+                                 (cache-dir (expand-file-name ".eglot-java" (project-root (project-current t))))
+                                 (source-file
+                                  (expand-file-name
+                                   (eglot-java--make-path
+                                    cache-dir
+                                    (save-match-data
+                                      (when (string-match "jdt://contents/\\(.*?\\)/\\(.*\\)\.\\(java\\|class\\)\\?" uri)
+                                        (format "%s.java" (replace-regexp-in-string "/" "." (match-string 2 uri) t t))))))))
+                            (unless (file-readable-p source-file)
+                              (let ((content (jsonrpc-request (eglot-current-server) :java/classFileContents (list :uri uri)))
+                                    (metadata-file (format "%s.%s.metadata"
+                                                           (file-name-directory source-file)
+                                                           (file-name-base source-file))))
+                                (unless (file-directory-p cache-dir) (make-directory cache-dir t))
+                                (with-temp-file source-file (insert content))
+                                (with-temp-file metadata-file (insert uri))))
+                            source-file))
+            
+            (add-to-list 'file-name-handler-alist '("\\`jdt://" . eglot-java--jdt-uri-handler))
+          '';
+        } ;
 
         jarchive = {
           enable = true;
