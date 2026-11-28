@@ -7,7 +7,7 @@
       ...
     }:
     {
-      overlayAttrs = { inherit (config.packages) qutebrowser; };
+      # overlayAttrs = { inherit (config.packages) qutebrowser; };
       packages.qutebrowser = pkgs.qutebrowser.overrideAttrs (oldAttrs: {
         propagatedBuildInputs = oldAttrs.propagatedBuildInputs ++ [ pkgs.python314Packages.idna ];
       });
@@ -20,7 +20,7 @@
       home = {
         packages = with pkgs.python314Packages; [ adblock ];
         sessionVariables = {
-          QTWEBENGINE_REMOTE_DEBUGGING = "9222 qutebrowser";
+          QTWEBENGINE_REMOTE_DEBUGGING = "9222";
           BROWSER = "qutebrowser";
         };
       };

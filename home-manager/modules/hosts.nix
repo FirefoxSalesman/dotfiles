@@ -52,6 +52,7 @@
         ];
         wantBattery = false;
       };
+      programs.qutebrowser.settings.qt.force_software_rendering = "chromium";
     };
     singleMonitorMachine = {
       hosts = {

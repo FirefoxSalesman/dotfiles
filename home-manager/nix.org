@@ -460,6 +460,7 @@ in
         ];
         wantBattery = false;
       };
+      programs.qutebrowser.settings.qt.force_software_rendering = "chromium";
     };
     singleMonitorMachine = {
       hosts = {
@@ -7650,7 +7651,7 @@ https://greasyfork.org/en/scripts/374833-yt2invidio
       ...
     }:
     {
-      overlayAttrs = { inherit (config.packages) qutebrowser; };
+      # overlayAttrs = { inherit (config.packages) qutebrowser; };
       packages.qutebrowser = pkgs.qutebrowser.overrideAttrs (oldAttrs: {
         propagatedBuildInputs = oldAttrs.propagatedBuildInputs ++ [ pkgs.python314Packages.idna ];
       });
@@ -7663,7 +7664,7 @@ https://greasyfork.org/en/scripts/374833-yt2invidio
       home = {
         packages = with pkgs.python314Packages; [ adblock ];
         sessionVariables = {
-          QTWEBENGINE_REMOTE_DEBUGGING = "9222 qutebrowser";
+          QTWEBENGINE_REMOTE_DEBUGGING = "9222";
           BROWSER = "qutebrowser";
         };
       };
