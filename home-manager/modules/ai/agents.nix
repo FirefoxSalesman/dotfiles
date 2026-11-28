@@ -35,7 +35,7 @@
 
     personalAI.programs = {
       emacs.init.usePackage.agent-shell.setopt.agent-shell-opencode-default-model-id =
-        ''"openrouter/nvidia/nemotron-3.5-super-vl:free"'';
+        ''"opencode/deepseek-v4.1-flash-free"'';
       opencode = {
         enable = true;
         enableMcpIntegration = true;
