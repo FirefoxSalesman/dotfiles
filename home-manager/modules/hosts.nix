@@ -2,10 +2,17 @@
 
 {
   flake.homeModules = {
-    emacs-host.imports = with inputs.self.homeModules; [
-      personalMachine
-      singleMonitorMachine
-    ];
+    emacs-host = {
+      targets.genericLinux.gpu.nvidia = {
+        enable = true;
+        sha256 = "sha256-CqsFGNtTz3PEEtx/MrvIUMqV6DnYkj0N5L/0LByRac4=";
+        version = "580.196.07";
+      };
+      imports = with inputs.self.homeModules; [
+        personalMachine
+        singleMonitorMachine
+      ];
+    };
     work-host = { pkgs, ... }: {
       imports = with inputs.self.homeModules; [
         singleMonitorMachine
@@ -21,7 +28,7 @@
       programs.emacs.init = {
         ide.languages.python = {
           enable = true;
-	  wantRuff = true;
+          wantRuff = true;
         };
         usePackage.ghostel.init = ''
           (defun efs/ghostel-command (command name) (require 'ghostel) (ghostel-shell-command command name))

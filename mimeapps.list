@@ -1,3 +1,4 @@
+
 [Default Applications]
 x-scheme-handler/discord=vesktop.desktop
 x-scheme-handler/org-protocol=org-protocol.desktop
